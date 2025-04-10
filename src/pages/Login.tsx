@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -12,10 +11,10 @@ import { useAuth } from "@/hooks/use-auth";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("customer");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPassword, setCustomerPassword] = useState("");
-  const [garageEmail, setGarageEmail] = useState("");
-  const [garagePassword, setGaragePassword] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("ansab.sid123@gmail.com");
+  const [customerPassword, setCustomerPassword] = useState("Ammiabbu@12345");
+  const [garageEmail, setGarageEmail] = useState("ansab.sid123@gmail.com");
+  const [garagePassword, setGaragePassword] = useState("Ammiabbu@12345");
   
   const location = useLocation();
   const { signIn, isLoading } = useAuth();

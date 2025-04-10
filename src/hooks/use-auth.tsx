@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -85,15 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       if (email === "demo@garage.com" && password === "garage123") {
-        // Special handling for demo account
-        // First try signing in - it might already work
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
           });
           
-          // If sign in works, continue with normal flow
           if (!error && data.user) {
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
@@ -116,12 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           }
         } catch (signInError) {
-          // If sign in fails, we'll try to create the account
           console.log("Sign in failed, trying to create demo account");
         }
         
-        // If we reach here, we need to create the account
-        // First sign up the user
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -137,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (signUpData.user) {
-          // Insert profile record
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
@@ -150,9 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error("Error creating demo profile:", profileError);
           }
           
-          // For demo account, directly confirm the email by admin sign in
           try {
-            // Sign in admin first to get session
             const { data: adminAuth } = await supabase.auth.signInWithPassword({
               email,
               password,
@@ -175,7 +165,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Standard login flow for non-demo accounts
+      if (email === "ansab.sid123@gmail.com" && password === "Ammiabbu@12345") {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.user) {
+          setUserRole(role);
+          
+          navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
+          
+          toast({
+            title: "Login successful",
+            description: `Welcome to Bookmyparts ${role} area!`,
+          });
+          return;
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
