@@ -59,8 +59,12 @@ const CarSearch = () => {
         ) : (
           showResults && (
             <div className="bg-white rounded-xl shadow-sm p-6">
-              {/* Pass parts data explicitly to ensure it's not lost */}
-              <PartsResults parts={parts} visible={showResults} />
+              {/* Force component key to refresh when parts change */}
+              <PartsResults 
+                key={`parts-results-${parts.length}`} 
+                parts={parts} 
+                visible={showResults && parts.length > 0} 
+              />
             </div>
           )
         )}
