@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -5,20 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Wrench, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("customer");
-  const [customerEmail, setCustomerEmail] = useState("ansab.sid123@gmail.com");
-  const [customerPassword, setCustomerPassword] = useState("Ammiabbu@12345");
-  const [garageEmail, setGarageEmail] = useState("ansab.sid123@gmail.com");
-  const [garagePassword, setGaragePassword] = useState("Ammiabbu@12345");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPassword, setCustomerPassword] = useState("");
+  const [garageEmail, setGarageEmail] = useState("");
+  const [garagePassword, setGaragePassword] = useState("");
+  const [error, setError] = useState("");
   
   const location = useLocation();
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/customer-dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   // Parse URL query parameters for demo login
   useEffect(() => {
@@ -40,19 +50,31 @@ const Login = () => {
 
   const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     try {
+      if (!customerEmail || !customerPassword) {
+        setError("Please enter both email and password");
+        return;
+      }
       await signIn(customerEmail, customerPassword, "customer");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login failed:", err);
+      setError(err.message || "Login failed. Please try again.");
     }
   };
 
   const handleGarageLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     try {
+      if (!garageEmail || !garagePassword) {
+        setError("Please enter both email and password");
+        return;
+      }
       await signIn(garageEmail, garagePassword, "garage");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login failed:", err);
+      setError(err.message || "Login failed. Please try again.");
     }
   };
 
@@ -64,7 +86,10 @@ const Login = () => {
             defaultValue="customer"
             value={activeTab}
             className="w-full"
-            onValueChange={(value) => setActiveTab(value)}
+            onValueChange={(value) => {
+              setActiveTab(value);
+              setError(""); // Clear errors when changing tabs
+            }}
           >
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="customer" className="flex items-center justify-center gap-2">
@@ -74,6 +99,13 @@ const Login = () => {
                 <Wrench size={18} /> Garage
               </TabsTrigger>
             </TabsList>
+
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <TabsContent value="customer">
               <Card>

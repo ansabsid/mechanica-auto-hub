@@ -33,23 +33,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      const currentUser = data.session?.user ?? null;
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', currentUser.id)
-          .single();
-          
-        if (profileData && !profileError) {
-          setUserRole(profileData.role as "customer" | "garage");
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error getting session:", error.message);
+          setIsLoading(false);
+          return;
         }
+        
+        const currentUser = data.session?.user ?? null;
+        setUser(currentUser);
+        
+        if (currentUser) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', currentUser.id)
+            .single();
+            
+          if (profileData && !profileError) {
+            setUserRole(profileData.role as "customer" | "garage");
+          } else if (profileError) {
+            console.error("Error fetching user profile:", profileError.message);
+          }
+        }
+      } catch (err) {
+        console.error("Session retrieval error:", err);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
     
     getSession();
@@ -60,14 +72,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
         
         if (currentUser) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .single();
-            
-          if (data && !error) {
-            setUserRole(data.role as "customer" | "garage");
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', currentUser.id)
+              .single();
+              
+            if (data && !error) {
+              setUserRole(data.role as "customer" | "garage");
+              
+              // Navigate based on role when login is detected
+              if (event === 'SIGNED_IN') {
+                navigate(data.role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
+                
+                toast({
+                  title: "Login successful",
+                  description: `Welcome to Bookmyparts!`,
+                });
+              }
+            } else if (error) {
+              console.error("Error fetching user profile after auth change:", error.message);
+            }
+          } catch (err) {
+            console.error("Error in auth state change handler:", err);
           }
         } else {
           setUserRole(null);
@@ -78,11 +106,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, navigate]);
 
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);
     try {
+      console.log(`Attempting to sign in with email: ${email}, role: ${role}`);
+      
+      // Special demo login handling
       if (email === "demo@garage.com" && password === "garage123") {
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -165,29 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (email === "ansab.sid123@gmail.com" && password === "Ammiabbu@12345") {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data.user) {
-          setUserRole(role);
-          
-          navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
-          
-          toast({
-            title: "Login successful",
-            description: `Welcome to Bookmyparts ${role} area!`,
-          });
-          return;
-        }
-      }
-
+      // Regular login process
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -198,37 +207,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (profileError) {
+            console.error("Profile error:", profileError);
+            throw new Error("User profile not found");
+          }
           
-        if (profileError || !profile) {
-          throw new Error("User profile not found");
+          // If profile exists but role doesn't match, sign out
+          if (profile && profile.role !== role) {
+            await supabase.auth.signOut();
+            throw new Error(`Invalid account type. Please use the ${role} login.`);
+          }
+          
+          setUserRole(profile?.role as "customer" | "garage");
+          
+          navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
+          
+          toast({
+            title: "Login successful",
+            description: `Welcome back to Bookmyparts!`,
+          });
+        } catch (profileFetchError: any) {
+          console.error("Error fetching profile after login:", profileFetchError);
+          throw profileFetchError;
         }
-        
-        if (profile.role !== role) {
-          await supabase.auth.signOut();
-          throw new Error(`Invalid account type. Please use the ${role} login.`);
-        }
-        
-        setUserRole(profile.role as "customer" | "garage");
-        
-        navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
-        
-        toast({
-          title: "Login successful",
-          description: `Welcome back to Bookmyparts!`,
-        });
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
         description: error.message || "An error occurred during login",
       });
-      console.error("Error signing in:", error.message);
+      throw error; // Re-throw so form handler can catch it
     } finally {
       setIsLoading(false);
     }
