@@ -49,12 +49,12 @@ export const useAppointments = () => {
 
     setIsLoading(true);
     try {
-      // Using raw SQL query to avoid type issues
-      const { data, error } = await supabase
-        .from('appointments')
+      // Using raw SQL query to avoid type issues with type assertion
+      const { data, error } = await (supabase
+        .from('appointments') as any)
         .select('*, garage:garage_id(name, location)')
         .eq('user_id', session.user.id)
-        .order('appointment_date', { ascending: true }) as any;
+        .order('appointment_date', { ascending: true });
       
       if (error) throw error;
       
@@ -147,19 +147,19 @@ export const useAppointments = () => {
 
     setIsBooking(true);
     try {
-      const { data, error } = await supabase.rpc('insert_appointment', {
+      const { data, error } = await (supabase as any).rpc('insert_appointment', {
         p_user_id: session.user.id,
         p_garage_id: garageId,
         p_service_type: serviceType,
         p_appointment_date: date,
         p_appointment_time: time,
         p_notes: notes || null
-      }) as any;
+      });
       
       if (error) {
         // Fallback to direct insert if RPC isn't available
-        const { data: insertData, error: insertError } = await supabase
-          .from('appointments')
+        const { data: insertData, error: insertError } = await (supabase
+          .from('appointments') as any)
           .insert({
             user_id: session.user.id,
             garage_id: garageId,
@@ -170,7 +170,7 @@ export const useAppointments = () => {
             status: 'pending'
           })
           .select()
-          .single() as any;
+          .single();
           
         if (insertError) throw insertError;
         
@@ -209,17 +209,17 @@ export const useAppointments = () => {
   const cancelAppointment = async (appointmentId: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.rpc('update_appointment_status', { 
+      const { error } = await (supabase as any).rpc('update_appointment_status', { 
         p_appointment_id: appointmentId,
         p_status: 'cancelled'
-      }) as any;
+      });
       
       if (error) {
         // Fallback to direct update if RPC isn't available
-        const { error: updateError } = await supabase
-          .from('appointments')
+        const { error: updateError } = await (supabase
+          .from('appointments') as any)
           .update({ status: 'cancelled' })
-          .eq('id', appointmentId) as any;
+          .eq('id', appointmentId);
           
         if (updateError) throw updateError;
       }

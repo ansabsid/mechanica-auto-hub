@@ -51,17 +51,17 @@ export const useOrders = () => {
     setIsLoading(true);
     try {
       // Using direct from to avoid type errors
-      const { data, error } = await supabase.rpc('get_user_orders', {
+      const { data, error } = await (supabase as any).rpc('get_user_orders', {
         p_user_id: session.user.id
-      }) as any;
+      });
       
       if (error) {
         // Fallback to direct query
-        const { data: ordersData, error: directError } = await supabase
-          .from('orders')
+        const { data: ordersData, error: directError } = await (supabase
+          .from('orders') as any)
           .select('*')
           .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false }) as any;
+          .order('created_at', { ascending: false });
           
         if (directError) throw directError;
         
@@ -110,28 +110,28 @@ export const useOrders = () => {
     setIsLoading(true);
     try {
       // Get order details
-      const { data: orderData, error: orderError } = await supabase.rpc('get_order', {
+      const { data: orderData, error: orderError } = await (supabase as any).rpc('get_order', {
         p_order_id: orderId
-      }) as any;
+      });
       
       if (orderError) {
         // Fallback to direct queries
-        const { data: directOrderData, error: directOrderError } = await supabase
-          .from('orders')
+        const { data: directOrderData, error: directOrderError } = await (supabase
+          .from('orders') as any)
           .select('*')
           .eq('id', orderId)
-          .single() as any;
+          .single();
           
         if (directOrderError) throw directOrderError;
         
         // Get order items
-        const { data: itemsData, error: itemsError } = await supabase
-          .from('order_items')
+        const { data: itemsData, error: itemsError } = await (supabase
+          .from('order_items') as any)
           .select(`
             *,
             part:part_id (name, description)
           `)
-          .eq('order_id', orderId) as any;
+          .eq('order_id', orderId);
           
         if (itemsError) throw itemsError;
         
@@ -236,24 +236,24 @@ export const useOrders = () => {
         price: item.part.price,
       }));
       
-      const { data, error } = await supabase.rpc('create_order_with_items', {
+      const { data, error } = await (supabase as any).rpc('create_order_with_items', {
         p_user_id: session.user.id,
         p_total_amount: totalAmount,
         p_items: JSON.stringify(orderItems)
-      }) as any;
+      });
       
       if (error) {
         // Fallback to manual transaction
         // 1. Create the order
-        const { data: order, error: orderError } = await supabase
-          .from('orders')
+        const { data: order, error: orderError } = await (supabase
+          .from('orders') as any)
           .insert({
             user_id: session.user.id,
             total_amount: totalAmount,
             status: 'pending',
           })
           .select()
-          .single() as any;
+          .single();
         
         if (orderError) throw orderError;
         
@@ -266,9 +266,9 @@ export const useOrders = () => {
           price: item.part.price,
         }));
         
-        const { error: itemsError } = await supabase
-          .from('order_items')
-          .insert(formattedItems) as any;
+        const { error: itemsError } = await (supabase
+          .from('order_items') as any)
+          .insert(formattedItems);
         
         if (itemsError) throw itemsError;
         
@@ -308,16 +308,16 @@ export const useOrders = () => {
     setIsLoading(true);
     try {
       // Use RPC to cancel order
-      const { error } = await supabase.rpc('cancel_order', {
+      const { error } = await (supabase as any).rpc('cancel_order', {
         p_order_id: orderId
-      }) as any;
+      });
       
       if (error) {
         // Fallback to direct update
-        const { error: updateError } = await supabase
-          .from('orders')
+        const { error: updateError } = await (supabase
+          .from('orders') as any)
           .update({ status: 'cancelled' })
-          .eq('id', orderId) as any;
+          .eq('id', orderId);
         
         if (updateError) throw updateError;
       }

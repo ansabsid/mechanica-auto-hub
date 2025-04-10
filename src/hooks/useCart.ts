@@ -34,18 +34,18 @@ export const useCart = () => {
     setIsLoading(true);
     try {
       // Check if user already has a cart - using raw query to avoid type issues
-      const { data: existingCarts, error: cartError } = await supabase.rpc(
+      const { data: existingCarts, error: cartError } = await (supabase as any).rpc(
         'get_user_cart',
         { p_user_id: session.user.id }
-      ) as any;
+      );
       
       if (cartError) {
         // Fallback to direct query
-        const { data: cartsData, error: directError } = await supabase
-          .from('carts')
+        const { data: cartsData, error: directError } = await (supabase
+          .from('carts') as any)
           .select('*')
           .eq('user_id', session.user.id)
-          .limit(1) as any;
+          .limit(1);
           
         if (directError) throw directError;
         
@@ -55,11 +55,11 @@ export const useCart = () => {
         }
         
         // Create new cart if none exists
-        const { data: newCart, error: createError } = await supabase
-          .from('carts')
+        const { data: newCart, error: createError } = await (supabase
+          .from('carts') as any)
           .insert({ user_id: session.user.id })
           .select()
-          .single() as any;
+          .single();
         
         if (createError) throw createError;
         
@@ -77,18 +77,18 @@ export const useCart = () => {
       }
       
       // Create new cart if none exists using RPC
-      const { data: newCart, error: createError } = await supabase.rpc(
+      const { data: newCart, error: createError } = await (supabase as any).rpc(
         'create_cart',
         { p_user_id: session.user.id }
-      ) as any;
+      );
       
       if (createError) {
         // Fallback to direct insert
-        const { data: insertData, error: insertError } = await supabase
-          .from('carts')
+        const { data: insertData, error: insertError } = await (supabase
+          .from('carts') as any)
           .insert({ user_id: session.user.id })
           .select()
-          .single() as any;
+          .single();
           
         if (insertError) throw insertError;
         
@@ -123,15 +123,15 @@ export const useCart = () => {
     setIsLoading(true);
     try {
       // Using raw query to avoid type issues
-      const { data, error } = await supabase.rpc(
+      const { data, error } = await (supabase as any).rpc(
         'get_cart_items',
         { p_cart_id: cartIdValue }
-      ) as any;
+      );
       
       if (error) {
         // Fallback to direct query
-        const { data: directData, error: directError } = await supabase
-          .from('cart_items')
+        const { data: directData, error: directError } = await (supabase
+          .from('cart_items') as any)
           .select(`
             *,
             part:part_id (
@@ -140,7 +140,7 @@ export const useCart = () => {
               garage_id, garages:garage_id (name, location)
             )
           `)
-          .eq('cart_id', cartIdValue) as any;
+          .eq('cart_id', cartIdValue);
           
         if (directError) throw directError;
         
@@ -223,43 +223,43 @@ export const useCart = () => {
     setIsLoading(true);
     try {
       // Using RPC to add item to cart
-      const { error } = await supabase.rpc(
+      const { error } = await (supabase as any).rpc(
         'add_item_to_cart',
         {
           p_cart_id: cartIdValue,
           p_part_id: partId,
           p_quantity: quantity
         }
-      ) as any;
+      );
       
       if (error) {
         // Fallback to check and update/insert logic
-        const { data: existingItems, error: checkError } = await supabase
-          .from('cart_items')
+        const { data: existingItems, error: checkError } = await (supabase
+          .from('cart_items') as any)
           .select('*')
           .eq('cart_id', cartIdValue)
-          .eq('part_id', partId) as any;
+          .eq('part_id', partId);
           
         if (checkError) throw checkError;
         
         if (existingItems && existingItems.length > 0) {
           // Update quantity if item already exists
           const newQuantity = existingItems[0].quantity + quantity;
-          const { error: updateError } = await supabase
-            .from('cart_items')
+          const { error: updateError } = await (supabase
+            .from('cart_items') as any)
             .update({ quantity: newQuantity })
-            .eq('id', existingItems[0].id) as any;
+            .eq('id', existingItems[0].id);
           
           if (updateError) throw updateError;
         } else {
           // Insert new item if it doesn't exist
-          const { error: insertError } = await supabase
-            .from('cart_items')
+          const { error: insertError } = await (supabase
+            .from('cart_items') as any)
             .insert({
               cart_id: cartIdValue,
               part_id: partId,
               quantity,
-            }) as any;
+            });
           
           if (insertError) throw insertError;
         }
@@ -291,20 +291,20 @@ export const useCart = () => {
     setIsLoading(true);
     try {
       // Use RPC to update quantity
-      const { error } = await supabase.rpc(
+      const { error } = await (supabase as any).rpc(
         'update_cart_item_quantity',
         {
           p_cart_item_id: cartItemId,
           p_quantity: quantity
         }
-      ) as any;
+      );
       
       if (error) {
         // Fallback to direct update
-        const { error: updateError } = await supabase
-          .from('cart_items')
+        const { error: updateError } = await (supabase
+          .from('cart_items') as any)
           .update({ quantity })
-          .eq('id', cartItemId) as any;
+          .eq('id', cartItemId);
           
         if (updateError) throw updateError;
       }
@@ -328,17 +328,17 @@ export const useCart = () => {
     setIsLoading(true);
     try {
       // Use RPC to remove item
-      const { error } = await supabase.rpc(
+      const { error } = await (supabase as any).rpc(
         'remove_cart_item',
         { p_cart_item_id: cartItemId }
-      ) as any;
+      );
       
       if (error) {
         // Fallback to direct delete
-        const { error: deleteError } = await supabase
-          .from('cart_items')
+        const { error: deleteError } = await (supabase
+          .from('cart_items') as any)
           .delete()
-          .eq('id', cartItemId) as any;
+          .eq('id', cartItemId);
           
         if (deleteError) throw deleteError;
       }
@@ -369,17 +369,17 @@ export const useCart = () => {
     setIsLoading(true);
     try {
       // Use RPC to clear cart
-      const { error } = await supabase.rpc(
+      const { error } = await (supabase as any).rpc(
         'clear_cart',
         { p_cart_id: cartId }
-      ) as any;
+      );
       
       if (error) {
         // Fallback to direct delete
-        const { error: deleteError } = await supabase
-          .from('cart_items')
+        const { error: deleteError } = await (supabase
+          .from('cart_items') as any)
           .delete()
-          .eq('cart_id', cartId) as any;
+          .eq('cart_id', cartId);
           
         if (deleteError) throw deleteError;
       }
