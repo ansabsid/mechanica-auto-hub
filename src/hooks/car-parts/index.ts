@@ -67,6 +67,7 @@ export const useCarParts = () => {
     }
   }, [manufacturers.length, allParts.length, isLoadingParts, fetchAllParts]);
 
+  // Add debugging logs to help identify any filtering issues
   console.log("useCarParts hook - current manufacturers:", manufacturers?.length || 0);
   console.log("useCarParts hook - current models:", models?.length || 0);
   console.log("useCarParts hook - current parts state:", parts?.length || 0);

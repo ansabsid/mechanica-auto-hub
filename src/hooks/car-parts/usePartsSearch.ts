@@ -213,8 +213,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
           duration: 5000,
         });
       } else {
-        // Only generate mock parts if no real parts found
-        console.log("No parts found in database, generating mock parts...");
+        // Generate mock parts that match the search criteria
+        console.log("No parts found in database, generating mock parts for the specific vehicle...");
         const mockStartTime = performance.now();
         const mockParts = generateMockParts(
           mfrId, 
@@ -223,21 +223,29 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
           manufacturers,
           models
         );
+        
+        // Important fix: Filter the mock parts to only include parts that match the criteria
+        const filteredMockParts = mockParts.filter(part => 
+          part.manufacturer_id === mfrId && 
+          part.model_id === mdlId && 
+          part.year === yearNum
+        );
+        
         const mockEndTime = performance.now();
-        console.log("Using mock parts:", mockParts.length);
+        console.log("Using filtered mock parts:", filteredMockParts.length);
         console.log(`Mock data generated in ${(mockEndTime - mockStartTime).toFixed(2)}ms`);
-        finalParts = mockParts;
+        finalParts = filteredMockParts;
         
         // Show toast message for mock data
         toast({
           title: "Using Sample Data",
-          description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockParts.length} sample parts.`,
+          description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${filteredMockParts.length} sample parts.`,
           variant: "default",
           duration: 5000,
         });
       }
       
-      console.log("Final parts being set:", finalParts);
+      console.log("Final filtered parts being set:", finalParts);
       
       // Update state in the correct order
       setParts(finalParts);
@@ -259,22 +267,34 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         duration: 5000,
       });
       
-      // Show mock data on error for better user experience
-      const mockParts: Part[] = generateMockParts(
-        parseInt(manufacturerId), 
-        parseInt(modelId), 
-        parseInt(year),
+      // Create properly filtered mock data on error for better user experience
+      const mfrId = parseInt(manufacturerId);
+      const mdlId = parseInt(modelId);
+      const yearNum = parseInt(year);
+      
+      const mockParts = generateMockParts(
+        mfrId, 
+        mdlId, 
+        yearNum,
         manufacturers,
         models
       );
-      console.log("Using mock parts due to error:", mockParts);
+      
+      // Filter the mock parts to only show relevant ones
+      const filteredMockParts = mockParts.filter(part => 
+        part.manufacturer_id === mfrId && 
+        part.model_id === mdlId && 
+        part.year === yearNum
+      );
+      
+      console.log("Using filtered mock parts due to error:", filteredMockParts.length);
       
       // Update state in the correct order
-      setParts(mockParts);
+      setParts(filteredMockParts);
       setIsSearching(false);
       setSearchCompleted(true);
       
-      return mockParts.length;
+      return filteredMockParts.length;
     }
   };
 

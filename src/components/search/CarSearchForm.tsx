@@ -63,6 +63,12 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       resetSearch();
       
       console.log("Starting search with params:", { manufacturer, model, year });
+      console.log("Search params (numeric):", { 
+        manufacturerId: parseInt(manufacturer), 
+        modelId: parseInt(model), 
+        year: parseInt(year) 
+      });
+      
       const count = await searchParts(manufacturer, model, year);
       console.log("Search returned count:", count);
       
