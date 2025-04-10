@@ -17,34 +17,36 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="bg-mechanica-100 text-mechanica-800 font-bold p-2 rounded-lg">
-              <span className="text-mechanica-600 text-xl">Bookmyparts</span>
-            </div>
+            <img 
+              src="/lovable-uploads/bc5d716e-e89a-48a9-b038-082d8861b31d.png" 
+              alt="Bookmyparts Logo" 
+              className="h-10" 
+            />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link
               to="/"
-              className="text-gray-700 hover:text-mechanica-600 font-medium"
+              className="text-gray-700 hover:text-bookmyparts-600 font-medium"
             >
               Home
             </Link>
             <Link
               to="/about"
-              className="text-gray-700 hover:text-mechanica-600 font-medium"
+              className="text-gray-700 hover:text-bookmyparts-600 font-medium"
             >
               About Us
             </Link>
             <Link
               to="/garages"
-              className="text-gray-700 hover:text-mechanica-600 font-medium"
+              className="text-gray-700 hover:text-bookmyparts-600 font-medium"
             >
               For Garages
             </Link>
             <Link
               to="/contact"
-              className="text-gray-700 hover:text-mechanica-600 font-medium"
+              className="text-gray-700 hover:text-bookmyparts-600 font-medium"
             >
               Contact
             </Link>
@@ -59,7 +61,7 @@ const Header = () => {
               </Button>
             </Link>
             <Link to="/register">
-              <Button className="bg-mechanica-500 hover:bg-mechanica-600 text-white">
+              <Button className="bg-bookmyparts-500 hover:bg-bookmyparts-600 text-white">
                 Sign Up
               </Button>
             </Link>
@@ -81,28 +83,28 @@ const Header = () => {
             <nav className="flex flex-col space-y-4">
               <Link
                 to="/"
-                className="text-gray-700 hover:text-mechanica-600 font-medium px-2 py-2"
+                className="text-gray-700 hover:text-bookmyparts-600 font-medium px-2 py-2"
                 onClick={toggleMenu}
               >
                 Home
               </Link>
               <Link
                 to="/about"
-                className="text-gray-700 hover:text-mechanica-600 font-medium px-2 py-2"
+                className="text-gray-700 hover:text-bookmyparts-600 font-medium px-2 py-2"
                 onClick={toggleMenu}
               >
                 About Us
               </Link>
               <Link
                 to="/garages"
-                className="text-gray-700 hover:text-mechanica-600 font-medium px-2 py-2"
+                className="text-gray-700 hover:text-bookmyparts-600 font-medium px-2 py-2"
                 onClick={toggleMenu}
               >
                 For Garages
               </Link>
               <Link
                 to="/contact"
-                className="text-gray-700 hover:text-mechanica-600 font-medium px-2 py-2"
+                className="text-gray-700 hover:text-bookmyparts-600 font-medium px-2 py-2"
                 onClick={toggleMenu}
               >
                 Contact
@@ -119,7 +121,7 @@ const Header = () => {
                 </Link>
                 <Link to="/register" onClick={toggleMenu}>
                   <Button
-                    className="w-full justify-center bg-mechanica-500 hover:bg-mechanica-600 text-white"
+                    className="w-full justify-center bg-bookmyparts-500 hover:bg-bookmyparts-600 text-white"
                   >
                     Sign Up
                   </Button>
