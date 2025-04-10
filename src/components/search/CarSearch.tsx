@@ -10,12 +10,11 @@ const CarSearch = () => {
   const { parts, isSearching, searchCompleted, resetSearch } = useCarParts();
   const { toast } = useToast();
 
-  // Add detailed logging for debugging
   console.log("CarSearch render - parts:", parts);
   console.log("CarSearch render - searchCompleted:", searchCompleted);
   console.log("CarSearch render - showResults:", showResults);
 
-  // Add effect to update UI when search completes
+  // Update UI when search completes
   useEffect(() => {
     console.log("Search completed effect triggered:", searchCompleted);
     console.log("Parts in effect:", parts);
@@ -41,7 +40,6 @@ const CarSearch = () => {
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
-    // This function will be called after search is completed and should reflect the found parts
     setShowResults(true);
   };
 

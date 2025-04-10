@@ -1,10 +1,9 @@
 
 import React, { useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
 import { PartCard } from "@/components/parts/PartCard";
-import { Package2, AlertCircle, LayoutGrid, LayoutList, SearchX } from "lucide-react";
+import { Package2, SearchX, LayoutGrid } from "lucide-react";
 
 interface PartsResultsProps {
   parts: Part[];

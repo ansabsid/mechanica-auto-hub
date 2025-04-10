@@ -50,31 +50,29 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("Valid parts from DB:", validParts);
       
-      // Generate mock parts as a fallback
-      const mockParts: Part[] = generateMockParts(
-        parseInt(manufacturerId), 
-        parseInt(modelId), 
-        parseInt(year),
-        manufacturers,
-        models
-      );
-      console.log("Generated mock parts:", mockParts);
+      let finalParts: Part[];
       
-      // Use DB parts if found, otherwise use mock parts
-      const finalParts = validParts.length > 0 ? validParts : mockParts;
-      
-      if (validParts.length === 0) {
-        console.log("Using mock parts:", mockParts);
+      if (validParts.length > 0) {
+        finalParts = validParts;
+        console.log("Using database parts:", validParts.length);
+      } else {
+        // Only generate mock parts if no real parts found
+        const mockParts = generateMockParts(
+          parseInt(manufacturerId), 
+          parseInt(modelId), 
+          parseInt(year),
+          manufacturers,
+          models
+        );
+        console.log("Using mock parts:", mockParts.length);
+        finalParts = mockParts;
       }
       
       console.log("Final parts being set:", finalParts);
       
-      // Update state
+      // Update state in the correct order
       setParts(finalParts);
-      
-      // Make sure we set the loading state to false before setting search completed
       setIsSearching(false);
-      // Now set searchCompleted to true to trigger the UI updates
       setSearchCompleted(true);
       
       return finalParts.length;
