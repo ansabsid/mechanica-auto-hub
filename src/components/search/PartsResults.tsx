@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
 import { PartCard } from "@/components/parts/PartCard";
-import { Package2, AlertCircle, LayoutGrid, LayoutList } from "lucide-react";
+import { Package2, AlertCircle, LayoutGrid, LayoutList, SearchX } from "lucide-react";
 
 interface PartsResultsProps {
   parts: Part[];
@@ -29,7 +29,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     console.log("No parts found in PartsResults component");
     return (
       <div className="text-center p-8 bg-gray-50 rounded-xl">
-        <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <SearchX className="mx-auto h-12 w-12 text-gray-400 mb-4" />
         <h3 className="text-xl font-semibold text-gray-800 mb-2">No Parts Found</h3>
         <p className="text-gray-500">We couldn't find any parts matching your search criteria. Try another combination.</p>
       </div>

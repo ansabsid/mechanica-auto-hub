@@ -41,7 +41,7 @@ const CarSearch = () => {
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
-    // This function will be called after search is completed
+    // This function will be called after search is completed and should reflect the found parts
     setShowResults(true);
   };
 

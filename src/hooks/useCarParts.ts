@@ -200,7 +200,11 @@ export const useCarParts = () => {
       
       // Update state with the parts data
       setParts(finalParts);
-      setSearchCompleted(true);
+      
+      // Important: Set search completed AFTER setting parts to ensure proper rendering
+      setTimeout(() => {
+        setSearchCompleted(true);
+      }, 50);
       
       return finalParts.length;
     } catch (error: any) {
@@ -211,11 +215,18 @@ export const useCarParts = () => {
       console.log("Using mock parts due to error:", mockParts);
       
       setParts(mockParts);
-      setSearchCompleted(true);
+      
+      // Set search completed state
+      setTimeout(() => {
+        setSearchCompleted(true);
+      }, 50);
       
       return mockParts.length;
     } finally {
-      setIsSearching(false);
+      // Delay setting isSearching to false to ensure UI transitions properly
+      setTimeout(() => {
+        setIsSearching(false);
+      }, 300);
     }
   };
 
