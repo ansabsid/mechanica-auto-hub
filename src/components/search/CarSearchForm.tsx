@@ -80,6 +80,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   console.log("Current manufacturers:", manufacturers?.length || 0);
   console.log("Current models:", models?.length || 0);
   console.log("Current selection - manufacturer:", manufacturer, "model:", model, "year:", year);
+  console.log("isLoading state:", isLoading);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-card max-w-4xl w-full mx-auto">
@@ -98,7 +99,6 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
               setManufacturer(value);
               setModel(""); // Reset model when manufacturer changes
             }}
-            disabled={isLoading}
             value={manufacturer}
           >
             <SelectTrigger id="manufacturer" className="w-full">

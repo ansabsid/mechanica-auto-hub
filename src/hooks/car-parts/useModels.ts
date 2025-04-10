@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Model } from "./types";
 
@@ -8,7 +8,7 @@ export const useModels = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Fetch models for a manufacturer
-  const fetchModels = async (manufacturerId: string) => {
+  const fetchModels = useCallback(async (manufacturerId: string) => {
     if (!manufacturerId) {
       setModels([]);
       return;
@@ -17,6 +17,7 @@ export const useModels = () => {
     setIsLoading(true);
     
     try {
+      console.log(`Fetching models for manufacturer ID: ${manufacturerId}`);
       const { data, error } = await supabase
         .from('models')
         .select('*')
@@ -28,8 +29,10 @@ export const useModels = () => {
       }
       
       if (data && data.length > 0) {
+        console.log(`Successfully fetched models: ${data.length} models found`);
         setModels(data);
       } else {
+        console.log("No models found in database, using fallback data");
         // If no models found, provide fallback data
         const mockModels: { [key: string]: Model[] } = {
           "1": [
@@ -78,7 +81,7 @@ export const useModels = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return {
     models,
