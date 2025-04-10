@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
@@ -12,11 +12,13 @@ interface PartsResultsProps {
 }
 
 const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
+  useEffect(() => {
+    console.log("PartsResults received parts:", parts);
+  }, [parts]);
+
   if (!visible) {
     return null;
   }
-
-  console.log("Parts in PartsResults:", parts); // Debug log
 
   if (!parts || parts.length === 0) {
     return (

@@ -45,9 +45,9 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          <>
-            {showResults && <PartsResults parts={parts} visible={true} />}
-          </>
+          showResults && (
+            <PartsResults parts={parts} visible={true} />
+          )
         )}
       </div>
     </div>
