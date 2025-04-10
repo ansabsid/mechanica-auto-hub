@@ -120,15 +120,17 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
-      // End timing on error
-      const endTime = performance.now();
-      const queryDuration = endTime - startTime;
+      // Store the startTime in a variable that's in scope for this catch block
+      const errorEndTime = performance.now();
+      // The startTime isn't defined in this scope, so we can't calculate an accurate time
+      // We'll just set a default value for the query duration when an error occurs
+      const queryDuration = 0; // We don't know the actual duration in the error case
       setQueryTime(queryDuration);
       
       // Show error toast
       toast({
         title: "Search Error",
-        description: `Error searching for parts (${queryDuration.toFixed(0)}ms): ${error.message}`,
+        description: `Error searching for parts: ${error.message}`,
         variant: "destructive",
         duration: 5000,
       });
