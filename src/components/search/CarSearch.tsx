@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +14,22 @@ interface Model {
   id: number;
   name: string;
   manufacturer_id: number;
+}
+
+interface Part {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number;
+  manufacturer_id: number;
+  model_id: number;
+  year: number;
+  garage_id: string | null;
+  garages: {
+    name: string;
+    location: string;
+  } | null;
 }
 
 const CarSearch = () => {
@@ -44,21 +59,10 @@ const CarSearch = () => {
         
         if (data) {
           setManufacturers(data);
-        } else {
-          // Fallback mock data if we don't have any data yet
-          setManufacturers([
-            { id: 1, name: "Toyota" },
-            { id: 2, name: "Honda" },
-            { id: 3, name: "BMW" },
-            { id: 4, name: "Mercedes" },
-            { id: 5, name: "Ford" },
-            { id: 6, name: "Audi" },
-            { id: 7, name: "Nissan" },
-          ]);
         }
       } catch (error: any) {
         console.error('Error fetching manufacturers:', error.message);
-        // Fallback to mock data on error
+        // Show fallback data if error
         setManufacturers([
           { id: 1, name: "Toyota" },
           { id: 2, name: "Honda" },
@@ -99,7 +103,7 @@ const CarSearch = () => {
         if (data && data.length > 0) {
           setModels(data);
         } else {
-          // Fallback mock data if we don't have any data yet
+          // If no models found, provide fallback data
           const mockModels: { [key: string]: Model[] } = {
             "1": [
               { id: 1, name: "Corolla", manufacturer_id: 1 },
@@ -123,7 +127,7 @@ const CarSearch = () => {
         }
       } catch (error: any) {
         console.error('Error fetching models:', error.message);
-        // Fallback to mock data on error
+        // Fallback data on error
         const mockModels: { [key: string]: Model[] } = {
           "1": [
             { id: 1, name: "Corolla", manufacturer_id: 1 },

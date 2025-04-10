@@ -146,22 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // Create a profile record
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            { 
-              id: data.user.id, 
-              email: data.user.email,
-              role,
-              ...metadata
-            }
-          ]);
-
-        if (profileError) {
-          throw profileError;
-        }
-
+        // The profile will be created automatically through our database trigger
         toast({
           title: "Account created",
           description: "Please check your email to confirm your account",
