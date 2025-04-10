@@ -56,13 +56,15 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       if (count > 0) {
         toast({
           title: "Search Results",
-          description: `Found ${count} parts matching your search criteria`
+          description: `Found ${count} parts matching your search criteria`,
+          duration: 3000
         });
       } else {
         toast({
           variant: "default",
           title: "No Results",
-          description: "No parts found matching your search criteria. Showing example parts."
+          description: "No parts found matching your search criteria. Showing example parts.",
+          duration: 3000
         });
       }
     } catch (error: any) {
@@ -155,6 +157,14 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
           <Search className="mr-2 h-5 w-5" /> 
           {isSearching ? "Searching..." : "Find Parts"}
         </Button>
+        
+        <div className="text-center mt-3 text-sm text-gray-500">
+          {!manufacturer || !model || !year ? (
+            <p>Please select all vehicle details above to search</p>
+          ) : (
+            <p>Click to search for parts compatible with your {year} {models.find(m => m.id.toString() === model)?.name}</p>
+          )}
+        </div>
       </div>
     </div>
   );

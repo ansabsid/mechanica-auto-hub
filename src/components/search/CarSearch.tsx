@@ -31,7 +31,19 @@ const CarSearch = () => {
   return (
     <div className="w-full">
       <CarSearchForm onSearch={handleSearchComplete} />
-      {showResults && <PartsResults parts={parts} visible={true} />}
+      
+      {/* Always render the results container, but conditionally show results */}
+      <div className="mt-8 border-t pt-6 transition-all">
+        {isSearching ? (
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-pulse text-center">
+              <p className="text-lg text-gray-500">Searching for parts...</p>
+            </div>
+          </div>
+        ) : (
+          showResults && <PartsResults parts={parts} visible={true} />
+        )}
+      </div>
     </div>
   );
 };
