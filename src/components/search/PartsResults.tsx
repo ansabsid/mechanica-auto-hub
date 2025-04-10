@@ -28,11 +28,11 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   if (!parts || parts.length === 0) {
     console.log("No parts found in PartsResults component");
     return (
-      <div className="text-center p-8 bg-gray-50 rounded-xl border-2 border-gray-200">
-        <SearchX className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-2xl font-semibold text-gray-800 mb-3">No Parts Found</h3>
-        <p className="text-gray-600 text-lg">We couldn't find any parts matching your search criteria.</p>
-        <p className="text-gray-500 mt-2">Try another combination of manufacturer, model, and year.</p>
+      <div className="text-center p-8 bg-red-50 border-4 border-red-200 rounded-xl mt-8 shadow-lg">
+        <SearchX className="mx-auto h-16 w-16 text-red-500 mb-4" />
+        <h3 className="text-2xl font-bold text-red-800 mb-3">No Parts Found</h3>
+        <p className="text-gray-700 text-lg">We couldn't find any parts matching your search criteria.</p>
+        <p className="text-gray-600 mt-2">Try another combination of manufacturer, model, and year.</p>
       </div>
     );
   }
@@ -41,16 +41,16 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   
   return (
     <div className="parts-results-container animate-in fade-in-50 duration-300">
-      <div className="mb-6 flex items-center justify-between bg-mechanica-50 p-4 rounded-lg">
+      <div className="mb-6 flex items-center justify-between bg-mechanica-100 p-6 rounded-lg border-2 border-mechanica-300 shadow-md">
         <div className="flex items-center">
-          <Package2 className="mr-2 h-6 w-6 text-mechanica-500" />
-          <h3 className="text-xl font-semibold text-gray-800">
+          <Package2 className="mr-3 h-8 w-8 text-mechanica-600" />
+          <h3 className="text-2xl font-bold text-gray-800">
             Parts Matching Your Vehicle
           </h3>
         </div>
         
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-white">
+          <Badge variant="outline" className="bg-white py-2 px-3 text-base">
             <span className="text-mechanica-600 font-semibold">{parts.length}</span> parts found
           </Badge>
         </div>
