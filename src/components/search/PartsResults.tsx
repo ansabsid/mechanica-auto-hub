@@ -2,8 +2,15 @@
 import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { PartCard } from "@/components/parts/PartCard";
-import { Package2, SearchX, LayoutGrid } from "lucide-react";
+import { Package2, SearchX } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 interface PartsResultsProps {
   parts: Part[];
@@ -56,10 +63,23 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {parts.map((part) => (
-          <PartCard key={part.id} part={part} />
-        ))}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-mechanica-50">
+              <TableHead className="font-bold text-mechanica-800">Part Name</TableHead>
+              <TableHead className="font-bold text-mechanica-800 text-right">Price</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {parts.map((part) => (
+              <TableRow key={part.id} className="hover:bg-mechanica-50">
+                <TableCell className="font-medium">{part.name}</TableCell>
+                <TableCell className="text-right font-bold">${part.price.toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
