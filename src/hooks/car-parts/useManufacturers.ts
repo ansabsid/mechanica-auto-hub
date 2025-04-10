@@ -3,8 +3,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Manufacturer } from "./types";
 
-// Set a timeout for fetch operations (in milliseconds)
-const FETCH_TIMEOUT = 5000;
+// Increase timeout for fetch operations (in milliseconds)
+const FETCH_TIMEOUT = 10000; // Increase from 5000 to 10000 ms (10 seconds)
 const MAX_RETRIES = 2;
 
 export const useManufacturers = () => {
@@ -13,21 +13,32 @@ export const useManufacturers = () => {
   // Add a ref to track if we've already attempted to fetch
   const fetchAttemptedRef = useRef<boolean>(false);
 
-  // Fetch with timeout helper
-  const fetchWithTimeout = async (promise) => {
+  // Fetch with timeout helper with improved retries
+  const fetchWithTimeout = async (promise, retryCount = 0) => {
     let timeoutId;
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error("Request timed out"));
-      }, FETCH_TIMEOUT);
-    });
-
+    
     try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("Request timed out"));
+        }, FETCH_TIMEOUT);
+      });
+
       const result = await Promise.race([promise, timeoutPromise]);
       clearTimeout(timeoutId);
       return result;
     } catch (error) {
       clearTimeout(timeoutId);
+      
+      // If we still have retries left, try again after a delay
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying timeout fetch (${retryCount + 1}/${MAX_RETRIES})...`);
+        const backoffDelay = Math.pow(2, retryCount) * 1000;
+        
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        return fetchWithTimeout(promise, retryCount + 1);
+      }
+      
       throw error;
     }
   };

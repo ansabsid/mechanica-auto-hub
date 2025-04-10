@@ -22,6 +22,7 @@ const CarSearch = () => {
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
   const initialLoadRef = useRef<boolean>(false);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   console.log("CarSearch render - parts:", parts?.length || 0);
   console.log("CarSearch render - allParts:", allParts?.length || 0);
@@ -56,6 +57,15 @@ const CarSearch = () => {
     }
   }, [isLoading, allParts, fetchAllParts]);
 
+  // Clean up any retry timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
     if (resultsCount === 0) {
@@ -78,11 +88,17 @@ const CarSearch = () => {
   };
 
   const handleRefresh = () => {
+    // Clear any existing retry timeouts
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+    
     toast({
       title: "Refreshing Parts",
       description: "Getting the latest parts data...",
       duration: 3000,
     });
+    
     fetchAllParts();
   };
 

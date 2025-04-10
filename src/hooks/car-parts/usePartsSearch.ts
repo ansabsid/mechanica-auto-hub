@@ -5,8 +5,9 @@ import { Part, Manufacturer, Model } from "./types";
 import { generateMockParts } from "./utils";
 import { useToast } from "@/hooks/use-toast";
 
-// Set a timeout for fetch operations (in milliseconds)
-const FETCH_TIMEOUT = 5000;
+// Increase the timeout for fetch operations (in milliseconds)
+const FETCH_TIMEOUT = 10000; // Increase from 5000 to 10000 ms (10 seconds)
+const MAX_RETRIES = 2;
 
 export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
   const [parts, setParts] = useState<Part[]>([]);
@@ -17,33 +18,46 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
   const [queryTime, setQueryTime] = useState<number>(0);
   const { toast } = useToast();
 
-  // Fetch all parts on mount
-  useEffect(() => {
-    fetchAllParts();
-  }, []);
-
   // Create a fetch with timeout function to handle network timeouts
-  const fetchWithTimeout = async (promise) => {
+  const fetchWithTimeout = async (promise, retryCount = 0) => {
     let timeoutId;
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error("Request timed out"));
-      }, FETCH_TIMEOUT);
-    });
-
+    
     try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("Request timed out"));
+        }, FETCH_TIMEOUT);
+      });
+
       const result = await Promise.race([promise, timeoutPromise]);
       clearTimeout(timeoutId);
       return result;
     } catch (error) {
       clearTimeout(timeoutId);
+      
+      // If we have retries left, retry the fetch with exponential backoff
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying fetch (${retryCount + 1}/${MAX_RETRIES})...`);
+        const backoffDelay = Math.pow(2, retryCount) * 1000;
+        
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        return fetchWithTimeout(promise, retryCount + 1);
+      }
+      
       throw error;
     }
   };
 
-  // Fetch all available parts from the database
+  // Fetch all available parts from the database with improved error handling
   const fetchAllParts = async () => {
     console.log("Fetching all available parts");
+    
+    // If already loading, don't start another fetch
+    if (isLoading) {
+      console.log("Already loading parts, skipping duplicate fetch");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -77,12 +91,27 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         setAllParts(processedParts);
         setParts(processedParts);
         setSearchCompleted(true);
+        
+        // Show success toast only if we got real data
+        toast({
+          title: "Parts Loaded Successfully",
+          description: `Loaded ${processedParts.length} parts from database`,
+          duration: 3000,
+        });
       } else {
         console.log("No parts found in database, generating mock parts for initial display");
         const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
         setAllParts(mockParts);
         setParts(mockParts);
         setSearchCompleted(true);
+        
+        // Show toast for mock data
+        toast({
+          title: "Using Sample Data",
+          description: "No parts found in database. Showing sample data instead.",
+          variant: "default",
+          duration: 5000,
+        });
       }
     } catch (error: any) {
       console.error("Error fetching all parts:", error.message);
@@ -114,7 +143,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     setQueryTime(0);
   };
 
-  // Search for parts - improved with timeout handling
+  // Search for parts with improved error handling
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
     console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);
