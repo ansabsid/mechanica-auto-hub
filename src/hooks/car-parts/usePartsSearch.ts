@@ -59,14 +59,18 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("Supabase query result:", data);
       
-      // Process and enhance the database results with garage information
+      // Process and enhance the database results with default garage information
       const validParts: Part[] = (data || []).map(part => {
         return {
           ...part,
           garages: part.garage_id ? { 
             name: 'AutoCare Dubai',
             location: 'Dubai Marina'
-          } : null
+          } : { 
+            // Provide default garage info even when garage_id is null
+            name: 'Mechanica Service Center',
+            location: 'Dubai, UAE'
+          }
         } as Part;
       });
       
