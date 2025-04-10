@@ -24,7 +24,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     return null;
   }
 
-  // Check if parts array is null, undefined or empty
+  // Check if parts array is empty
   if (!parts || parts.length === 0) {
     console.log("No parts found in PartsResults component");
     return (
@@ -36,7 +36,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     );
   }
 
-  console.log("Rendering parts list with", parts.length, "items");
+  console.log("Rendering parts list with", parts.length, "items:", parts);
   
   return (
     <div className="parts-results-container animate-in fade-in-50 duration-300">

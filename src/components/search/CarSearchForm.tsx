@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCarParts, Manufacturer, Model } from "@/hooks/useCarParts";
 
 interface CarSearchFormProps {
-  onSearch: (results: number) => void;
+  onSearch: (resultsCount: number) => void;
 }
 
 const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
@@ -57,6 +57,8 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       console.log("Starting search with params:", { manufacturer, model, year });
       const count = await searchParts(manufacturer, model, year);
       console.log("Search returned count:", count);
+      
+      // Pass count to parent component to update the UI
       onSearch(count);
     } catch (error: any) {
       console.error("Search failed:", error);
@@ -85,6 +87,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
               setModel(""); // Reset model when manufacturer changes
             }}
             disabled={isLoading}
+            value={manufacturer}
           >
             <SelectTrigger id="manufacturer" className="w-full">
               <SelectValue placeholder="Select manufacturer" />
@@ -125,7 +128,10 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
           <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
             Make Year
           </label>
-          <Select onValueChange={(value) => setYear(value)}>
+          <Select 
+            onValueChange={(value) => setYear(value)}
+            value={year}
+          >
             <SelectTrigger id="year" className="w-full">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>

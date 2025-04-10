@@ -10,8 +10,16 @@ const CarSearch = () => {
   const { parts, isSearching, searchCompleted, resetSearch } = useCarParts();
   const { toast } = useToast();
 
+  // Log initial state for debugging
+  console.log("Initial render - showResults:", showResults);
+  console.log("Initial render - parts:", parts);
+  console.log("Initial render - searchCompleted:", searchCompleted);
+
   // Add effect to update UI when search completes
   useEffect(() => {
+    console.log("Search completed effect triggered:", searchCompleted);
+    console.log("Parts in effect:", parts);
+    
     if (searchCompleted) {
       setShowResults(true);
       
@@ -21,7 +29,7 @@ const CarSearch = () => {
           description: "No parts found matching your criteria. Try different search parameters.",
         });
       } else {
-        console.log("Parts found:", parts.length);
+        console.log("Parts found effect:", parts.length);
         toast({
           title: "Parts Found",
           description: `Found ${parts.length} parts matching your vehicle.`,
@@ -33,23 +41,15 @@ const CarSearch = () => {
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
+    // This function will be called after search is completed
     setShowResults(true);
   };
 
-  // Enhanced debugging
-  console.log("Current parts in CarSearch:", parts); 
-  console.log("Show results:", showResults);
-  console.log("Search completed:", searchCompleted);
-  console.log("Is searching:", isSearching);
-
   return (
     <div className="w-full max-w-6xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Find Parts for Your Vehicle</h2>
-        <CarSearchForm onSearch={handleSearchComplete} />
-      </div>
+      <CarSearchForm onSearch={handleSearchComplete} />
       
-      <div className="transition-all duration-300">
+      <div className="mt-8 transition-all duration-300">
         {isSearching ? (
           <div className="flex justify-center items-center p-8 bg-white rounded-xl shadow-sm">
             <div className="animate-pulse text-center">
@@ -57,9 +57,11 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          <div className={`bg-white rounded-xl shadow-sm p-6 ${showResults ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
-            <PartsResults parts={parts} visible={showResults} />
-          </div>
+          showResults && (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <PartsResults parts={parts} visible={showResults} />
+            </div>
+          )
         )}
       </div>
     </div>
