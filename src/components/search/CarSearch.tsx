@@ -94,7 +94,7 @@ const CarSearch = () => {
         const { data, error } = await supabase
           .from('models')
           .select('*')
-          .eq('manufacturer_id', manufacturer)
+          .eq('manufacturer_id', parseInt(manufacturer))
           .order('name');
         
         if (error) {
@@ -175,9 +175,9 @@ const CarSearch = () => {
           *,
           garages:garage_id (name, location)
         `)
-        .eq('manufacturer_id', manufacturer)
-        .eq('model_id', model)
-        .eq('year', year);
+        .eq('manufacturer_id', parseInt(manufacturer))
+        .eq('model_id', parseInt(model))
+        .eq('year', parseInt(year));
       
       if (error) {
         throw error;
