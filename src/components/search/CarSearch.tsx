@@ -20,6 +20,8 @@ const CarSearch = () => {
           title: "No Results",
           description: "No parts found matching your criteria. Showing example parts instead.",
         });
+      } else {
+        console.log("Parts found:", parts.length);
       }
     }
   }, [searchCompleted, parts.length, toast]);

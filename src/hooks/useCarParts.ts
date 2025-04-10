@@ -177,8 +177,9 @@ export const useCarParts = () => {
       
       console.log("Valid parts from DB:", validParts);
       
-      // Always generate mock parts for better UX
+      // Generate mock parts for this car
       const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
+      console.log("Generated mock parts:", mockParts);
       
       // Use DB parts if found, otherwise use mock parts
       let finalParts = validParts.length > 0 ? validParts : mockParts;

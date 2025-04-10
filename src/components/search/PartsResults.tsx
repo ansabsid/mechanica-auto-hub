@@ -16,6 +16,8 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     return null;
   }
 
+  console.log("Parts in PartsResults:", parts); // Debug log
+
   if (!parts || parts.length === 0) {
     return (
       <div className="text-center p-8 bg-gray-50 rounded-xl">
