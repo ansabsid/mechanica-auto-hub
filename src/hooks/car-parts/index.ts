@@ -29,6 +29,7 @@ export const useCarParts = () => {
     parts,
     isSearching,
     searchCompleted,
+    queryTime,
     searchParts,
     resetSearch
   } = usePartsSearch(manufacturers, models);
@@ -41,6 +42,7 @@ export const useCarParts = () => {
 
   console.log("useCarParts hook - current parts state:", parts);
   console.log("useCarParts hook - searchCompleted:", searchCompleted);
+  console.log("useCarParts hook - queryTime:", queryTime);
 
   return {
     manufacturers,
@@ -50,6 +52,7 @@ export const useCarParts = () => {
     isLoading,
     isSearching,
     searchCompleted,
+    queryTime,
     fetchManufacturers,
     fetchModels,
     searchParts,

@@ -9,6 +9,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
   const [parts, setParts] = useState<Part[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
+  const [queryTime, setQueryTime] = useState<number>(0);
   const { toast } = useToast();
 
   // Reset search state
@@ -16,6 +17,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     console.log("Resetting search state");
     setParts([]);
     setSearchCompleted(false);
+    setQueryTime(0);
   };
 
   // Search for parts - improved to ensure proper state updates and database queries
@@ -27,6 +29,9 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     setParts([]);
     
     try {
+      // Start timing the query
+      const startTime = performance.now();
+      
       // Convert id strings to numbers
       const mfrId = parseInt(manufacturerId);
       const mdlId = parseInt(modelId);
@@ -40,6 +45,13 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         .eq('manufacturer_id', mfrId)
         .eq('model_id', mdlId)
         .eq('year', yearNum);
+      
+      // End timing the query
+      const endTime = performance.now();
+      const queryDuration = endTime - startTime;
+      setQueryTime(queryDuration);
+      
+      console.log(`Database query completed in ${queryDuration.toFixed(2)}ms`);
       
       if (error) {
         throw error;
@@ -69,12 +81,13 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         // Show success toast message
         toast({
           title: "Parts Found",
-          description: `Found ${validParts.length} parts matching your vehicle.`,
+          description: `Found ${validParts.length} parts matching your vehicle in ${queryDuration.toFixed(0)}ms`,
           duration: 5000,
         });
       } else {
         // Only generate mock parts if no real parts found
         console.log("No parts found in database, generating mock parts...");
+        const mockStartTime = performance.now();
         const mockParts = generateMockParts(
           mfrId, 
           mdlId, 
@@ -82,13 +95,15 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
           manufacturers,
           models
         );
+        const mockEndTime = performance.now();
         console.log("Using mock parts:", mockParts.length);
+        console.log(`Mock data generated in ${(mockEndTime - mockStartTime).toFixed(2)}ms`);
         finalParts = mockParts;
         
         // Show toast message for mock data
         toast({
           title: "Using Sample Data",
-          description: `No exact matches found. Showing ${mockParts.length} sample parts.`,
+          description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockParts.length} sample parts.`,
           variant: "default",
           duration: 5000,
         });
@@ -105,10 +120,15 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
+      // End timing on error
+      const endTime = performance.now();
+      const queryDuration = endTime - startTime;
+      setQueryTime(queryDuration);
+      
       // Show error toast
       toast({
         title: "Search Error",
-        description: `Error searching for parts: ${error.message}`,
+        description: `Error searching for parts (${queryDuration.toFixed(0)}ms): ${error.message}`,
         variant: "destructive",
         duration: 5000,
       });
@@ -136,6 +156,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     parts,
     isSearching,
     searchCompleted,
+    queryTime,
     searchParts,
     resetSearch
   };
