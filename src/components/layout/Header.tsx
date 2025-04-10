@@ -18,7 +18,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <div className="bg-mechanica-100 text-mechanica-800 font-bold p-2 rounded-lg">
-              <span className="text-mechanica-600 text-xl">Mechanica</span>
+              <span className="text-mechanica-600 text-xl">Bookmyparts</span>
             </div>
           </Link>
 

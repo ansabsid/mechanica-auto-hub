@@ -21,7 +21,7 @@ const Contact = () => {
       <section className="py-12 md:py-20 bg-mechanica-50">
         <div className="container-custom text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Contact <span className="text-mechanica-600">Mechanica</span>
+            Contact <span className="text-mechanica-600">Bookmyparts</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Get in touch with our team for support, partnership inquiries, or any questions.
@@ -54,10 +54,10 @@ const Contact = () => {
               <h3 className="text-xl font-semibold mb-2">Email Us</h3>
               <p className="text-gray-600 mb-2">Send us an email and we'll respond as soon as possible</p>
               <a 
-                href="mailto:support@mechanica.com" 
+                href="mailto:support@bookmyparts.com" 
                 className="text-mechanica-600 font-medium hover:underline"
               >
-                support@mechanica.com
+                support@bookmyparts.com
               </a>
             </div>
 
@@ -200,7 +200,7 @@ const Contact = () => {
               <div className="bg-mechanica-50 p-6 rounded-xl">
                 <h3 className="text-xl font-semibold mb-2">How do I become a garage partner?</h3>
                 <p className="text-gray-600">
-                  To join Mechanica as a garage partner, visit our "For Garages" page and
+                  To join Bookmyparts as a garage partner, visit our "For Garages" page and
                   complete the application form. Our team will review your application and
                   contact you within 48 hours.
                 </p>

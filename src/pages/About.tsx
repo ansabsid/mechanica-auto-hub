@@ -11,7 +11,7 @@ const About = () => {
       <section className="py-12 md:py-24 bg-mechanica-50">
         <div className="container-custom text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            About <span className="text-mechanica-600">Mechanica</span>
+            About <span className="text-mechanica-600">Bookmyparts</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Simplifying car maintenance and parts purchasing across the MENA region.
@@ -26,7 +26,7 @@ const About = () => {
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
               <p className="text-gray-600 mb-4">
-                Mechanica was founded in 2023 with a simple mission: to transform how car owners
+                Bookmyparts was founded in 2023 with a simple mission: to transform how car owners
                 in the MENA region find parts and book maintenance services.
               </p>
               <p className="text-gray-600 mb-4">
@@ -35,7 +35,7 @@ const About = () => {
                 quotes and appointment times.
               </p>
               <p className="text-gray-600 mb-4">
-                We built Mechanica to bridge this gap - creating a digital marketplace that 
+                We built Bookmyparts to bridge this gap - creating a digital marketplace that 
                 connects car owners directly with suppliers and service providers, making the 
                 process transparent, efficient, and hassle-free.
               </p>
@@ -43,7 +43,7 @@ const About = () => {
             <div className="order-first lg:order-last">
               <img
                 src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format"
-                alt="Mechanica Team"
+                alt="Bookmyparts Team"
                 className="rounded-xl shadow-card object-cover w-full"
               />
             </div>
@@ -104,7 +104,7 @@ const About = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Values</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              The core principles that guide everything we do at Mechanica
+              The core principles that guide everything we do at Bookmyparts
             </p>
           </div>
 
@@ -167,7 +167,7 @@ const About = () => {
       {/* Join Us */}
       <section className="py-16 bg-gradient-to-r from-mechanica-600 to-mechanica-700 text-white">
         <div className="container-custom text-center">
-          <h2 className="text-3xl font-bold mb-6">Join the Mechanica Community</h2>
+          <h2 className="text-3xl font-bold mb-6">Join the Bookmyparts Community</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Whether you're a car owner looking for better maintenance options or a garage wanting to
             grow your business, we're here to help you succeed.

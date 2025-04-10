@@ -12,7 +12,7 @@ const Footer = () => {
           <div className="col-span-1">
             <div className="mb-4">
               <div className="bg-mechanica-100 text-mechanica-800 font-bold p-2 rounded-lg inline-block">
-                <span className="text-mechanica-600 text-xl">Mechanica</span>
+                <span className="text-mechanica-600 text-xl">Bookmyparts</span>
               </div>
             </div>
             <p className="text-gray-600 mb-4">
@@ -86,7 +86,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="text-mechanica-500 mr-3 flex-shrink-0" />
-                <span className="text-gray-600">support@mechanica.com</span>
+                <span className="text-gray-600">support@bookmyparts.com</span>
               </li>
             </ul>
           </div>
@@ -95,7 +95,7 @@ const Footer = () => {
         <div className="border-t border-gray-200 mt-10 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} Mechanica. All rights reserved.
+              © {new Date().getFullYear()} Bookmyparts. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-500 hover:text-mechanica-600 text-sm">
