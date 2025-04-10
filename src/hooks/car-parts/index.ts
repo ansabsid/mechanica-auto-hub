@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";
 import { usePartsSearch } from "./usePartsSearch";
@@ -8,6 +8,7 @@ import { CarPartsSearchState } from "./types";
 
 export * from "./types";
 
+// Create and export the main hook that combines all functionality
 export const useCarParts = () => {
   // Get manufacturers functionality
   const { 

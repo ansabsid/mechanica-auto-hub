@@ -73,9 +73,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setParts(finalParts);
       
       // Important: Set search completed AFTER setting parts to ensure proper rendering
-      setTimeout(() => {
-        setSearchCompleted(true);
-      }, 50);
+      setSearchCompleted(true);
       
       return finalParts.length;
     } catch (error: any) {
@@ -94,16 +92,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setParts(mockParts);
       
       // Set search completed state
-      setTimeout(() => {
-        setSearchCompleted(true);
-      }, 50);
+      setSearchCompleted(true);
       
       return mockParts.length;
     } finally {
-      // Delay setting isSearching to false to ensure UI transitions properly
-      setTimeout(() => {
-        setIsSearching(false);
-      }, 300);
+      // Set isSearching to false after everything is done
+      setIsSearching(false);
     }
   };
 
