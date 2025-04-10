@@ -28,6 +28,9 @@ const CarSearch = () => {
     setShowResults(true);
   };
 
+  console.log("Current parts in CarSearch:", parts); // Add logging to debug
+  console.log("Show results:", showResults);
+
   return (
     <div className="w-full">
       <CarSearchForm onSearch={handleSearchComplete} />

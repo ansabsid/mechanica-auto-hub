@@ -16,7 +16,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     return null;
   }
 
-  if (parts.length === 0) {
+  if (!parts || parts.length === 0) {
     return (
       <div className="text-center p-8 bg-gray-50 rounded-xl">
         <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />

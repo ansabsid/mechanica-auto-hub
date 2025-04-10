@@ -175,6 +175,8 @@ export const useCarParts = () => {
         } as Part;
       });
       
+      console.log("Valid parts from DB:", validParts);
+      
       // ALWAYS show mock data for better user experience
       let finalParts = validParts;
       
@@ -182,6 +184,7 @@ export const useCarParts = () => {
       if (validParts.length === 0) {
         const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
         finalParts = mockParts;
+        console.log("Using mock parts:", mockParts);
       }
       
       setParts(finalParts);
@@ -192,6 +195,7 @@ export const useCarParts = () => {
       
       // Show mock data on error for better user experience
       const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
+      console.log("Using mock parts due to error:", mockParts);
       
       setParts(mockParts);
       setSearchCompleted(true);
