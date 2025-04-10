@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import {
   BrowserRouter as Router,
   Route,
@@ -14,11 +14,20 @@ import GarageDashboard from "@/pages/GarageDashboard";
 import { AuthProvider, useAuth } from "@/hooks/auth";
 import { Toaster } from "@/components/ui/toaster";
 
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="h-screen w-full flex items-center justify-center">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-mechanica-600"></div>
+  </div>
+);
+
 const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <Suspense fallback={<LoadingFallback />}>
+          <AppContent />
+        </Suspense>
         <Toaster />
       </AuthProvider>
     </Router>
@@ -26,7 +35,12 @@ const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, userRole, isLoading } = useAuth();
+
+  // Show loading spinner while authentication is being checked
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
 
   return (
     <Routes>

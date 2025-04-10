@@ -57,11 +57,14 @@ export const useCarParts = () => {
       // Load manufacturers first
       fetchManufacturers();
       
-      // Then fetch all parts
-      fetchAllParts();
+      // Then fetch all parts (but only if manufacturers loaded)
+      if (manufacturers.length > 0) {
+        fetchAllParts();
+      }
     }
-  }, [fetchManufacturers, fetchAllParts]);
+  }, [fetchManufacturers, fetchAllParts, manufacturers.length]);
 
+  console.log("useCarParts hook - current manufacturers:", manufacturers?.length || 0);
   console.log("useCarParts hook - current parts state:", parts?.length || 0);
   console.log("useCarParts hook - all parts count:", allParts?.length || 0);
   console.log("useCarParts hook - searchCompleted:", searchCompleted);

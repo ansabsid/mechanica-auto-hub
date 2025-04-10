@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Manufacturer } from "./types";
 
 // Increase timeout for fetch operations (in milliseconds)
-const FETCH_TIMEOUT = 10000; // Increase from 5000 to 10000 ms (10 seconds)
-const MAX_RETRIES = 2;
+const FETCH_TIMEOUT = 15000; // Increase from 10000 to 15000 ms (15 seconds)
+const MAX_RETRIES = 3;  // Increase max retries
 
 export const useManufacturers = () => {
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
@@ -45,6 +45,12 @@ export const useManufacturers = () => {
 
   // Fetch manufacturers with retries
   const fetchManufacturers = useCallback(async (retryCount = 0) => {
+    // If manufacturers already loaded, don't fetch again
+    if (manufacturers.length > 0) {
+      console.log("Manufacturers already loaded, skipping fetch");
+      return;
+    }
+    
     // Only set loading to true on the first attempt
     if (retryCount === 0) {
       setIsLoading(true);
@@ -109,7 +115,7 @@ export const useManufacturers = () => {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [manufacturers.length]);
 
   // Auto-fetch manufacturers on mount, but only once
   useEffect(() => {
