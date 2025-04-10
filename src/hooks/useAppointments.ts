@@ -2,30 +2,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Appointment, AvailableSlot } from "@/types/appointment.types";
+import { 
+  fetchUserAppointmentsFromApi, 
+  mockFetchAvailableSlots,
+  bookAppointmentApi,
+  cancelAppointmentApi
+} from "@/api/appointmentApi";
 
-export interface Appointment {
-  id: string;
-  user_id: string;
-  garage_id: string;
-  service_type: string;
-  appointment_date: string;
-  appointment_time: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  garage?: {
-    name: string;
-    location: string;
-  };
-}
-
-export interface AvailableSlot {
-  date: string;
-  time: string;
-  garage_id: string;
-  garage_name: string;
-}
+export type { Appointment, AvailableSlot };
 
 export const useAppointments = () => {
   const [userAppointments, setUserAppointments] = useState<Appointment[]>([]);
@@ -49,35 +34,8 @@ export const useAppointments = () => {
 
     setIsLoading(true);
     try {
-      // Using raw SQL query to avoid type issues with type assertion
-      const { data, error } = await (supabase
-        .from('appointments') as any)
-        .select('*, garage:garage_id(name, location)')
-        .eq('user_id', session.user.id)
-        .order('appointment_date', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Handle the data with explicit type casting
-      if (data) {
-        const typedAppointments = data.map((item: any) => ({
-          id: item.id,
-          user_id: item.user_id,
-          garage_id: item.garage_id,
-          service_type: item.service_type,
-          appointment_date: item.appointment_date,
-          appointment_time: item.appointment_time,
-          status: item.status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-          notes: item.notes,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          garage: item.garage ? {
-            name: item.garage.name || 'Unknown',
-            location: item.garage.location || 'Unknown'
-          } : undefined
-        }));
-        setUserAppointments(typedAppointments);
-      }
+      const appointments = await fetchUserAppointmentsFromApi(session.user.id);
+      setUserAppointments(appointments);
     } catch (error: any) {
       console.error("Error fetching appointments:", error.message);
       toast({
@@ -96,24 +54,8 @@ export const useAppointments = () => {
     setIsLoading(true);
     
     try {
-      // This is a mock implementation - in real app, this would query the database
-      // for available time slots based on garage schedule and existing appointments
-      const mockSlots: AvailableSlot[] = [
-        { date: '2025-04-15', time: '09:00', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-        { date: '2025-04-15', time: '11:30', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-        { date: '2025-04-15', time: '14:00', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-        { date: '2025-04-16', time: '10:00', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-        { date: '2025-04-16', time: '13:30', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-        { date: '2025-04-17', time: '09:30', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-        { date: '2025-04-17', time: '12:00', garage_id: garageId, garage_name: 'Auto Care Dubai' },
-      ];
-      
-      if (date) {
-        const filteredSlots = mockSlots.filter(slot => slot.date === date);
-        setAvailableSlots(filteredSlots);
-      } else {
-        setAvailableSlots(mockSlots);
-      }
+      const slots = mockFetchAvailableSlots(garageId, date);
+      setAvailableSlots(slots);
     } catch (error: any) {
       console.error("Error fetching available slots:", error.message);
       toast({
@@ -147,42 +89,14 @@ export const useAppointments = () => {
 
     setIsBooking(true);
     try {
-      const { data, error } = await (supabase as any).rpc('insert_appointment', {
-        p_user_id: session.user.id,
-        p_garage_id: garageId,
-        p_service_type: serviceType,
-        p_appointment_date: date,
-        p_appointment_time: time,
-        p_notes: notes || null
-      });
-      
-      if (error) {
-        // Fallback to direct insert if RPC isn't available
-        const { data: insertData, error: insertError } = await (supabase
-          .from('appointments') as any)
-          .insert({
-            user_id: session.user.id,
-            garage_id: garageId,
-            service_type: serviceType,
-            appointment_date: date,
-            appointment_time: time,
-            notes: notes || null,
-            status: 'pending'
-          })
-          .select()
-          .single();
-          
-        if (insertError) throw insertError;
-        
-        toast({
-          title: "Appointment booked",
-          description: "Your appointment has been scheduled successfully",
-        });
-        
-        // Refresh appointments list
-        await fetchUserAppointments();
-        return insertData;
-      }
+      const appointment = await bookAppointmentApi(
+        session.user.id,
+        garageId,
+        serviceType,
+        date,
+        time,
+        notes
+      );
       
       toast({
         title: "Appointment booked",
@@ -191,7 +105,7 @@ export const useAppointments = () => {
       
       // Refresh appointments list
       await fetchUserAppointments();
-      return data;
+      return appointment;
     } catch (error: any) {
       console.error("Error booking appointment:", error.message);
       toast({
@@ -209,20 +123,7 @@ export const useAppointments = () => {
   const cancelAppointment = async (appointmentId: string) => {
     setIsLoading(true);
     try {
-      const { error } = await (supabase as any).rpc('update_appointment_status', { 
-        p_appointment_id: appointmentId,
-        p_status: 'cancelled'
-      });
-      
-      if (error) {
-        // Fallback to direct update if RPC isn't available
-        const { error: updateError } = await (supabase
-          .from('appointments') as any)
-          .update({ status: 'cancelled' })
-          .eq('id', appointmentId);
-          
-        if (updateError) throw updateError;
-      }
+      await cancelAppointmentApi(appointmentId);
       
       toast({
         title: "Appointment cancelled",
