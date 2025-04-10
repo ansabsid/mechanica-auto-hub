@@ -5,6 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Profile {
+  id: string;
+  email: string;
+  role: "customer" | "garage";
+  created_at?: string;
+  updated_at?: string;
+}
+
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
