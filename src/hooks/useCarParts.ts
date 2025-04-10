@@ -162,8 +162,22 @@ export const useCarParts = () => {
         throw error;
       }
       
-      setParts(data || []);
-      return data?.length || 0;
+      // Process the data to ensure it matches the Part interface
+      const validParts: Part[] = (data || []).map(part => {
+        // Make sure garages property conforms to the Part interface
+        return {
+          ...part,
+          garages: part.garages && typeof part.garages === 'object' 
+            ? { 
+                name: (part.garages as any).name || 'Unknown Garage',
+                location: (part.garages as any).location || 'Unknown Location'
+              }
+            : null
+        } as Part;
+      });
+      
+      setParts(validParts);
+      return validParts.length || 0;
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       setParts([]);
