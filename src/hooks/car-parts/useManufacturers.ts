@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Manufacturer } from "./types";
 
@@ -10,6 +10,8 @@ const MAX_RETRIES = 2;
 export const useManufacturers = () => {
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  // Add a ref to track if we've already attempted to fetch
+  const fetchAttemptedRef = useRef<boolean>(false);
 
   // Fetch with timeout helper
   const fetchWithTimeout = async (promise) => {
@@ -32,7 +34,11 @@ export const useManufacturers = () => {
 
   // Fetch manufacturers with retries
   const fetchManufacturers = useCallback(async (retryCount = 0) => {
-    setIsLoading(true);
+    // Only set loading to true on the first attempt
+    if (retryCount === 0) {
+      setIsLoading(true);
+    }
+    
     try {
       console.log("Fetching manufacturers from Supabase...");
       
@@ -63,6 +69,9 @@ export const useManufacturers = () => {
           { id: 7, name: "Nissan" },
         ]);
       }
+      
+      // Always set loading to false after a successful fetch
+      setIsLoading(false);
     } catch (error: any) {
       console.error('Error fetching manufacturers:', error.message);
       
@@ -88,17 +97,15 @@ export const useManufacturers = () => {
         ]);
         setIsLoading(false);
       }
-    } finally {
-      // Only set loading to false if we're not retrying
-      if (retryCount >= MAX_RETRIES) {
-        setIsLoading(false);
-      }
     }
   }, []);
 
-  // Auto-fetch manufacturers on mount
+  // Auto-fetch manufacturers on mount, but only once
   useEffect(() => {
-    fetchManufacturers();
+    if (!fetchAttemptedRef.current) {
+      fetchAttemptedRef.current = true;
+      fetchManufacturers();
+    }
   }, [fetchManufacturers]);
 
   return {

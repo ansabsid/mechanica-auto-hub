@@ -21,6 +21,7 @@ const CarSearch = () => {
   } = useCarParts();
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
+  const initialLoadRef = useRef<boolean>(false);
 
   console.log("CarSearch render - parts:", parts?.length || 0);
   console.log("CarSearch render - allParts:", allParts?.length || 0);
@@ -46,10 +47,11 @@ const CarSearch = () => {
     }
   }, [searchCompleted, parts]);
 
-  // Make sure we have data to display
+  // Make sure we have data to display, but only on initial load
   useEffect(() => {
-    if (!isLoading && (!allParts || allParts.length === 0)) {
-      console.log("No parts found, fetching all parts...");
+    if (!initialLoadRef.current && !isLoading && (!allParts || allParts.length === 0)) {
+      console.log("Initial load: No parts found, fetching all parts...");
+      initialLoadRef.current = true; // Set the flag to prevent repeated fetches
       fetchAllParts();
     }
   }, [isLoading, allParts, fetchAllParts]);

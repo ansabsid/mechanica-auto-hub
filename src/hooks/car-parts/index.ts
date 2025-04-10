@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";
 import { usePartsSearch } from "./usePartsSearch";
@@ -10,6 +10,9 @@ export * from "./types";
 
 // Create and export the main hook that combines all functionality
 export const useCarParts = () => {
+  // Add a ref to track initialization
+  const initializedRef = useRef<boolean>(false);
+  
   // Get manufacturers functionality
   const { 
     manufacturers, 
@@ -43,13 +46,20 @@ export const useCarParts = () => {
   // Combine loading states
   const isLoading = isLoadingManufacturers || isLoadingModels || isLoadingParts;
 
-  // Fetch all parts on component mount
+  // Fetch data on mount, but only once
   useEffect(() => {
-    // Load all manufacturers first
-    fetchManufacturers();
-    
-    // Then fetch all parts
-    fetchAllParts();
+    if (!initializedRef.current) {
+      console.log("Initializing useCarParts hook - fetching data");
+      
+      // Set the initialized flag to true to prevent future fetches
+      initializedRef.current = true;
+      
+      // Load manufacturers first
+      fetchManufacturers();
+      
+      // Then fetch all parts
+      fetchAllParts();
+    }
   }, [fetchManufacturers, fetchAllParts]);
 
   console.log("useCarParts hook - current parts state:", parts?.length || 0);
