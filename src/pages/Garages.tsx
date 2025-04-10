@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -9,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   PhoneCall, 
   Mail, 
-  Shop, 
+  Store, 
   DollarSign, 
   Users, 
   BarChart, 
@@ -321,7 +320,7 @@ const Garages = () => {
                     <Label htmlFor="garage-name">Garage/Business Name</Label>
                     <div className="relative mt-1">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Shop size={18} className="text-gray-400" />
+                        <Store size={18} className="text-gray-400" />
                       </div>
                       <Input id="garage-name" className="pl-10" required />
                     </div>
