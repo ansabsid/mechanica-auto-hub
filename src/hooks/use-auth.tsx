@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
@@ -99,6 +100,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           setUserRole(null);
+          
+          // If user signed out, navigate to login
+          if (event === 'SIGNED_OUT') {
+            console.log("User signed out, navigating to login");
+            navigate("/login");
+          }
         }
       }
     );
@@ -305,21 +312,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log("Signing out...");
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error signing out:", error.message);
+        throw error;
+      }
+      
+      console.log("Successfully signed out");
       setUser(null);
       setUserRole(null);
+      
+      // Explicitly navigate to login page
       navigate("/login");
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
       });
     } catch (error: any) {
+      console.error("Error in signOut function:", error);
       toast({
         variant: "destructive",
         title: "Logout failed",
         description: error.message || "An error occurred during logout",
       });
-      console.error("Error signing out:", error.message);
     }
   };
 

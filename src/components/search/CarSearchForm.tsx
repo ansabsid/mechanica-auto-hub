@@ -29,11 +29,14 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   } = useCarParts();
 
   useEffect(() => {
+    console.log("Fetching manufacturers...");
     fetchManufacturers();
   }, []);
 
   useEffect(() => {
     if (manufacturer) {
+      console.log("Manufacturer selected:", manufacturer);
+      console.log("Fetching models for manufacturer:", manufacturer);
       fetchModels(manufacturer);
       // Reset model when manufacturer changes
       setModel("");
@@ -70,6 +73,10 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     }
   };
 
+  console.log("Current manufacturers:", manufacturers);
+  console.log("Current models:", models);
+  console.log("Current selection - manufacturer:", manufacturer, "model:", model, "year:", year);
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-card max-w-4xl w-full mx-auto">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
@@ -83,6 +90,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
           </label>
           <Select 
             onValueChange={(value) => {
+              console.log("Manufacturer selected:", value);
               setManufacturer(value);
               setModel(""); // Reset model when manufacturer changes
             }}
@@ -92,7 +100,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
             <SelectTrigger id="manufacturer" className="w-full">
               <SelectValue placeholder="Select manufacturer" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="bg-white z-50">
               {manufacturers.map((mfr) => (
                 <SelectItem key={mfr.id} value={mfr.id.toString()}>
                   {mfr.name}
@@ -107,14 +115,17 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
             Car Model
           </label>
           <Select 
-            onValueChange={(value) => setModel(value)} 
+            onValueChange={(value) => {
+              console.log("Model selected:", value);
+              setModel(value);
+            }} 
             disabled={!manufacturer || isLoading}
             value={model}
           >
             <SelectTrigger id="model" className="w-full">
               <SelectValue placeholder={manufacturer ? "Select model" : "Select manufacturer first"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="bg-white z-50">
               {models.map((mdl) => (
                 <SelectItem key={mdl.id} value={mdl.id.toString()}>
                   {mdl.name}
@@ -129,13 +140,16 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
             Make Year
           </label>
           <Select 
-            onValueChange={(value) => setYear(value)}
+            onValueChange={(value) => {
+              console.log("Year selected:", value);
+              setYear(value);
+            }}
             value={year}
           >
             <SelectTrigger id="year" className="w-full">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="bg-white z-50">
               {years.map((yr) => (
                 <SelectItem key={yr} value={yr.toString()}>
                   {yr}
