@@ -126,7 +126,7 @@ const Register = () => {
               )}
             />
             
-            <Button type="submit" className="w-full bg-mechanica-500 hover:bg-mechanica-600" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
@@ -135,7 +135,7 @@ const Register = () => {
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <Link to="/login" className="text-mechanica-600 hover:underline">
+            <Link to="/login" className="text-bookmyparts-600 hover:underline">
               Log in
             </Link>
           </p>

@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         toast({
           title: "Login successful",
-          description: `Welcome back to Mechanica!`,
+          description: `Welcome back to Bookmyparts!`,
         });
       }
     } catch (error: any) {
@@ -154,7 +154,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // The profile will be created automatically through our database trigger
+        // Create a record in the profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: email,
+            role: role
+          });
+        
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          // We don't throw here because the auth user was created successfully
+          // The database trigger should handle this automatically
+        }
+        
         toast({
           title: "Account created",
           description: "Please check your email to confirm your account",
