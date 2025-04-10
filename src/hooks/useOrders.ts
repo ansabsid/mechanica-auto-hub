@@ -50,15 +50,49 @@ export const useOrders = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+      // Using direct from to avoid type errors
+      const { data, error } = await supabase.rpc('get_user_orders', {
+        p_user_id: session.user.id
+      });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct query
+        const { data: ordersData, error: directError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+          
+        if (directError) throw directError;
+        
+        if (ordersData) {
+          const typedOrders: Order[] = ordersData.map(order => ({
+            id: order.id,
+            user_id: order.user_id,
+            total_amount: order.total_amount,
+            status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+            created_at: order.created_at,
+            updated_at: order.updated_at
+          }));
+          
+          setOrders(typedOrders);
+        }
+        return;
+      }
       
-      setOrders(data || []);
+      if (data) {
+        // Process RPC results
+        const typedOrders: Order[] = data.map(order => ({
+          id: order.id,
+          user_id: order.user_id,
+          total_amount: order.total_amount,
+          status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+          created_at: order.created_at,
+          updated_at: order.updated_at
+        }));
+        
+        setOrders(typedOrders);
+      }
     } catch (error: any) {
       console.error("Error fetching orders:", error.message);
       toast({
@@ -75,31 +109,84 @@ export const useOrders = () => {
   const fetchOrderDetails = async (orderId: string) => {
     setIsLoading(true);
     try {
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
+      // Get order details
+      const { data: orderData, error: orderError } = await supabase.rpc('get_order', {
+        p_order_id: orderId
+      });
       
-      if (orderError) throw orderError;
+      if (orderError) {
+        // Fallback to direct queries
+        const { data: directOrderData, error: directOrderError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+          
+        if (directOrderError) throw directOrderError;
+        
+        // Get order items
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('order_items')
+          .select(`
+            *,
+            part:part_id (name, description)
+          `)
+          .eq('order_id', orderId);
+          
+        if (itemsError) throw itemsError;
+        
+        // Format order with items
+        const orderWithItems: Order = {
+          id: directOrderData.id,
+          user_id: directOrderData.user_id,
+          total_amount: directOrderData.total_amount,
+          status: directOrderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+          created_at: directOrderData.created_at,
+          updated_at: directOrderData.updated_at,
+          items: itemsData?.map(item => ({
+            id: item.id,
+            order_id: item.order_id,
+            part_id: item.part_id,
+            garage_id: item.garage_id,
+            quantity: item.quantity,
+            price: item.price,
+            created_at: item.created_at,
+            part: item.part ? {
+              name: item.part.name,
+              description: item.part.description
+            } : undefined
+          })) || []
+        };
+        
+        setCurrentOrder(orderWithItems);
+        return orderWithItems;
+      }
       
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select(`
-          *,
-          part:part_id (name, description)
-        `)
-        .eq('order_id', orderId);
+      // Process RPC results if successful
+      if (orderData) {
+        const orderWithItems: Order = {
+          ...orderData,
+          status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+          items: orderData.items?.map((item: any) => ({
+            id: item.id,
+            order_id: item.order_id,
+            part_id: item.part_id,
+            garage_id: item.garage_id,
+            quantity: item.quantity,
+            price: item.price,
+            created_at: item.created_at,
+            part: item.part ? {
+              name: item.part.name,
+              description: item.part.description
+            } : undefined
+          })) || []
+        };
+        
+        setCurrentOrder(orderWithItems);
+        return orderWithItems;
+      }
       
-      if (itemsError) throw itemsError;
-      
-      const orderWithItems = {
-        ...orderData,
-        items: itemsData || [],
-      };
-      
-      setCurrentOrder(orderWithItems);
-      return orderWithItems;
+      return null;
     } catch (error: any) {
       console.error("Error fetching order details:", error.message);
       toast({
@@ -136,35 +223,60 @@ export const useOrders = () => {
     }
 
     setIsProcessing(true);
-    // Start a transaction
+    // Start a transaction using RPC
     try {
-      // 1. Create the order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: session.user.id,
-          total_amount: totalAmount,
-          status: 'pending',
-        })
-        .select()
-        .single();
-      
-      if (orderError) throw orderError;
-      
-      // 2. Create order items
       const orderItems = cartItems.map(item => ({
-        order_id: order.id,
         part_id: item.part_id,
         garage_id: item.part.garage_id || null,
         quantity: item.quantity,
         price: item.part.price,
       }));
       
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+      const { data, error } = await supabase.rpc('create_order_with_items', {
+        p_user_id: session.user.id,
+        p_total_amount: totalAmount,
+        p_items: JSON.stringify(orderItems)
+      });
       
-      if (itemsError) throw itemsError;
+      if (error) {
+        // Fallback to manual transaction
+        // 1. Create the order
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            user_id: session.user.id,
+            total_amount: totalAmount,
+            status: 'pending',
+          })
+          .select()
+          .single();
+        
+        if (orderError) throw orderError;
+        
+        // 2. Create order items
+        const formattedItems = cartItems.map(item => ({
+          order_id: order.id,
+          part_id: item.part_id,
+          garage_id: item.part.garage_id || null,
+          quantity: item.quantity,
+          price: item.part.price,
+        }));
+        
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(formattedItems);
+        
+        if (itemsError) throw itemsError;
+        
+        toast({
+          title: "Order created",
+          description: "Your order has been placed successfully!",
+        });
+        
+        // Refresh orders list
+        await fetchUserOrders();
+        return order;
+      }
       
       toast({
         title: "Order created",
@@ -173,7 +285,7 @@ export const useOrders = () => {
       
       // Refresh orders list
       await fetchUserOrders();
-      return order;
+      return data;
     } catch (error: any) {
       console.error("Error creating order:", error.message);
       toast({
@@ -191,12 +303,20 @@ export const useOrders = () => {
   const cancelOrder = async (orderId: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId);
+      // Use RPC to cancel order
+      const { error } = await supabase.rpc('cancel_order', {
+        p_order_id: orderId
+      });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct update
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({ status: 'cancelled' })
+          .eq('id', orderId);
+        
+        if (updateError) throw updateError;
+      }
       
       toast({
         title: "Order cancelled",

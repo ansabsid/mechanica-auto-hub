@@ -49,18 +49,35 @@ export const useAppointments = () => {
 
     setIsLoading(true);
     try {
+      // Using raw SQL query to avoid type issues
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          garage:garage_id (name, location)
-        `)
+        .select('*, garage:garage_id(name, location)')
         .eq('user_id', session.user.id)
         .order('appointment_date', { ascending: true });
       
       if (error) throw error;
       
-      setUserAppointments(data || []);
+      // Handle the data with explicit type casting
+      if (data) {
+        const typedAppointments = data.map(item => ({
+          id: item.id,
+          user_id: item.user_id,
+          garage_id: item.garage_id,
+          service_type: item.service_type,
+          appointment_date: item.appointment_date,
+          appointment_time: item.appointment_time,
+          status: item.status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
+          notes: item.notes,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          garage: item.garage ? {
+            name: item.garage.name,
+            location: item.garage.location
+          } : undefined
+        }));
+        setUserAppointments(typedAppointments);
+      }
     } catch (error: any) {
       console.error("Error fetching appointments:", error.message);
       toast({
@@ -130,20 +147,42 @@ export const useAppointments = () => {
 
     setIsBooking(true);
     try {
-      const { data, error } = await supabase
-        .from('appointments')
-        .insert({
-          user_id: session.user.id,
-          garage_id: garageId,
-          service_type: serviceType,
-          appointment_date: date,
-          appointment_time: time,
-          notes: notes || null,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('insert_appointment', {
+        p_user_id: session.user.id,
+        p_garage_id: garageId,
+        p_service_type: serviceType,
+        p_appointment_date: date,
+        p_appointment_time: time,
+        p_notes: notes || null
+      });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct insert if RPC isn't available
+        const { data: insertData, error: insertError } = await supabase
+          .from('appointments')
+          .insert({
+            user_id: session.user.id,
+            garage_id: garageId,
+            service_type: serviceType,
+            appointment_date: date,
+            appointment_time: time,
+            notes: notes || null,
+            status: 'pending'
+          })
+          .select()
+          .single();
+          
+        if (insertError) throw insertError;
+        
+        toast({
+          title: "Appointment booked",
+          description: "Your appointment has been scheduled successfully",
+        });
+        
+        // Refresh appointments list
+        await fetchUserAppointments();
+        return insertData;
+      }
       
       toast({
         title: "Appointment booked",
@@ -170,12 +209,20 @@ export const useAppointments = () => {
   const cancelAppointment = async (appointmentId: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status: 'cancelled' })
-        .eq('id', appointmentId);
+      const { error } = await supabase.rpc('update_appointment_status', { 
+        p_appointment_id: appointmentId,
+        p_status: 'cancelled'
+      });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct update if RPC isn't available
+        const { error: updateError } = await supabase
+          .from('appointments')
+          .update({ status: 'cancelled' })
+          .eq('id', appointmentId);
+          
+        if (updateError) throw updateError;
+      }
       
       toast({
         title: "Appointment cancelled",
