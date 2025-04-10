@@ -1,96 +1,90 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { CartItem } from "@/types/cart.types";
+import { CartItem, Cart } from "@/types/cart.types";
 import { 
-  getOrCreateUserCart, 
-  fetchCartItemsById, 
-  addItemToCart, 
-  updateCartItemQuantity as updateItemQuantity, 
-  removeCartItem, 
-  clearCartItems,
-  getCurrentSession,
-  onAuthStateChange
+  getUserCart, 
+  getCartItems, 
+  addToCart as apiAddToCart, 
+  updateCartItemQuantity as apiUpdateCartItemQuantity,
+  removeFromCart as apiRemoveFromCart,
+  clearCart as apiClearCart,
+  getUserSession
 } from "@/api/cartApi";
 
-export { CartItem } from "@/types/cart.types";
+export type { CartItem, Cart } from "@/types/cart.types";
 
 export const useCart = () => {
+  const [cart, setCart] = useState<Cart | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [cartId, setCartId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Get or create cart for the current user
-  const getOrCreateCart = async () => {
-    const { data: { session } } = await getCurrentSession();
-    
-    if (!session?.user) {
-      toast({
-        title: "Authentication required",
-        description: "Please login to manage your cart",
-        variant: "destructive",
-      });
-      return null;
-    }
-
+  // Fetch user's cart and items
+  const fetchCart = useCallback(async () => {
     setIsLoading(true);
     try {
-      const cid = await getOrCreateUserCart(session.user.id);
-      if (cid) {
-        setCartId(cid);
+      const sessionData = await getUserSession();
+      
+      if (!sessionData.session?.user) {
+        // If user is not logged in, show an empty cart
+        setCart(null);
+        setCartItems([]);
+        return;
       }
-      return cid;
-    } catch (error: any) {
-      console.error("Error getting or creating cart:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to initialize cart",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  // Fetch cart items with part details
-  const fetchCartItems = async () => {
-    const cartIdValue = cartId || await getOrCreateCart();
-    if (!cartIdValue) return;
-    
-    setIsLoading(true);
-    try {
-      const items = await fetchCartItemsById(cartIdValue);
-      setCartItems(items);
+      const userCart = await getUserCart();
+      
+      if (userCart) {
+        setCart(userCart);
+        const items = await getCartItems(userCart.id);
+        setCartItems(items);
+      }
     } catch (error: any) {
-      console.error("Error fetching cart items:", error.message);
+      console.error("Error fetching cart:", error.message);
       toast({
         title: "Error",
-        description: "Failed to load cart items",
+        description: "Failed to load your cart",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+  
+  // Initialize cart
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
-  // Add item to cart
+  // Add an item to the cart
   const addToCart = async (partId: number, quantity: number = 1) => {
-    const cartIdValue = cartId || await getOrCreateCart();
-    if (!cartIdValue) return;
-    
-    setIsLoading(true);
     try {
-      await addItemToCart(cartIdValue, partId, quantity);
+      const sessionData = await getUserSession();
+      
+      if (!sessionData.session?.user) {
+        toast({
+          title: "Authentication required",
+          description: "Please login to add items to cart",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!cart) {
+        await fetchCart();
+        if (!cart) return;
+      }
+      
+      await apiAddToCart(partId, cart.id, quantity);
       
       toast({
         title: "Added to cart",
-        description: "The item has been added to your cart",
+        description: "Item added to your cart",
       });
       
       // Refresh cart items
-      await fetchCartItems();
+      fetchCart();
     } catch (error: any) {
       console.error("Error adding to cart:", error.message);
       toast({
@@ -98,46 +92,52 @@ export const useCart = () => {
         description: "Failed to add item to cart",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Update cart item quantity
+  // Update quantity of a cart item
   const updateCartItemQuantity = async (cartItemId: string, quantity: number) => {
-    if (quantity < 1) return removeFromCart(cartItemId);
-    
-    setIsLoading(true);
     try {
-      await updateItemQuantity(cartItemId, quantity);
+      if (quantity <= 0) {
+        await removeFromCart(cartItemId);
+        return;
+      }
       
-      // Refresh cart items
-      await fetchCartItems();
+      await apiUpdateCartItemQuantity(cartItemId, quantity);
+      
+      // Update local state
+      setCartItems(prevItems => 
+        prevItems.map(item => 
+          item.id === cartItemId ? { ...item, quantity } : item
+        )
+      );
     } catch (error: any) {
       console.error("Error updating cart item:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to update item quantity",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      // If the item was removed, refresh the cart
+      if (error.message === "Item removed from cart") {
+        fetchCart();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update cart item",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  // Remove item from cart
+  // Remove an item from cart
   const removeFromCart = async (cartItemId: string) => {
-    setIsLoading(true);
     try {
-      await removeCartItem(cartItemId);
+      await apiRemoveFromCart(cartItemId);
+      
+      // Update local state
+      setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
       
       toast({
-        title: "Item removed",
-        description: "The item has been removed from your cart",
+        title: "Removed from cart",
+        description: "Item removed from your cart",
       });
-      
-      // Refresh cart items
-      await fetchCartItems();
     } catch (error: any) {
       console.error("Error removing from cart:", error.message);
       toast({
@@ -145,23 +145,24 @@ export const useCart = () => {
         description: "Failed to remove item from cart",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      // Refresh cart to ensure it's in sync
+      fetchCart();
     }
   };
 
   // Clear all items from cart
   const clearCart = async () => {
-    if (!cartId) return;
+    if (!cart) return;
     
-    setIsLoading(true);
     try {
-      await clearCartItems(cartId);
+      await apiClearCart(cart.id);
       
+      // Update local state
       setCartItems([]);
+      
       toast({
         title: "Cart cleared",
-        description: "All items have been removed from your cart",
+        description: "All items removed from your cart",
       });
     } catch (error: any) {
       console.error("Error clearing cart:", error.message);
@@ -170,56 +171,25 @@ export const useCart = () => {
         description: "Failed to clear cart",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Calculate cart total
+  // Calculate total price of items in cart
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
-      return total + (item.quantity * (item.part?.price || 0));
+      return total + (item.part.price * item.quantity);
     }, 0);
   };
 
-  // Initialize cart on auth state change
-  useEffect(() => {
-    const initCart = async () => {
-      const { data: { session } } = await getCurrentSession();
-      if (session?.user) {
-        const cid = await getOrCreateCart();
-        if (cid) {
-          await fetchCartItems();
-        }
-      }
-    };
-
-    initCart();
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN') {
-        await initCart();
-      } else if (event === 'SIGNED_OUT') {
-        setCartId(null);
-        setCartItems([]);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
   return {
+    cart,
     cartItems,
     isLoading,
-    cartId,
     addToCart,
     updateCartItemQuantity,
     removeFromCart,
     clearCart,
-    fetchCartItems,
     calculateTotal,
+    refreshCart: fetchCart,
   };
 };
