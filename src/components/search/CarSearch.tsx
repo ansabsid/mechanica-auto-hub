@@ -12,46 +12,37 @@ const CarSearch = () => {
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  console.log("CarSearch render - parts:", parts);
+  console.log("CarSearch render - parts:", parts?.length || 0);
   console.log("CarSearch render - searchCompleted:", searchCompleted);
   console.log("CarSearch render - showResults:", showResults);
 
   // Update UI when search completes
   useEffect(() => {
     console.log("Search completed effect triggered:", searchCompleted);
-    console.log("Parts in effect:", parts);
+    console.log("Parts in effect:", parts?.length || 0);
     
     if (searchCompleted) {
       setShowResults(true);
       
-      if (parts.length === 0) {
-        toast({
-          title: "No Results",
-          description: "No parts found matching your criteria. Try different search parameters.",
-          variant: "destructive",
-          duration: 5000,
-        });
-      } else {
-        console.log("Parts found effect:", parts.length);
-        toast({
-          title: "Parts Found",
-          description: `Found ${parts.length} parts matching your vehicle.`,
-          duration: 5000,
-        });
-        
-        // Scroll to results section with a slight delay
-        setTimeout(() => {
-          if (resultsRef.current) {
-            resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 300);
-      }
+      // Scroll to results section with a slight delay
+      setTimeout(() => {
+        if (resultsRef.current) {
+          resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
     }
-  }, [searchCompleted, parts, toast]);
+  }, [searchCompleted, parts]);
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
-    // We'll now rely on the searchCompleted effect to handle showing results
+    if (resultsCount === 0) {
+      toast({
+        title: "No Results",
+        description: "No parts found matching your criteria. Try different search parameters.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
   };
 
   return (
@@ -65,19 +56,19 @@ const CarSearch = () => {
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
               <span className="text-lg font-medium">Searching for parts...</span>
             </div>
-          ) : (
+          ) : parts && parts.length > 0 ? (
             <div className="flex flex-col items-center animate-bounce">
               <p className="text-mechanica-600 font-semibold mb-2 text-lg">Scroll down to see results</p>
               <ArrowDown className="text-mechanica-500" size={32} />
             </div>
-          )}
+          ) : null}
         </div>
       )}
       
       <div 
         id="search-results-section" 
         ref={resultsRef}
-        className="mt-8 transition-all duration-300 border-t-4 border-mechanica-300 pt-8"
+        className={`mt-8 transition-all duration-300 ${searchCompleted ? 'border-t-4 border-mechanica-300 pt-8' : ''}`}
       >
         {isSearching ? (
           <div className="flex justify-center items-center p-12 bg-white rounded-xl shadow-md">

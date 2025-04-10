@@ -61,17 +61,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       const count = await searchParts(manufacturer, model, year);
       console.log("Search returned count:", count);
       
-      // Notify user with toast
-      toast({
-        title: "Search Complete",
-        description: count > 0 
-          ? `Found ${count} parts for your vehicle.` 
-          : "No parts found. Try different search criteria.",
-        variant: count > 0 ? "default" : "destructive",
-        duration: 5000,
-      });
-      
-      // Pass count to parent component to update the UI
+      // Notify parent component about search completion
       onSearch(count);
     } catch (error: any) {
       console.error("Search failed:", error);
@@ -80,11 +70,15 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
         title: "Search failed",
         description: error.message || "An error occurred while searching"
       });
+      
+      // Even on error, notify parent that search is complete (with 0 results)
+      onSearch(0);
     }
   };
 
-  console.log("Current manufacturers:", manufacturers);
-  console.log("Current models:", models);
+  // For debugging
+  console.log("Current manufacturers:", manufacturers?.length || 0);
+  console.log("Current models:", models?.length || 0);
   console.log("Current selection - manufacturer:", manufacturer, "model:", model, "year:", year);
 
   return (

@@ -28,7 +28,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   if (!parts || parts.length === 0) {
     console.log("No parts found in PartsResults component");
     return (
-      <div className="text-center p-8 bg-red-50 border-4 border-red-200 rounded-xl mt-8 shadow-lg">
+      <div className="text-center p-8 bg-red-50 border-4 border-red-200 rounded-xl shadow-lg">
         <SearchX className="mx-auto h-16 w-16 text-red-500 mb-4" />
         <h3 className="text-2xl font-bold text-red-800 mb-3">No Parts Found</h3>
         <p className="text-gray-700 text-lg">We couldn't find any parts matching your search criteria.</p>
