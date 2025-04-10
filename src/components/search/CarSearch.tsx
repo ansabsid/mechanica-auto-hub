@@ -105,7 +105,7 @@ const CarSearch = () => {
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
-  // Determine which parts to show
+  // Determine which parts to show - FIX: Only show filtered parts when search is completed
   const displayParts = searchCompleted ? parts : allParts;
 
   return (
