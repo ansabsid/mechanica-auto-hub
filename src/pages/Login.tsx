@@ -7,27 +7,40 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Wrench, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("customer");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPassword, setCustomerPassword] = useState("");
+  const [garageEmail, setGarageEmail] = useState("");
+  const [garagePassword, setGaragePassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { signIn } = useAuth();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Handle login logic based on activeTab (customer or garage)
-    if (activeTab === "customer") {
-      console.log("Customer login");
-      // Redirect to customer dashboard
-      window.location.href = "/customer-dashboard";
-    } else {
-      console.log("Garage login");
-      // Redirect to garage dashboard
-      window.location.href = "/garage-dashboard";
+    setIsLoading(true);
+    try {
+      await signIn(customerEmail, customerPassword, "customer");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGarageLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await signIn(garageEmail, garagePassword, "garage");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,7 +70,7 @@ const Login = () => {
                     Log in to search for parts and book services for your vehicle
                   </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleCustomerLogin}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <label htmlFor="customer-email" className="text-sm font-medium">
@@ -73,6 +86,8 @@ const Login = () => {
                           placeholder="name@example.com"
                           className="pl-10"
                           required
+                          value={customerEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
                         />
                       </div>
                     </div>
@@ -94,6 +109,8 @@ const Login = () => {
                           type={showPassword ? "text" : "password"}
                           className="pl-10 pr-10"
                           required
+                          value={customerPassword}
+                          onChange={(e) => setCustomerPassword(e.target.value)}
                         />
                         <div 
                           className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
@@ -109,8 +126,12 @@ const Login = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex flex-col">
-                    <Button type="submit" className="w-full bg-mechanica-500 hover:bg-mechanica-600">
-                      Login
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-mechanica-500 hover:bg-mechanica-600"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Logging in..." : "Login"}
                     </Button>
                     <p className="mt-4 text-center text-sm text-gray-600">
                       Don't have an account?{" "}
@@ -131,7 +152,7 @@ const Login = () => {
                     Log in to manage your parts inventory and service appointments
                   </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleGarageLogin}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <label htmlFor="garage-email" className="text-sm font-medium">
@@ -147,6 +168,8 @@ const Login = () => {
                           placeholder="garage@example.com"
                           className="pl-10"
                           required
+                          value={garageEmail}
+                          onChange={(e) => setGarageEmail(e.target.value)}
                         />
                       </div>
                     </div>
@@ -168,6 +191,8 @@ const Login = () => {
                           type={showPassword ? "text" : "password"}
                           className="pl-10 pr-10"
                           required
+                          value={garagePassword}
+                          onChange={(e) => setGaragePassword(e.target.value)}
                         />
                         <div 
                           className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
@@ -183,8 +208,12 @@ const Login = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex flex-col">
-                    <Button type="submit" className="w-full bg-mechanica-500 hover:bg-mechanica-600">
-                      Login
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-mechanica-500 hover:bg-mechanica-600"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Logging in..." : "Login"}
                     </Button>
                     <p className="mt-4 text-center text-sm text-gray-600">
                       Not registered yet?{" "}

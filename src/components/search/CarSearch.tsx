@@ -1,55 +1,177 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data for demonstration
-const manufacturers = [
-  { id: 1, name: "Toyota" },
-  { id: 2, name: "Honda" },
-  { id: 3, name: "BMW" },
-  { id: 4, name: "Mercedes" },
-  { id: 5, name: "Ford" },
-  { id: 6, name: "Audi" },
-  { id: 7, name: "Nissan" },
-];
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const models = {
-  1: [
-    { id: 1, name: "Corolla" },
-    { id: 2, name: "Camry" },
-    { id: 3, name: "RAV4" },
-    { id: 4, name: "Land Cruiser" },
-  ],
-  2: [
-    { id: 5, name: "Civic" },
-    { id: 6, name: "Accord" },
-    { id: 7, name: "CR-V" },
-  ],
-  3: [
-    { id: 8, name: "3 Series" },
-    { id: 9, name: "5 Series" },
-    { id: 10, name: "X5" },
-  ],
-  // Add models for other manufacturers as needed
-};
+interface Manufacturer {
+  id: number;
+  name: string;
+}
 
-const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i);
+interface Model {
+  id: number;
+  name: string;
+  manufacturer_id: number;
+}
 
 const CarSearch = () => {
   const [manufacturer, setManufacturer] = useState<string>("");
   const [model, setModel] = useState<string>("");
   const [year, setYear] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const { toast } = useToast();
 
-  const handleSearch = () => {
-    console.log("Searching for parts with:", { manufacturer, model, year });
-    // Handle search logic here
-  };
+  const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i);
 
-  const getModelsForManufacturer = () => {
-    if (!manufacturer) return [];
-    return models[Number(manufacturer) as keyof typeof models] || [];
+  // Fetch manufacturers on component mount
+  useEffect(() => {
+    const fetchManufacturers = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('manufacturers')
+          .select('*')
+          .order('name');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setManufacturers(data);
+        }
+      } catch (error: any) {
+        console.error('Error fetching manufacturers:', error.message);
+        // Fall back to mock data if database is not yet set up
+        setManufacturers([
+          { id: 1, name: "Toyota" },
+          { id: 2, name: "Honda" },
+          { id: 3, name: "BMW" },
+          { id: 4, name: "Mercedes" },
+          { id: 5, name: "Ford" },
+          { id: 6, name: "Audi" },
+          { id: 7, name: "Nissan" },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchManufacturers();
+  }, []);
+
+  // Fetch models when manufacturer changes
+  useEffect(() => {
+    if (!manufacturer) {
+      setModels([]);
+      return;
+    }
+    
+    const fetchModels = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('models')
+          .select('*')
+          .eq('manufacturer_id', manufacturer)
+          .order('name');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setModels(data);
+        }
+      } catch (error: any) {
+        console.error('Error fetching models:', error.message);
+        // Fall back to mock data
+        const mockModels: { [key: string]: Model[] } = {
+          "1": [
+            { id: 1, name: "Corolla", manufacturer_id: 1 },
+            { id: 2, name: "Camry", manufacturer_id: 1 },
+            { id: 3, name: "RAV4", manufacturer_id: 1 },
+            { id: 4, name: "Land Cruiser", manufacturer_id: 1 },
+          ],
+          "2": [
+            { id: 5, name: "Civic", manufacturer_id: 2 },
+            { id: 6, name: "Accord", manufacturer_id: 2 },
+            { id: 7, name: "CR-V", manufacturer_id: 2 },
+          ],
+          "3": [
+            { id: 8, name: "3 Series", manufacturer_id: 3 },
+            { id: 9, name: "5 Series", manufacturer_id: 3 },
+            { id: 10, name: "X5", manufacturer_id: 3 },
+          ],
+        };
+        
+        setModels(mockModels[manufacturer] || []);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchModels();
+  }, [manufacturer]);
+
+  const handleSearch = async () => {
+    if (!manufacturer || !model || !year) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please select manufacturer, model, and year to search for parts"
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Query the parts table based on the selected criteria
+      const { data, error } = await supabase
+        .from('parts')
+        .select(`
+          *,
+          garages:garage_id (name, location)
+        `)
+        .eq('manufacturer_id', manufacturer)
+        .eq('model_id', model)
+        .eq('year', year);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Search Results",
+        description: `Found ${data?.length || 0} parts matching your search criteria`
+      });
+      
+      console.log("Parts found:", data);
+      
+      // In a real app, you'd update state to display these results
+      // For now we just log them and show a toast
+      
+    } catch (error: any) {
+      console.error("Error searching for parts:", error.message);
+      toast({
+        variant: "destructive",
+        title: "Search failed",
+        description: error.message || "An error occurred while searching"
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -62,7 +184,13 @@ const CarSearch = () => {
           <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-1">
             Car Manufacturer
           </label>
-          <Select onValueChange={(value) => setManufacturer(value)}>
+          <Select 
+            onValueChange={(value) => {
+              setManufacturer(value);
+              setModel(""); // Reset model when manufacturer changes
+            }}
+            disabled={isLoading}
+          >
             <SelectTrigger id="manufacturer" className="w-full">
               <SelectValue placeholder="Select manufacturer" />
             </SelectTrigger>
@@ -82,13 +210,13 @@ const CarSearch = () => {
           </label>
           <Select 
             onValueChange={(value) => setModel(value)} 
-            disabled={!manufacturer}
+            disabled={!manufacturer || isLoading}
           >
             <SelectTrigger id="model" className="w-full">
               <SelectValue placeholder={manufacturer ? "Select model" : "Select manufacturer first"} />
             </SelectTrigger>
             <SelectContent>
-              {getModelsForManufacturer().map((mdl: any) => (
+              {models.map((mdl) => (
                 <SelectItem key={mdl.id} value={mdl.id.toString()}>
                   {mdl.name}
                 </SelectItem>
@@ -120,8 +248,10 @@ const CarSearch = () => {
         <Button 
           onClick={handleSearch} 
           className="w-full bg-mechanica-500 hover:bg-mechanica-600 h-12 text-base"
+          disabled={!manufacturer || !model || !year || isSearching}
         >
-          <Search className="mr-2 h-5 w-5" /> Find Parts
+          <Search className="mr-2 h-5 w-5" /> 
+          {isSearching ? "Searching..." : "Find Parts"}
         </Button>
       </div>
     </div>
