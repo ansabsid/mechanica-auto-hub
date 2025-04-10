@@ -54,13 +54,13 @@ export const useAppointments = () => {
         .from('appointments')
         .select('*, garage:garage_id(name, location)')
         .eq('user_id', session.user.id)
-        .order('appointment_date', { ascending: true });
+        .order('appointment_date', { ascending: true }) as any;
       
       if (error) throw error;
       
       // Handle the data with explicit type casting
       if (data) {
-        const typedAppointments = data.map(item => ({
+        const typedAppointments = data.map((item: any) => ({
           id: item.id,
           user_id: item.user_id,
           garage_id: item.garage_id,
@@ -72,8 +72,8 @@ export const useAppointments = () => {
           created_at: item.created_at,
           updated_at: item.updated_at,
           garage: item.garage ? {
-            name: item.garage.name,
-            location: item.garage.location
+            name: item.garage.name || 'Unknown',
+            location: item.garage.location || 'Unknown'
           } : undefined
         }));
         setUserAppointments(typedAppointments);
@@ -154,7 +154,7 @@ export const useAppointments = () => {
         p_appointment_date: date,
         p_appointment_time: time,
         p_notes: notes || null
-      });
+      }) as any;
       
       if (error) {
         // Fallback to direct insert if RPC isn't available
@@ -170,7 +170,7 @@ export const useAppointments = () => {
             status: 'pending'
           })
           .select()
-          .single();
+          .single() as any;
           
         if (insertError) throw insertError;
         
@@ -212,14 +212,14 @@ export const useAppointments = () => {
       const { error } = await supabase.rpc('update_appointment_status', { 
         p_appointment_id: appointmentId,
         p_status: 'cancelled'
-      });
+      }) as any;
       
       if (error) {
         // Fallback to direct update if RPC isn't available
         const { error: updateError } = await supabase
           .from('appointments')
           .update({ status: 'cancelled' })
-          .eq('id', appointmentId);
+          .eq('id', appointmentId) as any;
           
         if (updateError) throw updateError;
       }

@@ -53,7 +53,7 @@ export const useOrders = () => {
       // Using direct from to avoid type errors
       const { data, error } = await supabase.rpc('get_user_orders', {
         p_user_id: session.user.id
-      });
+      }) as any;
       
       if (error) {
         // Fallback to direct query
@@ -61,12 +61,12 @@ export const useOrders = () => {
           .from('orders')
           .select('*')
           .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }) as any;
           
         if (directError) throw directError;
         
         if (ordersData) {
-          const typedOrders: Order[] = ordersData.map(order => ({
+          const typedOrders: Order[] = ordersData.map((order: any) => ({
             id: order.id,
             user_id: order.user_id,
             total_amount: order.total_amount,
@@ -80,9 +80,9 @@ export const useOrders = () => {
         return;
       }
       
-      if (data) {
+      if (data && Array.isArray(data)) {
         // Process RPC results
-        const typedOrders: Order[] = data.map(order => ({
+        const typedOrders: Order[] = data.map((order: any) => ({
           id: order.id,
           user_id: order.user_id,
           total_amount: order.total_amount,
@@ -112,7 +112,7 @@ export const useOrders = () => {
       // Get order details
       const { data: orderData, error: orderError } = await supabase.rpc('get_order', {
         p_order_id: orderId
-      });
+      }) as any;
       
       if (orderError) {
         // Fallback to direct queries
@@ -120,7 +120,7 @@ export const useOrders = () => {
           .from('orders')
           .select('*')
           .eq('id', orderId)
-          .single();
+          .single() as any;
           
         if (directOrderError) throw directOrderError;
         
@@ -131,7 +131,7 @@ export const useOrders = () => {
             *,
             part:part_id (name, description)
           `)
-          .eq('order_id', orderId);
+          .eq('order_id', orderId) as any;
           
         if (itemsError) throw itemsError;
         
@@ -143,7 +143,7 @@ export const useOrders = () => {
           status: directOrderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
           created_at: directOrderData.created_at,
           updated_at: directOrderData.updated_at,
-          items: itemsData?.map(item => ({
+          items: itemsData?.map((item: any) => ({
             id: item.id,
             order_id: item.order_id,
             part_id: item.part_id,
@@ -165,8 +165,12 @@ export const useOrders = () => {
       // Process RPC results if successful
       if (orderData) {
         const orderWithItems: Order = {
-          ...orderData,
+          id: orderData.id,
+          user_id: orderData.user_id,
+          total_amount: orderData.total_amount,
           status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+          created_at: orderData.created_at,
+          updated_at: orderData.updated_at,
           items: orderData.items?.map((item: any) => ({
             id: item.id,
             order_id: item.order_id,
@@ -236,7 +240,7 @@ export const useOrders = () => {
         p_user_id: session.user.id,
         p_total_amount: totalAmount,
         p_items: JSON.stringify(orderItems)
-      });
+      }) as any;
       
       if (error) {
         // Fallback to manual transaction
@@ -249,7 +253,7 @@ export const useOrders = () => {
             status: 'pending',
           })
           .select()
-          .single();
+          .single() as any;
         
         if (orderError) throw orderError;
         
@@ -264,7 +268,7 @@ export const useOrders = () => {
         
         const { error: itemsError } = await supabase
           .from('order_items')
-          .insert(formattedItems);
+          .insert(formattedItems) as any;
         
         if (itemsError) throw itemsError;
         
@@ -306,14 +310,14 @@ export const useOrders = () => {
       // Use RPC to cancel order
       const { error } = await supabase.rpc('cancel_order', {
         p_order_id: orderId
-      });
+      }) as any;
       
       if (error) {
         // Fallback to direct update
         const { error: updateError } = await supabase
           .from('orders')
           .update({ status: 'cancelled' })
-          .eq('id', orderId);
+          .eq('id', orderId) as any;
         
         if (updateError) throw updateError;
       }

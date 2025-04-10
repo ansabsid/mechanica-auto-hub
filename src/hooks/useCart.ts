@@ -37,7 +37,7 @@ export const useCart = () => {
       const { data: existingCarts, error: cartError } = await supabase.rpc(
         'get_user_cart',
         { p_user_id: session.user.id }
-      );
+      ) as any;
       
       if (cartError) {
         // Fallback to direct query
@@ -45,7 +45,7 @@ export const useCart = () => {
           .from('carts')
           .select('*')
           .eq('user_id', session.user.id)
-          .limit(1);
+          .limit(1) as any;
           
         if (directError) throw directError;
         
@@ -59,7 +59,7 @@ export const useCart = () => {
           .from('carts')
           .insert({ user_id: session.user.id })
           .select()
-          .single();
+          .single() as any;
         
         if (createError) throw createError;
         
@@ -80,7 +80,7 @@ export const useCart = () => {
       const { data: newCart, error: createError } = await supabase.rpc(
         'create_cart',
         { p_user_id: session.user.id }
-      );
+      ) as any;
       
       if (createError) {
         // Fallback to direct insert
@@ -88,7 +88,7 @@ export const useCart = () => {
           .from('carts')
           .insert({ user_id: session.user.id })
           .select()
-          .single();
+          .single() as any;
           
         if (insertError) throw insertError;
         
@@ -126,7 +126,7 @@ export const useCart = () => {
       const { data, error } = await supabase.rpc(
         'get_cart_items',
         { p_cart_id: cartIdValue }
-      );
+      ) as any;
       
       if (error) {
         // Fallback to direct query
@@ -140,13 +140,13 @@ export const useCart = () => {
               garage_id, garages:garage_id (name, location)
             )
           `)
-          .eq('cart_id', cartIdValue);
+          .eq('cart_id', cartIdValue) as any;
           
         if (directError) throw directError;
         
         // Process the data to match CartItem interface
         if (directData) {
-          const processedItems: CartItem[] = directData.map(item => {
+          const processedItems: CartItem[] = directData.map((item: any) => {
             return {
               id: item.id,
               cart_id: item.cart_id,
@@ -176,8 +176,8 @@ export const useCart = () => {
       }
       
       // Process the data to ensure it matches the CartItem interface
-      if (data) {
-        const validCartItems: CartItem[] = data.map(item => {
+      if (data && Array.isArray(data)) {
+        const validCartItems: CartItem[] = data.map((item: any) => {
           return {
             id: item.id,
             cart_id: item.cart_id,
@@ -230,7 +230,7 @@ export const useCart = () => {
           p_part_id: partId,
           p_quantity: quantity
         }
-      );
+      ) as any;
       
       if (error) {
         // Fallback to check and update/insert logic
@@ -238,7 +238,7 @@ export const useCart = () => {
           .from('cart_items')
           .select('*')
           .eq('cart_id', cartIdValue)
-          .eq('part_id', partId);
+          .eq('part_id', partId) as any;
           
         if (checkError) throw checkError;
         
@@ -248,7 +248,7 @@ export const useCart = () => {
           const { error: updateError } = await supabase
             .from('cart_items')
             .update({ quantity: newQuantity })
-            .eq('id', existingItems[0].id);
+            .eq('id', existingItems[0].id) as any;
           
           if (updateError) throw updateError;
         } else {
@@ -259,7 +259,7 @@ export const useCart = () => {
               cart_id: cartIdValue,
               part_id: partId,
               quantity,
-            });
+            }) as any;
           
           if (insertError) throw insertError;
         }
@@ -297,14 +297,14 @@ export const useCart = () => {
           p_cart_item_id: cartItemId,
           p_quantity: quantity
         }
-      );
+      ) as any;
       
       if (error) {
         // Fallback to direct update
         const { error: updateError } = await supabase
           .from('cart_items')
           .update({ quantity })
-          .eq('id', cartItemId);
+          .eq('id', cartItemId) as any;
           
         if (updateError) throw updateError;
       }
@@ -331,14 +331,14 @@ export const useCart = () => {
       const { error } = await supabase.rpc(
         'remove_cart_item',
         { p_cart_item_id: cartItemId }
-      );
+      ) as any;
       
       if (error) {
         // Fallback to direct delete
         const { error: deleteError } = await supabase
           .from('cart_items')
           .delete()
-          .eq('id', cartItemId);
+          .eq('id', cartItemId) as any;
           
         if (deleteError) throw deleteError;
       }
@@ -372,14 +372,14 @@ export const useCart = () => {
       const { error } = await supabase.rpc(
         'clear_cart',
         { p_cart_id: cartId }
-      );
+      ) as any;
       
       if (error) {
         // Fallback to direct delete
         const { error: deleteError } = await supabase
           .from('cart_items')
           .delete()
-          .eq('cart_id', cartId);
+          .eq('cart_id', cartId) as any;
           
         if (deleteError) throw deleteError;
       }

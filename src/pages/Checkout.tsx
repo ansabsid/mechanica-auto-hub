@@ -47,7 +47,7 @@ const Checkout = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSuccess, setIsSuccess] = useState(false);
-  const [orderId, setOrderId] = useState("");
+  const [orderId, setOrderId] = useState<string>("");
   const { user } = useAuth();
   
   const form = useForm<z.infer<typeof formSchema>>({
