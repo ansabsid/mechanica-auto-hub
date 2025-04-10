@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -105,6 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (event === 'SIGNED_OUT') {
             console.log("User signed out, navigating to login");
             navigate("/login");
+            
+            toast({
+              title: "Logged out",
+              description: "You have been successfully logged out",
+            });
           }
         }
       }
@@ -311,8 +317,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    setIsLoading(true);
     try {
-      console.log("Signing out...");
+      console.log("Signing out: Starting signOut process...");
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -320,17 +327,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log("Successfully signed out");
+      console.log("Signing out: Successfully signed out from Supabase");
       setUser(null);
       setUserRole(null);
-      
-      // Explicitly navigate to login page
-      navigate("/login");
       
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
       });
+      
+      // The navigation will happen in the auth state change listener
+      // This is to ensure the auth state is updated first
+      console.log("Signing out: Auth state should update and trigger navigation");
     } catch (error: any) {
       console.error("Error in signOut function:", error);
       toast({
@@ -338,6 +346,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logout failed",
         description: error.message || "An error occurred during logout",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

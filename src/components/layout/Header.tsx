@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, User, ChevronDown, Wrench, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -15,7 +16,10 @@ const Header = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log("Sign out button clicked, initiating logout...");
       await signOut();
+      console.log("Sign out completed, redirecting to login...");
+      navigate("/login");
     } catch (error) {
       console.error("Sign out error:", error);
     }
