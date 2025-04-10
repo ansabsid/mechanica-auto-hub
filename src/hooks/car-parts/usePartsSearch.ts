@@ -69,17 +69,14 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("Final parts being set:", finalParts);
       
-      // Important: Update both state variables together to ensure consistency
-      const partsCount = finalParts.length;
+      // First update the parts array directly
       setParts(finalParts);
       
-      // Use setTimeout to ensure state update is processed before setting searchCompleted
-      setTimeout(() => {
-        setSearchCompleted(true);
-        setIsSearching(false);
-      }, 100);
+      // Then update search status
+      setIsSearching(false);
+      setSearchCompleted(true);
       
-      return partsCount;
+      return finalParts.length;
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
@@ -93,13 +90,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       );
       console.log("Using mock parts due to error:", mockParts);
       
+      // First update the parts array directly
       setParts(mockParts);
       
-      // Use setTimeout for consistent behavior
-      setTimeout(() => {
-        setSearchCompleted(true);
-        setIsSearching(false);
-      }, 100);
+      // Then update search status
+      setIsSearching(false);
+      setSearchCompleted(true);
       
       return mockParts.length;
     }

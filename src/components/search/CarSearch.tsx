@@ -57,13 +57,13 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          showResults && (
+          showResults && searchCompleted && (
             <div className="bg-white rounded-xl shadow-sm p-6">
-              {/* Force component key to refresh when parts change */}
+              {/* Always render results regardless of parts.length to show the "no results" message */}
               <PartsResults 
-                key={`parts-results-${parts.length}`} 
+                key={`parts-results-${parts.length}-${Date.now()}`} 
                 parts={parts} 
-                visible={showResults && parts.length > 0} 
+                visible={true} 
               />
             </div>
           )

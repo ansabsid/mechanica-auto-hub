@@ -14,6 +14,7 @@ interface PartsResultsProps {
 const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   // Add detailed console logging to inspect the received props
   useEffect(() => {
+    console.log("PartsResults mounted/updated");
     console.log("PartsResults received parts:", parts);
     console.log("PartsResults visibility:", visible);
     console.log("PartsResults parts length:", parts?.length || 0);
@@ -36,7 +37,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     );
   }
 
-  console.log("Rendering parts list with", parts.length, "items:", parts);
+  console.log("Rendering parts list with", parts.length, "items");
   
   return (
     <div className="parts-results-container animate-in fade-in-50 duration-300">

@@ -24,7 +24,7 @@ export const useCarParts = () => {
     fetchModels 
   } = useModels();
   
-  // Get parts search functionality - ensure it's initialized with the manufacturers and models
+  // Get parts search functionality - pass in the manufacturers and models from state
   const {
     parts,
     isSearching,
