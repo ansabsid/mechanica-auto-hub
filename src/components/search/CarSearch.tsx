@@ -51,7 +51,7 @@ const CarSearch = () => {
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
-    setShowResults(true);
+    // We'll now rely on the searchCompleted effect to handle showing results
   };
 
   return (

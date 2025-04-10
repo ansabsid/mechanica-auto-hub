@@ -31,7 +31,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   useEffect(() => {
     console.log("Fetching manufacturers...");
     fetchManufacturers();
-  }, []);
+  }, [fetchManufacturers]);
 
   useEffect(() => {
     if (manufacturer) {
@@ -41,7 +41,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       // Reset model when manufacturer changes
       setModel("");
     }
-  }, [manufacturer]);
+  }, [manufacturer, fetchModels]);
 
   const handleSearch = async () => {
     if (!manufacturer || !model || !year) {
@@ -60,6 +60,16 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       console.log("Starting search with params:", { manufacturer, model, year });
       const count = await searchParts(manufacturer, model, year);
       console.log("Search returned count:", count);
+      
+      // Notify user with toast
+      toast({
+        title: "Search Complete",
+        description: count > 0 
+          ? `Found ${count} parts for your vehicle.` 
+          : "No parts found. Try different search criteria.",
+        variant: count > 0 ? "default" : "destructive",
+        duration: 5000,
+      });
       
       // Pass count to parent component to update the UI
       onSearch(count);
