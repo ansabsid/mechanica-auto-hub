@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -37,6 +38,12 @@ export const useCarParts = () => {
   const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
   
   const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i);
+
+  // Reset search state
+  const resetSearch = () => {
+    setParts([]);
+    setSearchCompleted(false);
+  };
 
   // Fetch manufacturers
   const fetchManufacturers = async () => {
@@ -146,9 +153,9 @@ export const useCarParts = () => {
 
   // Search for parts
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
+    console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);
     setSearchCompleted(false);
-    setParts([]); // Reset parts before searching
     
     try {
       // Modified this query to fix the relationship error
@@ -286,6 +293,7 @@ export const useCarParts = () => {
     searchCompleted,
     fetchManufacturers,
     fetchModels,
-    searchParts
+    searchParts,
+    resetSearch
   };
 };

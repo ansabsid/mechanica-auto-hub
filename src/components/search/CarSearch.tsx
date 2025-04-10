@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const CarSearch = () => {
   const [showResults, setShowResults] = useState(false);
-  const { parts, isSearching, searchCompleted } = useCarParts();
+  const { parts, isSearching, searchCompleted, resetSearch } = useCarParts();
   const { toast } = useToast();
 
   // Add effect to update UI when search completes
