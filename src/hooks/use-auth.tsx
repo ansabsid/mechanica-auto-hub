@@ -86,6 +86,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);
     try {
+      // Special case for demo garage login
+      if (email === "garage@example.com" && password === "garage123") {
+        // Check if demo account exists
+        const { data: userExists, error: checkError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', email)
+          .single();
+
+        // If demo account doesn't exist, create it
+        if (checkError && checkError.code === 'PGRST116') {
+          // First create the auth user
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                role: 'garage'
+              }
+            }
+          });
+
+          if (signUpError) {
+            throw signUpError;
+          }
+
+          // Then create the profile
+          if (signUpData.user) {
+            // The database trigger should handle this, but let's be sure
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .upsert({
+                id: signUpData.user.id,
+                email: email,
+                role: 'garage'
+              });
+
+            if (profileError) {
+              console.error("Error creating demo profile:", profileError);
+            }
+          }
+        }
+      }
+
+      // Proceed with normal login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
