@@ -12,6 +12,9 @@ import Garages from "./pages/Garages";
 import Contact from "./pages/Contact";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import GarageDashboard from "./pages/GarageDashboard";
+import Checkout from "./pages/Checkout";
+import OrdersListPage from "./pages/OrdersListPage";
+import OrderDetailPage from "./pages/OrdersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +34,9 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
             <Route path="/garage-dashboard" element={<GarageDashboard />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orders" element={<OrdersListPage />} />
+            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
