@@ -12,6 +12,7 @@ import {
   getUserSession
 } from "@/api/cartApi";
 
+// Use 'export type' for re-exporting types when isolatedModules is enabled
 export type { CartItem, Cart } from "@/types/cart.types";
 
 export const useCart = () => {
