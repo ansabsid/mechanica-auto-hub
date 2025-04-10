@@ -57,11 +57,11 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          showResults && (
+          searchCompleted && (
             <div className="bg-white rounded-xl shadow-sm p-6">
               <PartsResults 
                 parts={parts} 
-                visible={true} 
+                visible={showResults} 
               />
             </div>
           )

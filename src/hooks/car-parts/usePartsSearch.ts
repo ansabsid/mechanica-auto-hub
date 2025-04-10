@@ -69,9 +69,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("Final parts being set:", finalParts);
       
-      // Update state with a slight delay to ensure React catches the change
+      // Update state
       setParts(finalParts);
+      
+      // Make sure we set the loading state to false before setting search completed
       setIsSearching(false);
+      // Now set searchCompleted to true to trigger the UI updates
       setSearchCompleted(true);
       
       return finalParts.length;
@@ -88,7 +91,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       );
       console.log("Using mock parts due to error:", mockParts);
       
-      // Update state
+      // Update state in the correct order
       setParts(mockParts);
       setIsSearching(false);
       setSearchCompleted(true);

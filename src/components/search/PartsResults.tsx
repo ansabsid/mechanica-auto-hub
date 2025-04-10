@@ -25,7 +25,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     return null;
   }
 
-  // Check if parts array is empty
+  // Check if parts array is empty or undefined
   if (!parts || parts.length === 0) {
     console.log("No parts found in PartsResults component");
     return (
