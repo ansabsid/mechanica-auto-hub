@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +28,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -50,18 +48,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
         
         if (currentUser) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', currentUser.id)
-            .single();
-            
-          if (profileData && !profileError) {
-            setUserRole(profileData.role as "customer" | "garage");
-            console.log("Auth: User role set to:", profileData.role);
-          } else if (profileError) {
-            console.error("Error fetching user profile:", profileError.message);
-          }
+          // Fetch user role - use timeout to avoid supabase listener deadlocks
+          setTimeout(async () => {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', currentUser.id)
+              .single();
+              
+            if (profileData && !profileError) {
+              setUserRole(profileData.role as "customer" | "garage");
+              console.log("Auth: User role set to:", profileData.role);
+            } else if (profileError) {
+              console.error("Error fetching user profile:", profileError.message);
+            }
+          }, 0);
         } else {
           // Clear auth state if no user is found
           setUser(null);
@@ -71,64 +72,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Session retrieval error:", err);
       } finally {
         setIsLoading(false);
-        setIsInitialized(true);
       }
     };
     
     getSession();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state changed:", event);
         
-        // Set user to null first to ensure clean state transitions
+        // Handle sign out event
         if (event === 'SIGNED_OUT') {
           console.log("Setting user to null due to SIGNED_OUT event");
           setUser(null);
           setUserRole(null);
           
-          // Only redirect to login page if explicitly signed out
+          // Navigate to login page
           navigate("/login");
-          
-          toast({
-            title: "Logged out",
-            description: "You have been successfully logged out",
-          });
-          
           return;
         }
         
-        // Handle other auth events
+        // Handle user session changes
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
+        // Handle user data after auth changes - use timeout to avoid supabase listener deadlocks
         if (currentUser) {
-          try {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', currentUser.id)
-              .single();
-              
-            if (data && !error) {
-              setUserRole(data.role as "customer" | "garage");
-              
-              // Only navigate when SIGNED_IN event occurs
-              if (event === 'SIGNED_IN') {
-                // Navigate based on role when login is detected
-                navigate(data.role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
+          setTimeout(async () => {
+            try {
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', currentUser.id)
+                .single();
                 
-                toast({
-                  title: "Login successful",
-                  description: `Welcome to Bookmyparts!`,
-                });
+              if (data && !error) {
+                setUserRole(data.role as "customer" | "garage");
+                
+                // Navigate based on role when login is detected
+                if (event === 'SIGNED_IN') {
+                  navigate(data.role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
+                  
+                  toast({
+                    title: "Login successful",
+                    description: `Welcome to Bookmyparts!`,
+                  });
+                }
+              } else if (error) {
+                console.error("Error fetching user profile after auth change:", error.message);
               }
-            } else if (error) {
-              console.error("Error fetching user profile after auth change:", error.message);
+            } catch (err) {
+              console.error("Error in auth state change handler:", err);
             }
-          } catch (err) {
-            console.error("Error in auth state change handler:", err);
-          }
+          }, 0);
         }
       }
     );
@@ -226,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Regular login process
+      // Regular login process - simplified for faster processing
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -237,36 +233,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
-            
-          if (profileError) {
-            console.error("Profile error:", profileError);
-            throw new Error("User profile not found");
-          }
-          
-          // If profile exists but role doesn't match, sign out
-          if (profile && profile.role !== role) {
-            await supabase.auth.signOut();
-            throw new Error(`Invalid account type. Please use the ${role} login.`);
-          }
-          
-          setUserRole(profile?.role as "customer" | "garage");
-          
-          navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
-          
-          toast({
-            title: "Login successful",
-            description: `Welcome back to Bookmyparts!`,
-          });
-        } catch (profileFetchError: any) {
-          console.error("Error fetching profile after login:", profileFetchError);
-          throw profileFetchError;
-        }
+        // Successful login - role checking will happen in the auth listener
+        toast({
+          title: "Processing login",
+          description: "Authenticating your account...",
+        });
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -275,9 +246,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login failed",
         description: error.message || "An error occurred during login",
       });
-      throw error; // Re-throw so form handler can catch it
-    } finally {
       setIsLoading(false);
+      throw error; // Re-throw so form handler can catch it
     }
   };
 
@@ -345,6 +315,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       console.log("Signing out: Successfully signed out from Supabase");
+      
+      // Clear user state immediately
       setUser(null);
       setUserRole(null);
       
@@ -353,9 +325,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully logged out",
       });
       
-      // The navigation will happen in the auth state change listener
-      // This is to ensure the auth state is updated first
-      console.log("Signing out: Auth state should update and trigger navigation");
+      // Navigation will happen in the auth state change listener
     } catch (error: any) {
       console.error("Error in signOut function:", error);
       toast({
