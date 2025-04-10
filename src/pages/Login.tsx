@@ -18,19 +18,27 @@ const Login = () => {
   const [garageEmail, setGarageEmail] = useState("");
   const [garagePassword, setGaragePassword] = useState("");
   const [error, setError] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const location = useLocation();
   const { signIn, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users
+  // Redirect authenticated users only after component has fully initialized
   useEffect(() => {
     console.log("Login page - Authentication state:", { isAuthenticated, user });
+    
+    // Set initialization flag after first render
+    if (!isInitialized) {
+      setIsInitialized(true);
+      return;
+    }
+    
     if (isAuthenticated && user) {
       console.log("User is authenticated, redirecting to dashboard");
       navigate("/customer-dashboard");
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, isInitialized]);
 
   // Parse URL query parameters for demo login
   useEffect(() => {

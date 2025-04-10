@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Session retrieval error:", err);
       } finally {
         setIsLoading(false);
+        setIsInitialized(true);
       }
     };
     
@@ -78,16 +80,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event);
-        const currentUser = session?.user ?? null;
         
         // Set user to null first to ensure clean state transitions
         if (event === 'SIGNED_OUT') {
           console.log("Setting user to null due to SIGNED_OUT event");
           setUser(null);
           setUserRole(null);
-        } else {
-          setUser(currentUser);
+          
+          // Only redirect to login page if explicitly signed out
+          navigate("/login");
+          
+          toast({
+            title: "Logged out",
+            description: "You have been successfully logged out",
+          });
+          
+          return;
         }
+        
+        // Handle other auth events
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
         
         if (currentUser) {
           try {
@@ -100,8 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (data && !error) {
               setUserRole(data.role as "customer" | "garage");
               
-              // Navigate based on role when login is detected
+              // Only navigate when SIGNED_IN event occurs
               if (event === 'SIGNED_IN') {
+                // Navigate based on role when login is detected
                 navigate(data.role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
                 
                 toast({
@@ -115,17 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch (err) {
             console.error("Error in auth state change handler:", err);
           }
-        } else if (event === 'SIGNED_OUT') {
-          // Clear role state again to be safe
-          setUserRole(null);
-          
-          console.log("User signed out, navigating to login");
-          navigate("/login");
-          
-          toast({
-            title: "Logged out",
-            description: "You have been successfully logged out",
-          });
         }
       }
     );
