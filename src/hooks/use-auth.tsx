@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check active session and get user
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       const currentUser = data.session?.user ?? null;
@@ -56,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     getSession();
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const currentUser = session?.user ?? null;
@@ -86,18 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);
     try {
-      // Special case for demo garage login
-      if (email === "garage@example.com" && password === "garage123") {
-        // Check if demo account exists
+      if (email === "demo@garage.com" && password === "garage123") {
         const { data: userExists, error: checkError } = await supabase
           .from('profiles')
           .select('*')
           .eq('email', email)
           .single();
 
-        // If demo account doesn't exist, create it
-        if (checkError && checkError.code === 'PGRST116') {
-          // First create the auth user
+        if (checkError) {
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
@@ -112,9 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             throw signUpError;
           }
 
-          // Then create the profile
           if (signUpData.user) {
-            // The database trigger should handle this, but let's be sure
             const { error: profileError } = await supabase
               .from('profiles')
               .upsert({
@@ -130,7 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Proceed with normal login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -140,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      // Check if user exists and has the correct role
       if (data.user) {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -159,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUserRole(profile.role as "customer" | "garage");
         
-        // Redirect based on role
         navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
         
         toast({
@@ -182,7 +170,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, role: "customer" | "garage", metadata = {}) => {
     setIsLoading(true);
     try {
-      // Create user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -199,7 +186,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // Create a record in the profiles table
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({

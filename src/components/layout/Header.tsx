@@ -60,7 +60,7 @@ const Header = () => {
                 Login
               </Button>
             </Link>
-            <Link to="/login?type=garage&email=garage@example.com&password=garage123">
+            <Link to="/login?type=garage&email=demo@garage.com&password=garage123">
               <Button variant="outline" className="flex items-center gap-2">
                 <Wrench size={18} />
                 Garage Demo
@@ -125,7 +125,7 @@ const Header = () => {
                     Login
                   </Button>
                 </Link>
-                <Link to="/login?type=garage&email=garage@example.com&password=garage123" onClick={toggleMenu}>
+                <Link to="/login?type=garage&email=demo@garage.com&password=garage123" onClick={toggleMenu}>
                   <Button
                     variant="outline"
                     className="w-full justify-center flex items-center gap-2"
