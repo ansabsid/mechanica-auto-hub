@@ -12,15 +12,21 @@ interface PartsResultsProps {
 }
 
 const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
+  // Add detailed console logging to inspect the received props
   useEffect(() => {
     console.log("PartsResults received parts:", parts);
-  }, [parts]);
+    console.log("PartsResults visibility:", visible);
+    console.log("PartsResults parts length:", parts ? parts.length : 0);
+  }, [parts, visible]);
 
   if (!visible) {
+    console.log("PartsResults not visible, returning null");
     return null;
   }
 
+  // Check if parts array is null, undefined or empty
   if (!parts || parts.length === 0) {
+    console.log("No parts found in PartsResults component");
     return (
       <div className="text-center p-8 bg-gray-50 rounded-xl">
         <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -30,6 +36,8 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
     );
   }
 
+  console.log("Rendering parts list with", parts.length, "items");
+  
   return (
     <div>
       <div className="mb-6 flex items-center">

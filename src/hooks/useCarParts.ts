@@ -150,14 +150,16 @@ export const useCarParts = () => {
     }
   };
 
-  // Search for parts
+  // Search for parts - fixed with proper error handling and data flow
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
     console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);
     setSearchCompleted(false);
+    // Clear previous results at the start of a new search
+    setParts([]);
     
     try {
-      // Modified this query to fix the relationship error
+      // Query the database for matching parts
       const { data, error } = await supabase
         .from('parts')
         .select('*')
@@ -169,9 +171,8 @@ export const useCarParts = () => {
         throw error;
       }
       
-      // Since we're not joining with garages table anymore, we'll create mock garage data
+      // Process and enhance the database results with garage information
       const validParts: Part[] = (data || []).map(part => {
-        // Mock garages data for now
         return {
           ...part,
           garages: part.garage_id ? { 
@@ -183,7 +184,7 @@ export const useCarParts = () => {
       
       console.log("Valid parts from DB:", validParts);
       
-      // Generate mock parts for this car
+      // Generate mock parts as a fallback
       const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
       console.log("Generated mock parts:", mockParts);
       
@@ -195,6 +196,8 @@ export const useCarParts = () => {
       }
       
       console.log("Final parts being set:", finalParts);
+      
+      // Update state with the parts data
       setParts(finalParts);
       setSearchCompleted(true);
       

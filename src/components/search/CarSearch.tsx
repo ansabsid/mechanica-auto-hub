@@ -27,12 +27,15 @@ const CarSearch = () => {
   }, [searchCompleted, parts.length, toast]);
 
   const handleSearchComplete = (resultsCount: number) => {
+    console.log("Search completed with", resultsCount, "results");
     setShowResults(true);
   };
 
-  // Debug logging to track the state
+  // Enhanced debugging
   console.log("Current parts in CarSearch:", parts); 
   console.log("Show results:", showResults);
+  console.log("Search completed:", searchCompleted);
+  console.log("Is searching:", isSearching);
 
   return (
     <div className="w-full">
@@ -46,9 +49,10 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          showResults && (
+          <>
+            {/* Always pass the parts array to PartsResults, but control visibility */}
             <PartsResults parts={parts} visible={showResults} />
-          )
+          </>
         )}
       </div>
     </div>

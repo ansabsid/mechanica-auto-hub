@@ -50,7 +50,9 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     }
 
     try {
+      console.log("Starting search with params:", { manufacturer, model, year });
       const count = await searchParts(manufacturer, model, year);
+      console.log("Search returned count:", count);
       onSearch(count);
       
       if (count > 0) {
@@ -68,6 +70,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
         });
       }
     } catch (error: any) {
+      console.error("Search failed:", error);
       toast({
         variant: "destructive",
         title: "Search failed",
