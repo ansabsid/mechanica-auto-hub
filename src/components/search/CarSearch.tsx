@@ -30,7 +30,8 @@ const CarSearch = () => {
     setShowResults(true);
   };
 
-  console.log("Current parts in CarSearch:", parts); // Debug logging
+  // Debug logging to track the state
+  console.log("Current parts in CarSearch:", parts); 
   console.log("Show results:", showResults);
 
   return (
@@ -46,7 +47,7 @@ const CarSearch = () => {
           </div>
         ) : (
           showResults && (
-            <PartsResults parts={parts} visible={true} />
+            <PartsResults parts={parts} visible={showResults} />
           )
         )}
       </div>

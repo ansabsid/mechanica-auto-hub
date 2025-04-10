@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -156,7 +155,6 @@ export const useCarParts = () => {
     console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);
     setSearchCompleted(false);
-    setParts([]); // Clear previous results
     
     try {
       // Modified this query to fix the relationship error
@@ -199,7 +197,7 @@ export const useCarParts = () => {
       console.log("Final parts being set:", finalParts);
       setParts(finalParts);
       setSearchCompleted(true);
-      setIsSearching(false);
+      
       return finalParts.length;
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
@@ -210,8 +208,10 @@ export const useCarParts = () => {
       
       setParts(mockParts);
       setSearchCompleted(true);
-      setIsSearching(false);
+      
       return mockParts.length;
+    } finally {
+      setIsSearching(false);
     }
   };
 
