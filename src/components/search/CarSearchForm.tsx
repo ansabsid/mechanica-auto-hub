@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,7 +23,8 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     isSearching,
     fetchManufacturers,
     fetchModels,
-    searchParts
+    searchParts,
+    resetSearch
   } = useCarParts();
 
   useEffect(() => {
@@ -50,25 +50,13 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     }
 
     try {
+      // Reset previous search results
+      resetSearch();
+      
       console.log("Starting search with params:", { manufacturer, model, year });
       const count = await searchParts(manufacturer, model, year);
       console.log("Search returned count:", count);
       onSearch(count);
-      
-      if (count > 0) {
-        toast({
-          title: "Search Results",
-          description: `Found ${count} parts matching your search criteria`,
-          duration: 3000
-        });
-      } else {
-        toast({
-          variant: "default",
-          title: "No Results",
-          description: "No parts found matching your search criteria. Showing example parts.",
-          duration: 3000
-        });
-      }
     } catch (error: any) {
       console.error("Search failed:", error);
       toast({

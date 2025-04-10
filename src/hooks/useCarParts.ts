@@ -40,6 +40,7 @@ export const useCarParts = () => {
 
   // Reset search state
   const resetSearch = () => {
+    console.log("Resetting search state");
     setParts([]);
     setSearchCompleted(false);
   };
@@ -150,7 +151,7 @@ export const useCarParts = () => {
     }
   };
 
-  // Search for parts - fixed with proper error handling and data flow
+  // Search for parts - improved to ensure proper state updates
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
     console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);

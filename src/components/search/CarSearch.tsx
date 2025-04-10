@@ -22,9 +22,14 @@ const CarSearch = () => {
         });
       } else {
         console.log("Parts found:", parts.length);
+        toast({
+          title: "Parts Found",
+          description: `Found ${parts.length} parts matching your vehicle.`,
+          duration: 3000,
+        });
       }
     }
-  }, [searchCompleted, parts.length, toast]);
+  }, [searchCompleted, parts, toast]);
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
