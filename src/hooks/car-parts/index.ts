@@ -27,6 +27,7 @@ export const useCarParts = () => {
   // Get parts search functionality
   const {
     parts,
+    allParts,
     isSearching,
     searchCompleted,
     queryTime,
@@ -48,6 +49,7 @@ export const useCarParts = () => {
     manufacturers,
     models,
     parts,
+    allParts,
     years,
     isLoading,
     isSearching,

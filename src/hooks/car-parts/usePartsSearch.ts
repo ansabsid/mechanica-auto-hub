@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Part, Manufacturer, Model } from "./types";
 import { generateMockParts } from "./utils";
@@ -7,16 +7,80 @@ import { useToast } from "@/hooks/use-toast";
 
 export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
   const [parts, setParts] = useState<Part[]>([]);
+  const [allParts, setAllParts] = useState<Part[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
   const [queryTime, setQueryTime] = useState<number>(0);
   const { toast } = useToast();
 
+  // Fetch all parts on mount
+  useEffect(() => {
+    fetchAllParts();
+  }, []);
+
+  // Fetch all available parts from the database
+  const fetchAllParts = async () => {
+    console.log("Fetching all available parts");
+    try {
+      const { data, error } = await supabase
+        .from('parts')
+        .select('*');
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log("All parts fetched from database:", data?.length || 0);
+      
+      // Process the parts data with garage information
+      const processedParts: Part[] = (data || []).map(part => {
+        return {
+          ...part,
+          garages: part.garage_id ? { 
+            name: 'AutoCare Dubai',
+            location: 'Dubai Marina'
+          } : { 
+            name: 'Mechanica Service Center',
+            location: 'Dubai, UAE'
+          }
+        } as Part;
+      });
+      
+      if (processedParts.length > 0) {
+        setAllParts(processedParts);
+        setParts(processedParts);
+      } else {
+        console.log("No parts found in database, generating mock parts for initial display");
+        const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
+        setAllParts(mockParts);
+        setParts(mockParts);
+      }
+      
+      setSearchCompleted(true);
+    } catch (error: any) {
+      console.error("Error fetching all parts:", error.message);
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: `Error fetching parts: ${error.message}`,
+        variant: "destructive",
+        duration: 5000,
+      });
+      
+      // Generate mock parts as fallback
+      const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
+      setAllParts(mockParts);
+      setParts(mockParts);
+      setSearchCompleted(true);
+    }
+  };
+
   // Reset search state
   const resetSearch = () => {
     console.log("Resetting search state");
-    setParts([]);
-    setSearchCompleted(false);
+    setParts(allParts);
+    setSearchCompleted(true);
     setQueryTime(0);
   };
 
@@ -25,8 +89,6 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);
     setSearchCompleted(false);
-    // Clear previous results at the start of a new search
-    setParts([]);
     
     try {
       // Start timing the query
@@ -124,11 +186,9 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
-      // Store the startTime in a variable that's in scope for this catch block
       const errorEndTime = performance.now();
-      // The startTime isn't defined in this scope, so we can't calculate an accurate time
       // We'll just set a default value for the query duration when an error occurs
-      const queryDuration = 0; // We don't know the actual duration in the error case
+      const queryDuration = 0; 
       setQueryTime(queryDuration);
       
       // Show error toast
@@ -160,6 +220,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
 
   return {
     parts,
+    allParts,
     isSearching,
     searchCompleted,
     queryTime,

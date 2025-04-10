@@ -4,10 +4,11 @@ import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDown, Loader2, Clock } from "lucide-react";
+import { ArrowDown, Loader2, Clock, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const CarSearch = () => {
-  const [showResults, setShowResults] = useState(false);
+  const [showResults, setShowResults] = useState(true); // Set to true by default to show all parts
   const { parts, isSearching, searchCompleted, queryTime, resetSearch } = useCarParts();
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -45,6 +46,15 @@ const CarSearch = () => {
       });
     }
   };
+  
+  const handleClearSearch = () => {
+    resetSearch();
+    toast({
+      title: "Search Cleared",
+      description: "Showing all available parts",
+      duration: 3000,
+    });
+  };
 
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
@@ -53,27 +63,33 @@ const CarSearch = () => {
     <div className="w-full max-w-6xl mx-auto">
       <CarSearchForm onSearch={handleSearchComplete} />
       
-      {(isSearching || (searchCompleted && showResults)) && (
-        <div className="flex flex-col items-center justify-center mt-8 mb-4">
-          {isSearching ? (
-            <div className="flex items-center text-mechanica-600 animate-pulse">
-              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              <span className="text-lg font-medium">Searching for parts...</span>
-            </div>
-          ) : parts && parts.length > 0 ? (
-            <div className="flex flex-col items-center">
-              <div className="flex items-center text-mechanica-600 mb-2">
-                <Clock className="mr-2 h-5 w-5" />
-                <span className="text-sm font-medium">Query completed in {formattedQueryTime}</span>
-              </div>
-              <div className="flex flex-col items-center animate-bounce">
-                <p className="text-mechanica-600 font-semibold mb-2 text-lg">Scroll down to see results</p>
-                <ArrowDown className="text-mechanica-500" size={32} />
-              </div>
-            </div>
-          ) : null}
+      {searchCompleted && queryTime > 0 && (
+        <div className="flex justify-between items-center mt-6 mb-2 px-4">
+          <div className="flex items-center text-mechanica-600">
+            <Clock className="mr-2 h-5 w-5" />
+            <span className="text-sm font-medium">Search completed in {formattedQueryTime}</span>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleClearSearch}
+            className="text-sm"
+          >
+            <Search className="mr-2 h-4 w-4" />
+            Show All Parts
+          </Button>
         </div>
       )}
+      
+      {isSearching ? (
+        <div className="flex items-center justify-center mt-8 mb-4">
+          <div className="flex items-center text-mechanica-600 animate-pulse">
+            <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+            <span className="text-lg font-medium">Searching for parts...</span>
+          </div>
+        </div>
+      ) : null}
       
       <div 
         id="search-results-section" 
@@ -89,20 +105,18 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          searchCompleted && (
-            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-mechanica-200">
-              {queryTime > 0 && (
-                <div className="mb-4 flex items-center justify-end text-sm text-gray-500">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>Query time: {formattedQueryTime}</span>
-                </div>
-              )}
-              <PartsResults 
-                parts={parts} 
-                visible={showResults} 
-              />
-            </div>
-          )
+          <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-mechanica-200">
+            {queryTime > 0 && (
+              <div className="mb-4 flex items-center justify-end text-sm text-gray-500">
+                <Clock className="h-4 w-4 mr-1" />
+                <span>Query time: {formattedQueryTime}</span>
+              </div>
+            )}
+            <PartsResults 
+              parts={parts} 
+              visible={showResults} 
+            />
+          </div>
         )}
       </div>
     </div>
