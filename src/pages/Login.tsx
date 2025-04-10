@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,23 @@ const Login = () => {
   const [garageEmail, setGarageEmail] = useState("");
   const [garagePassword, setGaragePassword] = useState("");
   
+  const location = useLocation();
   const { signIn, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Parse URL query parameters for demo login
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const type = queryParams.get("type");
+    const email = queryParams.get("email");
+    const password = queryParams.get("password");
+
+    if (type === "garage" && email && password) {
+      setActiveTab("garage");
+      setGarageEmail(email);
+      setGaragePassword(password);
+    }
+  }, [location]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -47,6 +63,7 @@ const Login = () => {
         <div className="container max-w-md mx-auto px-4">
           <Tabs
             defaultValue="customer"
+            value={activeTab}
             className="w-full"
             onValueChange={(value) => setActiveTab(value)}
           >

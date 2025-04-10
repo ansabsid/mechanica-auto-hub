@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, ChevronDown } from "lucide-react";
+import { Menu, X, User, ChevronDown, Wrench } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -58,6 +58,12 @@ const Header = () => {
               <Button variant="outline" className="flex items-center gap-2">
                 <User size={18} />
                 Login
+              </Button>
+            </Link>
+            <Link to="/login?type=garage&email=garage@example.com&password=garage123">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Wrench size={18} />
+                Garage Demo
               </Button>
             </Link>
             <Link to="/register">
@@ -117,6 +123,15 @@ const Header = () => {
                   >
                     <User size={18} />
                     Login
+                  </Button>
+                </Link>
+                <Link to="/login?type=garage&email=garage@example.com&password=garage123" onClick={toggleMenu}>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center flex items-center gap-2"
+                  >
+                    <Wrench size={18} />
+                    Garage Demo
                   </Button>
                 </Link>
                 <Link to="/register" onClick={toggleMenu}>
