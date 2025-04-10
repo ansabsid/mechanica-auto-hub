@@ -34,6 +34,8 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   useEffect(() => {
     if (manufacturer) {
       fetchModels(manufacturer);
+      // Reset model when manufacturer changes
+      setModel("");
     }
   }, [manufacturer]);
 
@@ -51,10 +53,18 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       const count = await searchParts(manufacturer, model, year);
       onSearch(count);
       
-      toast({
-        title: "Search Results",
-        description: `Found ${count} parts matching your search criteria`
-      });
+      if (count > 0) {
+        toast({
+          title: "Search Results",
+          description: `Found ${count} parts matching your search criteria`
+        });
+      } else {
+        toast({
+          variant: "default",
+          title: "No Results",
+          description: "No parts found matching your search criteria. Showing example parts."
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
