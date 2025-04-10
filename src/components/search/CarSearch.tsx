@@ -4,6 +4,7 @@ import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
 import { useToast } from "@/hooks/use-toast";
+import { ArrowDown } from "lucide-react";
 
 const CarSearch = () => {
   const [showResults, setShowResults] = useState(false);
@@ -34,6 +35,14 @@ const CarSearch = () => {
           description: `Found ${parts.length} parts matching your vehicle.`,
           duration: 3000,
         });
+        
+        // Scroll to results section
+        setTimeout(() => {
+          const resultsSection = document.getElementById('search-results-section');
+          if (resultsSection) {
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 300);
       }
     }
   }, [searchCompleted, parts, toast]);
@@ -47,7 +56,14 @@ const CarSearch = () => {
     <div className="w-full max-w-6xl mx-auto">
       <CarSearchForm onSearch={handleSearchComplete} />
       
-      <div className="mt-8 transition-all duration-300">
+      {(isSearching || (searchCompleted && showResults)) && (
+        <div className="flex justify-center mt-6 animate-bounce">
+          <ArrowDown className="text-mechanica-500" size={32} />
+          <span className="sr-only">Scroll down to see results</span>
+        </div>
+      )}
+      
+      <div id="search-results-section" className="mt-8 transition-all duration-300">
         {isSearching ? (
           <div className="flex justify-center items-center p-8 bg-white rounded-xl shadow-sm">
             <div className="animate-pulse text-center">
@@ -56,7 +72,7 @@ const CarSearch = () => {
           </div>
         ) : (
           searchCompleted && (
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-sm p-6 border-2 border-mechanica-100">
               <PartsResults 
                 parts={parts} 
                 visible={showResults} 

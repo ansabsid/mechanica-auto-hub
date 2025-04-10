@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MapPin, ShoppingCart } from "lucide-react";
+import { MapPin, ShoppingCart, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Part } from "@/hooks/useCarParts";
 import { useCart } from "@/hooks/useCart";
@@ -17,25 +17,25 @@ export const PartCard = ({ part }: PartCardProps) => {
   };
   
   return (
-    <div className="bg-white rounded-xl shadow-subtle overflow-hidden card-hover">
-      <div className="h-48 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-2 border-gray-100">
+      <div className="h-48 overflow-hidden relative">
         <img
           src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format"
           alt={part.name}
           className="w-full h-full object-cover"
         />
+        <span className={`absolute top-2 right-2 ${part.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs px-2 py-1 rounded-full font-medium`}>
+          {part.stock > 0 ? "In Stock" : "Out of Stock"}
+        </span>
       </div>
       <div className="p-5">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg">{part.name}</h3>
-          <span className={`bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full`}>
-            {part.stock > 0 ? "In Stock" : "Out of Stock"}
-          </span>
+          <h3 className="font-semibold text-lg text-gray-800">{part.name}</h3>
         </div>
         {part.description && (
-          <div className="text-sm text-gray-500 mb-2">{part.description}</div>
+          <div className="text-sm text-gray-500 mb-3 line-clamp-2">{part.description}</div>
         )}
-        <p className="text-mechanica-600 font-bold text-lg mb-3">${part.price.toFixed(2)}</p>
+        <p className="text-mechanica-600 font-bold text-xl mb-4">${part.price.toFixed(2)}</p>
         <div className="flex justify-between items-center">
           <div>
             {part.garages && (
@@ -48,6 +48,13 @@ export const PartCard = ({ part }: PartCardProps) => {
             )}
           </div>
           <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex items-center"
+            >
+              <Info className="mr-1 h-4 w-4" /> Details
+            </Button>
             <Button 
               size="sm" 
               className="bg-mechanica-500 hover:bg-mechanica-600 flex items-center"
