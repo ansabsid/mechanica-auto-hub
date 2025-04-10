@@ -11,7 +11,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import CustomerDashboard from "@/pages/CustomerDashboard";
 import GarageDashboard from "@/pages/GarageDashboard";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/auth";
 import { Toaster } from "@/components/ui/toaster";
 
 const App: React.FC = () => {

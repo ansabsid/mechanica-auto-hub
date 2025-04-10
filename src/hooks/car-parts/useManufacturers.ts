@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Manufacturer } from "./types";
 
@@ -53,6 +53,11 @@ export const useManufacturers = () => {
       setIsLoading(false);
     }
   }, []);
+
+  // Auto-fetch manufacturers on mount
+  useEffect(() => {
+    fetchManufacturers();
+  }, [fetchManufacturers]);
 
   return {
     manufacturers,
