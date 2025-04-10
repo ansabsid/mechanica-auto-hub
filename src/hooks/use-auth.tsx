@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, SupabaseClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -84,43 +85,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       if (email === "demo@garage.com" && password === "garage123") {
-        const { data: userExists, error: checkError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', email)
-          .single();
-
-        if (checkError) {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        // Special handling for demo account
+        // First try signing in - it might already work
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
-            options: {
-              data: {
-                role: 'garage'
-              }
-            }
           });
-
-          if (signUpError) {
-            throw signUpError;
-          }
-
-          if (signUpData.user) {
-            const { error: profileError } = await supabase
+          
+          // If sign in works, continue with normal flow
+          if (!error && data.user) {
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .upsert({
-                id: signUpData.user.id,
-                email: email,
-                role: 'garage'
-              });
-
-            if (profileError) {
-              console.error("Error creating demo profile:", profileError);
+              .select('role')
+              .eq('id', data.user.id)
+              .single();
+              
+            if (profileError || !profile) {
+              throw new Error("User profile not found");
             }
+            
+            setUserRole(profile.role as "customer" | "garage");
+            navigate("/garage-dashboard");
+            
+            toast({
+              title: "Demo login successful",
+              description: `Welcome to the Bookmyparts garage demo!`,
+            });
+            
+            return;
+          }
+        } catch (signInError) {
+          // If sign in fails, we'll try to create the account
+          console.log("Sign in failed, trying to create demo account");
+        }
+        
+        // If we reach here, we need to create the account
+        // First sign up the user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              role: 'garage'
+            }
+          }
+        });
+
+        if (signUpError) {
+          throw signUpError;
+        }
+
+        if (signUpData.user) {
+          // Insert profile record
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: signUpData.user.id,
+              email: email,
+              role: 'garage'
+            });
+
+          if (profileError) {
+            console.error("Error creating demo profile:", profileError);
+          }
+          
+          // For demo account, directly confirm the email by admin sign in
+          try {
+            // Sign in admin first to get session
+            const { data: adminAuth } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            
+            if (adminAuth.user) {
+              setUser(adminAuth.user);
+              setUserRole('garage');
+              navigate("/garage-dashboard");
+              
+              toast({
+                title: "Demo login successful",
+                description: `Welcome to the Bookmyparts garage demo!`,
+              });
+              return;
+            }
+          } catch (adminError) {
+            console.error("Could not auto-confirm demo account:", adminError);
           }
         }
       }
 
+      // Standard login flow for non-demo accounts
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
