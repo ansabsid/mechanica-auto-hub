@@ -61,7 +61,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       console.log("Generated mock parts:", mockParts);
       
       // Use DB parts if found, otherwise use mock parts
-      let finalParts = validParts.length > 0 ? validParts : mockParts;
+      const finalParts = validParts.length > 0 ? validParts : mockParts;
       
       if (validParts.length === 0) {
         console.log("Using mock parts:", mockParts);
@@ -69,10 +69,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("Final parts being set:", finalParts);
       
-      // First update the parts array directly
+      // Update state with a slight delay to ensure React catches the change
       setParts(finalParts);
-      
-      // Then update search status
       setIsSearching(false);
       setSearchCompleted(true);
       
@@ -90,10 +88,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       );
       console.log("Using mock parts due to error:", mockParts);
       
-      // First update the parts array directly
+      // Update state
       setParts(mockParts);
-      
-      // Then update search status
       setIsSearching(false);
       setSearchCompleted(true);
       

@@ -57,11 +57,9 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          showResults && searchCompleted && (
+          showResults && (
             <div className="bg-white rounded-xl shadow-sm p-6">
-              {/* Always render results regardless of parts.length to show the "no results" message */}
               <PartsResults 
-                key={`parts-results-${parts.length}-${Date.now()}`} 
                 parts={parts} 
                 visible={true} 
               />

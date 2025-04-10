@@ -24,7 +24,7 @@ export const useCarParts = () => {
     fetchModels 
   } = useModels();
   
-  // Get parts search functionality - pass in the manufacturers and models from state
+  // Get parts search functionality
   const {
     parts,
     isSearching,
@@ -38,6 +38,9 @@ export const useCarParts = () => {
   
   // Combine loading states
   const isLoading = isLoadingManufacturers || isLoadingModels;
+
+  console.log("useCarParts hook - current parts state:", parts);
+  console.log("useCarParts hook - searchCompleted:", searchCompleted);
 
   return {
     manufacturers,
