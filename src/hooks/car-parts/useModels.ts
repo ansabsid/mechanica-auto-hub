@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Model } from "./types";
 
 // Set a timeout for fetch operations (in milliseconds)
-const FETCH_TIMEOUT = 5000;
-const MAX_RETRIES = 2;
+const FETCH_TIMEOUT = 15000;
+const MAX_RETRIES = 3;
 
 export const useModels = () => {
   const [models, setModels] = useState<Model[]>([]);
@@ -38,10 +38,9 @@ export const useModels = () => {
     }
 
     setIsLoading(true);
+    console.log(`Fetching models for manufacturer ID: ${manufacturerId}`);
     
     try {
-      console.log(`Fetching models for manufacturer ID: ${manufacturerId}`);
-      
       const fetchPromise = supabase
         .from('models')
         .select('*')
@@ -54,33 +53,57 @@ export const useModels = () => {
         throw error;
       }
       
+      // Always provide fallback data regardless of DB response
+      const mockModels: { [key: string]: Model[] } = {
+        "1": [
+          { id: 1, name: "Corolla", manufacturer_id: 1 },
+          { id: 2, name: "Camry", manufacturer_id: 1 },
+          { id: 3, name: "RAV4", manufacturer_id: 1 },
+          { id: 4, name: "Land Cruiser", manufacturer_id: 1 },
+        ],
+        "2": [
+          { id: 5, name: "Civic", manufacturer_id: 2 },
+          { id: 6, name: "Accord", manufacturer_id: 2 },
+          { id: 7, name: "CR-V", manufacturer_id: 2 },
+        ],
+        "3": [
+          { id: 8, name: "3 Series", manufacturer_id: 3 },
+          { id: 9, name: "5 Series", manufacturer_id: 3 },
+          { id: 10, name: "X5", manufacturer_id: 3 },
+        ],
+        "4": [
+          { id: 11, name: "C-Class", manufacturer_id: 4 },
+          { id: 12, name: "E-Class", manufacturer_id: 4 },
+          { id: 13, name: "G-Class", manufacturer_id: 4 },
+        ],
+        "5": [
+          { id: 14, name: "Mustang", manufacturer_id: 5 },
+          { id: 15, name: "F-150", manufacturer_id: 5 },
+          { id: 16, name: "Explorer", manufacturer_id: 5 },
+        ],
+        "6": [
+          { id: 17, name: "A4", manufacturer_id: 6 },
+          { id: 18, name: "Q5", manufacturer_id: 6 },
+          { id: 19, name: "R8", manufacturer_id: 6 },
+        ],
+        "7": [
+          { id: 20, name: "Altima", manufacturer_id: 7 },
+          { id: 21, name: "Rogue", manufacturer_id: 7 },
+          { id: 22, name: "GT-R", manufacturer_id: 7 },
+        ],
+      };
+      
       if (data && data.length > 0) {
         console.log(`Successfully fetched models: ${data.length} models found`);
         setModels(data);
       } else {
         console.log("No models found in database, using fallback data");
         // If no models found, provide fallback data
-        const mockModels: { [key: string]: Model[] } = {
-          "1": [
-            { id: 1, name: "Corolla", manufacturer_id: 1 },
-            { id: 2, name: "Camry", manufacturer_id: 1 },
-            { id: 3, name: "RAV4", manufacturer_id: 1 },
-            { id: 4, name: "Land Cruiser", manufacturer_id: 1 },
-          ],
-          "2": [
-            { id: 5, name: "Civic", manufacturer_id: 2 },
-            { id: 6, name: "Accord", manufacturer_id: 2 },
-            { id: 7, name: "CR-V", manufacturer_id: 2 },
-          ],
-          "3": [
-            { id: 8, name: "3 Series", manufacturer_id: 3 },
-            { id: 9, name: "5 Series", manufacturer_id: 3 },
-            { id: 10, name: "X5", manufacturer_id: 3 },
-          ],
-        };
-        
-        setModels(mockModels[manufacturerId] || []);
+        const fallbackModels = mockModels[manufacturerId] || [];
+        console.log(`Using fallback models for manufacturer ${manufacturerId}:`, fallbackModels);
+        setModels(fallbackModels);
       }
+      setIsLoading(false);
     } catch (error: any) {
       console.error('Error fetching models:', error.message);
       
@@ -112,14 +135,31 @@ export const useModels = () => {
             { id: 9, name: "5 Series", manufacturer_id: 3 },
             { id: 10, name: "X5", manufacturer_id: 3 },
           ],
+          "4": [
+            { id: 11, name: "C-Class", manufacturer_id: 4 },
+            { id: 12, name: "E-Class", manufacturer_id: 4 },
+            { id: 13, name: "G-Class", manufacturer_id: 4 },
+          ],
+          "5": [
+            { id: 14, name: "Mustang", manufacturer_id: 5 },
+            { id: 15, name: "F-150", manufacturer_id: 5 },
+            { id: 16, name: "Explorer", manufacturer_id: 5 },
+          ],
+          "6": [
+            { id: 17, name: "A4", manufacturer_id: 6 },
+            { id: 18, name: "Q5", manufacturer_id: 6 },
+            { id: 19, name: "R8", manufacturer_id: 6 },
+          ],
+          "7": [
+            { id: 20, name: "Altima", manufacturer_id: 7 },
+            { id: 21, name: "Rogue", manufacturer_id: 7 },
+            { id: 22, name: "GT-R", manufacturer_id: 7 },
+          ],
         };
         
-        setModels(mockModels[manufacturerId] || []);
-        setIsLoading(false);
-      }
-    } finally {
-      // Only set loading to false if we're not retrying
-      if (retryCount >= MAX_RETRIES) {
+        const fallbackModels = mockModels[manufacturerId] || [];
+        console.log(`Using fallback models for manufacturer ${manufacturerId}:`, fallbackModels);
+        setModels(fallbackModels);
         setIsLoading(false);
       }
     }

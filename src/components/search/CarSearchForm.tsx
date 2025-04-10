@@ -43,6 +43,11 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     }
   }, [manufacturer, fetchModels]);
 
+  // Log models when they change
+  useEffect(() => {
+    console.log("Available models:", models);
+  }, [models]);
+
   const handleSearch = async () => {
     if (!manufacturer || !model || !year) {
       toast({
@@ -127,14 +132,18 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
             value={model}
           >
             <SelectTrigger id="model" className="w-full">
-              <SelectValue placeholder={manufacturer ? "Select model" : "Select manufacturer first"} />
+              <SelectValue placeholder={manufacturer ? (isLoading ? "Loading models..." : "Select model") : "Select manufacturer first"} />
             </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-50">
-              {models.map((mdl) => (
-                <SelectItem key={mdl.id} value={mdl.id.toString()}>
-                  {mdl.name}
-                </SelectItem>
-              ))}
+            <SelectContent position="popper" className="bg-white z-50 max-h-60 overflow-y-auto">
+              {models && models.length > 0 ? (
+                models.map((mdl) => (
+                  <SelectItem key={mdl.id} value={mdl.id.toString()}>
+                    {mdl.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-models" disabled>No models available</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -153,7 +162,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
             <SelectTrigger id="year" className="w-full">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-50">
+            <SelectContent position="popper" className="bg-white z-50 max-h-60 overflow-y-auto">
               {years.map((yr) => (
                 <SelectItem key={yr} value={yr.toString()}>
                   {yr}
