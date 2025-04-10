@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight } from "lucide-react";
-import { useCart } from "@/hooks/useCart";
+import { useCart, CartItem } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
