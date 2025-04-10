@@ -4,11 +4,18 @@ import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
-// Initialize Supabase client
+// Initialize Supabase client with fallback values for development
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Only create the client if we have the required values
+let supabase: SupabaseClient | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  console.error("Supabase URL and anon key are required. Please set the VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.");
+}
 
 type AuthContextType = {
   user: User | null;
@@ -30,15 +37,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Skip initialization if Supabase client is not available
+    if (!supabase) {
+      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Configuration Error",
+        description: "Supabase URL and key are not configured. Please check your environment variables.",
+      });
+      return;
+    }
+
     // Check active session and get user
-    const session = supabase.auth.getSession();
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const currentUser = data.session?.user ?? null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+          
+        if (profileData && !profileError) {
+          setUserRole(profileData.role as "customer" | "garage");
+        }
+      }
+      
+      setIsLoading(false);
+    };
+    
+    getSession();
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        setIsLoading(false);
         
         if (currentUser) {
           const { data, error } = await supabase
@@ -59,9 +96,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
+    if (!supabase) {
+      toast({
+        variant: "destructive",
+        title: "Configuration Error",
+        description: "Supabase is not properly configured. Please check your environment variables.",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -113,6 +159,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, role: "customer" | "garage", metadata = {}) => {
+    if (!supabase) {
+      toast({
+        variant: "destructive",
+        title: "Configuration Error",
+        description: "Supabase is not properly configured. Please check your environment variables.",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
       // Create user
@@ -168,6 +223,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      toast({
+        variant: "destructive",
+        title: "Configuration Error",
+        description: "Supabase is not properly configured. Please check your environment variables.",
+      });
+      return;
+    }
+    
     try {
       await supabase.auth.signOut();
       setUser(null);

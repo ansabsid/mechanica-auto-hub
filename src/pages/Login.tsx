@@ -1,13 +1,13 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Wrench, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,9 +16,18 @@ const Login = () => {
   const [customerPassword, setCustomerPassword] = useState("");
   const [garageEmail, setGarageEmail] = useState("");
   const [garagePassword, setGaragePassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
   
-  const { signIn } = useAuth();
+  const { signIn, isLoading } = useAuth();
+
+  useEffect(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      setIsConfigured(false);
+    }
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -26,21 +35,23 @@ const Login = () => {
 
   const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!isConfigured) return;
+    
     try {
       await signIn(customerEmail, customerPassword, "customer");
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error("Login failed:", err);
     }
   };
 
   const handleGarageLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!isConfigured) return;
+    
     try {
       await signIn(garageEmail, garagePassword, "garage");
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error("Login failed:", err);
     }
   };
 
@@ -48,6 +59,16 @@ const Login = () => {
     <MainLayout>
       <section className="py-12 md:py-20">
         <div className="container max-w-md mx-auto px-4">
+          {!isConfigured && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Configuration Error</AlertTitle>
+              <AlertDescription>
+                Supabase environment variables are not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <Tabs
             defaultValue="customer"
             className="w-full"
@@ -129,7 +150,7 @@ const Login = () => {
                     <Button 
                       type="submit" 
                       className="w-full bg-mechanica-500 hover:bg-mechanica-600"
-                      disabled={isLoading}
+                      disabled={isLoading || !isConfigured}
                     >
                       {isLoading ? "Logging in..." : "Login"}
                     </Button>
@@ -211,7 +232,7 @@ const Login = () => {
                     <Button 
                       type="submit" 
                       className="w-full bg-mechanica-500 hover:bg-mechanica-600"
-                      disabled={isLoading}
+                      disabled={isLoading || !isConfigured}
                     >
                       {isLoading ? "Logging in..." : "Login"}
                     </Button>
