@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
   const [parts, setParts] = useState<Part[]>([]);
   const [allParts, setAllParts] = useState<Part[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
   const [queryTime, setQueryTime] = useState<number>(0);
@@ -21,6 +22,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
   // Fetch all available parts from the database
   const fetchAllParts = async () => {
     console.log("Fetching all available parts");
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('parts')
@@ -73,6 +75,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setAllParts(mockParts);
       setParts(mockParts);
       setSearchCompleted(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -221,10 +225,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
   return {
     parts,
     allParts,
+    isLoading,
     isSearching,
     searchCompleted,
     queryTime,
     searchParts,
-    resetSearch
+    resetSearch,
+    fetchAllParts
   };
 };
