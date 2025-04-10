@@ -28,14 +28,13 @@ const CarSearch = () => {
     setShowResults(true);
   };
 
-  console.log("Current parts in CarSearch:", parts); // Add logging to debug
+  console.log("Current parts in CarSearch:", parts); // Debug logging
   console.log("Show results:", showResults);
 
   return (
     <div className="w-full">
       <CarSearchForm onSearch={handleSearchComplete} />
       
-      {/* Always render the results container, but conditionally show results */}
       <div className="mt-8 border-t pt-6 transition-all">
         {isSearching ? (
           <div className="flex justify-center items-center p-8">
@@ -44,7 +43,7 @@ const CarSearch = () => {
             </div>
           </div>
         ) : (
-          showResults && <PartsResults parts={parts} visible={true} />
+          <PartsResults parts={parts} visible={showResults} />
         )}
       </div>
     </div>

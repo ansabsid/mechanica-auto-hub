@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -149,6 +148,7 @@ export const useCarParts = () => {
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
     setIsSearching(true);
     setSearchCompleted(false);
+    setParts([]); // Reset parts before searching
     
     try {
       // Modified this query to fix the relationship error
@@ -177,13 +177,13 @@ export const useCarParts = () => {
       
       console.log("Valid parts from DB:", validParts);
       
-      // ALWAYS show mock data for better user experience
-      let finalParts = validParts;
+      // Always generate mock parts for better UX
+      const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
       
-      // If no parts found, use mock data
+      // Use DB parts if found, otherwise use mock parts
+      let finalParts = validParts.length > 0 ? validParts : mockParts;
+      
       if (validParts.length === 0) {
-        const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
-        finalParts = mockParts;
         console.log("Using mock parts:", mockParts);
       }
       
