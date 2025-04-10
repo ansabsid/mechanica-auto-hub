@@ -2,13 +2,23 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, ChevronDown, Wrench } from "lucide-react";
+import { Menu, X, User, ChevronDown, Wrench, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, signOut } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
   };
 
   return (
@@ -54,23 +64,36 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/login">
-              <Button variant="outline" className="flex items-center gap-2">
-                <User size={18} />
-                Login
+            {isAuthenticated ? (
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut size={18} />
+                Sign Out
               </Button>
-            </Link>
-            <Link to="/login?type=garage&email=ansab.sid123@gmail.com&password=Ammiabbu@12345">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Wrench size={18} />
-                Garage Demo
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button>
-                Sign Up
-              </Button>
-            </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <User size={18} />
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/login?type=garage&email=ansab.sid123@gmail.com&password=Ammiabbu@12345">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Wrench size={18} />
+                    Garage Demo
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button>
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -116,31 +139,47 @@ const Header = () => {
                 Contact
               </Link>
               <div className="flex flex-col space-y-2 pt-2">
-                <Link to="/login" onClick={toggleMenu}>
+                {isAuthenticated ? (
                   <Button
                     variant="outline"
+                    onClick={() => {
+                      handleSignOut();
+                      toggleMenu();
+                    }}
                     className="w-full justify-center flex items-center gap-2"
                   >
-                    <User size={18} />
-                    Login
+                    <LogOut size={18} />
+                    Sign Out
                   </Button>
-                </Link>
-                <Link to="/login?type=garage&email=ansab.sid123@gmail.com&password=Ammiabbu@12345" onClick={toggleMenu}>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center flex items-center gap-2"
-                  >
-                    <Wrench size={18} />
-                    Garage Demo
-                  </Button>
-                </Link>
-                <Link to="/register" onClick={toggleMenu}>
-                  <Button
-                    className="w-full justify-center"
-                  >
-                    Sign Up
-                  </Button>
-                </Link>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={toggleMenu}>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-center flex items-center gap-2"
+                      >
+                        <User size={18} />
+                        Login
+                      </Button>
+                    </Link>
+                    <Link to="/login?type=garage&email=ansab.sid123@gmail.com&password=Ammiabbu@12345" onClick={toggleMenu}>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-center flex items-center gap-2"
+                      >
+                        <Wrench size={18} />
+                        Garage Demo
+                      </Button>
+                    </Link>
+                    <Link to="/register" onClick={toggleMenu}>
+                      <Button
+                        className="w-full justify-center"
+                      >
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>
