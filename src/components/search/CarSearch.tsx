@@ -18,7 +18,7 @@ const CarSearch = () => {
       if (parts.length === 0) {
         toast({
           title: "No Results",
-          description: "No parts found matching your criteria. Showing example parts instead.",
+          description: "No parts found matching your criteria. Try different search parameters.",
         });
       } else {
         console.log("Parts found:", parts.length);
@@ -38,21 +38,23 @@ const CarSearch = () => {
   console.log("Is searching:", isSearching);
 
   return (
-    <div className="w-full">
-      <CarSearchForm onSearch={handleSearchComplete} />
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">Find Parts for Your Vehicle</h2>
+        <CarSearchForm onSearch={handleSearchComplete} />
+      </div>
       
-      <div className="mt-8 border-t pt-6 transition-all">
+      <div className="transition-all duration-300">
         {isSearching ? (
-          <div className="flex justify-center items-center p-8">
+          <div className="flex justify-center items-center p-8 bg-white rounded-xl shadow-sm">
             <div className="animate-pulse text-center">
               <p className="text-lg text-gray-500">Searching for parts...</p>
             </div>
           </div>
         ) : (
-          <>
-            {/* Always pass the parts array to PartsResults, but control visibility */}
+          <div className={`bg-white rounded-xl shadow-sm p-6 ${showResults ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
             <PartsResults parts={parts} visible={showResults} />
-          </>
+          </div>
         )}
       </div>
     </div>

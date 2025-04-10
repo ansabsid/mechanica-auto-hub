@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
 import { PartCard } from "@/components/parts/PartCard";
-import { Package2, AlertCircle } from "lucide-react";
+import { Package2, AlertCircle, LayoutGrid, LayoutList } from "lucide-react";
 
 interface PartsResultsProps {
   parts: Part[];
@@ -39,12 +39,20 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   console.log("Rendering parts list with", parts.length, "items");
   
   return (
-    <div>
-      <div className="mb-6 flex items-center">
-        <Package2 className="mr-2 h-6 w-6 text-mechanica-500" />
-        <h3 className="text-xl font-semibold text-gray-800">
-          Parts Matching Your Vehicle ({parts.length} found)
-        </h3>
+    <div className="parts-results-container animate-in fade-in-50 duration-300">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center">
+          <Package2 className="mr-2 h-6 w-6 text-mechanica-500" />
+          <h3 className="text-xl font-semibold text-gray-800">
+            Parts Matching Your Vehicle ({parts.length} found)
+          </h3>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-mechanica-50">
+            <LayoutGrid className="h-4 w-4 mr-1" /> Grid View
+          </Badge>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
