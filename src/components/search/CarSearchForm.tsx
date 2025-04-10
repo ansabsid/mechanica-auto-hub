@@ -112,6 +112,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
           <Select 
             onValueChange={(value) => setModel(value)} 
             disabled={!manufacturer || isLoading}
+            value={model}
           >
             <SelectTrigger id="model" className="w-full">
               <SelectValue placeholder={manufacturer ? "Select model" : "Select manufacturer first"} />

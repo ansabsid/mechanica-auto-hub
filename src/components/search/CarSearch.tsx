@@ -3,26 +3,35 @@ import React, { useState, useEffect } from "react";
 import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
+import { useToast } from "@/hooks/use-toast";
 
 const CarSearch = () => {
   const [showResults, setShowResults] = useState(false);
-  const { parts, isSearching } = useCarParts();
+  const { parts, isSearching, searchCompleted } = useCarParts();
+  const { toast } = useToast();
 
   // Add effect to update UI when search completes
   useEffect(() => {
-    if (!isSearching && parts.length > 0) {
+    if (searchCompleted) {
       setShowResults(true);
+      
+      if (parts.length === 0) {
+        toast({
+          title: "No Results",
+          description: "No parts found matching your criteria. Showing example parts instead.",
+        });
+      }
     }
-  }, [isSearching, parts]);
+  }, [searchCompleted, parts.length, toast]);
 
   const handleSearchComplete = (resultsCount: number) => {
-    setShowResults(resultsCount > 0);
+    setShowResults(true);
   };
 
   return (
     <div className="w-full">
       <CarSearchForm onSearch={handleSearchComplete} />
-      <PartsResults parts={parts} visible={showResults} />
+      {showResults && <PartsResults parts={parts} visible={true} />}
     </div>
   );
 };

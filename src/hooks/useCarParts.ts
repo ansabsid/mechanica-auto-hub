@@ -35,6 +35,7 @@ export const useCarParts = () => {
   const [parts, setParts] = useState<Part[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
   
   const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i);
 
@@ -147,6 +148,8 @@ export const useCarParts = () => {
   // Search for parts
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
     setIsSearching(true);
+    setSearchCompleted(false);
+    
     try {
       // Modified this query to fix the relationship error
       const { data, error } = await supabase
@@ -172,104 +175,100 @@ export const useCarParts = () => {
         } as Part;
       });
       
+      // ALWAYS show mock data for better user experience
+      let finalParts = validParts;
+      
       // If no parts found, use mock data
       if (validParts.length === 0) {
-        const mockParts: Part[] = [
-          {
-            id: 1,
-            name: "Brake Pads",
-            description: "Premium quality brake pads",
-            price: 120,
-            stock: 15,
-            manufacturer_id: parseInt(manufacturerId),
-            model_id: parseInt(modelId),
-            year: parseInt(year),
-            garage_id: "1",
-            garages: {
-              name: "AutoCare Dubai",
-              location: "Dubai Marina"
-            }
-          },
-          {
-            id: 2,
-            name: "Oil Filter",
-            description: "High performance oil filter",
-            price: 35,
-            stock: 28,
-            manufacturer_id: parseInt(manufacturerId),
-            model_id: parseInt(modelId),
-            year: parseInt(year),
-            garage_id: "2",
-            garages: {
-              name: "SparkTech Auto",
-              location: "Al Quoz"
-            }
-          },
-          {
-            id: 3,
-            name: "Air Filter",
-            description: "Premium air filter for improved performance",
-            price: 45,
-            stock: 12,
-            manufacturer_id: parseInt(manufacturerId),
-            model_id: parseInt(modelId),
-            year: parseInt(year),
-            garage_id: "1",
-            garages: {
-              name: "AutoCare Dubai",
-              location: "Dubai Marina"
-            }
-          }
-        ];
-        
-        setParts(mockParts);
-        return mockParts.length;
+        const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
+        finalParts = mockParts;
       }
       
-      setParts(validParts);
-      return validParts.length;
+      setParts(finalParts);
+      setSearchCompleted(true);
+      return finalParts.length;
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
       // Show mock data on error for better user experience
-      const mockParts: Part[] = [
-        {
-          id: 1,
-          name: "Brake Pads",
-          description: "Premium quality brake pads",
-          price: 120,
-          stock: 15,
-          manufacturer_id: parseInt(manufacturerId),
-          model_id: parseInt(modelId),
-          year: parseInt(year),
-          garage_id: "1",
-          garages: {
-            name: "AutoCare Dubai",
-            location: "Dubai Marina"
-          }
-        },
-        {
-          id: 2,
-          name: "Oil Filter",
-          description: "High performance oil filter",
-          price: 35,
-          stock: 28,
-          manufacturer_id: parseInt(manufacturerId),
-          model_id: parseInt(modelId),
-          year: parseInt(year),
-          garage_id: "2",
-          garages: {
-            name: "SparkTech Auto",
-            location: "Al Quoz"
-          }
-        }
-      ];
+      const mockParts: Part[] = getMockParts(parseInt(manufacturerId), parseInt(modelId), parseInt(year));
       
       setParts(mockParts);
+      setSearchCompleted(true);
       return mockParts.length;
     } finally {
       setIsSearching(false);
     }
+  };
+
+  // Helper function to get consistent mock data
+  const getMockParts = (manufacturerId: number, modelId: number, year: number): Part[] => {
+    // Get manufacturer and model names for better mock data
+    const manufacturerName = manufacturers.find(m => m.id === manufacturerId)?.name || "Unknown";
+    const modelName = models.find(m => m.id === modelId)?.name || "Unknown";
+    
+    return [
+      {
+        id: 1,
+        name: `${manufacturerName} ${modelName} Brake Pads (${year})`,
+        description: "Premium quality brake pads designed for optimal stopping power",
+        price: 120,
+        stock: 15,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
+        garage_id: "1",
+        garages: {
+          name: "AutoCare Dubai",
+          location: "Dubai Marina"
+        }
+      },
+      {
+        id: 2,
+        name: `${manufacturerName} ${modelName} Oil Filter (${year})`,
+        description: "High performance oil filter for extended engine life",
+        price: 35,
+        stock: 28,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
+        garage_id: "2",
+        garages: {
+          name: "SparkTech Auto",
+          location: "Al Quoz"
+        }
+      },
+      {
+        id: 3,
+        name: `${manufacturerName} ${modelName} Air Filter (${year})`,
+        description: "Premium air filter for improved performance and fuel efficiency",
+        price: 45,
+        stock: 12,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
+        garage_id: "1",
+        garages: {
+          name: "AutoCare Dubai",
+          location: "Dubai Marina"
+        }
+      },
+      {
+        id: 4,
+        name: `${manufacturerName} ${modelName} Spark Plugs Set (${year})`,
+        description: "Set of 4 high performance spark plugs",
+        price: 60,
+        stock: 20,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
+        garage_id: "3",
+        garages: {
+          name: "Elite Auto Parts",
+          location: "Jumeirah"
+        }
+      }
+    ];
   };
 
   return {
@@ -279,6 +278,7 @@ export const useCarParts = () => {
     years,
     isLoading,
     isSearching,
+    searchCompleted,
     fetchManufacturers,
     fetchModels,
     searchParts
