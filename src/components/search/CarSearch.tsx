@@ -10,10 +10,10 @@ const CarSearch = () => {
   const { parts, isSearching, searchCompleted, resetSearch } = useCarParts();
   const { toast } = useToast();
 
-  // Log initial state for debugging
-  console.log("Initial render - showResults:", showResults);
-  console.log("Initial render - parts:", parts);
-  console.log("Initial render - searchCompleted:", searchCompleted);
+  // Add detailed logging for debugging
+  console.log("CarSearch render - parts:", parts);
+  console.log("CarSearch render - searchCompleted:", searchCompleted);
+  console.log("CarSearch render - showResults:", showResults);
 
   // Add effect to update UI when search completes
   useEffect(() => {
@@ -59,6 +59,7 @@ const CarSearch = () => {
         ) : (
           showResults && (
             <div className="bg-white rounded-xl shadow-sm p-6">
+              {/* Pass parts data explicitly to ensure it's not lost */}
               <PartsResults parts={parts} visible={showResults} />
             </div>
           )

@@ -16,7 +16,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   useEffect(() => {
     console.log("PartsResults received parts:", parts);
     console.log("PartsResults visibility:", visible);
-    console.log("PartsResults parts length:", parts ? parts.length : 0);
+    console.log("PartsResults parts length:", parts?.length || 0);
   }, [parts, visible]);
 
   if (!visible) {
