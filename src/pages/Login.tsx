@@ -20,15 +20,17 @@ const Login = () => {
   const [error, setError] = useState("");
   
   const location = useLocation();
-  const { signIn, isLoading, isAuthenticated } = useAuth();
+  const { signIn, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect authenticated users
   useEffect(() => {
-    if (isAuthenticated) {
+    console.log("Login page - Authentication state:", { isAuthenticated, user });
+    if (isAuthenticated && user) {
+      console.log("User is authenticated, redirecting to dashboard");
       navigate("/customer-dashboard");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   // Parse URL query parameters for demo login
   useEffect(() => {
@@ -56,6 +58,7 @@ const Login = () => {
         setError("Please enter both email and password");
         return;
       }
+      console.log("Attempting customer login with:", customerEmail);
       await signIn(customerEmail, customerPassword, "customer");
     } catch (err: any) {
       console.error("Login failed:", err);
@@ -71,6 +74,7 @@ const Login = () => {
         setError("Please enter both email and password");
         return;
       }
+      console.log("Attempting garage login with:", garageEmail);
       await signIn(garageEmail, garagePassword, "garage");
     } catch (err: any) {
       console.error("Login failed:", err);

@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated, signOut, user } = useAuth();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -68,7 +68,7 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            {isAuthenticated ? (
+            {isAuthenticated && user ? (
               <Button 
                 variant="outline" 
                 onClick={handleSignOut}
@@ -143,7 +143,7 @@ const Header = () => {
                 Contact
               </Link>
               <div className="flex flex-col space-y-2 pt-2">
-                {isAuthenticated ? (
+                {isAuthenticated && user ? (
                   <Button
                     variant="outline"
                     onClick={() => {

@@ -35,6 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const getSession = async () => {
       try {
+        console.log("Auth: Getting initial session");
+        setIsLoading(true);
         const { data, error } = await supabase.auth.getSession();
         if (error) {
           console.error("Error getting session:", error.message);
@@ -43,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         const currentUser = data.session?.user ?? null;
+        console.log("Auth: Initial session user:", currentUser?.email || "No user");
         setUser(currentUser);
         
         if (currentUser) {
@@ -54,9 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             
           if (profileData && !profileError) {
             setUserRole(profileData.role as "customer" | "garage");
+            console.log("Auth: User role set to:", profileData.role);
           } else if (profileError) {
             console.error("Error fetching user profile:", profileError.message);
           }
+        } else {
+          // Clear auth state if no user is found
+          setUser(null);
+          setUserRole(null);
         }
       } catch (err) {
         console.error("Session retrieval error:", err);
@@ -71,7 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         console.log("Auth state changed:", event);
         const currentUser = session?.user ?? null;
-        setUser(currentUser);
+        
+        // Set user to null first to ensure clean state transitions
+        if (event === 'SIGNED_OUT') {
+          console.log("Setting user to null due to SIGNED_OUT event");
+          setUser(null);
+          setUserRole(null);
+        } else {
+          setUser(currentUser);
+        }
         
         if (currentUser) {
           try {
@@ -99,19 +115,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch (err) {
             console.error("Error in auth state change handler:", err);
           }
-        } else {
+        } else if (event === 'SIGNED_OUT') {
+          // Clear role state again to be safe
           setUserRole(null);
           
-          // If user signed out, navigate to login
-          if (event === 'SIGNED_OUT') {
-            console.log("User signed out, navigating to login");
-            navigate("/login");
-            
-            toast({
-              title: "Logged out",
-              description: "You have been successfully logged out",
-            });
-          }
+          console.log("User signed out, navigating to login");
+          navigate("/login");
+          
+          toast({
+            title: "Logged out",
+            description: "You have been successfully logged out",
+          });
         }
       }
     );
