@@ -4,7 +4,7 @@ import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDown, Loader2, Clock, Search } from "lucide-react";
+import { ArrowDown, Loader2, Clock, Search, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CarSearch = () => {
@@ -75,6 +75,15 @@ const CarSearch = () => {
     });
   };
 
+  const handleRefresh = () => {
+    toast({
+      title: "Refreshing Parts",
+      description: "Getting the latest parts data...",
+      duration: 3000,
+    });
+    fetchAllParts();
+  };
+
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
@@ -85,12 +94,25 @@ const CarSearch = () => {
     <div className="w-full max-w-6xl mx-auto">
       <CarSearchForm onSearch={handleSearchComplete} />
       
-      {searchCompleted && queryTime > 0 && (
-        <div className="flex justify-between items-center mt-6 mb-2 px-4">
+      <div className="flex justify-between items-center mt-6 mb-2 px-4">
+        {searchCompleted && queryTime > 0 && (
           <div className="flex items-center text-mechanica-600">
             <Clock className="mr-2 h-5 w-5" />
             <span className="text-sm font-medium">Search completed in {formattedQueryTime}</span>
           </div>
+        )}
+        
+        <div className="flex items-center gap-2 ml-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="text-sm"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           
           <Button 
             variant="outline" 
@@ -102,7 +124,7 @@ const CarSearch = () => {
             Show All Parts
           </Button>
         </div>
-      )}
+      </div>
       
       {isSearching ? (
         <div className="flex items-center justify-center mt-8 mb-4">
@@ -119,7 +141,7 @@ const CarSearch = () => {
         className={`mt-8 transition-all duration-300 ${searchCompleted ? 'border-t-4 border-mechanica-300 pt-8' : ''}`}
       >
         {isLoading ? (
-          <div className="flex justify-center items-center p-12 bg-white rounded-xl shadow-md">
+          <div className="flex flex-col justify-center items-center p-12 bg-white rounded-xl shadow-md">
             <div className="animate-pulse text-center">
               <Loader2 className="animate-spin h-12 w-12 text-mechanica-500 mx-auto mb-4" />
               <p className="text-xl font-medium text-gray-700">Loading parts...</p>

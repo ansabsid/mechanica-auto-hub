@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX } from "lucide-react";
+import { Package2, SearchX, FileQuestion } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -11,6 +11,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PartsResultsProps {
   parts: Part[];
@@ -35,11 +36,11 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   if (!parts || parts.length === 0) {
     console.log("No parts found in PartsResults component");
     return (
-      <div className="text-center p-8 bg-red-50 border-4 border-red-200 rounded-xl shadow-lg">
-        <SearchX className="mx-auto h-16 w-16 text-red-500 mb-4" />
-        <h3 className="text-2xl font-bold text-red-800 mb-3">No Parts Found</h3>
-        <p className="text-gray-700 text-lg">We couldn't find any parts matching your search criteria.</p>
-        <p className="text-gray-600 mt-2">Try another combination of manufacturer, model, and year.</p>
+      <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
+        <FileQuestion className="mx-auto h-16 w-16 text-blue-500 mb-4" />
+        <h3 className="text-2xl font-bold text-blue-800 mb-3">No Parts Available</h3>
+        <p className="text-gray-700 text-lg">We're having trouble retrieving parts data right now.</p>
+        <p className="text-gray-600 mt-2">You can try refreshing the page or try again later.</p>
       </div>
     );
   }

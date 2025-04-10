@@ -5,6 +5,9 @@ import { Part, Manufacturer, Model } from "./types";
 import { generateMockParts } from "./utils";
 import { useToast } from "@/hooks/use-toast";
 
+// Set a timeout for fetch operations (in milliseconds)
+const FETCH_TIMEOUT = 5000;
+
 export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
   const [parts, setParts] = useState<Part[]>([]);
   const [allParts, setAllParts] = useState<Part[]>([]);
@@ -19,14 +22,36 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     fetchAllParts();
   }, []);
 
+  // Create a fetch with timeout function to handle network timeouts
+  const fetchWithTimeout = async (promise) => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error("Request timed out"));
+      }, FETCH_TIMEOUT);
+    });
+
+    try {
+      const result = await Promise.race([promise, timeoutPromise]);
+      clearTimeout(timeoutId);
+      return result;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  };
+
   // Fetch all available parts from the database
   const fetchAllParts = async () => {
     console.log("Fetching all available parts");
     setIsLoading(true);
+    
     try {
-      const { data, error } = await supabase
+      const fetchPromise = supabase
         .from('parts')
         .select('*');
+      
+      const { data, error } = await fetchWithTimeout(fetchPromise);
       
       if (error) {
         throw error;
@@ -51,26 +76,27 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       if (processedParts.length > 0) {
         setAllParts(processedParts);
         setParts(processedParts);
+        setSearchCompleted(true);
       } else {
         console.log("No parts found in database, generating mock parts for initial display");
         const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
         setAllParts(mockParts);
         setParts(mockParts);
+        setSearchCompleted(true);
       }
-      
-      setSearchCompleted(true);
     } catch (error: any) {
       console.error("Error fetching all parts:", error.message);
       
-      // Show error toast
+      // Show error toast with retry option
       toast({
-        title: "Error",
-        description: `Error fetching parts: ${error.message}`,
+        title: "Error Loading Parts",
+        description: `Could not load parts: ${error.message}. Using sample data instead.`,
         variant: "destructive",
         duration: 5000,
       });
       
       // Generate mock parts as fallback
+      console.log("Generating mock parts as fallback due to fetch error");
       const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
       setAllParts(mockParts);
       setParts(mockParts);
@@ -88,7 +114,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     setQueryTime(0);
   };
 
-  // Search for parts - improved to ensure proper state updates and database queries
+  // Search for parts - improved with timeout handling
   const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
     console.log("Searching for parts:", { manufacturerId, modelId, year });
     setIsSearching(true);
@@ -103,14 +129,17 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const mdlId = parseInt(modelId);
       const yearNum = parseInt(year);
       
-      // Query the database for matching parts
+      // Query the database for matching parts with timeout
       console.log(`Querying Supabase for parts: mfr=${mfrId}, model=${mdlId}, year=${yearNum}`);
-      const { data, error } = await supabase
+      
+      const queryPromise = supabase
         .from('parts')
         .select('*')
         .eq('manufacturer_id', mfrId)
         .eq('model_id', mdlId)
         .eq('year', yearNum);
+      
+      const { data, error } = await fetchWithTimeout(queryPromise);
       
       // End timing the query
       const endTime = performance.now();
@@ -191,14 +220,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       console.error("Error searching for parts:", error.message);
       
       const errorEndTime = performance.now();
-      // We'll just set a default value for the query duration when an error occurs
-      const queryDuration = 0; 
-      setQueryTime(queryDuration);
+      setQueryTime(0);
       
       // Show error toast
       toast({
         title: "Search Error",
-        description: `Error searching for parts: ${error.message}`,
+        description: `Error searching for parts: ${error.message}. Showing sample data instead.`,
         variant: "destructive",
         duration: 5000,
       });
