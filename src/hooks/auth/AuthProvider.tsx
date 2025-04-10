@@ -1,4 +1,3 @@
-
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +11,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [authChangeHandled, setAuthChangeHandled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("Setting user to null due to SIGNED_OUT event");
           setUser(null);
           setUserRole(null);
+          setAuthChangeHandled(false);
           
           // Only redirect to login page if explicitly signed out
           navigate("/login");
@@ -89,8 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (role) {
                 setUserRole(role);
                 
-                // Only navigate when SIGNED_IN event occurs
-                if (event === 'SIGNED_IN') {
+                // Only navigate and show toast when SIGNED_IN event occurs and hasn't been handled yet
+                if (event === 'SIGNED_IN' && !authChangeHandled) {
+                  setAuthChangeHandled(true);
+                  
                   // Navigate based on role when login is detected
                   navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
                   
@@ -111,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast, navigate]);
+  }, [toast, navigate, authChangeHandled]);
 
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);

@@ -8,15 +8,26 @@ import { ArrowDown, Loader2, Clock, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CarSearch = () => {
-  const [showResults, setShowResults] = useState(true); // Set to true by default to show all parts
-  const { parts, isSearching, searchCompleted, queryTime, resetSearch } = useCarParts();
+  const [showResults, setShowResults] = useState(true); // Set to true to show all parts by default
+  const { 
+    parts, 
+    allParts, 
+    isLoading,
+    isSearching, 
+    searchCompleted, 
+    queryTime, 
+    resetSearch, 
+    fetchAllParts 
+  } = useCarParts();
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
 
   console.log("CarSearch render - parts:", parts?.length || 0);
+  console.log("CarSearch render - allParts:", allParts?.length || 0);
   console.log("CarSearch render - searchCompleted:", searchCompleted);
   console.log("CarSearch render - showResults:", showResults);
   console.log("CarSearch render - queryTime:", queryTime);
+  console.log("CarSearch render - isLoading:", isLoading);
 
   // Update UI when search completes
   useEffect(() => {
@@ -34,6 +45,14 @@ const CarSearch = () => {
       }, 300);
     }
   }, [searchCompleted, parts]);
+
+  // Make sure we have data to display
+  useEffect(() => {
+    if (!isLoading && (!allParts || allParts.length === 0)) {
+      console.log("No parts found, fetching all parts...");
+      fetchAllParts();
+    }
+  }, [isLoading, allParts, fetchAllParts]);
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
@@ -58,6 +77,9 @@ const CarSearch = () => {
 
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
+
+  // Determine which parts to show
+  const displayParts = searchCompleted ? parts : allParts;
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -96,11 +118,11 @@ const CarSearch = () => {
         ref={resultsRef}
         className={`mt-8 transition-all duration-300 ${searchCompleted ? 'border-t-4 border-mechanica-300 pt-8' : ''}`}
       >
-        {isSearching ? (
+        {isLoading ? (
           <div className="flex justify-center items-center p-12 bg-white rounded-xl shadow-md">
             <div className="animate-pulse text-center">
               <Loader2 className="animate-spin h-12 w-12 text-mechanica-500 mx-auto mb-4" />
-              <p className="text-xl font-medium text-gray-700">Searching for parts...</p>
+              <p className="text-xl font-medium text-gray-700">Loading parts...</p>
               <p className="text-gray-500 mt-2">This may take a moment</p>
             </div>
           </div>
@@ -113,7 +135,7 @@ const CarSearch = () => {
               </div>
             )}
             <PartsResults 
-              parts={parts} 
+              parts={displayParts || []} 
               visible={showResults} 
             />
           </div>

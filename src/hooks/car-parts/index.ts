@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";
 import { usePartsSearch } from "./usePartsSearch";
@@ -28,22 +28,35 @@ export const useCarParts = () => {
   const {
     parts,
     allParts,
+    isLoading: isLoadingParts,
     isSearching,
     searchCompleted,
     queryTime,
     searchParts,
-    resetSearch
+    resetSearch,
+    fetchAllParts
   } = usePartsSearch(manufacturers, models);
   
   // Generate years range
   const years = generateYearRange();
   
   // Combine loading states
-  const isLoading = isLoadingManufacturers || isLoadingModels;
+  const isLoading = isLoadingManufacturers || isLoadingModels || isLoadingParts;
 
-  console.log("useCarParts hook - current parts state:", parts);
+  // Fetch all parts on component mount
+  useEffect(() => {
+    // Load all manufacturers first
+    fetchManufacturers();
+    
+    // Then fetch all parts
+    fetchAllParts();
+  }, [fetchManufacturers, fetchAllParts]);
+
+  console.log("useCarParts hook - current parts state:", parts?.length || 0);
+  console.log("useCarParts hook - all parts count:", allParts?.length || 0);
   console.log("useCarParts hook - searchCompleted:", searchCompleted);
   console.log("useCarParts hook - queryTime:", queryTime);
+  console.log("useCarParts hook - isLoading:", isLoading);
 
   return {
     manufacturers,
@@ -58,6 +71,7 @@ export const useCarParts = () => {
     fetchManufacturers,
     fetchModels,
     searchParts,
-    resetSearch
+    resetSearch,
+    fetchAllParts
   };
 };
