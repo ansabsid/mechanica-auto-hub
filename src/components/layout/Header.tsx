@@ -1,13 +1,17 @@
-
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, ChevronDown, Wrench, LogOut } from "lucide-react";
+import { Menu, X, User, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useMobile } from "@/hooks/use-mobile";
+import CartDrawer from "@/components/cart/CartDrawer";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { isAuthenticated, signOut, user } = useAuth();
+  const { isMobile } = useMobile();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -26,9 +30,9 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-subtle sticky top-0 z-50">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="container-custom py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
@@ -39,35 +43,51 @@ const Header = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className={`hidden md:flex space-x-6 ${isMobile ? "hidden" : ""}`}>
             <Link
               to="/"
-              className="text-gray-700 hover:text-gray-900 font-medium"
+              className={`text-gray-700 hover:text-mechanica-600 ${
+                location.pathname === "/" ? "font-semibold text-mechanica-600" : ""
+              }`}
             >
               Home
             </Link>
             <Link
-              to="/about"
-              className="text-gray-700 hover:text-gray-900 font-medium"
+              to="/categories"
+              className={`text-gray-700 hover:text-mechanica-600 ${
+                location.pathname === "/categories" ? "font-semibold text-mechanica-600" : ""
+              }`}
             >
-              About Us
+              Categories
             </Link>
             <Link
               to="/garages"
-              className="text-gray-700 hover:text-gray-900 font-medium"
+              className={`text-gray-700 hover:text-mechanica-600 ${
+                location.pathname === "/garages" ? "font-semibold text-mechanica-600" : ""
+              }`}
             >
-              For Garages
+              Garages
+            </Link>
+            <Link
+              to="/about"
+              className={`text-gray-700 hover:text-mechanica-600 ${
+                location.pathname === "/about" ? "font-semibold text-mechanica-600" : ""
+              }`}
+            >
+              About
             </Link>
             <Link
               to="/contact"
-              className="text-gray-700 hover:text-gray-900 font-medium"
+              className={`text-gray-700 hover:text-mechanica-600 ${
+                location.pathname === "/contact" ? "font-semibold text-mechanica-600" : ""
+              }`}
             >
               Contact
             </Link>
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-4">
             {isAuthenticated && user ? (
               <Button 
                 variant="outline" 
@@ -110,85 +130,62 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 animate-fade-in">
+        {/* Mobile Navigation */}
+        {showMobileMenu && (
+          <div className="md:hidden py-4 border-t border-gray-100">
             <nav className="flex flex-col space-y-4">
               <Link
                 to="/"
-                className="text-gray-700 hover:text-gray-900 font-medium px-2 py-2"
-                onClick={toggleMenu}
+                className={`text-gray-700 hover:text-mechanica-600 ${
+                  location.pathname === "/" ? "font-semibold text-mechanica-600" : ""
+                }`}
+                onClick={() => setShowMobileMenu(false)}
               >
                 Home
               </Link>
               <Link
-                to="/about"
-                className="text-gray-700 hover:text-gray-900 font-medium px-2 py-2"
-                onClick={toggleMenu}
+                to="/categories"
+                className={`text-gray-700 hover:text-mechanica-600 ${
+                  location.pathname === "/categories" ? "font-semibold text-mechanica-600" : ""
+                }`}
+                onClick={() => setShowMobileMenu(false)}
               >
-                About Us
+                Categories
               </Link>
               <Link
                 to="/garages"
-                className="text-gray-700 hover:text-gray-900 font-medium px-2 py-2"
-                onClick={toggleMenu}
+                className={`text-gray-700 hover:text-mechanica-600 ${
+                  location.pathname === "/garages" ? "font-semibold text-mechanica-600" : ""
+                }`}
+                onClick={() => setShowMobileMenu(false)}
               >
-                For Garages
+                Garages
+              </Link>
+              <Link
+                to="/about"
+                className={`text-gray-700 hover:text-mechanica-600 ${
+                  location.pathname === "/about" ? "font-semibold text-mechanica-600" : ""
+                }`}
+                onClick={() => setShowMobileMenu(false)}
+              >
+                About
               </Link>
               <Link
                 to="/contact"
-                className="text-gray-700 hover:text-gray-900 font-medium px-2 py-2"
-                onClick={toggleMenu}
+                className={`text-gray-700 hover:text-mechanica-600 ${
+                  location.pathname === "/contact" ? "font-semibold text-mechanica-600" : ""
+                }`}
+                onClick={() => setShowMobileMenu(false)}
               >
                 Contact
               </Link>
-              <div className="flex flex-col space-y-2 pt-2">
-                {isAuthenticated && user ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      handleSignOut();
-                      toggleMenu();
-                    }}
-                    className="w-full justify-center flex items-center gap-2"
-                  >
-                    <LogOut size={18} />
-                    Sign Out
-                  </Button>
-                ) : (
-                  <>
-                    <Link to="/login" onClick={toggleMenu}>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-center flex items-center gap-2"
-                      >
-                        <User size={18} />
-                        Login
-                      </Button>
-                    </Link>
-                    <Link to="/login?type=garage&email=ansab.sid123@gmail.com&password=Ammiabbu@12345" onClick={toggleMenu}>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-center flex items-center gap-2"
-                      >
-                        <Wrench size={18} />
-                        Garage Demo
-                      </Button>
-                    </Link>
-                    <Link to="/register" onClick={toggleMenu}>
-                      <Button
-                        className="w-full justify-center"
-                      >
-                        Sign Up
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
             </nav>
           </div>
         )}
       </div>
+
+      {/* Cart Drawer */}
+      <CartDrawer />
     </header>
   );
 };
