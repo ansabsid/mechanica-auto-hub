@@ -13,7 +13,7 @@ export interface GarageInfo {
 }
 
 /**
- * Hook for managing garage operations (admin functionality)
+ * Hook for managing garage operations
  * Provides functions for fetching and adding garages
  */
 export const useGarageManagement = () => {
@@ -40,7 +40,8 @@ export const useGarageManagement = () => {
       
       const { data, error: fetchError } = await supabase
         .from('garages')
-        .select('*');
+        .select('*')
+        .order('location');
         
       if (fetchError) {
         console.error("Supabase error:", fetchError);

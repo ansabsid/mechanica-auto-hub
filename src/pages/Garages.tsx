@@ -2,12 +2,21 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, AlertTriangle, PlusCircle } from "lucide-react";
+import { Loader2, AlertTriangle, PlusCircle, MapPin, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAuth } from "@/hooks/use-auth";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 // Define the type for garage data
 interface Garage {
@@ -16,103 +25,83 @@ interface Garage {
   location: string;
   area: string | null;
   images: string | null;
-  // Additional frontend properties (not from database)
-  rating?: number;
-  reviews?: number;
-  services?: string[];
-  hours?: string;
-  phone?: string;
-  email?: string;
 }
 
-// Sample services for each garage
-const serviceOptions = [
-  ["Oil Change", "Brake Service", "Air Conditioning", "Engine Diagnostics"],
-  ["Wheel Alignment", "Battery Service", "Suspension Repair", "Oil Change"],
-  ["Engine Repair", "Transmission Service", "Electrical Systems", "Computer Diagnostics"],
-  ["Oil Change", "Tire Service", "Brake Repair", "Air Conditioning"]
-];
+// Create a component for the garage card
+const GarageCard = ({ garage }: { garage: Garage }) => {
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{garage.name}</CardTitle>
+          {garage.area && (
+            <Badge variant="outline" className="bg-mechanica-50">
+              {garage.area}
+            </Badge>
+          )}
+        </div>
+        <CardDescription className="flex items-center mt-1">
+          <MapPin className="h-3.5 w-3.5 mr-1 text-mechanica-500" />
+          {garage.location}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pb-2 flex-grow">
+        <div className="relative aspect-video w-full overflow-hidden rounded-md bg-gray-100">
+          <img
+            src={garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+            alt={garage.name}
+            className="h-full w-full object-cover transition-all hover:scale-105"
+          />
+        </div>
+      </CardContent>
+      <CardFooter className="pt-0">
+        <Button variant="outline" className="w-full">View Details</Button>
+      </CardFooter>
+    </Card>
+  );
+};
 
 const Garages = () => {
-  const [garages, setGarages] = useState<Garage[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { fetchGarages, fetchLoading, error } = useGarageManagement();
+  const { fetchGarages, fetchLoading, error, garages } = useGarageManagement();
   const [loadingInitial, setLoadingInitial] = useState(true);
-  const { user } = useAuth();
   
-  // Fetch garages from Supabase - now with additional protection against multiple calls
+  // Fetch garages from Supabase
   useEffect(() => {
-    let isMounted = true;
-    
     const loadGarages = async () => {
       try {
-        console.log("Fetching garages from database...");
-        const garagesList = await fetchGarages();
-        
-        if (!isMounted) return;
-        
-        if (!garagesList || garagesList.length === 0) {
-          console.log("No garages found in the database");
-          setGarages([]);
-          setLoadingInitial(false);
-          return;
-        }
-        
-        // Enhance garages with additional frontend properties
-        const enhancedGarages = garagesList.map((garage, index) => ({
-          ...garage,
-          id: garage.id as string,
-          rating: 4.5 + (Math.random() * 0.5), // Random rating between 4.5-5.0
-          reviews: Math.floor(50 + Math.random() * 200), // Random reviews between 50-250
-          services: serviceOptions[index % serviceOptions.length],
-          hours: "8:00 AM - 6:00 PM",
-          phone: "+971 552552476",
-          email: `info@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
-          // Ensure image exists, otherwise use a fallback
-          images: garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        }));
-        
-        console.log("Enhanced garages:", enhancedGarages);
-        setGarages(enhancedGarages);
-      } catch (err: any) {
-        console.error("Error in loadGarages:", err.message);
-        if (isMounted) {
-          toast.error("Failed to load garages");
-        }
+        await fetchGarages();
       } finally {
-        if (isMounted) {
-          setLoadingInitial(false);
-        }
+        setLoadingInitial(false);
       }
     };
     
     loadGarages();
-    
-    // Cleanup function to prevent state updates on unmounted component
-    return () => {
-      isMounted = false;
-    };
   }, [fetchGarages]);
 
-  // Search functionality
+  // Filter garages based on search query
   const filteredGarages = garages.filter(garage => {
-    // Apply search query if present
-    if (searchQuery) {
-      return (
-        garage.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        garage.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        garage.services?.some(service => 
-          service.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
-    }
-    return true;
+    if (!searchQuery) return true;
+    
+    return (
+      garage.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      garage.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (garage.area && garage.area.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // The filtering is already reactive via the filteredGarages computed value
-  };
+  // Group garages by location
+  const garagesByLocation = filteredGarages.reduce((acc, garage) => {
+    const location = garage.location;
+    if (!acc[location]) {
+      acc[location] = [];
+    }
+    acc[location].push(garage);
+    return acc;
+  }, {} as Record<string, Garage[]>);
+
+  // Sort locations alphabetically
+  const sortedLocations = Object.keys(garagesByLocation).sort();
 
   const handleRetry = () => {
     toast.info("Retrying...");
@@ -120,7 +109,7 @@ const Garages = () => {
     fetchGarages();
   };
 
-  // Simple function to add a sample garage
+  // Add a sample garage for testing
   const addSampleGarage = async () => {
     const { addGarage } = useGarageManagement();
     
@@ -148,7 +137,7 @@ const Garages = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-mechanica-50 py-8 md:py-24">
+      <section className="bg-mechanica-50 py-8 md:py-16">
         <div className="container-custom text-center px-4 md:px-8">
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6">Find Trusted Garages</h1>
           <p className="text-base md:text-xl text-gray-600 max-w-3xl mx-auto mb-6 md:mb-8">
@@ -156,22 +145,28 @@ const Garages = () => {
           </p>
           
           <div className="max-w-xl mx-auto">
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <Input 
-                placeholder="Search by location or service..." 
-                className="bg-white"
+                placeholder="Search by location or garage name..." 
+                className="bg-white pl-10 pr-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Button type="submit" className="whitespace-nowrap">
-                Find Garages
-              </Button>
-            </form>
+              {searchQuery && (
+                <button 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </section>
       
-      {/* General Content Section */}
+      {/* Garages Content Section */}
       <section className="py-8 md:py-16">
         <div className="container-custom px-4 md:px-8">
           {/* General Error State */}
@@ -198,7 +193,7 @@ const Garages = () => {
             </div>
           )}
           
-          {/* Empty State - Now with a button to add a sample garage for testing */}
+          {/* Empty State */}
           {!isLoading && !error && filteredGarages.length === 0 && (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
               <div className="mb-4">
@@ -211,7 +206,7 @@ const Garages = () => {
               <p className="text-lg text-gray-600 mb-4">
                 {garages.length === 0 
                   ? "No garages found in our database yet." 
-                  : "No garages found matching your criteria."}
+                  : "No garages found matching your search criteria."}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -251,16 +246,26 @@ const Garages = () => {
             </div>
           )}
           
-          {/* Info message when no specific UI is shown */}
-          {!isLoading && filteredGarages.length > 0 && (
-            <div className="text-center py-12 bg-green-50 rounded-lg border border-green-100">
-              <h2 className="text-xl font-bold text-green-800 mb-2">Garages Found</h2>
-              <p className="text-green-700 mb-4">
-                {filteredGarages.length} garages available in our database.
-              </p>
-              <p className="text-sm text-gray-600">
-                The garage view section has been removed. Use the search bar above to find specific garages.
-              </p>
+          {/* Garages By Location */}
+          {!isLoading && !error && filteredGarages.length > 0 && (
+            <div className="space-y-8">
+              {sortedLocations.map((location) => (
+                <div key={location} className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+                  <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-mechanica-600" />
+                    {location}
+                    <Badge className="ml-2 bg-mechanica-100 text-mechanica-800">
+                      {garagesByLocation[location].length}
+                    </Badge>
+                  </h2>
+                  <Separator className="mb-4" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {garagesByLocation[location].map((garage) => (
+                      <GarageCard key={garage.id} garage={garage} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           
