@@ -80,7 +80,7 @@ export const useGarageProducts = (garageId?: string) => {
         model_id: 1,        // Default values, in a real app these would be selected
         year: new Date().getFullYear(),
         garage_id: garageId,
-        image_url: product.imageUrl // Add the image URL to the product data
+        image_url: product.imageUrl // Use the image URL directly
       };
 
       // 1. Insert the part into the parts table
