@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -155,48 +154,46 @@ const Checkout = () => {
   
   if (isSuccess) {
     return (
-      <MainLayout>
-        <div className="container-custom max-w-3xl py-20">
-          <Card className="border-green-100 shadow-lg">
-            <CardContent className="pt-6 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <Check className="h-8 w-8 text-green-600" />
-              </div>
-              <CardTitle className="text-2xl mb-2">Order Successful!</CardTitle>
-              <CardDescription className="text-lg mb-6">
-                Your order has been placed successfully.
-              </CardDescription>
-              
-              <p className="text-sm text-muted-foreground mb-2">
-                Order ID: {orderId}
-              </p>
-              <p className="text-sm text-muted-foreground mb-6">
-                You will be redirected to your order details in a moment...
-              </p>
-              
-              <div className="flex justify-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/customer-dashboard")}
-                >
-                  Continue Shopping
-                </Button>
-                <Button 
-                  onClick={() => navigate(`/orders/${orderId}`)}
-                  className="bg-mechanica-500 hover:bg-mechanica-600"
-                >
-                  View Order
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </MainLayout>
+      <div className="container-custom max-w-3xl py-20">
+        <Card className="border-green-100 shadow-lg">
+          <CardContent className="pt-6 text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <Check className="h-8 w-8 text-green-600" />
+            </div>
+            <CardTitle className="text-2xl mb-2">Order Successful!</CardTitle>
+            <CardDescription className="text-lg mb-6">
+              Your order has been placed successfully.
+            </CardDescription>
+            
+            <p className="text-sm text-muted-foreground mb-2">
+              Order ID: {orderId}
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              You will be redirected to your order details in a moment...
+            </p>
+            
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/customer-dashboard")}
+              >
+                Continue Shopping
+              </Button>
+              <Button 
+                onClick={() => navigate(`/orders/${orderId}`)}
+                className="bg-mechanica-500 hover:bg-mechanica-600"
+              >
+                View Order
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
   
   return (
-    <MainLayout>
+    <>
       <div className="py-8 bg-mechanica-50">
         <div className="container-custom">
           <Button 
@@ -509,7 +506,7 @@ const Checkout = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 
