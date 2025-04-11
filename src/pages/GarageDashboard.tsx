@@ -458,8 +458,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-category">Category*</Label>
                         <Select 
                           value={newProduct.category}
-                          onChange={(value) => setNewProduct({...newProduct, category: value})}
-                          required
+                          onValueChange={(value) => setNewProduct({...newProduct, category: value})}
                         >
                           <SelectTrigger id="product-category">
                             <SelectValue placeholder="Select category" />
@@ -493,8 +492,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-manufacturer">Manufacturer*</Label>
                         <Select 
                           value={newProduct.manufacturer_id?.toString()}
-                          onChange={(value) => setNewProduct({...newProduct, manufacturer_id: parseInt(value)})}
-                          required
+                          onValueChange={(value) => setNewProduct({...newProduct, manufacturer_id: parseInt(value)})}
                         >
                           <SelectTrigger id="product-manufacturer">
                             <SelectValue placeholder="Select manufacturer" />
@@ -513,9 +511,8 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-model">Model*</Label>
                         <Select 
                           value={newProduct.model_id?.toString()}
-                          onChange={(value) => setNewProduct({...newProduct, model_id: parseInt(value)})}
+                          onValueChange={(value) => setNewProduct({...newProduct, model_id: parseInt(value)})}
                           disabled={filteredModels.length === 0}
-                          required
                         >
                           <SelectTrigger id="product-model">
                             <SelectValue placeholder={filteredModels.length === 0 ? "Select a manufacturer first" : "Select model"} />
@@ -534,8 +531,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-year">Year*</Label>
                         <Select 
                           value={newProduct.year?.toString()}
-                          onChange={(value) => setNewProduct({...newProduct, year: parseInt(value)})}
-                          required
+                          onValueChange={(value) => setNewProduct({...newProduct, year: parseInt(value)})}
                         >
                           <SelectTrigger id="product-year">
                             <SelectValue placeholder="Select year" />
@@ -576,7 +572,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-status">Availability Status</Label>
                         <Select 
                           value={newProduct.status}
-                          onChange={(value) => setNewProduct({...newProduct, status: value})}
+                          onValueChange={(value) => setNewProduct({...newProduct, status: value})}
                         >
                           <SelectTrigger id="product-status">
                             <SelectValue placeholder="Select status" />
@@ -589,6 +585,7 @@ const GarageDashboard = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="product-image">Product Image</Label>
                         <div className="flex flex-col space-y-2">
@@ -858,8 +855,7 @@ const GarageDashboard = () => {
                       <Label htmlFor="garage-area">Area*</Label>
                       <Select 
                         value={newGarage.area}
-                        onChange={(value) => setNewGarage({...newGarage, area: value})}
-                        required
+                        onValueChange={(value) => setNewGarage({...newGarage, area: value})}
                       >
                         <SelectTrigger id="garage-area">
                           <SelectValue placeholder="Select area" />
@@ -893,6 +889,24 @@ const GarageDashboard = () => {
                         placeholder="e.g. 1000"
                       />
                     </div>
+                    <Button
+                      type="submit"
+                      variant="mechanica"
+                      disabled={garageLoading}
+                      className="w-full md:w-auto"
+                    >
+                      {garageLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Garage
+                        </>
+                      )}
+                    </Button>
                   </form>
                 </div>
               </div>
@@ -903,7 +917,7 @@ const GarageDashboard = () => {
       
       {selectedProduct && (
         <EditProductModal 
-          open={editModalOpen}
+          isOpen={editModalOpen}
           onOpenChange={setEditModalOpen}
           product={selectedProduct}
           onSave={handleUpdateProduct}

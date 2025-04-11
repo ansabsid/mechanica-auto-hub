@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
 import Index from './pages/Index';
@@ -15,7 +15,7 @@ import GarageDashboard from './pages/GarageDashboard';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import PartScanner from './pages/PartScanner';
-import { CategoryPage } from './components/categories/CategoryPage';
+import CategoryPage from './components/categories/CategoryPage';
 import BookAppointment from './pages/BookAppointment';
 import './App.css';
 
