@@ -308,11 +308,11 @@ const Checkout = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex space-x-3 md:space-x-4 mb-6 max-w-none">
+                <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0 mb-6">
                   <Button
                     type="button"
                     variant={paymentMethod === "card" ? "default" : "outline"}
-                    className={`flex-1 text-sm md:text-base px-3 md:px-6 h-12 ${paymentMethod === "card" ? "bg-mechanica-500 hover:bg-mechanica-600" : ""}`}
+                    className={`w-full h-12 ${paymentMethod === "card" ? "bg-mechanica-500 hover:bg-mechanica-600" : ""}`}
                     onClick={() => setPaymentMethod("card")}
                   >
                     <CreditCard className="mr-2 h-5 w-5" />
@@ -321,7 +321,7 @@ const Checkout = () => {
                   <Button
                     type="button"
                     variant={paymentMethod === "applepay" ? "default" : "outline"}
-                    className={`flex-1 text-sm md:text-base px-3 md:px-6 h-12 ${paymentMethod === "applepay" ? "bg-black hover:bg-gray-800" : ""}`}
+                    className={`w-full h-12 ${paymentMethod === "applepay" ? "bg-black hover:bg-gray-800" : ""}`}
                     onClick={() => setPaymentMethod("applepay")}
                   >
                     <Apple className="mr-2 h-5 w-5" />
