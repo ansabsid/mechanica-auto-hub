@@ -53,7 +53,7 @@ export const InstallationOptionsDialog = ({
   const [garages, setGarages] = useState<Garage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { addToCart } = useCart();
+  const { addToCart, refreshCart } = useCart();
   
   // Fetch garages that have this part when the dialog opens
   useEffect(() => {
@@ -104,6 +104,9 @@ export const InstallationOptionsDialog = ({
       
       // Add part with installation info to cart
       await addToCart(part.id, 1, installationData);
+      
+      // Explicitly refresh the cart to ensure we see the updated items
+      await refreshCart();
       
       toast({
         title: "Added to cart",

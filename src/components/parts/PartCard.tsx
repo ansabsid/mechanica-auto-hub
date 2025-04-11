@@ -14,7 +14,7 @@ interface PartCardProps {
 }
 
 export const PartCard = ({ part }: PartCardProps) => {
-  const { cartItems, addToCart, isLoading } = useCart();
+  const { cartItems, addToCart, refreshCart, isLoading } = useCart();
   const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
   const { toast } = useToast();
   
@@ -29,6 +29,8 @@ export const PartCard = ({ part }: PartCardProps) => {
       try {
         // If already in cart, just add one more with same installation option
         await addToCart(part.id, 1, existingInstallation);
+        // Refresh cart to make sure we see the updated items
+        await refreshCart();
         toast({
           title: "Added to cart",
           description: `${part.name} added to cart${existingInstallation ? " with installation" : ""}`,
@@ -51,6 +53,8 @@ export const PartCard = ({ part }: PartCardProps) => {
   const handleAddToCartOnly = async () => {
     try {
       await addToCart(part.id, 1);
+      // Explicitly refresh the cart to ensure we see the updated items
+      await refreshCart();
       toast({
         title: "Added to cart",
         description: `${part.name} added to your cart`,

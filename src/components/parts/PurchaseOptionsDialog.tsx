@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Part } from "@/hooks/useCarParts";
 import { InstallationOptionsDialog } from "@/components/parts/InstallationOptionsDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/hooks/useCart";
 
 interface PurchaseOptionsDialogProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export const PurchaseOptionsDialog = ({
 }: PurchaseOptionsDialogProps) => {
   const [showInstallationOptions, setShowInstallationOptions] = useState(false);
   const { toast } = useToast();
+  const { refreshCart } = useCart();
   
   const handleBuyWithInstallation = () => {
     setShowInstallationOptions(true);
@@ -39,12 +41,16 @@ export const PurchaseOptionsDialog = ({
   const handleInstallationComplete = () => {
     // Close installation dialog only
     setShowInstallationOptions(false);
+    // Refresh cart to make sure we see the new items
+    refreshCart();
   };
   
   const handleCartOnlyClick = async () => {
     try {
       // Call the passed callback to add to cart
       await onAddToCartOnly();
+      // Refresh cart to make sure we see the new items
+      await refreshCart();
       // Close the dialog after adding to cart
       onClose();
     } catch (error) {
