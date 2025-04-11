@@ -75,6 +75,8 @@ const updatePartWithImage = async (dbPart: any): Promise<boolean> => {
     const fileName = `part_${part.id}_${Date.now()}.${fileExt}`;
     const filePath = `parts/${fileName}`;
     
+    console.log(`Uploading image to 'parts' bucket with path: ${filePath}`);
+    
     // Upload to Supabase storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('parts')

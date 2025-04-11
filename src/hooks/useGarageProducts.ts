@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -40,11 +39,11 @@ export const useGarageProducts = (garageId?: string) => {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${garageId}/${fileName}`;
       
-      console.log("Attempting to upload file:", filePath);
+      console.log("Attempting to upload file to 'parts' bucket:", filePath);
       
       setUploadProgress(30);
       
-      // Upload the file
+      // Upload the file to the existing 'parts' bucket
       const { data, error } = await supabase.storage
         .from('parts')
         .upload(filePath, file, {
@@ -185,17 +184,12 @@ export const useGarageProducts = (garageId?: string) => {
       let imageUrl = product.imageUrl;
       
       if (imageFile) {
-        try {
-          imageUrl = await uploadImage(imageFile, validGarageId);
-          if (imageUrl) {
-            console.log("Image uploaded successfully, URL:", imageUrl);
-          } else {
-            // If upload failed, continue with product creation without an image
-            console.log("Image upload failed, proceeding without image");
-          }
-        } catch (uploadError: any) {
-          console.error("Error during image upload:", uploadError);
-          // Continue with product creation without image
+        imageUrl = await uploadImage(imageFile, validGarageId);
+        if (imageUrl) {
+          console.log("Image uploaded successfully, URL:", imageUrl);
+        } else {
+          // If upload failed, continue with product creation without an image
+          console.log("Image upload failed, proceeding without image");
         }
       }
       
@@ -215,11 +209,25 @@ export const useGarageProducts = (garageId?: string) => {
 
       console.log("Prepared data for database insertion:", productData);
 
-      // Use fixed ID 7 for testing
-      const partId = 7; 
-      console.log("Using fixed part ID:", partId);
+      // Call the insert_part function to create a new part
+      const { data, error } = await enhancedSupabase.rpc('insert_part', {
+        part_data: productData
+      });
 
-      // Skip the RPC call and proceed with the association
+      if (error) {
+        console.error("RPC error:", error);
+        throw new Error(`Failed to create part: ${error.message}`);
+      }
+
+      console.log("Part created with response:", data);
+
+      // Extract part ID from response
+      const partId = data.id;
+
+      if (!partId) {
+        throw new Error("No part ID returned from database");
+      }
+
       console.log("Part created with ID:", partId);
 
       // First check if an association already exists to avoid duplicate key errors
