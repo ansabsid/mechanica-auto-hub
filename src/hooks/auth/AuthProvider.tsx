@@ -1,3 +1,4 @@
+
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +9,7 @@ import { fetchUserRole, createUserProfile } from "./authUtils";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
+  const [userRole, setUserRole] = useState<"customer" | "garage" | "admin" | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [authChangeHandled, setAuthChangeHandled] = useState(false);
   const { toast } = useToast();

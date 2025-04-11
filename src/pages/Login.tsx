@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -25,13 +24,11 @@ const Login = () => {
   const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
 
-  // Check if the user is an admin based on their email
   const checkAdminStatus = (email: string) => {
     setIsAdmin(isAdminUser(email));
   };
 
   useEffect(() => {
-    // Check admin status whenever emails change
     checkAdminStatus(customerEmail);
     
     const queryParams = new URLSearchParams(location.search);
@@ -47,7 +44,10 @@ const Login = () => {
     
     if (isAuthenticated && user) {
       console.log("Login page - User is authenticated with role:", userRole);
-      if (userRole === 'garage') {
+      if (userRole === 'admin') {
+        console.log("Admin user detected - redirecting to garage dashboard");
+        navigate("/garage-dashboard");
+      } else if (userRole === 'garage') {
         console.log("Redirecting to garage dashboard");
         navigate("/garage-dashboard");
       } else {
@@ -102,14 +102,13 @@ const Login = () => {
             value={activeTab}
             className="w-full"
             onValueChange={(value) => {
-              // Only allow admin to switch to garage tab
               if (value === "garage" && !isAdmin) {
                 setError("Only administrators can access the garage login");
                 return;
               }
               
               setActiveTab(value);
-              setError(""); // Clear errors when changing tabs
+              setError("");
             }}
           >
             <TabsList className="grid w-full grid-cols-2 mb-8">
