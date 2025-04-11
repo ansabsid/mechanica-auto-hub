@@ -1,5 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { EnhancedSupabaseClient } from "./supabaseTypes";
+
+// Cast supabase client to enhanced type with RPC functions
+const enhancedSupabase = supabase as unknown as EnhancedSupabaseClient;
 
 export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | null> => {
   try {
@@ -36,7 +40,7 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
     }
     
     // Use serviceRole client for admin operations that bypass RLS
-    const { error } = await supabase.rpc('create_profile_for_user', {
+    const { error } = await enhancedSupabase.rpc('create_profile_for_user', {
       user_id: userId,
       user_email: email,
       user_role: role
@@ -75,7 +79,7 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
         const role = await fetchUserRole(signInData.user.id);
         if (!role) {
           console.log("Creating profile for existing demo user");
-          await supabase.rpc('create_profile_for_user', {
+          await enhancedSupabase.rpc('create_profile_for_user', {
             user_id: signInData.user.id,
             user_email: demoEmail,
             user_role: 'garage'
@@ -105,7 +109,7 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
 
     if (signUpData.user) {
       try {
-        await supabase.rpc('create_profile_for_user', {
+        await enhancedSupabase.rpc('create_profile_for_user', {
           user_id: signUpData.user.id,
           user_email: demoEmail,
           user_role: 'garage'
