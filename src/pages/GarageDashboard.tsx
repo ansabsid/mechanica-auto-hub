@@ -113,7 +113,7 @@ const GarageDashboard = () => {
     installationFee: "",
   });
 
-  const [currentGarageId, setCurrentGarageId] = useState<string | null>(null);
+  const [currentGarageId, setCurrentGarageId] = useState<string>("");
   const [productImage, setProductImage] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("inventory");
@@ -131,7 +131,7 @@ const GarageDashboard = () => {
     uploadProgress,
     setUploadProgress,
     availableGarages
-  } = useGarageProducts();
+  } = useGarageProducts(currentGarageId);
   
   const { 
     createServiceSlots, 
@@ -147,17 +147,24 @@ const GarageDashboard = () => {
   } = useGarageManagement();
 
   useEffect(() => {
-    fetchGarages().then(() => {
-      if (garages.length > 0) {
-        const firstGarageId = garages[0]?.id;
+    const initializeGarageData = async () => {
+      const garageData = await fetchGarages();
+      
+      if (garageData && garageData.length > 0) {
+        const firstGarageId = garageData[0]?.id;
+        console.log("Setting current garage ID to:", firstGarageId);
+        
         if (firstGarageId) {
           setCurrentGarageId(firstGarageId);
-          fetchProducts(firstGarageId);
         } else {
           toast.warning("No garages found. Please add a garage first.");
         }
+      } else {
+        toast.warning("No garages found. Please add a garage first.");
       }
-    });
+    };
+    
+    initializeGarageData();
     
     fetchManufacturers();
     
@@ -245,8 +252,9 @@ const GarageDashboard = () => {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!currentGarageId) {
-      toast.error("Garage ID not found. Please add a garage first.");
+      toast.error("No garage selected. Please add a garage first.");
       return;
     }
 
@@ -255,6 +263,7 @@ const GarageDashboard = () => {
       return;
     }
 
+    console.log("Adding product with garage ID:", currentGarageId);
     setIsUploading(true);
     
     try {
@@ -318,6 +327,12 @@ const GarageDashboard = () => {
     });
   };
 
+  const handleGarageChange = (garageId: string) => {
+    console.log("Changing to garage ID:", garageId);
+    setCurrentGarageId(garageId);
+    fetchProducts(garageId);
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex flex-col gap-8">
@@ -329,6 +344,29 @@ const GarageDashboard = () => {
               </h2>
               <p className="text-gray-600">Manage your garage, products, and appointments</p>
             </div>
+            
+            {availableGarages.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label htmlFor="garage-selector" className="text-sm font-medium">
+                  Current Garage:
+                </label>
+                <Select 
+                  value={currentGarageId} 
+                  onValueChange={handleGarageChange}
+                >
+                  <SelectTrigger id="garage-selector" className="w-[200px]">
+                    <SelectValue placeholder="Select garage" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableGarages.map(garage => (
+                      <SelectItem key={garage.id} value={garage.id}>
+                        {garage.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           <Tabs defaultValue="inventory" className="w-full" onValueChange={setActiveTab}>

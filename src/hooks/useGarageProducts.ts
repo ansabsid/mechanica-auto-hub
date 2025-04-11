@@ -86,6 +86,7 @@ export const useGarageProducts = (garageId?: string) => {
       if (error) throw error;
       
       if (data && data.length > 0) {
+        console.log("Available garages:", data);
         setAvailableGarages(data);
         return data;
       }
@@ -99,8 +100,12 @@ export const useGarageProducts = (garageId?: string) => {
 
   // Fetch products for a specific garage
   const fetchProducts = async (garageId: string) => {
-    if (!garageId) return;
+    if (!garageId) {
+      console.log("No garage ID provided for fetching products");
+      return;
+    }
     
+    console.log("Fetching products for garage ID:", garageId);
     setFetchLoading(true);
     try {
       // First try to fetch from parts where garage_id matches
@@ -133,6 +138,7 @@ export const useGarageProducts = (garageId?: string) => {
         index === self.findIndex((p) => p.id === product.id)
       );
       
+      console.log("Fetched products:", uniqueProducts);
       setProducts(uniqueProducts);
       return uniqueProducts;
     } catch (error: any) {
@@ -157,8 +163,17 @@ export const useGarageProducts = (garageId?: string) => {
         return null;
       }
       
-      // Use the first available garage ID if none is specified
-      const validGarageId = garages[0].id;
+      // Use the provided garage ID if it's valid, otherwise use the first available garage ID
+      let validGarageId = productGarageId;
+      
+      // Check if the provided garage ID exists in our list of available garages
+      const garageExists = garages.some(garage => garage.id === productGarageId);
+      
+      if (!garageExists) {
+        console.log("Provided garage ID not found in available garages, using first available garage");
+        validGarageId = garages[0].id;
+      }
+      
       console.log("Using valid garage ID:", validGarageId);
       
       // First, upload the image if provided
@@ -248,11 +263,25 @@ export const useGarageProducts = (garageId?: string) => {
   // Use effect to fetch products when garageId changes
   useEffect(() => {
     // Fetch available garages on mount
-    fetchAvailableGarages();
+    const initializeHook = async () => {
+      const garages = await fetchAvailableGarages();
+      
+      // If a garageId is provided, use it to fetch products
+      if (garageId) {
+        console.log("Garage ID provided on mount:", garageId);
+        fetchProducts(garageId);
+      } 
+      // If no garageId is provided but we have garages, use the first one
+      else if (garages.length > 0) {
+        const firstGarageId = garages[0]?.id;
+        console.log("No garage ID provided, using first garage:", firstGarageId);
+        fetchProducts(firstGarageId);
+      } else {
+        console.log("No garages available");
+      }
+    };
     
-    if (garageId) {
-      fetchProducts(garageId);
-    }
+    initializeHook();
   }, [garageId]);
 
   return {
