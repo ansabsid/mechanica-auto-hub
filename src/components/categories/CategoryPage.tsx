@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCarParts } from "@/hooks/useCarParts";
@@ -178,7 +179,7 @@ const CategoryPage = () => {
         <Separator className="my-4" />
         
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <Card key={i} className="h-24 animate-pulse">
                 <CardContent className="p-4 flex items-center justify-center">
@@ -191,7 +192,7 @@ const CategoryPage = () => {
           <>
             {/* Manufacturers Step */}
             {navigationStep === 'manufacturer' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {manufacturers.map(manufacturer => (
                   <Card 
                     key={manufacturer.id} 
@@ -209,7 +210,7 @@ const CategoryPage = () => {
             
             {/* Models Step */}
             {navigationStep === 'model' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {models.map(model => (
                   <Card 
                     key={model.id} 
@@ -227,7 +228,7 @@ const CategoryPage = () => {
             
             {/* Years Step */}
             {navigationStep === 'year' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {availableYears.map(year => (
                   <Card 
                     key={year} 
@@ -257,7 +258,7 @@ const CategoryPage = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {currentParts.map(part => (
                       <PartCard key={part.id} part={part} />
                     ))}
