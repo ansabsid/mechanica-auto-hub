@@ -109,6 +109,22 @@ const appointments = [
   },
 ];
 
+// Define slot and garage interfaces for type safety
+interface ServiceSlot {
+  service: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  interval: string;
+}
+
+interface GarageInfo {
+  name: string;
+  area: string;
+  location: string;
+  installationFee: string;
+}
+
 const GarageDashboard = () => {
   const [newProduct, setNewProduct] = useState<GarageProduct>({
     name: "",
@@ -116,6 +132,22 @@ const GarageDashboard = () => {
     price: "",
     quantity: "",
     status: "In Stock",
+  });
+
+  // Add the missing state variables
+  const [newSlot, setNewSlot] = useState<ServiceSlot>({
+    service: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    interval: "60",
+  });
+
+  const [newGarage, setNewGarage] = useState<GarageInfo>({
+    name: "",
+    area: "",
+    location: "",
+    installationFee: "",
   });
 
   const [products, setProducts] = useState([]);
