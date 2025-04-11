@@ -18,7 +18,7 @@ import CategoryPage from "@/components/categories/CategoryPage";
 
 import "./App.css";
 
-// Create the router outside the App component
+// Create the router using the AuthProvider wrapper for each route
 const router = createBrowserRouter([
   {
     path: "/",
@@ -74,7 +74,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-// The App component now wraps AuthProvider inside RouterProvider
+// Ensuring the router is wrapped with AuthProvider in main.tsx, not here
 function App() {
   return (
     <RouterProvider 
