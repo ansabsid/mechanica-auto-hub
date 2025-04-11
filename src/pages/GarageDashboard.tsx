@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -128,7 +127,9 @@ const GarageDashboard = () => {
     fetchProducts, 
     products, 
     isLoading: productLoading, 
-    fetchLoading: productsLoading 
+    fetchLoading: productsLoading,
+    uploadProgress,
+    setUploadProgress
   } = useGarageProducts();
   
   const { 
@@ -250,52 +251,11 @@ const GarageDashboard = () => {
     }
 
     setIsUploading(true);
-    let imageUrl = null;
-
+    
     try {
-      if (productImage) {
-        const fileExt = productImage.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const filePath = `${currentGarageId}/${fileName}`;
-        
-        setUploadProgress(10);
-        
-        // Upload the file to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('parts')
-          .upload(filePath, productImage, {
-            cacheControl: '3600',
-            upsert: false
-          });
-          
-        if (error) {
-          throw new Error(`Error uploading image: ${error.message}`);
-        }
-        
-        setUploadProgress(90);
-        
-        // Get the public URL for the uploaded file
-        const { data: { publicUrl } } = supabase.storage
-          .from('parts')
-          .getPublicUrl(filePath);
-          
-        imageUrl = publicUrl;
-        console.log("Image uploaded successfully:", imageUrl);
-        
-        setUploadProgress(100);
-      }
+      console.log("Saving product with data:", newProduct);
       
-      const productWithImage = {
-        ...newProduct,
-        imageUrl: imageUrl,
-        manufacturer_id: Number(newProduct.manufacturer_id),
-        model_id: Number(newProduct.model_id),
-        year: Number(newProduct.year)
-      };
-      
-      console.log("Saving product with data:", productWithImage);
-      
-      const productId = await addProduct(productWithImage, currentGarageId);
+      const productId = await addProduct(newProduct, currentGarageId, productImage);
       
       if (productId) {
         toast.success("Product added successfully!");
