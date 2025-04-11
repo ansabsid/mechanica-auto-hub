@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle, Wrench } from "lucide-react";
+import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
@@ -18,19 +18,20 @@ export const PartCard = ({ part }: PartCardProps) => {
   const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
   const { toast } = useToast();
   
-  const existingInstallation = cartItems.find(item => 
-    item.part_id === part.id && item.installation_data
-  )?.installation_data;
+  // Check if this part with installation is already in cart
+  const existingCartItem = cartItems.find(item => item.part_id === part.id);
+  const existingInstallation = existingCartItem?.installation_data;
   
   const handleAddToCartClick = async () => {
     if (part.stock <= 0) return;
     
-    if (existingInstallation) {
+    if (existingCartItem) {
       try {
+        // If already in cart, just add one more with same installation option
         await addToCart(part.id, 1, existingInstallation);
         toast({
           title: "Added to cart",
-          description: `${part.name} added to cart with existing installation option`,
+          description: `${part.name} added to cart${existingInstallation ? " with installation" : ""}`,
         });
       } catch (error) {
         console.error("Error adding part with existing installation:", error);
@@ -43,6 +44,7 @@ export const PartCard = ({ part }: PartCardProps) => {
       return;
     }
     
+    // If not in cart, show purchase options
     setShowPurchaseOptions(true);
   };
   
@@ -145,7 +147,7 @@ export const PartCard = ({ part }: PartCardProps) => {
       </Card>
 
       <PurchaseOptionsDialog 
-        isOpen={showPurchaseOptions && !existingInstallation}
+        isOpen={showPurchaseOptions}
         onClose={onDialogClose}
         part={part}
         onAddToCartOnly={handleAddToCartOnly}
