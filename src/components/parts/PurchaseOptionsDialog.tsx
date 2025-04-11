@@ -41,7 +41,7 @@ export const PurchaseOptionsDialog = ({
   const handleInstallationComplete = () => {
     // Close installation dialog only
     setShowInstallationOptions(false);
-    // Refresh cart to make sure we see the new items
+    // Refresh cart to ensure we see the updated items with installation
     refreshCart();
   };
   

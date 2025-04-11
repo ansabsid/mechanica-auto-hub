@@ -115,7 +115,13 @@ export const InstallationOptionsDialog = ({
       
       // Close all dialogs
       setConfirmationOpen(false);
-      // Signal parent to close all dialogs - this is crucial for proper dialog flow
+      
+      // Reset state for clean re-opening
+      setStep(1);
+      setArea("");
+      setSelectedGarage(null);
+      
+      // Signal parent to close all dialogs and refresh cart
       onComplete();
     } catch (error) {
       console.error("Error adding to cart with installation:", error);
