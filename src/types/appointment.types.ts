@@ -14,6 +14,10 @@ export interface Appointment {
     name: string;
     location: string;
   };
+  // Optional properties that might be used in the UI but aren't in the database schema
+  customer?: string;
+  phone?: string;
+  car?: string;
 }
 
 export interface AvailableSlot {

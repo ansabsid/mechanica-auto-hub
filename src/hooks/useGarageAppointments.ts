@@ -15,14 +15,17 @@ export interface ServiceSlot {
 
 export interface Appointment {
   id: string;
-  customer: string;
+  user_id: string;
+  garage_id: string;
   service_type: string;
   appointment_date: string;
   appointment_time: string;
   status: string;
   notes?: string;
-  garage_id: string;
-  user_id: string;
+  created_at: string;
+  updated_at: string;
+  // Optional fields for UI display that might come from joins or be populated manually
+  customer?: string;
   phone?: string;
   car?: string;
 }
