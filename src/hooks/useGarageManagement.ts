@@ -9,6 +9,7 @@ export interface GarageInfo {
   area: string;
   location: string;
   installationFee: string;
+  images?: string | null;
 }
 
 /**
@@ -38,7 +39,8 @@ export const useGarageManagement = () => {
         name: garage.name,
         area: garage.area || '',
         location: garage.location,
-        installationFee: '' // This might be stored elsewhere in a real app
+        installationFee: '', // This might be stored elsewhere in a real app
+        images: garage.images // Include the images field
       }));
       
       setGarages(formattedGarages);
@@ -65,7 +67,8 @@ export const useGarageManagement = () => {
         .insert({
           name: garage.name,
           area: garage.area,
-          location: garage.location
+          location: garage.location,
+          images: garage.images
         })
         .select()
         .single();
