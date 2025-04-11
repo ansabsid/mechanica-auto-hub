@@ -26,7 +26,6 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, searchCompleted }) =
     
     if (parts && parts.length > 0) {
       console.log("🔎 First part:", parts[0]);
-      console.log("Full parts array:", parts); // Log the entire parts array for debugging
     }
   }, [parts, searchCompleted]);
 
