@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem, Cart, InstallationOptions, Garage } from "@/types/cart.types";
 
@@ -130,25 +131,36 @@ export async function addToCart(
   installationOptions?: InstallationOptions
 ): Promise<CartItem> {
   try {
-    // Check if the item already exists in the cart
+    // Check if the item already exists in the cart WITH THE SAME INSTALLATION OPTIONS
     const { data: existingItems, error: checkError } = await (supabase
       .from('cart_items') as any)
       .select('*')
       .eq('cart_id', cartId)
-      .eq('part_id', partId)
-      .is('installation_data', installationOptions ? null : installationOptions)
-      .maybeSingle();
+      .eq('part_id', partId);
       
     if (checkError) throw checkError;
     
-    if (existingItems) {
-      // Update quantity if the item already exists
-      const newQuantity = existingItems.quantity + quantity;
+    // Check if we have an item with the same installation configuration
+    const matchingItem = existingItems?.find(item => {
+      // If both have installation data or both don't have installation data
+      if (!!item.installation_data === !!installationOptions) {
+        // If neither has installation data, they match
+        if (!installationOptions) return true;
+        
+        // If both have installation data, check if they match
+        return item.installation_data?.garageId === installationOptions.garageId;
+      }
+      return false;
+    });
+    
+    if (matchingItem) {
+      // Update quantity if the item with same installation options already exists
+      const newQuantity = matchingItem.quantity + quantity;
       
       const { data: updatedItem, error: updateError } = await (supabase
         .from('cart_items') as any)
         .update({ quantity: newQuantity })
-        .eq('id', existingItems.id)
+        .eq('id', matchingItem.id)
         .select()
         .single();
         

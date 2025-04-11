@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,11 +12,21 @@ interface PartCardProps {
 }
 
 export const PartCard = ({ part }: PartCardProps) => {
-  const { addToCart, isLoading } = useCart();
+  const { cartItems, addToCart, isLoading } = useCart();
   const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
+  
+  const existingInstallation = cartItems.find(item => 
+    item.part_id === part.id && item.installation_data
+  )?.installation_data;
   
   const handleAddToCartClick = () => {
     if (part.stock <= 0) return;
+    
+    if (existingInstallation) {
+      addToCart(part.id, 1, existingInstallation);
+      return;
+    }
+    
     setShowPurchaseOptions(true);
   };
   
@@ -107,9 +116,8 @@ export const PartCard = ({ part }: PartCardProps) => {
         </CardFooter>
       </Card>
 
-      {/* Purchase Options Dialog */}
       <PurchaseOptionsDialog 
-        isOpen={showPurchaseOptions}
+        isOpen={showPurchaseOptions && !existingInstallation}
         onClose={onDialogClose}
         part={part}
         onAddToCartOnly={handleAddToCartOnly}

@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { CartItem, Cart } from "@/types/cart.types";
+import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
 import { 
   getUserCart, 
   getCartItems, 
@@ -14,13 +13,6 @@ import {
 
 // Use 'export type' for re-exporting types when isolatedModules is enabled
 export type { CartItem, Cart } from "@/types/cart.types";
-
-interface InstallationOptions {
-  installationRequired: boolean;
-  garageId: string;
-  garageName: string;
-  installationFee: number;
-}
 
 export const useCart = () => {
   const [cart, setCart] = useState<Cart | null>(null);
@@ -86,9 +78,12 @@ export const useCart = () => {
       
       await apiAddToCart(partId, cart.id, quantity, installationOptions);
       
-      const message = installationOptions?.installationRequired
-        ? "Part with installation added to cart"
-        : "Item added to your cart";
+      let message = "Item added to your cart";
+      
+      // Customize message based on whether this is a purchase with installation
+      if (installationOptions?.installationRequired) {
+        message = `Part with installation at ${installationOptions.garageName} added to cart`;
+      }
       
       toast({
         title: "Added to cart",
