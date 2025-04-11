@@ -1,11 +1,17 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { User, Wrench, Award, Settings, MapPin, Globe, ThumbsUp } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import ComingSoonDialog from "@/components/ui/coming-soon-dialog";
 
 const About = () => {
   const isMobile = useIsMobile();
+  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
+  
+  const handleAppDownloadClick = () => {
+    setIsComingSoonOpen(true);
+  };
   
   return (
     <>
@@ -175,15 +181,28 @@ const About = () => {
             grow your business, we're here to help you succeed.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <Button className="bg-white text-mechanica-700 hover:bg-gray-100 w-full sm:w-auto">
+            <Button 
+              className="bg-mechanica-500 text-white hover:bg-mechanica-500 w-full sm:w-auto"
+              onClick={handleAppDownloadClick}
+            >
               Download Our App
             </Button>
-            <Button variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+            <Button 
+              variant="outline" 
+              className="border-white text-white hover:text-white hover:bg-white/10 hover:border-white w-full sm:w-auto"
+              onClick={handleAppDownloadClick}
+            >
               Join as a Garage
             </Button>
           </div>
         </div>
       </section>
+
+      {/* Coming Soon Dialog */}
+      <ComingSoonDialog 
+        open={isComingSoonOpen}
+        onOpenChange={setIsComingSoonOpen}
+      />
     </>
   );
 };
