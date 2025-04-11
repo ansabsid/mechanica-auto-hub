@@ -60,29 +60,25 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       
     if (error) throw error;
     
-    // Fetch garage details separately if needed
-    const itemsWithGarages = await Promise.all(
-      (data || []).map(async (item: any) => {
-        if (item.part?.garage_id) {
-          const { data: garageData } = await (supabase
-            .from('garages') as any)
-            .select('name, location')
-            .eq('id', item.part.garage_id)
-            .single();
-            
-          if (garageData) {
-            return {
-              ...item,
-              part: {
-                ...item.part,
-                garages: garageData
-              }
-            };
+    // Instead of querying a non-existent garages table, we'll mock the garage data for now
+    // In a real implementation, you'd query a profiles table that has garage information or similar
+    const itemsWithGarages = (data || []).map((item: any) => {
+      if (item.part?.garage_id) {
+        // Mock garage data based on the garage_id
+        // This is a temporary solution until a proper garage table is set up
+        return {
+          ...item,
+          part: {
+            ...item.part,
+            garages: {
+              name: `Garage ${item.part.garage_id.substring(0, 4)}`,
+              location: "Dubai, UAE"
+            }
           }
-        }
-        return item;
-      })
-    );
+        };
+      }
+      return item;
+    });
     
     return itemsWithGarages || [];
   } catch (error) {
