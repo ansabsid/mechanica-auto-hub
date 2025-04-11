@@ -1,3 +1,4 @@
+
 import { useCallback, useMemo } from "react";
 import { Manufacturer, Model, Part } from "./types";
 import { useToast } from "@/hooks/use-toast";
@@ -141,7 +142,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       if (validParts.length === 0) {
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
         
-        // Generate mock parts for the vehicle - this will have image_url properly set now
+        // Generate mock parts for the vehicle
         mockPartsData = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
         console.log("Generated mock parts:", mockPartsData.length);

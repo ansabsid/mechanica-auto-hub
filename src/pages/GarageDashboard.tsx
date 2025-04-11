@@ -32,7 +32,6 @@ import { useGarageAppointments, ServiceSlot } from "@/hooks/useGarageAppointment
 import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { UpdateImagesButton } from "@/components/parts/UpdateImagesButton";
 
 const appointments = [
   {
@@ -267,7 +266,6 @@ const GarageDashboard = () => {
             </div>
             
             <div className="flex gap-2">
-              <UpdateImagesButton />
               <Button className="bg-mechanica-500 hover:bg-mechanica-600">
                 <Plus className="mr-2 h-4 w-4" /> Add New Product
               </Button>

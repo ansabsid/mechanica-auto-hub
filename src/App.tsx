@@ -17,15 +17,9 @@ import Checkout from "@/pages/Checkout";
 import CategoryPage from "@/components/categories/CategoryPage";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { initializePartImages } from "@/utils/initializeImages";
 import './App.css';
 
 function App() {
-  // Run initialization once when the app loads
-  useEffect(() => {
-    initializePartImages();
-  }, []);
-
   return (
     <AuthProvider>
       <Router>
