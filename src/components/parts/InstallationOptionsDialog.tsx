@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Part } from "@/hooks/useCarParts";
+import { Part, Garage } from "@/hooks/car-parts/types";
 import {
   Select,
   SelectContent,
@@ -23,7 +23,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/hooks/useCart";
-import { Garage, InstallationOptions } from "@/types/cart.types";
+import { InstallationOptions } from "@/types/cart.types";
 
 interface InstallationOptionsDialogProps {
   isOpen: boolean;
@@ -46,7 +46,6 @@ export const InstallationOptionsDialog = ({
   const { toast } = useToast();
   const { addToCart, refreshCart } = useCart();
   
-  // Function to add to cart with installation
   const handleConfirmInstallation = async () => {
     if (!selectedGarage) {
       toast({
@@ -67,7 +66,6 @@ export const InstallationOptionsDialog = ({
         installationFee: selectedGarage.installationFee
       };
       
-      // Add item to cart with installation
       console.log("Adding to cart with installation:", {
         partId: part.id,
         installationOptions
@@ -80,18 +78,14 @@ export const InstallationOptionsDialog = ({
         description: `${part.name} with installation has been added to your cart`,
       });
       
-      // Close all dialogs
       setConfirmationOpen(false);
       
-      // Reset state for clean re-opening
       setStep(1);
       setArea("");
       setSelectedGarage(null);
       
-      // Signal parent to close all dialogs and refresh cart
       onComplete();
       
-      // Force a cart refresh after adding to ensure it updates properly
       setTimeout(() => {
         refreshCart();
       }, 100);

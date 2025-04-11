@@ -11,6 +11,13 @@ export interface Model {
   name: string;
 }
 
+export interface Garage {
+  id: string;
+  name: string;
+  location: string;
+  installationFee: number;
+}
+
 export interface Part {
   id: number;
   name: string;
@@ -25,6 +32,7 @@ export interface Part {
     name: string;
     location: string;
   } | null;
+  availableGarages?: Garage[];
 }
 
 // Search state interface

@@ -1,5 +1,5 @@
 
-import { Part } from "@/hooks/car-parts/types";
+import { Part, Garage as PartGarage } from "@/hooks/car-parts/types";
 
 export interface Garage {
   id: string;
@@ -21,9 +21,7 @@ export interface CartItem {
   part_id: number;
   quantity: number;
   installation_data?: InstallationOptions;
-  part: Part & {
-    availableGarages?: Garage[];
-  };
+  part: Part;
 }
 
 export interface Cart {
