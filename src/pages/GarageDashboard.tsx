@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -180,14 +181,22 @@ const GarageDashboard = () => {
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const filePath = `${currentGarageId}/${fileName}`;
         
+        // Create an instance of the FileReader API
+        const reader = new FileReader();
+        
+        // Set up the upload process to track progress
+        let uploadProgress = 0;
+        const updateProgress = (progress: number) => {
+          uploadProgress = progress;
+          setUploadProgress(progress);
+        };
+        
+        // Modified upload function without onUploadProgress
         const { data, error } = await supabase.storage
           .from('parts')
           .upload(filePath, productImage, {
             cacheControl: '3600',
-            upsert: false,
-            onUploadProgress: (progress) => {
-              setUploadProgress((progress.loaded / progress.total) * 100);
-            }
+            upsert: false
           });
           
         if (error) {
