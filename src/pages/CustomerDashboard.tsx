@@ -1,7 +1,5 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import CarSearch from "@/components/search/CarSearch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -147,7 +145,6 @@ const CustomerDashboard = () => {
       <section className="py-8 bg-mechanica-50">
         <div className="container-custom">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Welcome back, Ahmed</h1>
-          <CarSearch />
         </div>
       </section>
 
