@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
@@ -24,10 +25,12 @@ export const useCart = () => {
   const fetchCart = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching cart data...");
       const sessionData = await getUserSession();
       
       if (!sessionData.session?.user) {
         // If user is not logged in, show an empty cart
+        console.log("No user session, setting empty cart");
         setCart(null);
         setCartItems([]);
         return;
@@ -36,8 +39,10 @@ export const useCart = () => {
       const userCart = await getUserCart();
       
       if (userCart) {
+        console.log("User cart found, fetching items");
         setCart(userCart);
         const items = await getCartItems(userCart.id);
+        console.log(`Retrieved ${items.length} cart items`);
         setCartItems(items);
       }
     } catch (error: any) {

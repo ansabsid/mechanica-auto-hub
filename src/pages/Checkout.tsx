@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -29,6 +28,16 @@ import { useOrders } from "@/hooks/useOrders";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, CreditCard, ShoppingCart, Loader2, Check, Apple } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
@@ -42,7 +51,7 @@ const formSchema = z.object({
 });
 
 const Checkout = () => {
-  const { cartItems, calculateTotal, clearCart, isLoading: cartLoading } = useCart();
+  const { cartItems, calculateTotal, clearCart, isLoading: cartLoading, refreshCart } = useCart();
   const { createOrder, isProcessing } = useOrders();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -66,13 +75,29 @@ const Checkout = () => {
   });
   
   useEffect(() => {
+    console.log("Checkout page mounted");
+    refreshCart();
+  }, [refreshCart]);
+  
+  useEffect(() => {
     if (cartItems.length === 0 && !isSuccess) {
-      navigate("/customer-dashboard");
+      console.log("Cart is empty but staying on checkout page");
     }
   }, [cartItems, isSuccess]);
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to place an order",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log("Processing order with values:", values);
+      
       const order = await createOrder(cartItems, calculateTotal());
       
       if (order) {
@@ -85,6 +110,7 @@ const Checkout = () => {
         }, 3000);
       }
     } catch (error) {
+      console.error("Order processing error:", error);
       toast({
         title: "Error",
         description: "There was a problem processing your order",
@@ -95,6 +121,17 @@ const Checkout = () => {
 
   const handleApplePaySubmit = async () => {
     try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to place an order",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log("Processing Apple Pay order");
+      
       const order = await createOrder(cartItems, calculateTotal());
       
       if (order) {
@@ -107,6 +144,7 @@ const Checkout = () => {
         }, 3000);
       }
     } catch (error) {
+      console.error("Apple Pay processing error:", error);
       toast({
         title: "Error",
         description: "There was a problem processing your Apple Pay payment",

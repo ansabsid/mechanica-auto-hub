@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
@@ -48,13 +49,16 @@ export const CartDrawer = () => {
     
     console.log("Navigating to checkout...");
     
-    // Close the drawer first
+    // Close the drawer first and proceed with navigation
     setIsOpen(false);
     
-    // Force direct navigation to checkout page after a short delay
-    // This avoids potential issues with React Router navigation
+    // Use a more reliable navigation approach with a delay
     setTimeout(() => {
+      // Use direct window navigation to ensure a full page load to checkout
       window.location.href = "/checkout";
+      
+      // Log that we're attempting navigation
+      console.log("Attempting to navigate to /checkout");
     }, 300);
   };
   
