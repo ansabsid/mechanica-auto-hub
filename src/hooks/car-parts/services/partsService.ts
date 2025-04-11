@@ -62,6 +62,27 @@ export const fetchAllPartsFromDB = async () => {
             location: "Deira, Dubai, UAE",
             installationFee: 27.99,
             area: "Deira"
+          },
+          {
+            id: "g5",
+            name: "AutoFix Express - Deira",
+            location: "Al Rigga, Deira, Dubai, UAE",
+            installationFee: 24.99,
+            area: "Deira"
+          },
+          {
+            id: "g6",
+            name: "QuickFix Auto Workshop - Deira",
+            location: "Al Muteena, Deira, Dubai, UAE",
+            installationFee: 22.99,
+            area: "Deira"
+          },
+          {
+            id: "g7",
+            name: "Dubai Auto Care - Deira",
+            location: "Naif Road, Deira, Dubai, UAE",
+            installationFee: 26.50,
+            area: "Deira"
           }
         ]
       } as Part;
@@ -193,6 +214,27 @@ export const createMockPartsForVehicle = (
             location: "Deira, Dubai, UAE",
             installationFee: 16.99,
             area: "Deira"
+          },
+          {
+            id: "g5",
+            name: "AutoFix Express - Deira",
+            location: "Al Rigga, Deira, Dubai, UAE",
+            installationFee: 14.99,
+            area: "Deira"
+          },
+          {
+            id: "g6",
+            name: "QuickFix Auto Workshop - Deira",
+            location: "Al Muteena, Deira, Dubai, UAE",
+            installationFee: 13.99,
+            area: "Deira"
+          },
+          {
+            id: "g7",
+            name: "Dubai Auto Care - Deira",
+            location: "Naif Road, Deira, Dubai, UAE",
+            installationFee: 15.50,
+            area: "Deira"
           }
         ]
       },
@@ -230,6 +272,20 @@ export const createMockPartsForVehicle = (
             name: "Mechanica Service Center - Deira",
             location: "Deira, Dubai, UAE",
             installationFee: 32.99,
+            area: "Deira"
+          },
+          {
+            id: "g5",
+            name: "AutoFix Express - Deira",
+            location: "Al Rigga, Deira, Dubai, UAE",
+            installationFee: 34.99,
+            area: "Deira"
+          },
+          {
+            id: "g7",
+            name: "Dubai Auto Care - Deira",
+            location: "Naif Road, Deira, Dubai, UAE",
+            installationFee: 36.50,
             area: "Deira"
           }
         ]
@@ -277,6 +333,20 @@ export const createMockPartsForVehicle = (
             location: "Deira, Dubai, UAE",
             installationFee: 18.99,
             area: "Deira"
+          },
+          {
+            id: "g5",
+            name: "AutoFix Express - Deira",
+            location: "Al Rigga, Deira, Dubai, UAE",
+            installationFee: 17.99,
+            area: "Deira"
+          },
+          {
+            id: "g6",
+            name: "QuickFix Auto Workshop - Deira",
+            location: "Al Muteena, Deira, Dubai, UAE",
+            installationFee: 16.99,
+            area: "Deira"
           }
         ]
       },
@@ -314,6 +384,20 @@ export const createMockPartsForVehicle = (
             name: "Mechanica Service Center - Deira",
             location: "Deira, Dubai, UAE",
             installationFee: 36.99,
+            area: "Deira"
+          },
+          {
+            id: "g6",
+            name: "QuickFix Auto Workshop - Deira",
+            location: "Al Muteena, Deira, Dubai, UAE",
+            installationFee: 34.99,
+            area: "Deira"
+          },
+          {
+            id: "g7",
+            name: "Dubai Auto Care - Deira",
+            location: "Naif Road, Deira, Dubai, UAE",
+            installationFee: 37.50,
             area: "Deira"
           }
         ]
@@ -364,6 +448,27 @@ export const createMockPartsForVehicle = (
         name: "Mechanica Service Center - Deira",
         location: "Deira, Dubai, UAE",
         installationFee: 27.99,
+        area: "Deira"
+      },
+      {
+        id: "g5",
+        name: "AutoFix Express - Deira",
+        location: "Al Rigga, Deira, Dubai, UAE",
+        installationFee: 24.99,
+        area: "Deira"
+      },
+      {
+        id: "g6",
+        name: "QuickFix Auto Workshop - Deira",
+        location: "Al Muteena, Deira, Dubai, UAE",
+        installationFee: 22.99,
+        area: "Deira"
+      },
+      {
+        id: "g7",
+        name: "Dubai Auto Care - Deira",
+        location: "Naif Road, Deira, Dubai, UAE",
+        installationFee: 26.50,
         area: "Deira"
       }
     ]

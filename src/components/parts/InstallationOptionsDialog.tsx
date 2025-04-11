@@ -89,22 +89,57 @@ export const InstallationOptionsDialog = ({
       
       // If no garages found in this area, generate mock garages
       if (garagesInArea.length === 0) {
-        const mockGarages: Garage[] = [
-          {
-            id: `mock-${selectedArea}-1`,
-            name: `Mechanica Service Center - ${selectedArea}`,
-            location: `${selectedArea}, Dubai, UAE`,
-            installationFee: 25.99,
-            area: selectedArea
-          },
-          {
-            id: `mock-${selectedArea}-2`,
-            name: `AutoFix Workshop - ${selectedArea}`,
-            location: `${selectedArea}, Dubai, UAE`,
-            installationFee: 29.99,
-            area: selectedArea
-          }
-        ];
+        let mockGarages: Garage[] = [];
+        
+        if (selectedArea === "Deira") {
+          mockGarages = [
+            {
+              id: `mock-deira-1`,
+              name: `Mechanica Service Center - Deira`,
+              location: `Deira, Dubai, UAE`,
+              installationFee: 25.99,
+              area: "Deira"
+            },
+            {
+              id: `mock-deira-2`,
+              name: `AutoFix Express - Deira`,
+              location: `Al Rigga, Deira, Dubai, UAE`,
+              installationFee: 24.99,
+              area: "Deira"
+            },
+            {
+              id: `mock-deira-3`,
+              name: `QuickFix Auto Workshop - Deira`,
+              location: `Al Muteena, Deira, Dubai, UAE`,
+              installationFee: 22.99,
+              area: "Deira"
+            },
+            {
+              id: `mock-deira-4`,
+              name: `Dubai Auto Care - Deira`,
+              location: `Naif Road, Deira, Dubai, UAE`,
+              installationFee: 26.50,
+              area: "Deira"
+            }
+          ];
+        } else {
+          mockGarages = [
+            {
+              id: `mock-${selectedArea}-1`,
+              name: `Mechanica Service Center - ${selectedArea}`,
+              location: `${selectedArea}, Dubai, UAE`,
+              installationFee: 25.99,
+              area: selectedArea
+            },
+            {
+              id: `mock-${selectedArea}-2`,
+              name: `AutoFix Workshop - ${selectedArea}`,
+              location: `${selectedArea}, Dubai, UAE`,
+              installationFee: 29.99,
+              area: selectedArea
+            }
+          ];
+        }
         
         setFilteredGarages(mockGarages);
         console.log("Added mock garages for area:", selectedArea, mockGarages);
