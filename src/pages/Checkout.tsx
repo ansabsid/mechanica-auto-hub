@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -196,7 +195,6 @@ const Checkout = () => {
     );
   }
   
-  // Mobile order summary drawer
   const OrderSummaryContent = () => (
     <div className="space-y-4">
       {cartItems.map((item) => (
@@ -262,7 +260,6 @@ const Checkout = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Checkout</h1>
           <p className="text-muted-foreground">Complete your purchase</p>
           
-          {/* Mobile Order Summary Drawer */}
           {isMobile && (
             <Drawer>
               <DrawerTrigger asChild>
@@ -311,23 +308,23 @@ const Checkout = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex space-x-3 md:space-x-4 mb-6">
+                <div className="flex space-x-3 md:space-x-4 mb-6 max-w-none">
                   <Button
                     type="button"
                     variant={paymentMethod === "card" ? "default" : "outline"}
-                    className={`flex-1 text-sm md:text-base px-2 md:px-4 ${paymentMethod === "card" ? "bg-mechanica-500 hover:bg-mechanica-600" : ""}`}
+                    className={`flex-1 text-sm md:text-base px-3 md:px-6 h-12 ${paymentMethod === "card" ? "bg-mechanica-500 hover:bg-mechanica-600" : ""}`}
                     onClick={() => setPaymentMethod("card")}
                   >
-                    <CreditCard className="mr-1 md:mr-2 h-4 w-4" />
+                    <CreditCard className="mr-2 h-5 w-5" />
                     Credit Card
                   </Button>
                   <Button
                     type="button"
                     variant={paymentMethod === "applepay" ? "default" : "outline"}
-                    className={`flex-1 text-sm md:text-base px-2 md:px-4 ${paymentMethod === "applepay" ? "bg-black hover:bg-gray-800" : ""}`}
+                    className={`flex-1 text-sm md:text-base px-3 md:px-6 h-12 ${paymentMethod === "applepay" ? "bg-black hover:bg-gray-800" : ""}`}
                     onClick={() => setPaymentMethod("applepay")}
                   >
-                    <Apple className="mr-1 md:mr-2 h-4 w-4" />
+                    <Apple className="mr-2 h-5 w-5" />
                     Apple Pay
                   </Button>
                 </div>
@@ -344,12 +341,12 @@ const Checkout = () => {
                           <p className="mb-4">Pay with Apple Pay</p>
                           <Button 
                             onClick={handleApplePaySubmit}
-                            className="w-full bg-white text-black hover:bg-gray-100"
+                            className="w-full bg-white text-black hover:bg-gray-100 h-12 text-base"
                             disabled={isProcessing || cartLoading}
                           >
                             {isProcessing ? (
                               <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                 Processing...
                               </>
                             ) : (
@@ -533,7 +530,6 @@ const Checkout = () => {
             </Card>
           </div>
 
-          {/* Desktop Order Summary - hidden on mobile */}
           {!isMobile && (
             <div>
               <Card>
