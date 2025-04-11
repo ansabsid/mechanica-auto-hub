@@ -56,6 +56,7 @@ export const PurchaseOptionsDialog = ({
   
   const handleCartOnlyClick = async () => {
     try {
+      console.log("Handling cart only click");
       // Call the passed callback to add to cart
       await onAddToCartOnly();
       // Force refresh cart to make sure we see the new items

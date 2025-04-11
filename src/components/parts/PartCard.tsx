@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ export const PartCard = ({ part }: PartCardProps) => {
   
   const handleAddToCartOnly = async () => {
     try {
+      console.log("Adding part to cart:", part.id);
       await addToCart(part.id, 1);
       // Explicitly refresh the cart to ensure we see the updated items
       await refreshCart();
@@ -67,6 +69,7 @@ export const PartCard = ({ part }: PartCardProps) => {
         title: "Added to cart",
         description: `${part.name} added to your cart`,
       });
+      return true; // Indicate success to the calling function
     } catch (error) {
       console.error("Error adding part only to cart:", error);
       toast({
@@ -74,6 +77,7 @@ export const PartCard = ({ part }: PartCardProps) => {
         description: "Failed to add part to cart",
         variant: "destructive",
       });
+      throw error; // Re-throw to indicate failure
     }
   };
   
