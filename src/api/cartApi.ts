@@ -54,7 +54,8 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
           garage_id,
           stock,
           garages:garage_id (
-            name
+            name,
+            location
           )
         )
       `)
@@ -69,7 +70,17 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
 }
 
 // Add a part to the cart
-export async function addToCart(partId: number, cartId: string, quantity: number = 1): Promise<CartItem> {
+export async function addToCart(
+  partId: number, 
+  cartId: string, 
+  quantity: number = 1,
+  installationOptions?: {
+    installationRequired: boolean;
+    garageId: string;
+    garageName: string;
+    installationFee: number;
+  }
+): Promise<CartItem> {
   try {
     // Check if the item already exists in the cart
     const { data: existingItems, error: checkError } = await (supabase
@@ -77,6 +88,7 @@ export async function addToCart(partId: number, cartId: string, quantity: number
       .select('*')
       .eq('cart_id', cartId)
       .eq('part_id', partId)
+      .eq('installation_options', installationOptions ? JSON.stringify(installationOptions) : null)
       .maybeSingle();
       
     if (checkError) throw checkError;
@@ -96,18 +108,21 @@ export async function addToCart(partId: number, cartId: string, quantity: number
       return updatedItem;
     } else {
       // Add new item to cart
-      const { data: newItem, error: addError } = await (supabase
+      const newItem = {
+        cart_id: cartId,
+        part_id: partId,
+        quantity: quantity,
+        installation_options: installationOptions || null
+      };
+      
+      const { data: insertedItem, error: addError } = await (supabase
         .from('cart_items') as any)
-        .insert({
-          cart_id: cartId,
-          part_id: partId,
-          quantity: quantity
-        })
+        .insert(newItem)
         .select()
         .single();
         
       if (addError) throw addError;
-      return newItem;
+      return insertedItem;
     }
   } catch (error) {
     console.error("Error adding to cart:", error);

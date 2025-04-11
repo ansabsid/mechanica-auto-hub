@@ -15,6 +15,13 @@ import {
 // Use 'export type' for re-exporting types when isolatedModules is enabled
 export type { CartItem, Cart } from "@/types/cart.types";
 
+interface InstallationOptions {
+  installationRequired: boolean;
+  garageId: string;
+  garageName: string;
+  installationFee: number;
+}
+
 export const useCart = () => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -59,7 +66,7 @@ export const useCart = () => {
   }, [fetchCart]);
 
   // Add an item to the cart
-  const addToCart = async (partId: number, quantity: number = 1) => {
+  const addToCart = async (partId: number, quantity: number = 1, installationOptions?: InstallationOptions) => {
     try {
       const sessionData = await getUserSession();
       
@@ -77,11 +84,15 @@ export const useCart = () => {
         if (!cart) return;
       }
       
-      await apiAddToCart(partId, cart.id, quantity);
+      await apiAddToCart(partId, cart.id, quantity, installationOptions);
+      
+      const message = installationOptions?.installationRequired
+        ? "Part with installation added to cart"
+        : "Item added to your cart";
       
       toast({
         title: "Added to cart",
-        description: "Item added to your cart",
+        description: message,
       });
       
       // Refresh cart items
@@ -175,10 +186,17 @@ export const useCart = () => {
     }
   };
 
-  // Calculate total price of items in cart
+  // Calculate total price of items in cart (including installation fees)
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
-      return total + (item.part.price * item.quantity);
+      let itemTotal = item.part.price * item.quantity;
+      
+      // Add installation fee if applicable
+      if (item.installation_options) {
+        itemTotal += item.installation_options.installationFee;
+      }
+      
+      return total + itemTotal;
     }, 0);
   };
 
