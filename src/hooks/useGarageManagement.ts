@@ -38,7 +38,6 @@ export const useGarageManagement = () => {
     try {
       console.log("Fetching garages from the database...");
       
-      // With RLS enabled, we need to make sure we're fetching data properly
       const { data, error: fetchError } = await supabase
         .from('garages')
         .select('*');
@@ -69,11 +68,7 @@ export const useGarageManagement = () => {
       return formattedGarages;
     } catch (error: any) {
       console.error("Error fetching garages:", error.message);
-      if (error.message.includes("JWTError") || error.message.includes("invalid token")) {
-        setError("Authentication error. You might need to login to view garages.");
-      } else {
-        setError(error.message);
-      }
+      setError(error.message);
       toast.error("Failed to load garages");
       return [];
     } finally {
@@ -106,11 +101,7 @@ export const useGarageManagement = () => {
       await fetchGarages(); // Refresh the garages list
       return data;
     } catch (error: any) {
-      if (error.message.includes("JWTError") || error.message.includes("invalid token")) {
-        toast.error("Authentication error. Please login to add garages.");
-      } else {
-        toast.error(error.message || "Failed to add garage");
-      }
+      toast.error(error.message || "Failed to add garage");
       console.error("Add garage error:", error);
       return null;
     } finally {
