@@ -28,13 +28,31 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
     console.log("RouteGuard checking access for path:", location.pathname);
     console.log("Current user:", user?.email, "Role:", userRole);
     
-    // Add specific path protection for garage dashboard
-    if (location.pathname === "/garage-dashboard" && userRole !== "garage") {
-      console.log("Access denied to garage dashboard - redirecting");
-      navigate("/customer-dashboard");
+    // Handle protected routes based on user role
+    if (location.pathname === "/garage-dashboard") {
+      if (!user) {
+        console.log("Access denied to garage dashboard - not logged in - redirecting to login");
+        navigate("/login");
+        return;
+      }
+      
+      if (userRole !== "garage") {
+        console.log("Access denied to garage dashboard - not a garage - redirecting to customer dashboard");
+        navigate("/customer-dashboard");
+        return;
+      }
     }
     
-    // Could add more path protection logic here
+    // Redirect authenticated users from login page based on role
+    if (location.pathname === "/login" && user) {
+      if (userRole === "garage") {
+        console.log("User already logged in as garage - redirecting to garage dashboard");
+        navigate("/garage-dashboard");
+      } else {
+        console.log("User already logged in as customer - redirecting to customer dashboard");
+        navigate("/customer-dashboard");
+      }
+    }
     
   }, [location.pathname, user, userRole, navigate]);
   
@@ -49,15 +67,15 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Index />,
+    element: <RouteGuard><Index /></RouteGuard>,
   },
   {
     path: "/about",
-    element: <About />,
+    element: <RouteGuard><About /></RouteGuard>,
   },
   {
     path: "/contact",
-    element: <Contact />,
+    element: <RouteGuard><Contact /></RouteGuard>,
   },
   {
     path: "/login",
@@ -69,31 +87,31 @@ const router = createBrowserRouter([
   },
   {
     path: "/garages",
-    element: <Garages />,
+    element: <RouteGuard><Garages /></RouteGuard>,
   },
   {
     path: "/customer-dashboard",
-    element: <CustomerDashboard />,
+    element: <RouteGuard><CustomerDashboard /></RouteGuard>,
   },
   {
     path: "/garage-dashboard",
-    element: <GarageDashboard />,
+    element: <RouteGuard><GarageDashboard /></RouteGuard>,
   },
   {
     path: "/orders/:orderId",
-    element: <OrdersPage />,
+    element: <RouteGuard><OrdersPage /></RouteGuard>,
   },
   {
     path: "/orders",
-    element: <OrdersListPage />,
+    element: <RouteGuard><OrdersListPage /></RouteGuard>,
   },
   {
     path: "/checkout",
-    element: <Checkout />,
+    element: <RouteGuard><Checkout /></RouteGuard>,
   },
   {
     path: "/categories",
-    element: <CategoryPage />,
+    element: <RouteGuard><CategoryPage /></RouteGuard>,
   },
   {
     path: "*",

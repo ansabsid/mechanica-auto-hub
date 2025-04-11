@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -23,22 +22,7 @@ const Login = () => {
   const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users based on role
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("Login page - User is authenticated with role:", userRole);
-      if (userRole === 'garage') {
-        console.log("Redirecting to garage dashboard");
-        navigate("/garage-dashboard");
-      } else {
-        console.log("Redirecting to customer dashboard");
-        navigate("/customer-dashboard");
-      }
-    }
-  }, [isAuthenticated, user, userRole, navigate]);
-
-  // Parse URL query parameters for demo login
-  useEffect(() => {
+  React.useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const type = queryParams.get("type");
     const email = queryParams.get("email");
@@ -49,7 +33,18 @@ const Login = () => {
       setGarageEmail(email);
       setGaragePassword(password);
     }
-  }, [location]);
+    
+    if (isAuthenticated && user) {
+      console.log("Login page - User is authenticated with role:", userRole);
+      if (userRole === 'garage') {
+        console.log("Redirecting to garage dashboard");
+        navigate("/garage-dashboard");
+      } else {
+        console.log("Redirecting to customer dashboard");
+        navigate("/customer-dashboard");
+      }
+    }
+  }, [location, isAuthenticated, user, userRole, navigate]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

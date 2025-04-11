@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import InstallationRequestsNotification from "@/components/garage/InstallationRequestsNotification";
+import { InstallationRequestsNotification } from "@/components/garage/InstallationRequestsNotification";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
