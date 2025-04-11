@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGarageManagement } from "@/hooks/useGarageManagement";
 
 // Define the type for garage data
 interface Garage {
@@ -51,9 +51,8 @@ const Garages = () => {
   const [filterOption, setFilterOption] = useState("all");
   const [garages, setGarages] = useState<Garage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isAddingSamples, setIsAddingSamples] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { fetchGarages } = useGarageManagement();
   
   // Sample services for each garage
   const serviceOptions = [
@@ -65,22 +64,13 @@ const Garages = () => {
   
   // Fetch garages from Supabase
   useEffect(() => {
-    const fetchGarages = async () => {
+    const loadGarages = async () => {
       setIsLoading(true);
       try {
-        console.log("Fetching garages from Supabase...");
-        const { data, error } = await supabase
-          .from('garages')
-          .select('*');
-          
-        if (error) {
-          console.error("Supabase error:", error);
-          throw error;
-        }
+        console.log("Fetching garages from database...");
+        const garagesList = await fetchGarages();
         
-        console.log("Garages data received:", data);
-        
-        if (!data || data.length === 0) {
+        if (!garagesList || garagesList.length === 0) {
           console.log("No garages found in the database");
           setGarages([]);
           setIsLoading(false);
@@ -88,7 +78,7 @@ const Garages = () => {
         }
         
         // Enhance garages with additional frontend properties
-        const enhancedGarages = data.map((garage, index) => ({
+        const enhancedGarages = garagesList.map((garage, index) => ({
           ...garage,
           rating: 4.5 + (Math.random() * 0.5), // Random rating between 4.5-5.0
           reviews: Math.floor(50 + Math.random() * 200), // Random reviews between 50-250
@@ -110,8 +100,8 @@ const Garages = () => {
       }
     };
     
-    fetchGarages();
-  }, []);
+    loadGarages();
+  }, [fetchGarages]);
 
   // Filter and search functionality
   const filteredGarages = garages
@@ -141,115 +131,6 @@ const Garages = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // The filtering is already reactive via the filteredGarages computed value
-  };
-
-  // Helper function to add a test garage
-  const addTestGarage = async () => {
-    try {
-      setIsAdding(true);
-      console.log("Creating test garage...");
-      
-      const testGarageName = "Test Garage " + Math.floor(Math.random() * 1000);
-      
-      const { data, error } = await supabase
-        .from('garages')
-        .insert({
-          name: testGarageName,
-          location: "Dubai Test Location",
-          area: "Dubai",
-          images: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        })
-        .select();
-        
-      if (error) {
-        console.error("Error adding test garage:", error);
-        throw error;
-      }
-      
-      console.log("New test garage created:", data);
-      toast.success(`Test garage "${testGarageName}" added successfully!`);
-      
-      // Refresh the garages list
-      const { data: updatedGarages, error: fetchError } = await supabase
-        .from('garages')
-        .select('*');
-        
-      if (fetchError) {
-        console.error("Error fetching updated garages:", fetchError);
-        throw fetchError;
-      }
-      
-      console.log("Updated garages list:", updatedGarages);
-      
-      // Enhance garages with additional frontend properties
-      const enhancedGarages = updatedGarages.map((garage, index) => ({
-        ...garage,
-        rating: 4.5 + (Math.random() * 0.5),
-        reviews: Math.floor(50 + Math.random() * 200),
-        services: serviceOptions[index % serviceOptions.length],
-        hours: "8:00 AM - 6:00 PM",
-        phone: "+971 552552476",
-        email: `info@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        images: garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-      }));
-      
-      setGarages(enhancedGarages);
-    } catch (error: any) {
-      console.error("Error in addTestGarage:", error);
-      toast.error("Failed to add test garage: " + error.message);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  // Helper function to add sample garages
-  const addSampleGarages = async () => {
-    try {
-      setIsAddingSamples(true);
-      console.log("Adding sample garages...");
-      
-      const { data, error } = await supabase
-        .from('garages')
-        .insert(sampleGarages)
-        .select();
-        
-      if (error) {
-        console.error("Error adding sample garages:", error);
-        throw error;
-      }
-      
-      console.log("Sample garages created:", data);
-      toast.success("Sample garages added successfully!");
-      
-      // Refresh the garages list
-      const { data: updatedGarages, error: fetchError } = await supabase
-        .from('garages')
-        .select('*');
-        
-      if (fetchError) {
-        console.error("Error fetching updated garages:", fetchError);
-        throw fetchError;
-      }
-      
-      // Enhance garages with additional frontend properties
-      const enhancedGarages = updatedGarages.map((garage, index) => ({
-        ...garage,
-        rating: 4.5 + (Math.random() * 0.5),
-        reviews: Math.floor(50 + Math.random() * 200),
-        services: serviceOptions[index % serviceOptions.length],
-        hours: "8:00 AM - 6:00 PM",
-        phone: "+971 552552476",
-        email: `info@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        images: garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-      }));
-      
-      setGarages(enhancedGarages);
-    } catch (error: any) {
-      console.error("Error in addSampleGarages:", error);
-      toast.error("Failed to add sample garages: " + error.message);
-    } finally {
-      setIsAddingSamples(false);
-    }
   };
 
   return (
@@ -327,47 +208,6 @@ const Garages = () => {
             </div>
           </div>
           
-          {/* Debug Section - Only in development */}
-          <div className="mb-6 flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              onClick={addTestGarage} 
-              className="mb-4"
-              disabled={isAdding}
-            >
-              {isAdding ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                "Add Test Garage (Debug)"
-              )}
-            </Button>
-            
-            {garages.length === 0 && (
-              <Button 
-                variant="default" 
-                onClick={addSampleGarages} 
-                className="mb-4"
-                disabled={isAddingSamples}
-              >
-                {isAddingSamples ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding Samples...
-                  </>
-                ) : (
-                  "Add Sample Garages"
-                )}
-              </Button>
-            )}
-            
-            <div className="text-sm text-gray-500 mb-2 w-full">
-              Total garages: {garages.length}, Filtered: {filteredGarages.length}
-            </div>
-          </div>
-          
           {/* Loading State */}
           {isLoading && (
             <div className="flex justify-center items-center py-12">
@@ -381,7 +221,7 @@ const Garages = () => {
             <div className="text-center py-12">
               <p className="text-lg text-gray-600 mb-4">
                 {garages.length === 0 
-                  ? "No garages found in database. Use the buttons above to add test or sample garages." 
+                  ? "No garages found in database." 
                   : "No garages found matching your criteria."}
               </p>
               {garages.length > 0 && (
@@ -494,4 +334,3 @@ const Garages = () => {
 };
 
 export default Garages;
-
