@@ -169,7 +169,9 @@ export const useGarageProducts = (garageId?: string) => {
       }
 
       // Safely extract and handle the part ID
-      const partId = response.data ? response.data.id : null;
+      // Type assertion to handle the correctly typed response
+      const partData = response.data as { id: number } | null;
+      const partId = partData ? partData.id : null;
       
       // Check if data exists and has a valid id
       if (partId === null || typeof partId !== 'number') {
