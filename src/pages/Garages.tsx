@@ -44,7 +44,7 @@ const Garages = () => {
       hours: "8:30 AM - 8:00 PM",
       phone: "+971 552552476",
       email: "service@mechanicamasters.com",
-      image: "https://images.unsplash.com/photo-1630066633681-72af2dafb372?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      image: "https://images.unsplash.com/photo-1503457574462-bd27054394c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
     },
     {
       id: 4,
@@ -56,7 +56,7 @@ const Garages = () => {
       hours: "8:00 AM - 6:00 PM",
       phone: "+971 552552476",
       email: "info@garagemasters.com",
-      image: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      image: "https://images.unsplash.com/photo-1613214143499-659fdaca6ca5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
     },
   ];
 
