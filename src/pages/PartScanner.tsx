@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ const PartScanner = () => {
   const [scanResult, setScanResult] = useState<Part | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // Start the camera stream
   const startCamera = async () => {
     try {
       setError(null);
@@ -54,7 +52,6 @@ const PartScanner = () => {
     }
   };
   
-  // Stop the camera stream
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
@@ -64,20 +61,17 @@ const PartScanner = () => {
     }
   };
   
-  // Toggle between front and back camera
   const toggleCamera = () => {
     stopCamera();
     setIsFrontCamera(!isFrontCamera);
   };
   
-  // Trigger file selection dialog
   const selectImage = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
   
-  // Handle file input change
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -89,14 +83,9 @@ const PartScanner = () => {
         if (canvasRef.current) {
           const ctx = canvasRef.current.getContext('2d');
           if (ctx) {
-            // Set canvas dimensions to match image
             canvasRef.current.width = img.width;
             canvasRef.current.height = img.height;
-            
-            // Draw image to canvas
             ctx.drawImage(img, 0, 0);
-            
-            // Scan the image
             scanImage(file);
           }
         }
@@ -106,7 +95,6 @@ const PartScanner = () => {
     reader.readAsDataURL(file);
   };
   
-  // Capture and scan the current camera frame
   const captureAndScan = () => {
     if (!isStreaming || !videoRef.current || !canvasRef.current) {
       toast({
@@ -122,14 +110,9 @@ const PartScanner = () => {
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
-      // Match canvas size to video size
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
-      // Draw current video frame to canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Convert canvas to blob
       canvas.toBlob((blob) => {
         if (blob) {
           scanImage(blob);
@@ -144,7 +127,6 @@ const PartScanner = () => {
     }
   };
   
-  // Process the image using the AI model
   const scanImage = async (imageData: Blob | File) => {
     setIsScanning(true);
     setScanResult(null);
@@ -155,7 +137,6 @@ const PartScanner = () => {
         description: "Analyzing the image with our AI model...",
       });
       
-      // Call the edge function to process the image
       const { data: processingResult, error: functionError } = await supabase.functions.invoke(
         'scan-car-part'
       );
@@ -168,7 +149,6 @@ const PartScanner = () => {
         throw new Error("Could not identify the car part");
       }
       
-      // Set the scan result
       setScanResult(processingResult.part);
       
       toast({
@@ -190,27 +170,22 @@ const PartScanner = () => {
     }
   };
   
-  // Navigate to the part details page
   const viewPart = () => {
     if (scanResult) {
-      // TODO: Navigate to a part details page with the scan result ID
       toast({
         title: "Viewing Part",
         description: `Showing details for ${scanResult.name}`,
       });
       
-      // For now, we'll navigate back to the home page
       navigate("/");
     }
   };
   
-  // Start camera when component mounts or camera preference changes
   useEffect(() => {
     if (!isStreaming) {
       startCamera();
     }
     
-    // Cleanup on unmount
     return () => {
       stopCamera();
     };
@@ -218,7 +193,6 @@ const PartScanner = () => {
   
   return (
     <div className="container max-w-full px-4 py-4 md:py-8">
-      {/* Mobile-friendly header with back button */}
       <div className="flex items-center mb-4">
         <Button 
           variant="ghost" 
@@ -235,7 +209,6 @@ const PartScanner = () => {
         <div className="flex flex-col space-y-4">
           <Card className="overflow-hidden shadow-sm">
             <CardContent className="p-0">
-              {/* Main video display */}
               <div className="relative w-full bg-black aspect-video">
                 <video 
                   ref={videoRef}
@@ -262,10 +235,8 @@ const PartScanner = () => {
                 )}
               </div>
               
-              {/* Hidden canvas for image processing */}
               <canvas ref={canvasRef} className="hidden" />
               
-              {/* Hidden file input */}
               <input 
                 ref={fileInputRef}
                 type="file"
@@ -276,57 +247,62 @@ const PartScanner = () => {
             </CardContent>
           </Card>
           
-          {/* Mobile-optimized camera controls */}
-          <div className="flex flex-wrap gap-2 justify-between">
-            <div className="flex gap-2">
-              {isStreaming ? (
-                <Button variant="outline" size="sm" onClick={stopCamera} className="h-10">
-                  <XCircle className="mr-1 h-4 w-4" />
-                  <span className="text-xs md:text-sm">Stop</span>
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" onClick={startCamera} className="h-10">
-                  <Camera className="mr-1 h-4 w-4" />
-                  <span className="text-xs md:text-sm">Start</span>
-                </Button>
-              )}
-              
+          <div className="grid grid-cols-4 gap-2">
+            {isStreaming ? (
               <Button 
                 variant="outline" 
-                size="sm" 
-                onClick={toggleCamera} 
-                disabled={!isStreaming}
-                className="h-10"
+                size="icon" 
+                onClick={stopCamera} 
+                className="flex flex-col items-center justify-center p-2 h-16"
               >
-                <RotateCw className="mr-1 h-4 w-4" />
-                <span className="text-xs md:text-sm">Flip</span>
+                <XCircle className="h-6 w-6 mb-1" />
+                <span className="text-[10px]">Stop</span>
               </Button>
-            </div>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={startCamera} 
+                className="flex flex-col items-center justify-center p-2 h-16"
+              >
+                <Camera className="h-6 w-6 mb-1" />
+                <span className="text-[10px]">Start</span>
+              </Button>
+            )}
             
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={selectImage}
-                className="h-10"
-              >
-                <ImagePlus className="mr-1 h-4 w-4" />
-                <span className="text-xs md:text-sm">Upload</span>
-              </Button>
-              
-              <Button 
-                size="sm"
-                onClick={captureAndScan} 
-                disabled={!isStreaming || isScanning}
-                className="bg-mechanica-500 hover:bg-mechanica-600 h-10"
-              >
-                <Scan className="mr-1 h-4 w-4" />
-                <span className="text-xs md:text-sm">{isScanning ? "Scanning..." : "Scan"}</span>
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={toggleCamera} 
+              disabled={!isStreaming}
+              className="flex flex-col items-center justify-center p-2 h-16"
+            >
+              <RotateCw className="h-6 w-6 mb-1" />
+              <span className="text-[10px]">Flip</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={selectImage}
+              className="flex flex-col items-center justify-center p-2 h-16"
+            >
+              <ImagePlus className="h-6 w-6 mb-1" />
+              <span className="text-[10px]">Upload</span>
+            </Button>
+            
+            <Button 
+              variant="mechanica"
+              size="icon"
+              onClick={captureAndScan} 
+              disabled={!isStreaming || isScanning}
+              className="flex flex-col items-center justify-center p-2 h-16"
+            >
+              <Scan className="h-6 w-6 mb-1" />
+              <span className="text-[10px]">{isScanning ? "..." : "Scan"}</span>
+            </Button>
           </div>
           
-          {/* Error message */}
           {error && (
             <Alert variant="destructive">
               <AlertTitle className="text-sm">Error</AlertTitle>
@@ -335,7 +311,6 @@ const PartScanner = () => {
           )}
         </div>
         
-        {/* Results section - optimized for mobile */}
         <div className="flex flex-col space-y-4">
           <Card className="shadow-sm">
             <CardContent className="pt-4 px-4 md:pt-6 md:px-6">

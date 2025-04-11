@@ -11,9 +11,9 @@ const FloatingScanButton = () => {
   if (!isMobile) return null;
   
   return (
-    <Link to="/scanner" className="fixed bottom-20 right-4 z-50">
+    <Link to="/scanner" className="fixed bottom-24 right-4 z-50">
       <Button 
-        size="lg" 
+        size="icon" 
         className="rounded-full w-14 h-14 shadow-lg bg-mechanica-500 hover:bg-mechanica-600"
       >
         <Camera className="h-6 w-6" />
