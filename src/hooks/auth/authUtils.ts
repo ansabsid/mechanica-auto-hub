@@ -39,12 +39,14 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
       return; // Profile already exists, no need to create a new one
     }
     
-    // Use serviceRole client for admin operations that bypass RLS
-    const { error } = await enhancedSupabase.rpc('create_profile_for_user', {
-      user_id: userId,
-      user_email: email,
-      user_role: role
-    });
+    // Use direct insert instead of RPC function
+    const { error } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: email,
+        role: role
+      });
     
     if (error) {
       console.error("Error creating profile:", error);
@@ -126,7 +128,7 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
     }
     
     // If account exists but needs email confirmation
-    // For demo accounts, we'll use the admin function to directly create a profile and bypass confirmation
+    // For demo accounts, we'll use a direct approach to create a profile and bypass confirmation
     console.log("Trying alternative approach for demo account...");
     
     // Force create user profile if needed
