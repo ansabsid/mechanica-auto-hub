@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
 import { useGarageAppointments, ServiceSlot } from "@/hooks/useGarageAppointments";
-import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
+import { useGarageManagement } from "@/hooks/useGarageManagement";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -111,11 +111,11 @@ const GarageDashboard = () => {
     interval: "60",
   });
 
-  const [newGarage, setNewGarage] = useState<GarageInfo>({
+  const [newGarage, setNewGarage] = useState({
     name: "",
     area: "",
     location: "",
-    installationFee: "",
+    installationFee: ""
   });
 
   const [currentGarageId, setCurrentGarageId] = useState<string>("");
