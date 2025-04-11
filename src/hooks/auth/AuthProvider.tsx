@@ -1,3 +1,4 @@
+
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -116,11 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Special demo login handling
       if (isDemoAccount(email)) {
+        console.log("Using demo account login flow");
         const demoResult = await handleDemoAccount();
         
         if (demoResult) {
           setUser(demoResult.user);
           setUserRole(demoResult.role);
+          setAuthChangeHandled(true);
           
           toast({
             title: "Demo login successful",

@@ -40,12 +40,12 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
 };
 
 export const isDemoAccount = (email: string): boolean => {
-  return email === "demo.garage@example.com";
+  return email === "demo@mechanica.com";
 };
 
 export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" } | null> => {
   try {
-    const demoEmail = "demo.garage@example.com";
+    const demoEmail = "demo@mechanica.com";
     const demoPassword = "garage123";
     
     // Try signing in first (if account exists)

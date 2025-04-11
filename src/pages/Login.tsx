@@ -90,7 +90,7 @@ const Login = () => {
     setError("");
     try {
       console.log("Attempting demo garage login");
-      await signIn("demo.garage@example.com", "garage123", "garage");
+      await signIn("demo@mechanica.com", "garage123", "garage");
     } catch (err: any) {
       console.error("Demo login failed:", err);
       setError(err.message || "Demo login failed. Please try again.");
