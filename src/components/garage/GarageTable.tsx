@@ -20,7 +20,7 @@ const GarageTable = ({ garages, loading }: GarageTableProps) => {
       <div className="space-y-4">
         <div>No garages found.</div>
         
-        <Alert variant="info" className="bg-blue-50 border-blue-200">
+        <Alert variant="default" className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-500" />
           <AlertDescription className="text-sm">
             Debugging Tip: Check the database to ensure garages exist and that your user account has permission to view them.
