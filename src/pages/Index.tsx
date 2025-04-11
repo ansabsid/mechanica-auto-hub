@@ -1,18 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
-import CarSearch from "@/components/search/CarSearch";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { 
-  Search, 
   Settings, 
   CreditCard, 
   Smartphone, 
   Star, 
   ChevronRight, 
-  CheckCircle2,
-  Filter
+  CheckCircle2
 } from "lucide-react";
 
 // Featured products data
@@ -124,15 +121,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Search Section - Only show if not authenticated */}
-      {!isAuthenticated && (
-        <section className="py-12 md:py-16 bg-white">
-          <div className="container-custom">
-            <CarSearch />
-          </div>
-        </section>
-      )}
-
       {/* Featured Products */}
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container-custom">
@@ -191,7 +179,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center text-center p-6">
               <div className="bg-mechanica-100 p-4 rounded-full mb-6">
-                <Search className="h-8 w-8 text-mechanica-600" />
+                <Settings className="h-8 w-8 text-mechanica-600" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Choose Your Car</h3>
               <p className="text-gray-600">
