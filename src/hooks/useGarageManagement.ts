@@ -35,7 +35,10 @@ export const useGarageManagement = () => {
         .from('garages')
         .select('*');
         
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
       if (!data || data.length === 0) {
         console.log("No garages found in the database");
@@ -50,7 +53,7 @@ export const useGarageManagement = () => {
         name: garage.name,
         area: garage.area || '',
         location: garage.location,
-        installationFee: '', // This might be stored elsewhere in a real app
+        installationFee: '25.00', // Default installation fee
         images: garage.images // Include the images field
       }));
       
