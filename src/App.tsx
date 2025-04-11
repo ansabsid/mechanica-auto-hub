@@ -28,22 +28,23 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
     console.log("RouteGuard checking access for path:", location.pathname);
     console.log("Current user:", user?.email, "Role:", userRole);
     
+    // Special bypass for /garage-dashboard path (only applies for this path)
+    if (location.pathname === "/garage-dashboard") {
+      // Allow access to garage dashboard without login
+      console.log("Bypass auth enabled - allowing direct access to garage dashboard");
+      return;
+    }
+    
     if (!isLoading) {
-      // Handle protected routes based on user role
-      if (location.pathname === "/garage-dashboard") {
+      // Handle protected routes based on user role (for other routes)
+      if (location.pathname === "/customer-dashboard") {
         if (!user) {
-          console.log("Access denied to garage dashboard - not logged in - redirecting to login");
+          console.log("Access denied to customer dashboard - not logged in - redirecting to login");
           navigate("/login");
           return;
         }
         
-        if (userRole !== "garage") {
-          console.log("Access denied to garage dashboard - not a garage - redirecting to customer dashboard");
-          navigate("/customer-dashboard");
-          return;
-        }
-        
-        console.log("Access granted to garage dashboard for role:", userRole);
+        console.log("Access granted to customer dashboard for role:", userRole);
       }
       
       // Redirect authenticated users from login page based on role
