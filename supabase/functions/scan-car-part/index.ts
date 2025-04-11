@@ -123,9 +123,10 @@ serve(async (req) => {
     // 1. Use a Hugging Face model or another ML service to identify the part
     // 2. Query your database for matching parts
     
-    // Randomly select a part from our mock database to simulate recognition
-    const randomIndex = Math.floor(Math.random() * mockParts.length);
-    const recognizedPart = mockParts[randomIndex];
+    // Recognize a part based on labels that might be in the image
+    // For mock purposes, we'll select a specific part that would match what's in your database
+    const partIndex = 2; // Air Filter (index 2 in the mockParts array)
+    const recognizedPart = mockParts[partIndex];
     
     console.log(`Identified part: ${recognizedPart.name}`);
     
