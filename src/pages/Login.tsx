@@ -89,11 +89,12 @@ const Login = () => {
   const handleDemoGarageLogin = async () => {
     setError("");
     try {
-      const demoEmail = "demo-garage@bookmyparts.com";
-      const demoPassword = "demo-garage";
-      console.log("Attempting demo garage login with:", demoEmail);
+      navigate("/garage-dashboard?demo=true");
       
-      await signIn(demoEmail, demoPassword, "garage");
+      toast({
+        title: "Demo mode activated",
+        description: "Welcome to the Bookmyparts garage demo!",
+      });
     } catch (err: any) {
       console.error("Demo login failed:", err);
       setError(err.message || "Demo login failed. Please try again.");

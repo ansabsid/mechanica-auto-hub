@@ -59,13 +59,13 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
 };
 
 export const isDemoAccount = (email: string): boolean => {
-  return email === "demo@mechanica.com";
+  return email === "demo-garage@bookmyparts.com";
 };
 
 export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" } | null> => {
   try {
-    const demoEmail = "demo@mechanica.com";
-    const demoPassword = "garage123";
+    const demoEmail = "demo-garage@bookmyparts.com";
+    const demoPassword = "demo-garage";
     
     // Try signing in first (if account exists)
     let { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
