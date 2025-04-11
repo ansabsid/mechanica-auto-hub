@@ -17,14 +17,16 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Define the type for garage data
+// Updated interface to match GarageInfo from the hook but making id required
 interface Garage {
   id: string;
   name: string;
   location: string;
   area: string | null;
   images: string | null;
+  installationFee?: string;
 }
 
 // Create a component for the garage card
@@ -96,7 +98,7 @@ const Garages = () => {
     if (!acc[location]) {
       acc[location] = [];
     }
-    acc[location].push(garage);
+    acc[location].push(garage as Garage); // Type assertion to fix the compatibility issue
     return acc;
   }, {} as Record<string, Garage[]>);
 

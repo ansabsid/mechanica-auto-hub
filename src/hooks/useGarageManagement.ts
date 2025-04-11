@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface GarageInfo {
-  id?: string;
+  id: string; // Changed from optional to required to match the Garage interface
   name: string;
-  area: string;
+  area: string | null;
   location: string;
   installationFee: string;
   images?: string | null;
@@ -67,7 +67,7 @@ export const useGarageManagement = () => {
       const formattedGarages = data.map(garage => ({
         id: garage.id,
         name: garage.name,
-        area: garage.area || '',
+        area: garage.area || null,
         location: garage.location,
         installationFee: '25.00', // Default installation fee
         images: garage.images // Include the images field
@@ -91,7 +91,7 @@ export const useGarageManagement = () => {
    * @param garage The garage information to add
    * @returns Promise resolving to the created garage data or null on error
    */
-  const addGarage = async (garage: GarageInfo) => {
+  const addGarage = async (garage: Omit<GarageInfo, 'id'>) => {
     setIsLoading(true);
     try {
       console.log("Adding new garage:", garage);
