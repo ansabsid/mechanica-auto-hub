@@ -2,6 +2,7 @@
 import React from "react";
 import Header from "./Header";
 import { useAuth } from "@/hooks/auth";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow flex items-center justify-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+          <LoadingSpinner size="lg" />
         </main>
       </div>
     );

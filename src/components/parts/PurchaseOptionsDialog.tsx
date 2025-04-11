@@ -14,6 +14,7 @@ import { Part } from "@/hooks/car-parts/types";
 import { InstallationOptionsDialog } from "@/components/parts/InstallationOptionsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PurchaseOptionsDialogProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export const PurchaseOptionsDialog = ({
   onAddToCartOnly,
 }: PurchaseOptionsDialogProps) => {
   const [showInstallationOptions, setShowInstallationOptions] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { toast } = useToast();
   const { refreshCart } = useCart();
   
@@ -57,6 +59,7 @@ export const PurchaseOptionsDialog = ({
   const handleCartOnlyClick = async () => {
     try {
       console.log("Handling cart only click");
+      setIsAddingToCart(true);
       // Call the passed callback to add to cart
       await onAddToCartOnly();
       // Force refresh cart to make sure we see the new items
@@ -75,6 +78,8 @@ export const PurchaseOptionsDialog = ({
         description: "Failed to add part to cart",
         variant: "destructive",
       });
+    } finally {
+      setIsAddingToCart(false);
     }
   };
   
@@ -91,29 +96,36 @@ export const PurchaseOptionsDialog = ({
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 gap-4 py-4">
-            <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                 onClick={handleCartOnlyClick}>
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <ShoppingCart className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="font-medium text-lg">Buy Part Only</h3>
-              <p className="text-sm text-gray-500 text-center mt-1">
-                Add this part to your cart and checkout
-              </p>
+          {isAddingToCart ? (
+            <div className="py-8 flex justify-center">
+              <LoadingSpinner />
+              <p className="ml-3 text-gray-500">Adding to cart...</p>
             </div>
-            
-            <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                 onClick={handleBuyWithInstallation}>
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <Wrench className="h-6 w-6 text-blue-600" />
+          ) : (
+            <div className="grid grid-cols-1 gap-4 py-4">
+              <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                   onClick={handleCartOnlyClick}>
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                  <ShoppingCart className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="font-medium text-lg">Buy Part Only</h3>
+                <p className="text-sm text-gray-500 text-center mt-1">
+                  Add this part to your cart and checkout
+                </p>
               </div>
-              <h3 className="font-medium text-lg">Buy With Installation</h3>
-              <p className="text-sm text-gray-500 text-center mt-1">
-                Purchase this part and have it installed by a professional
-              </p>
+              
+              <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                   onClick={handleBuyWithInstallation}>
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                  <Wrench className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="font-medium text-lg">Buy With Installation</h3>
+                <p className="text-sm text-gray-500 text-center mt-1">
+                  Purchase this part and have it installed by a professional
+                </p>
+              </div>
             </div>
-          </div>
+          )}
           
           <DialogFooter className="sm:justify-start">
             <Button type="button" variant="secondary" onClick={onClose}>

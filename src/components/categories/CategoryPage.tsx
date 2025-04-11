@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCarParts } from "@/hooks/useCarParts";
@@ -8,6 +7,7 @@ import { ArrowLeft, Car, Calendar } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Part } from "@/hooks/car-parts/types";
 import { PartCard } from "@/components/parts/PartCard";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface CategoryItem {
   id: number;
@@ -177,14 +177,8 @@ const CategoryPage = () => {
       <Separator className="my-4" />
       
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Card key={i} className="h-24 animate-pulse">
-              <CardContent className="p-4 flex items-center justify-center">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex justify-center items-center py-16">
+          <LoadingSpinner size="lg" />
         </div>
       ) : (
         <>
