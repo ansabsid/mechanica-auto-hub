@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -246,7 +245,7 @@ const Contact = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-6 md:mb-8">Find Us</h2>
           <div className="rounded-xl overflow-hidden h-64 md:h-96 shadow-subtle">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d462560.3011806427!2d54.947309235929374!3d25.076280447510162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f43496ad9c645%3A0xbde66e5084295162!2sDubai%20-%20United%20Arab%20Emirates!5e0!3m2!1sen!2sus!4v1618321387565!5m2!1sen!2sus"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3612.0731190412044!2d55.150744!3d25.0969539!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f6b5a8a1a3af3%3A0xd28f40613fed5aff!2sTCOM%20-%20Dubai%20Media%20City!5e0!3m2!1sen!2sae!4v1713032429056!5m2!1sen!2sae"
               width="100%"
               height="100%"
               style={{ border: 0 }}
