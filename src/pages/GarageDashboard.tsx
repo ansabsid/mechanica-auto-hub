@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +25,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 // Mock product data
 const products = [
@@ -106,7 +110,7 @@ const appointments = [
 ];
 
 const GarageDashboard = () => {
-  const [newProduct, setNewProduct] = useState({
+  const [newProduct, setNewProduct] = useState<GarageProduct>({
     name: "",
     category: "",
     price: "",
@@ -114,20 +118,10 @@ const GarageDashboard = () => {
     status: "In Stock",
   });
 
-  const [newSlot, setNewSlot] = useState({
-    service: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    interval: "60",
-  });
-
-  const [newGarage, setNewGarage] = useState({
-    name: "",
-    area: "",
-    location: "",
-    installationFee: "",
-  });
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { addProduct, isLoading } = useGarageProducts();
+  const [currentGarageId, setCurrentGarageId] = useState<string | null>(null);
 
   const dubaiAreas = [
     "Dubai Marina",
@@ -147,16 +141,58 @@ const GarageDashboard = () => {
     "Arabian Ranches"
   ];
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  useEffect(() => {
+    const mockGarageId = "27f4e4a5-3e4b-4c4d-9d3f-cd3c4e5f6a7b";
+    setCurrentGarageId(mockGarageId);
+    
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('parts')
+          .select('*')
+          .eq('garage_id', mockGarageId);
+        
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error: any) {
+        console.error("Error fetching products:", error.message);
+        toast.error("Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (mockGarageId) {
+      fetchProducts();
+    }
+  }, []);
+
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Adding new product:", newProduct);
-    setNewProduct({
-      name: "",
-      category: "",
-      price: "",
-      quantity: "",
-      status: "In Stock",
-    });
+    if (!currentGarageId) {
+      toast.error("Garage ID not found. Please try again.");
+      return;
+    }
+
+    const productId = await addProduct(newProduct, currentGarageId);
+    
+    if (productId) {
+      const { data } = await supabase
+        .from('parts')
+        .select('*')
+        .eq('garage_id', currentGarageId);
+      
+      setProducts(data || []);
+      
+      setNewProduct({
+        name: "",
+        category: "",
+        price: "",
+        quantity: "",
+        status: "In Stock",
+      });
+    }
   };
 
   const handleAddSlot = (e: React.FormEvent) => {
@@ -283,8 +319,12 @@ const GarageDashboard = () => {
                         <Input id="product-image" type="file" />
                       </div>
                     </div>
-                    <Button type="submit" className="bg-mechanica-500 hover:bg-mechanica-600">
-                      Add Product
+                    <Button 
+                      type="submit" 
+                      className="bg-mechanica-500 hover:bg-mechanica-600"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Adding..." : "Add Product"}
                     </Button>
                   </form>
                 </div>
@@ -302,52 +342,58 @@ const GarageDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((product) => (
-                        <tr key={product.id} className="border-b">
-                          <td className="p-4">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-md overflow-hidden mr-3">
-                                <img
-                                  src={product.image}
-                                  alt={product.name}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                              <span className="font-medium">{product.name}</span>
-                            </div>
-                          </td>
-                          <td className="p-4">{product.category}</td>
-                          <td className="p-4">AED {product.price}</td>
-                          <td className="p-4">{product.quantity}</td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              product.status === "In Stock" 
-                                ? "bg-green-100 text-green-800" 
-                                : product.status === "Limited"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}>
-                              {product.status}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Edit Product</DropdownMenuItem>
-                                <DropdownMenuItem>Update Status</DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={6} className="text-center p-4">Loading products...</td>
                         </tr>
-                      ))}
+                      ) : products.length > 0 ? (
+                        products.map((product: any) => (
+                          <tr key={product.id} className="border-b">
+                            <td className="p-4">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 rounded-md overflow-hidden mr-3 bg-gray-200">
+                                  {/* Placeholder image */}
+                                </div>
+                                <span className="font-medium">{product.name}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">{product.category || "Uncategorized"}</td>
+                            <td className="p-4">AED {product.price}</td>
+                            <td className="p-4">{product.stock}</td>
+                            <td className="p-4">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                product.stock > 10 
+                                  ? "bg-green-100 text-green-800" 
+                                  : product.stock > 0
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}>
+                                {product.stock > 10 ? "In Stock" : product.stock > 0 ? "Limited" : "Out of Stock"}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem>Edit Product</DropdownMenuItem>
+                                  <DropdownMenuItem>Update Status</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="text-center p-4">No products found. Add your first product!</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
