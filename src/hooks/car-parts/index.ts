@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";
 import { generateYearRange } from "./utils";
@@ -53,17 +53,18 @@ export const useCarParts = () => {
   /**
    * Reset search state
    */
-  const resetSearch = () => {
+  const resetSearch = useCallback(() => {
+    console.log("Resetting search state");
     setParts([]);
     setQueryTime(0);
     setIsSearching(false);
     setSearchCompleted(false);
-  };
+  }, []);
 
   /**
    * Search for parts based on vehicle criteria
    */
-  const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
+  const searchParts = useCallback(async (manufacturerId: string, modelId: string, year: string) => {
     if (!manufacturerId || !modelId || !year) {
       toast({
         variant: "destructive",
@@ -120,6 +121,8 @@ export const useCarParts = () => {
         }
       }));
       
+      console.log("Found parts:", processedParts.length, processedParts);
+      
       // If we found parts, show them
       if (processedParts.length > 0) {
         toast({
@@ -159,7 +162,7 @@ export const useCarParts = () => {
       
       return 0;
     }
-  };
+  }, [resetSearch, toast]);
 
   return {
     manufacturers,

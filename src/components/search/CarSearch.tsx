@@ -111,31 +111,13 @@ const CarSearch = () => {
         <div 
           id="search-results-section" 
           ref={resultsRef}
-          className={`mt-8 transition-all duration-300 ${searchCompleted ? 'border-t-4 border-mechanica-300 pt-8' : ''}`}
+          className="mt-8"
         >
-          {isLoading ? (
-            <div className="flex flex-col justify-center items-center p-12 bg-white rounded-xl shadow-md">
-              <div className="animate-pulse text-center">
-                <Loader2 className="animate-spin h-12 w-12 text-mechanica-500 mx-auto mb-4" />
-                <p className="text-xl font-medium text-gray-700">Loading parts...</p>
-                <p className="text-gray-500 mt-2">This may take a moment</p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-mechanica-200">
-              {queryTime > 0 && (
-                <div className="mb-4 flex items-center justify-end text-sm text-gray-500">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>Query time: {formattedQueryTime}</span>
-                </div>
-              )}
-              <PartsResults 
-                parts={parts || []} 
-                isLoading={isLoading}
-                searchCompleted={searchCompleted} 
-              />
-            </div>
-          )}
+          <PartsResults 
+            parts={parts || []} 
+            isLoading={isLoading}
+            searchCompleted={searchCompleted} 
+          />
         </div>
       )}
     </div>
