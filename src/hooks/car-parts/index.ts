@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";

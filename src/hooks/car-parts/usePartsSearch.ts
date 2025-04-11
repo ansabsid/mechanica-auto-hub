@@ -1,54 +1,30 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Part, Manufacturer, Model } from "./types";
-import { generateMockParts } from "./utils";
+import { useCallback } from "react";
+import { Manufacturer, Model, Part } from "./types";
 import { useToast } from "@/hooks/use-toast";
-
-// Increase the timeout for fetch operations (in milliseconds)
-const FETCH_TIMEOUT = 10000; // 10 seconds
-const MAX_RETRIES = 2;
+import { usePartsSearchState } from "./usePartsSearchState";
+import { 
+  fetchAllPartsFromDB, 
+  fetchPartsForVehicle, 
+  createMockPartsForVehicle 
+} from "./services/partsService";
 
 export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
-  const [parts, setParts] = useState<Part[]>([]);
-  const [allParts, setAllParts] = useState<Part[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
-  const [queryTime, setQueryTime] = useState<number>(0);
+  const { 
+    parts, setParts,
+    allParts, setAllParts,
+    isLoading, setIsLoading,
+    isSearching, setIsSearching,
+    searchCompleted, setSearchCompleted,
+    queryTime, setQueryTime
+  } = usePartsSearchState();
+  
   const { toast } = useToast();
 
-  // Create a fetch with timeout function to handle network timeouts
-  const fetchWithTimeout = async (promise, retryCount = 0) => {
-    let timeoutId;
-    
-    try {
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(new Error("Request timed out"));
-        }, FETCH_TIMEOUT);
-      });
-
-      const result = await Promise.race([promise, timeoutPromise]);
-      clearTimeout(timeoutId);
-      return result;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying fetch (${retryCount + 1}/${MAX_RETRIES})...`);
-        const backoffDelay = Math.pow(2, retryCount) * 1000;
-        
-        await new Promise(resolve => setTimeout(resolve, backoffDelay));
-        return fetchWithTimeout(promise, retryCount + 1);
-      }
-      
-      throw error;
-    }
-  };
-
-  // Fetch all available parts from the database with improved error handling
-  const fetchAllParts = async () => {
+  /**
+   * Fetches all available parts from the database
+   */
+  const fetchAllParts = useCallback(async () => {
     console.log("Fetching all available parts");
     
     if (isLoading) {
@@ -59,31 +35,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     setIsLoading(true);
     
     try {
-      const fetchPromise = supabase
-        .from('parts')
-        .select('*');
-      
-      const { data, error } = await fetchWithTimeout(fetchPromise);
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log("All parts fetched from database:", data?.length || 0);
-      
-      // Process the parts data with garage information
-      const processedParts: Part[] = (data || []).map(part => {
-        return {
-          ...part,
-          garages: part.garage_id ? { 
-            name: 'AutoCare Dubai',
-            location: 'Dubai Marina'
-          } : { 
-            name: 'Mechanica Service Center',
-            location: 'Dubai, UAE'
-          }
-        } as Part;
-      });
+      const processedParts = await fetchAllPartsFromDB();
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
@@ -97,7 +49,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         });
       } else {
         console.log("No parts found in database, generating mock parts for initial display");
-        const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
+        const mockParts = createMockPartsForVehicle(1, 1, 2023, manufacturers, models);
         setAllParts(mockParts);
         setParts([]);
         setSearchCompleted(false);
@@ -119,26 +71,33 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         duration: 5000,
       });
       
-      const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
+      const mockParts = createMockPartsForVehicle(1, 1, 2023, manufacturers, models);
       setAllParts(mockParts);
       setParts([]);
       setSearchCompleted(false);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, manufacturers, models, toast, setAllParts, setParts, setSearchCompleted, setIsLoading]);
 
-  // Reset search state
-  const resetSearch = () => {
+  /**
+   * Reset search state
+   */
+  const resetSearch = useCallback(() => {
     console.log("Resetting search state");
-    // IMPORTANT FIX: Don't set parts to allParts when resetting search
-    setSearchCompleted(false); // Mark as not completed so we show all parts
-    setParts([]); // Clear the filtered parts
+    setSearchCompleted(false);
+    setParts([]);
     setQueryTime(0);
-  };
+  }, [setParts, setSearchCompleted, setQueryTime]);
 
-  // Search for parts with improved error handling
-  const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
+  /**
+   * Search for parts based on vehicle criteria
+   * @param manufacturerId The manufacturer ID 
+   * @param modelId The model ID
+   * @param year The year
+   * @returns Number of parts found
+   */
+  const searchParts = useCallback(async (manufacturerId: string, modelId: string, year: string) => {
     console.log("🔍 SEARCHING FOR PARTS:", { manufacturerId, modelId, year });
     setIsSearching(true);
     setSearchCompleted(false);
@@ -152,16 +111,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const mdlId = parseInt(modelId);
       const yearNum = parseInt(year);
       
-      console.log(`Querying Supabase for parts: mfr=${mfrId}, model=${mdlId}, year=${yearNum}`);
-      
-      const queryPromise = supabase
-        .from('parts')
-        .select('*')
-        .eq('manufacturer_id', mfrId)
-        .eq('model_id', mdlId)
-        .eq('year', yearNum);
-      
-      const { data, error } = await fetchWithTimeout(queryPromise);
+      // Fetch parts from database
+      const validParts = await fetchPartsForVehicle(mfrId, mdlId, yearNum);
       
       // End timing the query
       const endTime = performance.now();
@@ -169,28 +120,6 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setQueryTime(queryDuration);
       
       console.log(`Database query completed in ${queryDuration.toFixed(2)}ms`);
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log("Supabase query result:", data);
-      
-      // Process and enhance the database results with default garage information
-      const validParts: Part[] = (data || []).map(part => {
-        return {
-          ...part,
-          garages: part.garage_id ? { 
-            name: 'AutoCare Dubai',
-            location: 'Dubai Marina'
-          } : { 
-            name: 'Mechanica Service Center',
-            location: 'Dubai, UAE'
-          }
-        } as Part;
-      });
-      
-      console.log("🔢 Valid parts from DB:", validParts.length);
       
       let finalParts: Part[];
       
@@ -216,31 +145,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
         const mockStartTime = performance.now();
         
-        // Generate AND filter mock parts in one step - create only parts that match
-        const mockParts = generateMockParts(
-          mfrId, 
-          mdlId, 
-          yearNum,
-          manufacturers,
-          models
-        ).filter(part => 
-          part.manufacturer_id === mfrId && 
-          part.model_id === mdlId && 
-          part.year === yearNum
-        );
+        // Create mock parts for the vehicle
+        const mockParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
         const mockEndTime = performance.now();
         console.log("Using filtered mock parts:", mockParts.length);
         console.log(`Mock data generated in ${(mockEndTime - mockStartTime).toFixed(2)}ms`);
-        
-        // Verify that all parts match the criteria
-        const allMatch = mockParts.every(part => 
-          part.manufacturer_id === mfrId && 
-          part.model_id === mdlId && 
-          part.year === yearNum
-        );
-        
-        console.log("⚠️ All mock parts match search criteria:", allMatch);
         
         finalParts = mockParts;
         
@@ -278,17 +188,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const mdlId = parseInt(modelId);
       const yearNum = parseInt(year);
       
-      const mockParts = generateMockParts(
-        mfrId, 
-        mdlId, 
-        yearNum,
-        manufacturers,
-        models
-      ).filter(part => 
-        part.manufacturer_id === mfrId && 
-        part.model_id === mdlId && 
-        part.year === yearNum
-      );
+      const mockParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
       
       console.log("Using filtered mock parts due to error:", mockParts.length);
       
@@ -299,7 +199,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       return mockParts.length;
     }
-  };
+  }, [manufacturers, models, toast, setParts, setIsSearching, setSearchCompleted, setQueryTime]);
 
   return {
     parts,
