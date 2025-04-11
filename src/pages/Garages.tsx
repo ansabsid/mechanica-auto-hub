@@ -29,6 +29,7 @@ const Garages = () => {
   const [filterOption, setFilterOption] = useState("all");
   const [garages, setGarages] = useState<Garage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Sample services for each garage
@@ -122,25 +123,40 @@ const Garages = () => {
   // Helper function to add a test garage
   const addTestGarage = async () => {
     try {
+      setIsAdding(true);
+      console.log("Creating test garage...");
+      
+      const testGarageName = "Test Garage " + Math.floor(Math.random() * 1000);
+      
       const { data, error } = await supabase
         .from('garages')
         .insert({
-          name: "Test Garage " + Math.floor(Math.random() * 1000),
+          name: testGarageName,
           location: "Dubai Test Location",
           area: "Dubai",
           images: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
         })
         .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error adding test garage:", error);
+        throw error;
+      }
       
-      toast.success("Test garage added successfully!");
+      console.log("New test garage created:", data);
+      toast.success(`Test garage "${testGarageName}" added successfully!`);
+      
       // Refresh the garages list
       const { data: updatedGarages, error: fetchError } = await supabase
         .from('garages')
         .select('*');
         
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error("Error fetching updated garages:", fetchError);
+        throw fetchError;
+      }
+      
+      console.log("Updated garages list:", updatedGarages);
       
       // Enhance garages with additional frontend properties
       const enhancedGarages = updatedGarages.map((garage, index) => ({
@@ -156,8 +172,10 @@ const Garages = () => {
       
       setGarages(enhancedGarages);
     } catch (error: any) {
-      console.error("Error adding test garage:", error.message);
-      toast.error("Failed to add test garage");
+      console.error("Error in addTestGarage:", error);
+      toast.error("Failed to add test garage: " + error.message);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -242,8 +260,16 @@ const Garages = () => {
               variant="outline" 
               onClick={addTestGarage} 
               className="mb-4"
+              disabled={isAdding}
             >
-              Add Test Garage (Debug)
+              {isAdding ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                "Add Test Garage (Debug)"
+              )}
             </Button>
             <div className="text-sm text-gray-500 mb-2">
               Total garages: {garages.length}, Filtered: {filteredGarages.length}
@@ -376,3 +402,4 @@ const Garages = () => {
 };
 
 export default Garages;
+
