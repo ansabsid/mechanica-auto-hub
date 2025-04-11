@@ -837,3 +837,101 @@ const GarageDashboard = () => {
                     size={isMobile ? "sm" : "default"}
                     className="w-full md:w-auto"
                   >
+                    <Plus className="mr-1 md:mr-2 h-4 w-4" /> Add New Garage
+                  </Button>
+                </div>
+                
+                <div id="garage-form" className="bg-white rounded-xl shadow-sm p-4 md:p-6">
+                  <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Add New Garage</h3>
+                  <form onSubmit={handleAddGarage} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="garage-name">Garage Name*</Label>
+                      <Input 
+                        id="garage-name"
+                        value={newGarage.name}
+                        onChange={(e) => setNewGarage({...newGarage, name: e.target.value})}
+                        required
+                        placeholder="e.g. My Garage"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="garage-area">Area*</Label>
+                      <Select 
+                        value={newGarage.area}
+                        onChange={(value) => setNewGarage({...newGarage, area: value})}
+                        required
+                      >
+                        <SelectTrigger id="garage-area">
+                          <SelectValue placeholder="Select area" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {dubaiAreas.map(area => (
+                            <SelectItem key={area} value={area}>
+                              {area}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="garage-location">Location*</Label>
+                      <Input 
+                        id="garage-location"
+                        value={newGarage.location}
+                        onChange={(e) => setNewGarage({...newGarage, location: e.target.value})}
+                        required
+                        placeholder="e.g. Dubai, UAE"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="garage-installation-fee">Installation Fee (AED)</Label>
+                      <Input 
+                        id="garage-installation-fee"
+                        type="number"
+                        value={newGarage.installationFee}
+                        onChange={(e) => setNewGarage({...newGarage, installationFee: e.target.value})}
+                        placeholder="e.g. 1000"
+                      />
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </section>
+      </div>
+      
+      {selectedProduct && (
+        <EditProductModal 
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          product={selectedProduct}
+          onSave={handleUpdateProduct}
+        />
+      )}
+      
+      <ConfirmDialog 
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteProduct}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+      
+      <ConfirmDialog
+        isOpen={statusUpdateDialogOpen}
+        onClose={() => setStatusUpdateDialogOpen(false)}
+        onConfirm={handleStatusUpdate}
+        title="Update Product Status"
+        description={`Are you sure you want to change the product status to "${statusProduct?.status}"?`}
+        confirmText="Update"
+        cancelText="Cancel"
+      />
+    </div>
+  );
+};
+
+export default GarageDashboard;
