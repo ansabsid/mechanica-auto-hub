@@ -83,10 +83,10 @@ const Contact = () => {
               <div className="space-y-6 md:space-y-8">
                 <Card className="p-4 md:p-6 border-none shadow-subtle">
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit">
+                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit mx-auto sm:mx-0 flex items-center justify-center">
                       <Phone className="h-5 w-5 text-mechanica-600" />
                     </div>
-                    <div>
+                    <div className="text-center sm:text-left">
                       <h3 className="font-semibold text-base md:text-lg mb-1">Phone</h3>
                       <p className="text-gray-600 text-sm md:text-base">+971 552552476</p>
                       <p className="text-gray-600 text-sm md:text-base">Available 9am - 6pm, Sunday - Thursday</p>
@@ -96,10 +96,10 @@ const Contact = () => {
                 
                 <Card className="p-4 md:p-6 border-none shadow-subtle">
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit">
+                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit mx-auto sm:mx-0 flex items-center justify-center">
                       <Mail className="h-5 w-5 text-mechanica-600" />
                     </div>
-                    <div>
+                    <div className="text-center sm:text-left">
                       <h3 className="font-semibold text-base md:text-lg mb-1">Email</h3>
                       <p className="text-gray-600 text-sm md:text-base">support@bookmyparts.com</p>
                       <p className="text-gray-600 text-sm md:text-base">We aim to respond within 24 hours</p>
@@ -109,10 +109,10 @@ const Contact = () => {
                 
                 <Card className="p-4 md:p-6 border-none shadow-subtle">
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit">
+                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit mx-auto sm:mx-0 flex items-center justify-center">
                       <MapPin className="h-5 w-5 text-mechanica-600" />
                     </div>
-                    <div>
+                    <div className="text-center sm:text-left">
                       <h3 className="font-semibold text-base md:text-lg mb-1">Office</h3>
                       <p className="text-gray-600 text-sm md:text-base">Dubai, United Arab Emirates</p>
                     </div>
@@ -121,10 +121,10 @@ const Contact = () => {
                 
                 <Card className="p-4 md:p-6 border-none shadow-subtle">
                   <div className="flex flex-col sm:flex-row sm:items-center">
-                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit">
+                    <div className="bg-mechanica-100 p-3 rounded-full mb-4 sm:mb-0 sm:mr-5 w-fit mx-auto sm:mx-0 flex items-center justify-center">
                       <Clock className="h-5 w-5 text-mechanica-600" />
                     </div>
-                    <div>
+                    <div className="text-center sm:text-left">
                       <h3 className="font-semibold text-base md:text-lg mb-1">Business Hours</h3>
                       <p className="text-gray-600 text-sm md:text-base">Sunday - Thursday: 9:00 AM - 6:00 PM</p>
                       <p className="text-gray-600 text-sm md:text-base">Friday - Saturday: Closed</p>
