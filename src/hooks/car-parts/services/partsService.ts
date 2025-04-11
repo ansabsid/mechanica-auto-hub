@@ -116,7 +116,7 @@ export const createMockPartsForVehicle = (
 ) => {
   console.log("Generating mock parts for the specific vehicle...");
   
-  // Special case for Toyota(1) Corolla(2) 2022 - only return air filter and brake pads
+  // Special case for Toyota(1) Corolla(2) 2022
   if (manufacturerId === 1 && modelId === 2 && yearNum === 2022) {
     console.log("SPECIAL CASE: Toyota Corolla 2022 - returning only air filter and brake pads");
     
@@ -145,6 +145,44 @@ export const createMockPartsForVehicle = (
         manufacturer_id: 1, // Toyota
         model_id: 2, // Corolla
         year: 2022,
+        garage_id: null,
+        garages: {
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      }
+    ];
+  }
+  
+  // Special case for Toyota(1) Corolla(2) 2023
+  if (manufacturerId === 1 && modelId === 2 && yearNum === 2023) {
+    console.log("SPECIAL CASE: Toyota Corolla 2023 - returning only air filter and brake pads");
+    
+    return [
+      {
+        id: 201,
+        name: "Air Filter - Toyota Corolla",
+        description: "OEM compatible air filter for Toyota Corolla 2023",
+        price: 32.99,
+        stock: 20,
+        manufacturer_id: 1, // Toyota
+        model_id: 2, // Corolla
+        year: 2023,
+        garage_id: null,
+        garages: {
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      },
+      {
+        id: 202,
+        name: "Brake Pads - Toyota Corolla",
+        description: "Premium brake pads for Toyota Corolla 2023",
+        price: 84.99,
+        stock: 12,
+        manufacturer_id: 1, // Toyota
+        model_id: 2, // Corolla
+        year: 2023,
         garage_id: null,
         garages: {
           name: 'Mechanica Service Center',

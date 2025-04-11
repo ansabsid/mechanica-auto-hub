@@ -39,8 +39,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
-        // Clear filtered parts when fetching all parts
-        setParts([]);
+        // Don't set filtered parts when fetching all parts
+        // We only want to set filtered parts after a search
         setSearchCompleted(false);
         
         toast({
@@ -49,38 +49,27 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
           duration: 3000,
         });
       } else {
-        console.log("No parts found in database, generating mock parts for initial display");
-        const mockParts = createMockPartsForVehicle(1, 1, 2023, manufacturers, models);
-        setAllParts(mockParts);
-        // Clear filtered parts when generating mock parts
-        setParts([]);
+        console.log("No parts found in database, ready for search");
+        setAllParts([]);
         setSearchCompleted(false);
-        
-        toast({
-          title: "Using Sample Data",
-          description: "No parts found in database. Showing sample data instead.",
-          variant: "default",
-          duration: 5000,
-        });
       }
     } catch (error: any) {
       console.error("Error fetching all parts:", error.message);
       
       toast({
         title: "Error Loading Parts",
-        description: `Could not load parts: ${error.message}. Using sample data instead.`,
+        description: `Could not load parts: ${error.message}. Please try again.`,
         variant: "destructive",
         duration: 5000,
       });
       
-      const mockParts = createMockPartsForVehicle(1, 1, 2023, manufacturers, models);
-      setAllParts(mockParts);
+      setAllParts([]);
       setParts([]);
       setSearchCompleted(false);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, manufacturers, models, toast, setAllParts, setParts, setSearchCompleted, setIsLoading]);
+  }, [isLoading, toast, setAllParts, setParts, setSearchCompleted, setIsLoading]);
 
   /**
    * Reset search state
@@ -103,6 +92,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     console.log("🔍 SEARCHING FOR PARTS:", { manufacturerId, modelId, year });
     setIsSearching(true);
     setSearchCompleted(false);
+    setParts([]); // Clear any existing parts before searching
     
     try {
       // Start timing the query
@@ -137,7 +127,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       } else {
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
         
-        // Special case for Toyota(1) Corolla(2) 2022
+        // Generate mock parts for the vehicle
         finalParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
         console.log("Using mock parts:", finalParts.length);

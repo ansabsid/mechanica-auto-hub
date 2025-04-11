@@ -14,14 +14,15 @@ import {
 
 interface PartsResultsProps {
   parts: Part[];
-  visible: boolean;
+  searchCompleted: boolean;
 }
 
-const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
+const PartsResults: React.FC<PartsResultsProps> = ({ parts, searchCompleted }) => {
   // Add detailed console logging to inspect the received props
   useEffect(() => {
     console.log("🔍 PartsResults MOUNTED/UPDATED");
     console.log("📋 Parts length:", parts?.length || 0);
+    console.log("🔄 Search completed:", searchCompleted);
     
     // Debug parts data in more detail
     if (parts && parts.length > 0) {
@@ -51,13 +52,14 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
         console.warn("⛔ FILTER ISSUE DETECTED: Multiple manufacturer/model IDs in results!");
       }
     }
-  }, [parts]);
+  }, [parts, searchCompleted]);
 
-  if (!visible) {
+  // Only render when search is completed
+  if (!searchCompleted) {
     return null;
   }
 
-  // Check if parts array is empty or undefined
+  // Check if parts array is empty
   if (!parts || parts.length === 0) {
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">

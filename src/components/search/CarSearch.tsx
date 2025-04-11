@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
@@ -7,10 +8,8 @@ import { ArrowDown, Loader2, Clock, Search, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CarSearch = () => {
-  const [showResults, setShowResults] = useState(true); // Set to true to show all parts by default
   const { 
     parts, 
-    allParts, 
     isLoading,
     isSearching, 
     searchCompleted, 
@@ -25,7 +24,6 @@ const CarSearch = () => {
 
   // Add explicit logging for debugging
   console.log("🔍 CarSearch render - parts length:", parts?.length || 0);
-  console.log("🔍 CarSearch render - allParts length:", allParts?.length || 0);
   console.log("🔍 CarSearch render - searchCompleted:", searchCompleted);
   
   // Update UI when search completes
@@ -34,8 +32,6 @@ const CarSearch = () => {
     console.log("🔢 Parts in effect:", parts?.length || 0);
     
     if (searchCompleted) {
-      setShowResults(true);
-      
       // Scroll to results section with a slight delay
       setTimeout(() => {
         if (resultsRef.current) {
@@ -47,12 +43,11 @@ const CarSearch = () => {
 
   // Make sure we have data to display, but only on initial load
   useEffect(() => {
-    if (!initialLoadRef.current && !isLoading && (!allParts || allParts.length === 0)) {
-      console.log("Initial load: No parts found, fetching all parts...");
-      initialLoadRef.current = true; // Set the flag to prevent repeated fetches
-      fetchAllParts();
+    if (!initialLoadRef.current && !isLoading) {
+      console.log("Initial load: Setting up CarSearch component");
+      initialLoadRef.current = true; // Set the flag to prevent repeated operations
     }
-  }, [isLoading, allParts, fetchAllParts]);
+  }, [isLoading]);
 
   // Clean up any retry timeouts when component unmounts
   useEffect(() => {
@@ -79,7 +74,7 @@ const CarSearch = () => {
     resetSearch();
     toast({
       title: "Search Cleared",
-      description: "Showing all available parts",
+      description: "Ready for a new search",
       duration: 3000,
     });
   };
@@ -91,27 +86,21 @@ const CarSearch = () => {
     }
     
     toast({
-      title: "Refreshing Parts",
-      description: "Getting the latest parts data...",
+      title: "Refreshing Search",
+      description: "Ready for a new search",
       duration: 3000,
     });
     
-    fetchAllParts();
+    resetSearch();
   };
 
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
-
-  // CRITICAL FIX: Ensure we're showing the correct parts
-  // ALWAYS show filtered parts when search is completed, never show all parts after search
-  const displayParts = searchCompleted ? parts : allParts;
   
   // Critical debug logging
   console.log("⚠️ FINAL DISPLAY STATE:");
   console.log("- Search completed:", searchCompleted);
   console.log("- Filtered parts count:", parts?.length || 0);
-  console.log("- All parts count:", allParts?.length || 0);
-  console.log("- Actually displaying:", displayParts?.length || 0, "parts");
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -144,7 +133,7 @@ const CarSearch = () => {
             className="text-sm"
           >
             <Search className="mr-2 h-4 w-4" />
-            Show All Parts
+            Clear Search
           </Button>
         </div>
       </div>
@@ -180,8 +169,8 @@ const CarSearch = () => {
               </div>
             )}
             <PartsResults 
-              parts={displayParts || []} 
-              visible={showResults} 
+              parts={parts || []} 
+              searchCompleted={searchCompleted} 
             />
           </div>
         )}
