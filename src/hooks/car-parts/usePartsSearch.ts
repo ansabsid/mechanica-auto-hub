@@ -153,6 +153,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
             variant: "default",
             duration: 5000,
           });
+          
+          setParts(mockParts);
         } else {
           toast({
             title: "No Parts Found",
@@ -160,9 +162,9 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
             variant: "destructive",
             duration: 5000,
           });
+          
+          setParts([]);
         }
-        
-        setParts(mockParts);
       } else {
         console.log("Using database parts:", validParts.length);
         
@@ -197,16 +199,16 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const mdlId = parseInt(modelId);
       const yearNum = parseInt(year);
       
-      const mockParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
+      const mock_parts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
       
-      console.log("Using filtered mock parts due to error:", mockParts.length);
+      console.log("Using filtered mock parts due to error:", mock_parts.length);
       
       // Update state in the correct order
-      setParts(mockParts);
+      setParts(mock_parts);
       setIsSearching(false);
       setSearchCompleted(true);
       
-      return mockParts.length;
+      return mock_parts.length;
     }
   }, [manufacturers, models, toast, setParts, setIsSearching, setSearchCompleted, setQueryTime]);
 

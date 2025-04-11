@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
@@ -30,7 +30,7 @@ function App() {
       <Router>
         <Toaster />
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          <Route path="/" element={<MainLayout><Outlet /></MainLayout>}>
             <Route index element={<Index />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
