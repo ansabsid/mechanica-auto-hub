@@ -86,16 +86,14 @@ const Login = () => {
     }
   };
 
-  const handleDemoGarageLogin = () => {
+  const handleDemoGarageLogin = async () => {
     setError("");
     try {
-      console.log("Bypassing login and going directly to garage dashboard");
-      navigate("/garage-dashboard");
+      const demoEmail = "demo-garage@bookmyparts.com";
+      const demoPassword = "demo-garage";
+      console.log("Attempting demo garage login with:", demoEmail);
       
-      toast({
-        title: "Demo mode activated",
-        description: "Welcome to the Bookmyparts garage demo!",
-      });
+      await signIn(demoEmail, demoPassword, "garage");
     } catch (err: any) {
       console.error("Demo login failed:", err);
       setError(err.message || "Demo login failed. Please try again.");

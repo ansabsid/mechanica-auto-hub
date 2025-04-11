@@ -29,6 +29,13 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
     console.log("Current user:", user?.email, "Role:", userRole);
     
     if (!isLoading) {
+      // Special case for demo garage dashboard - allow direct access for now
+      if (location.pathname === "/garage-dashboard" && 
+          location.search.includes("demo=true")) {
+        console.log("Allowing demo garage dashboard access");
+        return;
+      }
+      
       // Handle garage-specific routes
       if (location.pathname === "/garage-dashboard") {
         if (!user) {
@@ -78,7 +85,7 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
         }
       }
     }
-  }, [location.pathname, user, userRole, navigate, isLoading]);
+  }, [location.pathname, user, userRole, navigate, isLoading, location.search]);
   
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
