@@ -105,8 +105,12 @@ const CarSearch = () => {
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
-  // Determine which parts to show - FIX: Only show filtered parts when search is completed
-  const displayParts = searchCompleted ? parts : allParts;
+  // Determine which parts to show - CRITICAL FIX: Always show filtered parts when search is completed
+  // This ensures that after a search, we only show the parts matching search criteria
+  const displayParts = searchCompleted && parts.length > 0 ? parts : allParts;
+
+  // Add console log to debug what parts are being displayed
+  console.log("Displaying parts:", displayParts?.length || 0, "Search completed:", searchCompleted, "Parts array length:", parts?.length || 0);
 
   return (
     <div className="w-full max-w-6xl mx-auto">
