@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
@@ -28,8 +27,6 @@ const CarSearch = () => {
   console.log("CarSearch render - allParts:", allParts?.length || 0);
   console.log("CarSearch render - searchCompleted:", searchCompleted);
   console.log("CarSearch render - showResults:", showResults);
-  console.log("CarSearch render - queryTime:", queryTime);
-  console.log("CarSearch render - isLoading:", isLoading);
 
   // Update UI when search completes
   useEffect(() => {
@@ -105,8 +102,9 @@ const CarSearch = () => {
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
-  // CRITICAL FIX: Now explicitly use the correct parts array based on search status
-  // This ensures we only show parts matching the search criteria after a search is completed
+  // CRITICAL FIX: Ensure we're using the correct parts array
+  // When search is completed, show ONLY the filtered parts results
+  // Otherwise show all parts when no search has been performed
   const displayParts = searchCompleted ? parts : allParts;
   
   // Add debug logging

@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX } from "lucide-react";
+import { Package2, SearchX, Car } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -34,6 +34,15 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
         model_id: parts[0].model_id,
         year: parts[0].year
       });
+
+      // Log all unique manufacturer_ids, model_ids, and years to verify filtering
+      const uniqueMfrs = [...new Set(parts.map(p => p.manufacturer_id))];
+      const uniqueModels = [...new Set(parts.map(p => p.model_id))];
+      const uniqueYears = [...new Set(parts.map(p => p.year))];
+      
+      console.log("Unique manufacturer IDs in results:", uniqueMfrs);
+      console.log("Unique model IDs in results:", uniqueModels);
+      console.log("Unique years in results:", uniqueYears);
     }
   }, [parts, visible]);
 
@@ -87,8 +96,18 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
             {parts.map((part) => (
               <TableRow key={part.id} className="hover:bg-mechanica-50">
                 <TableCell className="font-medium">{part.name}</TableCell>
-                <TableCell className="text-sm text-gray-600">
-                  Manufacturer ID: {part.manufacturer_id}, Model ID: {part.model_id}, Year: {part.year}
+                <TableCell>
+                  <div className="flex items-start space-x-2">
+                    <Car className="h-5 w-5 text-mechanica-500 mt-0.5" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Manufacturer ID: {part.manufacturer_id}, Model ID: {part.model_id}, Year: {part.year}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Compatible with vehicles matching these exact specifications
+                      </div>
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right font-bold">${part.price.toFixed(2)}</TableCell>
               </TableRow>

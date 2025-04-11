@@ -89,8 +89,9 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
-        // Initialize parts array with all parts - will be replaced after search
+        // Don't set parts array on initial load, it will be set after search
         setParts([]);
+        // Don't mark search as completed on initial load
         setSearchCompleted(false);
         
         // Show success toast only if we got real data
@@ -226,7 +227,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
           models
         );
         
-        // Important fix: Filter the mock parts to only include parts that match the criteria
+        // CRITICAL FIX: Filter mock parts to ONLY include exact matches
         const filteredMockParts = mockParts.filter(part => 
           part.manufacturer_id === mfrId && 
           part.model_id === mdlId && 
@@ -235,7 +236,18 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         
         const mockEndTime = performance.now();
         console.log("Using filtered mock parts:", filteredMockParts.length);
+        console.log("Original mock parts length:", mockParts.length);
         console.log(`Mock data generated in ${(mockEndTime - mockStartTime).toFixed(2)}ms`);
+        
+        // Assert that the filtered mock parts exactly match the search criteria
+        const allMatch = filteredMockParts.every(part => 
+          part.manufacturer_id === mfrId && 
+          part.model_id === mdlId && 
+          part.year === yearNum
+        );
+        
+        console.log("All filtered parts match criteria:", allMatch);
+        
         finalParts = filteredMockParts;
         
         // Show toast message for mock data
@@ -247,7 +259,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         });
       }
       
-      console.log("Final filtered parts being set:", finalParts);
+      console.log("Final filtered parts being set:", finalParts.length);
       
       // Update state in the correct order
       setParts(finalParts);
