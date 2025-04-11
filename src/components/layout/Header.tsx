@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, User, ShoppingCart, LogOut, Home, Settings } from "lucide-react";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
+      console.log("Handling logout click...");
       await signOut();
       console.log("Sign out completed, redirecting to login...");
       navigate("/login");
@@ -194,7 +195,10 @@ const Header = () => {
               
               {isAuthenticated && (
                 <button
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
                   className="flex items-center text-red-600 hover:text-red-800 transition-colors"
                 >
                   <LogOut className="mr-2 h-4 w-4" />

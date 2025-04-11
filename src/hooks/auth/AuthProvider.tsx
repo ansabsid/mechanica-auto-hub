@@ -1,3 +1,4 @@
+
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -206,19 +207,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    setIsLoading(true);
     try {
       console.log("Signing out: Starting signOut process...");
+      
+      // Set loading state to true while signing out
+      setIsLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error("Error signing out:", error.message);
+        toast({
+          variant: "destructive",
+          title: "Logout failed",
+          description: error.message || "An error occurred during logout",
+        });
         throw error;
       }
       
       console.log("Signing out: Successfully signed out from Supabase");
       
-      // Clear user state immediately
+      // Clear user state immediately to ensure UI updates
       setUser(null);
       setUserRole(null);
       
@@ -227,7 +236,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully logged out",
       });
       
-      // Navigation will happen in components using the context
     } catch (error: any) {
       console.error("Error in signOut function:", error);
       toast({
