@@ -13,40 +13,64 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_time: string
+          confirmation_code: string | null
           created_at: string
           garage_id: string
           id: string
           notes: string | null
+          service_slot_id: string | null
           service_type: string
           status: string
           updated_at: string
           user_id: string
+          vehicle_id: string | null
         }
         Insert: {
           appointment_date: string
           appointment_time: string
+          confirmation_code?: string | null
           created_at?: string
           garage_id: string
           id?: string
           notes?: string | null
+          service_slot_id?: string | null
           service_type: string
           status?: string
           updated_at?: string
           user_id: string
+          vehicle_id?: string | null
         }
         Update: {
           appointment_date?: string
           appointment_time?: string
+          confirmation_code?: string | null
           created_at?: string
           garage_id?: string
           id?: string
           notes?: string | null
+          service_slot_id?: string | null
           service_type?: string
           status?: string
           updated_at?: string
           user_id?: string
+          vehicle_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "appointments_service_slot_id_fkey"
+            columns: ["service_slot_id"]
+            isOneToOne: false
+            referencedRelation: "service_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cart_items: {
         Row: {
@@ -396,11 +420,98 @@ export type Database = {
         }
         Relationships: []
       }
+      service_slots: {
+        Row: {
+          created_at: string
+          date: string
+          duration_minutes: number
+          end_time: string
+          garage_id: string
+          id: string
+          is_available: boolean
+          service_type: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          duration_minutes?: number
+          end_time: string
+          garage_id: string
+          id?: string
+          is_available?: boolean
+          service_type: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          duration_minutes?: number
+          end_time?: string
+          garage_id?: string
+          id?: string
+          is_available?: boolean
+          service_type?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_slots_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          created_at: string
+          id: string
+          license_plate: string | null
+          make: string
+          model: string
+          updated_at: string
+          user_id: string
+          vin: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          license_plate?: string | null
+          make: string
+          model: string
+          updated_at?: string
+          user_id: string
+          vin?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          license_plate?: string | null
+          make?: string
+          model?: string
+          updated_at?: string
+          user_id?: string
+          vin?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      generate_confirmation_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_garages_for_part: {
         Args: { part_id_param: number }
         Returns: {

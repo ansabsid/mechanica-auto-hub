@@ -20,7 +20,8 @@ import {
   Car,
   Factory,
   Edit,
-  Trash2
+  Trash2,
+  Clock
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -31,13 +32,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
-import { useGarageAppointments, ServiceSlot } from "@/hooks/useGarageAppointments";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import EditProductModal from "@/components/products/EditProductModal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
+import ServiceSlotManager from "@/components/garage/ServiceSlotManager";
+import AppointmentManager from "@/components/garage/AppointmentManager";
+import { InstallationRequestsNotification } from "@/components/garage/InstallationRequestsNotification";
 
 const appointments = [
   {
@@ -103,14 +106,6 @@ const GarageDashboard = () => {
     description: "",
   });
 
-  const [newSlot, setNewSlot] = useState<ServiceSlot>({
-    service: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    interval: "60",
-  });
-
   const [newGarage, setNewGarage] = useState({
     name: "",
     area: "",
@@ -148,11 +143,6 @@ const GarageDashboard = () => {
     updateProductStatus,
     deleteProduct
   } = useGarageProducts(currentGarageId);
-  
-  const { 
-    createServiceSlots, 
-    isLoading: slotLoading 
-  } = useGarageAppointments();
   
   const { 
     addGarage, 
@@ -312,24 +302,6 @@ const GarageDashboard = () => {
     }
   };
 
-  const handleAddSlot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentGarageId) {
-      toast.error("Garage ID not found. Please try again.");
-      return;
-    }
-    
-    await createServiceSlots(newSlot, currentGarageId);
-    
-    setNewSlot({
-      service: "",
-      date: "",
-      startTime: "",
-      endTime: "",
-      interval: "60",
-    });
-  };
-
   const handleAddGarage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -432,17 +404,22 @@ const GarageDashboard = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                <InstallationRequestsNotification />
               </div>
             )}
           </div>
           
           <Tabs defaultValue="inventory" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-4 md:mb-8 md:max-w-md md:mx-auto">
+            <TabsList className="grid w-full grid-cols-4 mb-4 md:mb-8 md:max-w-md md:mx-auto">
               <TabsTrigger value="inventory" className="flex items-center justify-center gap-1 md:gap-2 py-1 md:py-2 px-1 md:px-3 text-xs md:text-sm">
                 <ShoppingBag size={isMobile ? 16 : 18} /> {isMobile ? "Items" : "Inventory"}
               </TabsTrigger>
               <TabsTrigger value="appointments" className="flex items-center justify-center gap-1 md:gap-2 py-1 md:py-2 px-1 md:px-3 text-xs md:text-sm">
                 <Calendar size={isMobile ? 16 : 18} /> {isMobile ? "Appts" : "Appointments"}
+              </TabsTrigger>
+              <TabsTrigger value="service-slots" className="flex items-center justify-center gap-1 md:gap-2 py-1 md:py-2 px-1 md:px-3 text-xs md:text-sm">
+                <Clock size={isMobile ? 16 : 18} /> {isMobile ? "Slots" : "Service Slots"}
               </TabsTrigger>
               <TabsTrigger value="garages" className="flex items-center justify-center gap-1 md:gap-2 py-1 md:py-2 px-1 md:px-3 text-xs md:text-sm">
                 <MapPin size={isMobile ? 16 : 18} /> Garages
@@ -481,7 +458,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-category">Category*</Label>
                         <Select 
                           value={newProduct.category}
-                          onValueChange={(value) => setNewProduct({...newProduct, category: value})}
+                          onChange={(value) => setNewProduct({...newProduct, category: value})}
                           required
                         >
                           <SelectTrigger id="product-category">
@@ -516,7 +493,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-manufacturer">Manufacturer*</Label>
                         <Select 
                           value={newProduct.manufacturer_id?.toString()}
-                          onValueChange={(value) => setNewProduct({...newProduct, manufacturer_id: parseInt(value)})}
+                          onChange={(value) => setNewProduct({...newProduct, manufacturer_id: parseInt(value)})}
                           required
                         >
                           <SelectTrigger id="product-manufacturer">
@@ -536,7 +513,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-model">Model*</Label>
                         <Select 
                           value={newProduct.model_id?.toString()}
-                          onValueChange={(value) => setNewProduct({...newProduct, model_id: parseInt(value)})}
+                          onChange={(value) => setNewProduct({...newProduct, model_id: parseInt(value)})}
                           disabled={filteredModels.length === 0}
                           required
                         >
@@ -557,7 +534,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-year">Year*</Label>
                         <Select 
                           value={newProduct.year?.toString()}
-                          onValueChange={(value) => setNewProduct({...newProduct, year: parseInt(value)})}
+                          onChange={(value) => setNewProduct({...newProduct, year: parseInt(value)})}
                           required
                         >
                           <SelectTrigger id="product-year">
@@ -599,7 +576,7 @@ const GarageDashboard = () => {
                         <Label htmlFor="product-status">Availability Status</Label>
                         <Select 
                           value={newProduct.status}
-                          onValueChange={(value) => setNewProduct({...newProduct, status: value})}
+                          onChange={(value) => setNewProduct({...newProduct, status: value})}
                         >
                           <SelectTrigger id="product-status">
                             <SelectValue placeholder="Select status" />
@@ -821,188 +798,33 @@ const GarageDashboard = () => {
             </TabsContent>
 
             <TabsContent value="appointments">
-              <div className="flex flex-col space-y-4 md:space-y-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-                  <h2 className="text-lg md:text-xl font-semibold">Service Appointments</h2>
-                  <Button 
-                    onClick={() => document.getElementById('service-form')?.scrollIntoView({ behavior: 'smooth' })}
-                    variant="mechanica"
-                    size={isMobile ? "sm" : "default"}
-                    className="w-full md:w-auto"
-                  >
-                    <Plus className="mr-1 md:mr-2 h-4 w-4" /> Create Service Slots
-                  </Button>
-                </div>
-
-                <div id="service-form" className="bg-white rounded-xl shadow-sm p-4 md:p-6">
-                  <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Add Service Slots</h3>
-                  <form onSubmit={handleAddSlot} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="service-type">Service Type*</Label>
-                        <Select
-                          value={newSlot.service}
-                          onValueChange={(value) => setNewSlot({...newSlot, service: value})}
-                          required
-                        >
-                          <SelectTrigger id="service-type">
-                            <SelectValue placeholder="Select service" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="oil-change">Oil Change</SelectItem>
-                            <SelectItem value="brake-service">Brake Service</SelectItem>
-                            <SelectItem value="full-service">Full Car Service</SelectItem>
-                            <SelectItem value="ac-service">AC Service</SelectItem>
-                            <SelectItem value="tire-change">Tire Change</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="service-date">Date*</Label>
-                        <Input 
-                          id="service-date"
-                          type="date"
-                          value={newSlot.date}
-                          onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="start-time">Start Time*</Label>
-                        <Input 
-                          id="start-time"
-                          type="time"
-                          value={newSlot.startTime}
-                          onChange={(e) => setNewSlot({...newSlot, startTime: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="end-time">End Time*</Label>
-                        <Input 
-                          id="end-time"
-                          type="time"
-                          value={newSlot.endTime}
-                          onChange={(e) => setNewSlot({...newSlot, endTime: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="service-interval">Appointment Duration (minutes)*</Label>
-                        <Select
-                          value={newSlot.interval}
-                          onValueChange={(value) => setNewSlot({...newSlot, interval: value})}
-                          required
-                        >
-                          <SelectTrigger id="service-interval">
-                            <SelectValue placeholder="Select duration" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="30">30 minutes</SelectItem>
-                            <SelectItem value="60">60 minutes</SelectItem>
-                            <SelectItem value="90">90 minutes</SelectItem>
-                            <SelectItem value="120">2 hours</SelectItem>
-                            <SelectItem value="180">3 hours</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      variant="mechanica"
-                      disabled={slotLoading}
-                      className="w-full md:w-auto"
-                    >
-                      {slotLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating...
-                        </>
-                      ) : "Create Slots"}
-                    </Button>
-                  </form>
-                </div>
-
-                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
-                  <div className="max-h-[500px] overflow-y-auto">
-                    <table className="w-full bg-white rounded-xl shadow-sm">
-                      <thead className="sticky top-0 bg-white z-10">
-                        <tr className="border-b">
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Customer</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Service</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Date & Time</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">Car</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Status</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {appointments.map((appointment) => (
-                          <tr key={appointment.id} className="border-b">
-                            <td className="p-2 md:p-4">
-                              <div>
-                                <div className="font-medium text-xs md:text-sm">{appointment.customer}</div>
-                                <div className="text-xs text-gray-500 hidden md:block">{appointment.phone}</div>
-                              </div>
-                            </td>
-                            <td className="p-2 md:p-4 text-xs md:text-sm">{appointment.service}</td>
-                            <td className="p-2 md:p-4">
-                              <div>
-                                <div className="text-xs md:text-sm">
-                                  {new Date(appointment.date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </div>
-                                <div className="text-xs text-gray-500">{appointment.time}</div>
-                              </div>
-                            </td>
-                            <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">{appointment.car}</td>
-                            <td className="p-2 md:p-4">
-                              <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs ${
-                                appointment.status === "Confirmed" 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}>
-                                {appointment.status}
-                              </span>
-                            </td>
-                            <td className="p-2 md:p-4">
-                              <div className="flex space-x-1 md:space-x-2">
-                                {appointment.status === "Pending" && (
-                                  <>
-                                    <Button size="sm" variant="outline" className="h-7 md:h-8 w-7 md:w-8 p-0 bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
-                                      <Check className="h-4 w-4" />
-                                    </Button>
-                                    <Button size="sm" variant="outline" className="h-7 md:h-8 w-7 md:w-8 p-0 bg-red-50 text-red-600 border-red-200 hover:bg-red-100">
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                                )}
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-7 md:h-8 w-7 md:w-8 p-0">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                                    <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {currentGarageId ? (
+                <AppointmentManager garageId={currentGarageId} />
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mb-4">
+                    <Calendar className="w-16 h-16 mx-auto text-gray-400" />
                   </div>
+                  <p className="text-lg text-gray-600 mb-4">
+                    Please select a garage to view appointments
+                  </p>
                 </div>
-              </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="service-slots">
+              {currentGarageId ? (
+                <ServiceSlotManager garageId={currentGarageId} />
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mb-4">
+                    <Clock className="w-16 h-16 mx-auto text-gray-400" />
+                  </div>
+                  <p className="text-lg text-gray-600 mb-4">
+                    Please select a garage to manage service slots
+                  </p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="garages">
@@ -1015,186 +837,3 @@ const GarageDashboard = () => {
                     size={isMobile ? "sm" : "default"}
                     className="w-full md:w-auto"
                   >
-                    <Plus className="mr-1 md:mr-2 h-4 w-4" /> Add New Garage
-                  </Button>
-                </div>
-
-                <div id="garage-form" className="bg-white rounded-xl shadow-sm p-4 md:p-6">
-                  <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Onboard New Garage</h3>
-                  <form onSubmit={handleAddGarage} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="garage-name">Garage Name*</Label>
-                        <Input 
-                          id="garage-name"
-                          value={newGarage.name}
-                          onChange={(e) => setNewGarage({...newGarage, name: e.target.value})}
-                          required
-                          placeholder="e.g. Mechanica Service Center - Dubai Marina"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="garage-area">Area*</Label>
-                        <Select 
-                          value={newGarage.area}
-                          onValueChange={(value) => setNewGarage({...newGarage, area: value})}
-                          required
-                        >
-                          <SelectTrigger id="garage-area">
-                            <SelectValue placeholder="Select area" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[200px] overflow-y-auto">
-                            {dubaiAreas.map((area) => (
-                              <SelectItem key={area} value={area}>
-                                {area}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs md:text-sm text-gray-500">This groups garages by area for customer selection</p>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="garage-location">Full Address*</Label>
-                        <Textarea 
-                          id="garage-location"
-                          value={newGarage.location}
-                          onChange={(e) => setNewGarage({...newGarage, location: e.target.value})}
-                          required
-                          placeholder="e.g. Dubai Marina, Sheikh Zayed Road, Dubai, UAE"
-                          className="resize-none h-20"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="garage-fee">Base Installation Fee (AED)*</Label>
-                        <Input 
-                          id="garage-fee"
-                          type="number"
-                          value={newGarage.installationFee}
-                          onChange={(e) => setNewGarage({...newGarage, installationFee: e.target.value})}
-                          required
-                          placeholder="e.g. 25.99"
-                        />
-                        <p className="text-xs md:text-sm text-gray-500">Base fee applied to installations at this garage</p>
-                      </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      variant="mechanica"
-                      disabled={garageLoading}
-                      className="w-full md:w-auto"
-                    >
-                      {garageLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Adding...
-                        </>
-                      ) : "Add Garage"}
-                    </Button>
-                  </form>
-                </div>
-
-                <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
-                  <div className="max-h-[500px] overflow-y-auto">
-                    <table className="w-full bg-white rounded-xl shadow-sm">
-                      <thead className="sticky top-0 bg-white z-10">
-                        <tr className="border-b">
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Garage Name</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Area</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">Full Address</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Installation Fee</th>
-                          <th className="text-left p-2 md:p-4 text-xs md:text-sm">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {garagesLoading ? (
-                          <tr>
-                            <td colSpan={5} className="text-center p-4">
-                              <div className="flex justify-center items-center py-4">
-                                <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                                Loading garages...
-                              </div>
-                            </td>
-                          </tr>
-                        ) : garages.length > 0 ? (
-                          garages.map((garage) => (
-                            <tr key={garage.id} className="border-b">
-                              <td className="p-2 md:p-4 text-xs md:text-sm">{garage.name}</td>
-                              <td className="p-2 md:p-4 text-xs md:text-sm">{garage.area}</td>
-                              <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">{garage.location}</td>
-                              <td className="p-2 md:p-4 text-xs md:text-sm">AED {garage.installationFee || "0.00"}</td>
-                              <td className="p-2 md:p-4">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-7 md:h-8 w-7 md:w-8 p-0">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>Edit Garage</DropdownMenuItem>
-                                    <DropdownMenuItem>View Parts</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={5} className="text-center p-4 text-sm">No garages found. Add your first garage!</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </section>
-      </div>
-      
-      <EditProductModal 
-        isOpen={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          setSelectedProduct(null);
-        }}
-        product={selectedProduct}
-        onSave={handleUpdateProduct}
-        manufacturers={manufacturers}
-        models={models}
-        years={years}
-      />
-      
-      <ConfirmDialog 
-        isOpen={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={handleDeleteProduct}
-        title="Delete Product"
-        description="Are you sure you want to delete this product? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="destructive"
-        isLoading={productLoading}
-      />
-      
-      <ConfirmDialog 
-        isOpen={statusUpdateDialogOpen}
-        onClose={() => setStatusUpdateDialogOpen(false)}
-        onConfirm={handleStatusUpdate}
-        title="Update Product Status"
-        description={`Are you sure you want to change the status to "${statusProduct?.status}"?`}
-        confirmText="Update"
-        cancelText="Cancel"
-        isLoading={productLoading}
-      />
-    </div>
-  );
-};
-
-export default GarageDashboard;

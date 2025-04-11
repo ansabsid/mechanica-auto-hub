@@ -1,49 +1,47 @@
 
-import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
-import MainLayout from "@/components/layout/MainLayout";
-import Index from "@/pages/Index";
-import About from "@/pages/About";
-import Contact from "@/pages/Contact";
-import Garages from "@/pages/Garages";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import NotFound from "@/pages/NotFound";
-import CustomerDashboard from "@/pages/CustomerDashboard";
-import GarageDashboard from "@/pages/GarageDashboard";
-import OrdersPage from "@/pages/OrdersPage";
-import OrdersListPage from "@/pages/OrdersListPage";
-import Checkout from "@/pages/Checkout";
-import PartScanner from "@/pages/PartScanner";
-import CategoryPage from "@/components/categories/CategoryPage";
-import { AuthProvider } from "@/hooks/auth/AuthProvider";
-import { Toaster } from "@/components/ui/sonner";
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MainLayout from './components/layout/MainLayout';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import OrdersPage from './pages/OrdersPage';
+import OrdersListPage from './pages/OrdersListPage';
+import Checkout from './pages/Checkout';
+import CustomerDashboard from './pages/CustomerDashboard';
+import Garages from './pages/Garages';
+import GarageDashboard from './pages/GarageDashboard';
+import Contact from './pages/Contact';
+import About from './pages/About';
+import PartScanner from './pages/PartScanner';
+import { CategoryPage } from './components/categories/CategoryPage';
+import BookAppointment from './pages/BookAppointment';
 import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Toaster />
-        <Routes>
-          <Route path="/" element={<MainLayout><Outlet /></MainLayout>}>
-            <Route index element={<Index />} />
-            <Route path="about" element={<About />} />
-            <Route path="contact" element={<Contact />} />
-            <Route path="garages" element={<Garages />} />
-            <Route path="categories" element={<CategoryPage />} />
-            <Route path="scanner" element={<PartScanner />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-            <Route path="customer-dashboard" element={<CustomerDashboard />} />
-            <Route path="garage-dashboard" element={<GarageDashboard />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="orders-list" element={<OrdersListPage />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Index />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="orders/:id" element={<OrdersPage />} />
+          <Route path="orders" element={<OrdersListPage />} />
+          <Route path="checkout" element={<Checkout />} />
+          <Route path="customer-dashboard" element={<CustomerDashboard />} />
+          <Route path="garages" element={<Garages />} />
+          <Route path="book-appointment/:id" element={<BookAppointment />} />
+          <Route path="garage-dashboard" element={<GarageDashboard />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="about" element={<About />} />
+          <Route path="category/:categoryName" element={<CategoryPage />} />
+          <Route path="scan" element={<PartScanner />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
 

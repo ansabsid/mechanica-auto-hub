@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 import GarageTable from "@/components/garage/GarageTable";
+import { useNavigate } from "react-router-dom";
 
 interface Garage {
   id: string;
@@ -38,6 +39,7 @@ const GaragePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredGarages, setFilteredGarages] = useState<Garage[]>([]);
   const [view, setView] = useState<"grid" | "list">("grid");
+  const navigate = useNavigate();
   
   const { 
     garages, 
@@ -80,8 +82,13 @@ const GaragePage = () => {
   };
 
   const handleBookAppointment = (garageId: string, garageName: string) => {
-    toast.success(`Appointment booking initiated for ${garageName}`);
     console.log(`Booking appointment for garage: ${garageId}`);
+    navigate(`/book-appointment/${garageId}`, { 
+      state: { 
+        garageName,
+        garageId 
+      } 
+    });
   };
 
   const handleSeedSampleGarages = async () => {
