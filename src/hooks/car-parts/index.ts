@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";
-import { usePartsSearch } from "./usePartsSearch";
 import { generateYearRange } from "./utils";
-import { CarPartsSearchState } from "./types";
+import { supabase } from "@/integrations/supabase/client";
+import { Part, Manufacturer, Model } from "./types";
+import { useToast } from "@/hooks/use-toast";
 
 export * from "./types";
 
@@ -12,6 +13,14 @@ export * from "./types";
 export const useCarParts = () => {
   // Add a ref to track initialization
   const initializedRef = useRef<boolean>(false);
+  const { toast } = useToast();
+  
+  // State management
+  const [parts, setParts] = useState<Part[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
+  const [queryTime, setQueryTime] = useState<number>(0);
   
   // Get manufacturers functionality
   const { 
@@ -27,70 +36,143 @@ export const useCarParts = () => {
     fetchModels 
   } = useModels();
   
-  // Get parts search functionality
-  const {
-    parts,
-    allParts,
-    isLoading: isLoadingParts,
-    isSearching,
-    searchCompleted,
-    queryTime,
-    searchParts,
-    resetSearch,
-    fetchAllParts
-  } = usePartsSearch(manufacturers, models);
-  
   // Generate years range
   const years = generateYearRange();
   
   // Combine loading states
-  const isLoading = isLoadingManufacturers || isLoadingModels || isLoadingParts;
+  const isLoadingData = isLoadingManufacturers || isLoadingModels || isLoading;
 
   // Fetch data on mount, but only once
   useEffect(() => {
     if (!initializedRef.current) {
-      console.log("Initializing useCarParts hook - fetching data");
-      
-      // Set the initialized flag to true to prevent future fetches
       initializedRef.current = true;
-      
-      // Load manufacturers first
       fetchManufacturers();
     }
   }, [fetchManufacturers]);
   
-  // Fetch all parts when manufacturers are loaded, but don't show toast
-  useEffect(() => {
-    if (initializedRef.current && manufacturers.length > 0 && !allParts.length && !isLoadingParts) {
-      console.log("Manufacturers loaded, now fetching all parts (silently)");
-      // Pass false to indicate we don't want to show a toast message
-      fetchAllParts(false);
-    }
-  }, [manufacturers.length, allParts.length, isLoadingParts, fetchAllParts]);
+  /**
+   * Reset search state
+   */
+  const resetSearch = () => {
+    setParts([]);
+    setQueryTime(0);
+    setIsSearching(false);
+    setSearchCompleted(false);
+  };
 
-  // Add debugging logs to help identify any filtering issues
-  console.log("useCarParts hook - current manufacturers:", manufacturers?.length || 0);
-  console.log("useCarParts hook - current models:", models?.length || 0);
-  console.log("useCarParts hook - current parts state:", parts?.length || 0);
-  console.log("useCarParts hook - all parts count:", allParts?.length || 0);
-  console.log("useCarParts hook - searchCompleted:", searchCompleted);
-  console.log("useCarParts hook - queryTime:", queryTime);
-  console.log("useCarParts hook - isLoading:", isLoading);
+  /**
+   * Search for parts based on vehicle criteria
+   */
+  const searchParts = async (manufacturerId: string, modelId: string, year: string) => {
+    if (!manufacturerId || !modelId || !year) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please select manufacturer, model, and year to search for parts"
+      });
+      return 0;
+    }
+
+    try {
+      // Reset previous search results
+      resetSearch();
+      
+      // Start the search
+      setIsSearching(true);
+      
+      // Convert id strings to numbers
+      const mfrId = parseInt(manufacturerId);
+      const mdlId = parseInt(modelId);
+      const yearNum = parseInt(year);
+      
+      // Start timing the query
+      const startTime = performance.now();
+      
+      // Query the database using Supabase
+      const { data, error } = await supabase
+        .from('parts')
+        .select('*')
+        .eq('manufacturer_id', mfrId)
+        .eq('model_id', mdlId)
+        .eq('year', yearNum);
+      
+      // End timing the query
+      const endTime = performance.now();
+      const queryDuration = endTime - startTime;
+      setQueryTime(queryDuration);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Process the results
+      const foundParts = data || [];
+      
+      // Enhance parts with garage info
+      const processedParts: Part[] = foundParts.map(part => ({
+        ...part,
+        garages: part.garage_id ? { 
+          name: 'AutoCare Dubai',
+          location: 'Dubai Marina'
+        } : { 
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      }));
+      
+      // If we found parts, show them
+      if (processedParts.length > 0) {
+        toast({
+          title: "Parts Found",
+          description: `Found ${processedParts.length} parts matching your vehicle in ${queryDuration.toFixed(0)}ms`,
+          duration: 5000,
+        });
+      } else {
+        toast({
+          title: "No Parts Found",
+          description: `No parts found matching your vehicle. Try different criteria.`,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+      
+      // Update state
+      setParts(processedParts);
+      setIsSearching(false);
+      setSearchCompleted(true);
+      
+      return processedParts.length;
+    } catch (error: any) {
+      console.error("Error searching for parts:", error.message);
+      
+      setQueryTime(0);
+      setIsSearching(false);
+      setSearchCompleted(true);
+      setParts([]);
+      
+      toast({
+        title: "Search Error",
+        description: `Error searching for parts: ${error.message}`,
+        variant: "destructive",
+        duration: 5000,
+      });
+      
+      return 0;
+    }
+  };
 
   return {
     manufacturers,
     models,
     parts,
-    allParts,
     years,
-    isLoading,
+    isLoading: isLoadingData,
     isSearching,
     searchCompleted,
     queryTime,
     fetchManufacturers,
     fetchModels,
     searchParts,
-    resetSearch,
-    fetchAllParts
+    resetSearch
   };
 };

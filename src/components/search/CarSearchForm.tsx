@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useCarParts, Model } from "@/hooks/useCarParts";
+import { useCarParts } from "@/hooks/useCarParts";
 import FormHeader from "./form/FormHeader";
 import ManufacturerSelect from "./form/ManufacturerSelect";
 import ModelSelect from "./form/ModelSelect";
@@ -31,24 +31,16 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   } = useCarParts();
 
   useEffect(() => {
-    console.log("Fetching manufacturers...");
     fetchManufacturers();
   }, [fetchManufacturers]);
 
   useEffect(() => {
     if (manufacturer) {
-      console.log("Manufacturer selected:", manufacturer);
-      console.log("Fetching models for manufacturer:", manufacturer);
       fetchModels(manufacturer);
       // Reset model when manufacturer changes
       setModel("");
     }
   }, [manufacturer, fetchModels]);
-
-  // Log models when they change
-  useEffect(() => {
-    console.log("Available models:", models);
-  }, [models]);
 
   const handleSearch = async () => {
     if (!manufacturer || !model || !year) {
@@ -64,15 +56,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       // Reset previous search results
       resetSearch();
       
-      console.log("Starting search with params:", { manufacturer, model, year });
-      console.log("Search params (numeric):", { 
-        manufacturerId: parseInt(manufacturer), 
-        modelId: parseInt(model), 
-        year: parseInt(year) 
-      });
-      
       const count = await searchParts(manufacturer, model, year);
-      console.log("Search returned count:", count);
       
       // Notify parent component about search completion
       onSearch(count);
@@ -91,12 +75,6 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
 
   // Find the selected model object
   const selectedModel = models.find(m => m.id.toString() === model);
-
-  // For debugging
-  console.log("Current manufacturers:", manufacturers?.length || 0);
-  console.log("Current models:", models?.length || 0);
-  console.log("Current selection - manufacturer:", manufacturer, "model:", model, "year:", year);
-  console.log("isLoading state:", isLoading);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-card max-w-4xl w-full mx-auto">

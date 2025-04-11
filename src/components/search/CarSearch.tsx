@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDown, Loader2, Clock, Search, RefreshCw } from "lucide-react";
+import { Loader2, Clock, Search, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CarSearch = () => {
@@ -14,59 +14,19 @@ const CarSearch = () => {
     isSearching, 
     searchCompleted, 
     queryTime, 
-    resetSearch, 
-    fetchAllParts 
+    resetSearch
   } = useCarParts();
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
-  const initialLoadRef = useRef<boolean>(false);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Add explicit logging for debugging
-  console.log("🔍 CarSearch render - parts length:", parts?.length || 0);
-  console.log("🔍 CarSearch render - searchCompleted:", searchCompleted);
-  
-  // Update UI when search completes
-  useEffect(() => {
-    console.log("🔄 Search completed effect triggered:", searchCompleted);
-    console.log("🔢 Parts in effect:", parts?.length || 0);
-    
-    if (searchCompleted && parts && parts.length > 0) {
-      // Scroll to results section with a slight delay
+  const handleSearchComplete = (resultsCount: number) => {
+    // Scroll to results section with a slight delay when results are found
+    if (resultsCount > 0) {
       setTimeout(() => {
         if (resultsRef.current) {
           resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 300);
-    }
-  }, [searchCompleted, parts]);
-
-  // Make sure we have data to display, but only on initial load
-  useEffect(() => {
-    if (!initialLoadRef.current && !isLoading) {
-      console.log("Initial load: Setting up CarSearch component");
-      initialLoadRef.current = true; // Set the flag to prevent repeated operations
-    }
-  }, [isLoading]);
-
-  // Clean up any retry timeouts when component unmounts
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleSearchComplete = (resultsCount: number) => {
-    console.log("Search completed with", resultsCount, "results");
-    if (resultsCount === 0) {
-      toast({
-        title: "No Results",
-        description: "No parts found matching your criteria. Try different search parameters.",
-        variant: "destructive",
-        duration: 5000,
-      });
     }
   };
   
@@ -80,11 +40,6 @@ const CarSearch = () => {
   };
 
   const handleRefresh = () => {
-    // Clean up any existing retry timeouts
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-    }
-    
     toast({
       title: "Refreshing Search",
       description: "Ready for a new search",
@@ -96,11 +51,6 @@ const CarSearch = () => {
 
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
-  
-  // Critical debug logging
-  console.log("⚠️ FINAL DISPLAY STATE:");
-  console.log("- Search completed:", searchCompleted);
-  console.log("- Filtered parts count:", parts?.length || 0);
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -169,6 +119,7 @@ const CarSearch = () => {
               )}
               <PartsResults 
                 parts={parts || []} 
+                isLoading={isLoading}
                 searchCompleted={searchCompleted} 
               />
             </div>

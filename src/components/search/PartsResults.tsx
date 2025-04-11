@@ -1,8 +1,8 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car, AlertCircle } from "lucide-react";
+import { Package2, SearchX, Car } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -14,30 +14,27 @@ import {
 
 interface PartsResultsProps {
   parts: Part[];
+  isLoading: boolean;
   searchCompleted: boolean;
 }
 
-const PartsResults: React.FC<PartsResultsProps> = ({ parts, searchCompleted }) => {
-  // Add detailed console logging to inspect the received props
-  useEffect(() => {
-    console.log("🔍 PartsResults MOUNTED/UPDATED");
-    console.log("📋 Parts length:", parts?.length || 0);
-    console.log("🔄 Search completed:", searchCompleted);
-    
-    if (parts && parts.length > 0) {
-      console.log("🔎 First part:", parts[0]);
-    }
-  }, [parts, searchCompleted]);
-
+const PartsResults: React.FC<PartsResultsProps> = ({ 
+  parts, 
+  isLoading, 
+  searchCompleted 
+}) => {
+  // Only render when search is completed and not loading
+  if (isLoading) {
+    return null;
+  }
+  
   // Only render when search is completed
   if (!searchCompleted) {
-    console.log("Search not completed yet, not rendering results");
     return null;
   }
 
   // Check if parts array is empty
   if (!parts || parts.length === 0) {
-    console.log("No parts found in results");
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
         <SearchX className="mx-auto h-16 w-16 text-blue-500 mb-4" />
@@ -47,8 +44,6 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, searchCompleted }) =
       </div>
     );
   }
-  
-  console.log("Rendering parts table with", parts.length, "parts");
   
   return (
     <div className="parts-results-container animate-in fade-in-50 duration-300">
