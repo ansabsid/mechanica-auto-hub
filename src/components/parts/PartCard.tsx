@@ -13,6 +13,31 @@ interface PartCardProps {
   part: Part;
 }
 
+// Function to get an appropriate image URL based on part name or category
+const getPartImageUrl = (part: Part): string => {
+  const name = part.name.toLowerCase();
+  const category = part.category?.toLowerCase() || '';
+  
+  if (name.includes('oil') || category.includes('oil')) {
+    return "https://images.unsplash.com/photo-1635954749253-a0642359cdfa?w=800&h=600&auto=format";
+  } else if (name.includes('filter') || category.includes('filter')) {
+    return "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format";
+  } else if (name.includes('brake') || category.includes('brake')) {
+    return "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format";
+  } else if (name.includes('spark') || category.includes('ignition')) {
+    return "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format";
+  } else if (name.includes('tire') || category.includes('tire') || name.includes('wheel')) {
+    return "https://images.unsplash.com/photo-1591839728094-39242732d4c1?w=800&h=600&auto=format";
+  } else if (name.includes('battery') || category.includes('electrical')) {
+    return "https://images.unsplash.com/photo-1619641464045-b201ebd9ec0c?w=800&h=600&auto=format";
+  } else if (name.includes('belt') || category.includes('belt')) {
+    return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
+  } else {
+    // Default auto parts image for other categories
+    return "https://images.unsplash.com/photo-1647427060118-4911c9821b82?w=800&h=600&auto=format";
+  }
+};
+
 export const PartCard = ({ part }: PartCardProps) => {
   const { cartItems, addToCart, refreshCart, isLoading } = useCart();
   const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
@@ -78,7 +103,7 @@ export const PartCard = ({ part }: PartCardProps) => {
       <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl group border border-gray-200 rounded-xl h-full flex flex-col">
         <div className="h-48 overflow-hidden relative">
           <img
-            src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format"
+            src={getPartImageUrl(part)}
             alt={part.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />

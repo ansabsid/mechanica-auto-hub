@@ -18,6 +18,31 @@ interface PartsResultsProps {
   searchCompleted: boolean;
 }
 
+// Function to get an appropriate image URL based on part name or category
+const getPartImageUrl = (part: Part): string => {
+  const name = part.name.toLowerCase();
+  const category = part.category?.toLowerCase() || '';
+  
+  if (name.includes('oil') || category.includes('oil')) {
+    return "https://images.unsplash.com/photo-1635954749253-a0642359cdfa?w=800&h=600&auto=format";
+  } else if (name.includes('filter') || category.includes('filter')) {
+    return "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format";
+  } else if (name.includes('brake') || category.includes('brake')) {
+    return "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format";
+  } else if (name.includes('spark') || category.includes('ignition')) {
+    return "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format";
+  } else if (name.includes('tire') || category.includes('tire') || name.includes('wheel')) {
+    return "https://images.unsplash.com/photo-1591839728094-39242732d4c1?w=800&h=600&auto=format";
+  } else if (name.includes('battery') || category.includes('electrical')) {
+    return "https://images.unsplash.com/photo-1619641464045-b201ebd9ec0c?w=800&h=600&auto=format";
+  } else if (name.includes('belt') || category.includes('belt')) {
+    return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
+  } else {
+    // Default auto parts image for other categories
+    return "https://images.unsplash.com/photo-1647427060118-4911c9821b82?w=800&h=600&auto=format";
+  }
+};
+
 const PartsResults: React.FC<PartsResultsProps> = ({ 
   parts, 
   isLoading, 
@@ -89,7 +114,18 @@ const PartsResults: React.FC<PartsResultsProps> = ({
           <TableBody>
             {parts.map((part) => (
               <TableRow key={part.id} className="hover:bg-mechanica-50">
-                <TableCell className="font-medium">{part.name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center">
+                    <div className="h-12 w-12 rounded-md overflow-hidden mr-3">
+                      <img 
+                        src={getPartImageUrl(part)} 
+                        alt={part.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    {part.name}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <div className="flex items-start space-x-2">
                     <Car className="h-5 w-5 text-mechanica-500 mt-0.5" />

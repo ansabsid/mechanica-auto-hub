@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -12,13 +13,13 @@ import {
   CheckCircle2
 } from "lucide-react";
 
-// Featured products data
+// Featured products data with automotive-specific images
 const featuredProducts = [
   {
     id: 1,
     name: "Bosch Premium Oil Filter",
     price: 35,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
+    image: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format",
     garage: "AutoCare Dubai",
     availability: "In Stock",
   },
@@ -26,7 +27,7 @@ const featuredProducts = [
     id: 2,
     name: "Michelin Pilot Sport 4 Tire",
     price: 199,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
+    image: "https://images.unsplash.com/photo-1591839728094-39242732d4c1?w=800&h=600&auto=format",
     garage: "Tire Zone",
     availability: "Limited",
   },
@@ -34,7 +35,7 @@ const featuredProducts = [
     id: 3,
     name: "NGK Laser Platinum Spark Plugs",
     price: 45,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
+    image: "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format",
     garage: "SparkTech Auto",
     availability: "In Stock",
   },
@@ -42,7 +43,7 @@ const featuredProducts = [
     id: 4,
     name: "AC Delco Brake Pads",
     price: 85,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
+    image: "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format",
     garage: "BrakeMax",
     availability: "In Stock",
   },
@@ -112,7 +113,7 @@ const Index = () => {
             </div>
             <div className="lg:block hidden">
               <img
-                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format"
+                src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&auto=format"
                 alt="Mechanica Car Service"
                 className="rounded-xl shadow-card object-cover w-full"
               />
@@ -302,7 +303,7 @@ const Index = () => {
             </div>
             <div className="hidden lg:block">
               <img
-                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format"
+                src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&auto=format"
                 alt="Mechanica App"
                 className="rounded-xl shadow-lg object-cover w-full"
               />
