@@ -17,6 +17,9 @@ export type RPCFunctions = {
     location: string;
     installation_fee: number;
   }[];
+  insert_part: (args: { part_data: any }) => {
+    id: number;
+  };
   create_profile_for_user: (args: { 
     user_id: string; 
     user_email: string; 

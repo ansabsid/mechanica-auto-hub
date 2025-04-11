@@ -2,6 +2,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { EnhancedSupabaseClient } from "@/hooks/auth/supabaseTypes";
+
+// Cast supabase client to our enhanced type with RPC function signatures
+const enhancedSupabase = supabase as unknown as EnhancedSupabaseClient;
 
 export interface GarageProduct {
   id?: number;
@@ -153,7 +157,7 @@ export const useGarageProducts = (garageId?: string) => {
       console.log("Prepared data for database insertion:", productData);
 
       // Use RPC (Remote Procedure Call) function to bypass RLS
-      const { data: partData, error: partError } = await supabase
+      const { data, error: partError } = await enhancedSupabase
         .rpc('insert_part', {
           part_data: productData
         });
@@ -163,17 +167,17 @@ export const useGarageProducts = (garageId?: string) => {
         throw new Error(`Failed to add part: ${partError.message}`);
       }
 
-      if (!partData || !partData.id) {
+      if (!data || !data.id) {
         throw new Error("Part creation failed - no ID returned");
       }
 
-      console.log("Part added successfully through RPC, id:", partData.id);
+      console.log("Part added successfully through RPC, id:", data.id);
 
       // 2. Create the association in the parts_garages table to ensure proper relationship
       const { error: associationError } = await supabase
         .from('parts_garages')
         .insert({
-          part_id: partData.id,
+          part_id: data.id,
           garage_id: garageId,
           installation_fee: 0 // Default installation fee
         });
@@ -189,7 +193,7 @@ export const useGarageProducts = (garageId?: string) => {
       
       // Refresh the products list to show the newly added product
       await fetchProducts(garageId);
-      return partData.id;
+      return data.id;
     } catch (error: any) {
       toast.error(error.message || "Failed to add product");
       console.error("Add product error:", error);
