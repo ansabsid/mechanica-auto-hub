@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   MapPin, 
@@ -8,7 +7,10 @@ import {
   Calendar,
   DollarSign,
   Database,
-  Trash2
+  Trash2,
+  RefreshCw,
+  Grid,
+  List
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +25,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
+import GarageTable from "@/components/garage/GarageTable";
 
-// Simplified Garage interface with only the essential fields
 interface Garage {
   id: string;
   name: string;
@@ -39,7 +41,6 @@ const GaragePage = () => {
   const [filteredGarages, setFilteredGarages] = useState<Garage[]>([]);
   const [view, setView] = useState<"grid" | "list">("grid");
   
-  // Use the useGarageManagement hook to fetch garages
   const { 
     garages, 
     fetchLoading: loading, 
@@ -51,7 +52,6 @@ const GaragePage = () => {
   } = useGarageManagement();
 
   useEffect(() => {
-    // Fetch garages when component mounts
     console.log("GaragePage component mounted, fetching garages...");
     fetchGarages();
   }, []);
@@ -60,7 +60,6 @@ const GaragePage = () => {
     console.log("Garages or search query changed, filtering garages...", { garagesCount: garages.length, searchQuery });
     
     if (garages.length > 0) {
-      // Filter garages based on search query
       const filtered = garages.filter(garage => {
         const searchLower = searchQuery.toLowerCase();
         return (
@@ -85,7 +84,6 @@ const GaragePage = () => {
 
   const handleBookAppointment = (garageId: string, garageName: string) => {
     toast.success(`Appointment booking initiated for ${garageName}`);
-    // In a real app, this would navigate to a booking form or open a modal
     console.log(`Booking appointment for garage: ${garageId}`);
   };
 
@@ -97,6 +95,10 @@ const GaragePage = () => {
   const handleClearAllGarages = async () => {
     console.log("User clicked Clear All Garages button");
     await clearAllGarages();
+  };
+
+  const toggleView = () => {
+    setView(prev => prev === "grid" ? "list" : "grid");
   };
 
   const GarageCard = ({ garage }: { garage: Garage }) => (
@@ -185,73 +187,114 @@ const GaragePage = () => {
           </div>
         )}
         
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <p className="text-gray-600">
+              {loading ? (
+                <span className="flex items-center">
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Fetching garages...
+                </span>
+              ) : (
+                <>
+                  Showing <span className="font-medium">{filteredGarages.length}</span> garages
+                  {searchQuery && <span> for "<span className="font-medium">{searchQuery}</span>"</span>}
+                </>
+              )}
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggleView}
+              className="text-gray-600 border-gray-200"
+            >
+              {view === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+              onClick={handleRetry}
+              disabled={loading || isLoading}
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Refresh
+            </Button>
+            {garages.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={handleClearAllGarages}
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Clear All Garages
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Debug Information:</h3>
+          <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
+            {JSON.stringify({
+              garagesTotalCount: garages.length,
+              filteredCount: filteredGarages.length,
+              isLoading,
+              fetchLoading: loading,
+              error,
+              view
+            }, null, 2)}
+          </pre>
+        </div>
+
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner size="md" className="mr-2" />
             <span className="text-lg text-gray-600">Loading garages...</span>
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <p className="text-gray-600">
-                  Showing <span className="font-medium">{filteredGarages.length}</span> garages
-                  {searchQuery && <span> for "<span className="font-medium">{searchQuery}</span>"</span>}
-                </p>
-              </div>
-              {garages.length > 0 && (
+        ) : filteredGarages.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="mb-4">
+              <Building2 className="w-16 h-16 mx-auto text-gray-400" />
+            </div>
+            <p className="text-lg text-gray-600 mb-4">
+              {loading ? "Loading garages..." : "No garages found matching your search criteria."}
+            </p>
+            {!loading && searchQuery && (
+              <Button 
+                variant="outline" 
+                onClick={() => setSearchQuery("")}
+                className="mb-4"
+              >
+                Clear Search
+              </Button>
+            )}
+            {!loading && garages.length === 0 && (
+              <div className="mt-4">
+                <p className="text-gray-600 mb-4">Would you like to add some sample garages for testing?</p>
                 <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={handleClearAllGarages}
+                  onClick={handleSeedSampleGarages}
+                  className="bg-mechanica-600 flex items-center mx-auto"
                   disabled={isLoading}
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Clear All Garages
+                  <Database className="h-4 w-4 mr-2" />
+                  {isLoading ? "Adding Sample Data..." : "Add Sample Garages"}
                 </Button>
-              )}
-            </div>
-
-            {filteredGarages.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="mb-4">
-                  <Building2 className="w-16 h-16 mx-auto text-gray-400" />
-                </div>
-                <p className="text-lg text-gray-600 mb-4">
-                  {loading ? "Loading garages..." : "No garages found matching your search criteria."}
-                </p>
-                {!loading && searchQuery && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSearchQuery("")}
-                    className="mb-4"
-                  >
-                    Clear Search
-                  </Button>
-                )}
-                {!loading && garages.length === 0 && (
-                  <div className="mt-4">
-                    <p className="text-gray-600 mb-4">Would you like to add some sample garages for testing?</p>
-                    <Button 
-                      onClick={handleSeedSampleGarages}
-                      className="bg-mechanica-600 flex items-center mx-auto"
-                      disabled={isLoading}
-                    >
-                      <Database className="h-4 w-4 mr-2" />
-                      {isLoading ? "Adding Sample Data..." : "Add Sample Garages"}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredGarages.map((garage) => (
-                  <GarageCard key={garage.id} garage={garage} />
-                ))}
               </div>
             )}
-          </>
+          </div>
+        ) : view === "grid" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredGarages.map((garage) => (
+              <GarageCard key={garage.id} garage={garage} />
+            ))}
+          </div>
+        ) : (
+          <GarageTable garages={filteredGarages} loading={loading} />
         )}
         
         <div className="mt-8 md:mt-16 bg-mechanica-50 rounded-xl p-4 md:p-8 text-center">
