@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { isDemoAccount } from "@/hooks/auth/authUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,6 +25,7 @@ const Login = () => {
   const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -101,8 +104,8 @@ const Login = () => {
   };
 
   return (
-    <section className="py-12 md:py-20">
-      <div className="container max-w-md mx-auto px-4">
+    <section className="py-12 md:py-20 w-full max-w-full overflow-x-hidden">
+      <div className="container px-4 sm:px-6 md:max-w-md mx-auto">
         <Tabs
           defaultValue="customer"
           value={activeTab}
@@ -113,14 +116,14 @@ const Login = () => {
           }}
         >
           <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="customer" className="flex items-center justify-center gap-2">
-              <User size={18} /> Customer
+            <TabsTrigger value="customer" className="flex items-center justify-center gap-2 px-2 py-2">
+              <User size={isMobile ? 16 : 18} /> Customer
             </TabsTrigger>
             <TabsTrigger 
               value="garage" 
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 px-2 py-2"
             >
-              <Wrench size={18} /> Garage
+              <Wrench size={isMobile ? 16 : 18} /> Garage
             </TabsTrigger>
           </TabsList>
 
@@ -132,22 +135,22 @@ const Login = () => {
           )}
 
           <TabsContent value="customer">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Customer Login</CardTitle>
+            <Card className="border shadow-sm">
+              <CardHeader className="px-5 pt-5 pb-3">
+                <CardTitle className="text-xl md:text-2xl">Customer Login</CardTitle>
                 <CardDescription>
                   Log in to search for parts and book services for your vehicle
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handleCustomerLogin}>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-5 pt-0">
                   <div className="space-y-2">
                     <label htmlFor="customer-email" className="text-sm font-medium">
                       Email
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail size={18} className="text-gray-400" />
+                        <Mail size={16} className="text-gray-400" />
                       </div>
                       <Input
                         id="customer-email"
@@ -171,7 +174,7 @@ const Login = () => {
                     </div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock size={18} className="text-gray-400" />
+                        <Lock size={16} className="text-gray-400" />
                       </div>
                       <Input
                         id="customer-password"
@@ -186,15 +189,15 @@ const Login = () => {
                         onClick={togglePasswordVisibility}
                       >
                         {showPassword ? (
-                          <EyeOff size={18} className="text-gray-400" />
+                          <EyeOff size={16} className="text-gray-400" />
                         ) : (
-                          <Eye size={18} className="text-gray-400" />
+                          <Eye size={16} className="text-gray-400" />
                         )}
                       </div>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex flex-col">
+                <CardFooter className="flex flex-col px-5 pb-5 pt-2">
                   <Button 
                     type="submit" 
                     className="w-full bg-mechanica-500 hover:bg-mechanica-600"
@@ -214,22 +217,22 @@ const Login = () => {
           </TabsContent>
 
           <TabsContent value="garage">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Garage Login</CardTitle>
+            <Card className="border shadow-sm">
+              <CardHeader className="px-5 pt-5 pb-3">
+                <CardTitle className="text-xl md:text-2xl">Garage Login</CardTitle>
                 <CardDescription>
                   Log in to manage your parts inventory and service appointments
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handleGarageLogin}>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-5 pt-0">
                   <div className="space-y-2">
                     <label htmlFor="garage-email" className="text-sm font-medium">
                       Email
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail size={18} className="text-gray-400" />
+                        <Mail size={16} className="text-gray-400" />
                       </div>
                       <Input
                         id="garage-email"
@@ -253,7 +256,7 @@ const Login = () => {
                     </div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock size={18} className="text-gray-400" />
+                        <Lock size={16} className="text-gray-400" />
                       </div>
                       <Input
                         id="garage-password"
@@ -268,15 +271,15 @@ const Login = () => {
                         onClick={togglePasswordVisibility}
                       >
                         {showPassword ? (
-                          <EyeOff size={18} className="text-gray-400" />
+                          <EyeOff size={16} className="text-gray-400" />
                         ) : (
-                          <Eye size={18} className="text-gray-400" />
+                          <Eye size={16} className="text-gray-400" />
                         )}
                       </div>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex flex-col gap-3">
+                <CardFooter className="flex flex-col gap-3 px-5 pb-5 pt-2">
                   <Button 
                     type="submit" 
                     className="w-full bg-mechanica-500 hover:bg-mechanica-600"
