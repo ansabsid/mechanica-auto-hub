@@ -9,6 +9,7 @@ export interface GarageInfo {
   area: string | null;
   location: string;
   images?: string | null;
+  installationFee?: number | null; // Added the installationFee property
 }
 
 // New interface for adding a new garage (without id)
@@ -17,6 +18,7 @@ export interface NewGarageInfo {
   area: string | null;
   location: string;
   images?: string | null;
+  installationFee?: string | null; // Added the installationFee property
 }
 
 /**
@@ -48,7 +50,7 @@ export const useGarageManagement = () => {
       // Only select the fields we need for the card display
       const { data, error: fetchError } = await supabase
         .from('garages')
-        .select('id, name, location, area, images')
+        .select('id, name, location, area, images, installation_fee')
         .order('location');
         
       if (fetchError) {
@@ -74,9 +76,18 @@ export const useGarageManagement = () => {
       
       console.log("Garages fetched successfully:", data);
       
-      // Map the data directly since we're only selecting what we need
-      setGarages(data);
-      return data;
+      // Map the data to our expected format (converting installation_fee to installationFee)
+      const formattedGarages = data.map(garage => ({
+        id: garage.id,
+        name: garage.name,
+        location: garage.location,
+        area: garage.area,
+        images: garage.images,
+        installationFee: garage.installation_fee
+      }));
+      
+      setGarages(formattedGarages);
+      return formattedGarages;
     } catch (error: any) {
       console.error("Error fetching garages:", error.message);
       setError(error.message);
@@ -103,7 +114,8 @@ export const useGarageManagement = () => {
           name: garage.name,
           area: garage.area,
           location: garage.location,
-          images: garage.images
+          images: garage.images,
+          installation_fee: garage.installationFee
         })
         .select()
         .single();
