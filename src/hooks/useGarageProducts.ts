@@ -74,16 +74,16 @@ export const useGarageProducts = (garageId?: string) => {
     try {
       console.log("Adding product with data:", product);
       
-      // Convert string values to appropriate types
+      // Ensure numeric types are properly formatted for database insertion
       const productData = {
         name: product.name,
         category: product.category,
         price: parseFloat(product.price.toString()),
         stock: parseInt(product.quantity.toString()),
         description: null,
-        manufacturer_id: product.manufacturer_id || 1,
-        model_id: product.model_id || 1,
-        year: product.year || new Date().getFullYear(),
+        manufacturer_id: product.manufacturer_id || 1, // Ensure manufacturer_id is set
+        model_id: product.model_id || 1, // Ensure model_id is set
+        year: product.year || new Date().getFullYear(), // Ensure year is set
         garage_id: garageId,
         image_url: product.imageUrl // Use the image URL directly
       };
@@ -101,7 +101,9 @@ export const useGarageProducts = (garageId?: string) => {
         throw new Error(`Failed to add part: ${partError.message}`);
       }
 
-      // 2. Create the association in the parts_garages table
+      console.log("Part added successfully, id:", partData.id);
+
+      // 2. Create the association in the parts_garages table to ensure proper relationship
       const { error: associationError } = await supabase
         .from('parts_garages')
         .insert({
@@ -111,15 +113,15 @@ export const useGarageProducts = (garageId?: string) => {
         });
 
       if (associationError) {
-        // If association fails, we should ideally rollback the part creation
-        // but for simplicity we'll just report the error
         console.error("Association failed but part was created:", associationError);
         throw new Error(`Failed to associate part with garage: ${associationError.message}`);
       }
 
+      console.log("Parts_garages association created successfully");
+      
       toast.success("Product added successfully!");
       
-      // Refresh the products list
+      // Refresh the products list to show the newly added product
       await fetchProducts(garageId);
       return partData.id;
     } catch (error: any) {
