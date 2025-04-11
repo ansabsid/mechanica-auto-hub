@@ -27,7 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/hooks/useCart";
 import { useOrders } from "@/hooks/useOrders";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CreditCard, ShoppingCart, Loader2, Check } from "lucide-react";
+import { ArrowLeft, CreditCard, ShoppingCart, Loader2, Check, Apple } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
@@ -49,6 +49,7 @@ const Checkout = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string>("");
   const { user } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "applepay">("card");
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,6 +88,28 @@ const Checkout = () => {
       toast({
         title: "Error",
         description: "There was a problem processing your order",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleApplePaySubmit = async () => {
+    try {
+      const order = await createOrder(cartItems, calculateTotal());
+      
+      if (order) {
+        setIsSuccess(true);
+        setOrderId(order.id || "");
+        await clearCart();
+        
+        setTimeout(() => {
+          navigate(`/orders/${order.id}`);
+        }, 3000);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was a problem processing your Apple Pay payment",
         variant: "destructive",
       });
     }
@@ -156,24 +179,106 @@ const Checkout = () => {
           <div className="md:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Shipping & Payment Information</CardTitle>
+                <CardTitle>Payment Method</CardTitle>
                 <CardDescription>
-                  Please enter your details to complete the order
+                  Choose how you'd like to pay
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Contact Information</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex space-x-4 mb-6">
+                  <Button
+                    type="button"
+                    variant={paymentMethod === "card" ? "default" : "outline"}
+                    className={`flex-1 ${paymentMethod === "card" ? "bg-mechanica-500 hover:bg-mechanica-600" : ""}`}
+                    onClick={() => setPaymentMethod("card")}
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Credit Card
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={paymentMethod === "applepay" ? "default" : "outline"}
+                    className={`flex-1 ${paymentMethod === "applepay" ? "bg-black hover:bg-gray-800" : ""}`}
+                    onClick={() => setPaymentMethod("applepay")}
+                  >
+                    <Apple className="mr-2 h-4 w-4" />
+                    Apple Pay
+                  </Button>
+                </div>
+
+                {paymentMethod === "applepay" ? (
+                  <div className="py-6">
+                    <Card className="border-2 bg-black text-white">
+                      <CardContent className="pt-6 pb-6">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center mb-4">
+                            <Apple className="h-8 w-8" />
+                            <span className="text-xl font-medium ml-2">Pay</span>
+                          </div>
+                          <p className="mb-4">Pay with Apple Pay</p>
+                          <Button 
+                            onClick={handleApplePaySubmit}
+                            className="w-full bg-white text-black hover:bg-gray-100"
+                            disabled={isProcessing || cartLoading}
+                          >
+                            {isProcessing ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>Pay ${calculateTotal().toFixed(2)}</>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Contact Information</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="fullName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <Separator className="my-4" />
+                        <h3 className="font-medium">Shipping Address</h3>
+                        
                         <FormField
                           control={form.control}
-                          name="fullName"
+                          name="address"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Full Name</FormLabel>
+                              <FormLabel>Address</FormLabel>
                               <FormControl>
                                 <Input {...field} />
                               </FormControl>
@@ -182,105 +287,54 @@ const Checkout = () => {
                           )}
                         />
                         
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <Separator className="my-4" />
-                      <h3 className="font-medium">Shipping Address</h3>
-                      
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>City</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="postalCode"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Postal Code</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <Separator className="my-4" />
+                        <div className="flex items-center mb-2">
+                          <CreditCard className="mr-2 h-5 w-5 text-muted-foreground" />
+                          <h3 className="font-medium">Payment Details</h3>
+                        </div>
                         
                         <FormField
                           control={form.control}
-                          name="postalCode"
+                          name="cardNumber"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Postal Code</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <Separator className="my-4" />
-                      <div className="flex items-center mb-2">
-                        <CreditCard className="mr-2 h-5 w-5 text-muted-foreground" />
-                        <h3 className="font-medium">Payment Details</h3>
-                      </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name="cardNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Card Number</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                placeholder="1234 5678 9012 3456" 
-                                type="text"
-                                maxLength={19}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="cardExpiry"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Expiry Date</FormLabel>
+                              <FormLabel>Card Number</FormLabel>
                               <FormControl>
                                 <Input 
                                   {...field} 
-                                  placeholder="MM/YY" 
-                                  maxLength={5}
+                                  placeholder="1234 5678 9012 3456" 
+                                  type="text"
+                                  maxLength={19}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -288,47 +342,67 @@ const Checkout = () => {
                           )}
                         />
                         
-                        <FormField
-                          control={form.control}
-                          name="cardCVC"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>CVC</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  {...field} 
-                                  placeholder="123" 
-                                  maxLength={4}
-                                  type="password"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="cardExpiry"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expiry Date</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    placeholder="MM/YY" 
+                                    maxLength={5}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="cardCVC"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>CVC</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    placeholder="123" 
+                                    maxLength={4}
+                                    type="password"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-mechanica-500 hover:bg-mechanica-600"
-                        disabled={isProcessing || cartLoading}
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            Complete Order (${calculateTotal().toFixed(2)})
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
+                      
+                      <div className="pt-4">
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-mechanica-500 hover:bg-mechanica-600"
+                          disabled={isProcessing || cartLoading}
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Complete Order (${calculateTotal().toFixed(2)})
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
               </CardContent>
             </Card>
           </div>
