@@ -112,7 +112,8 @@ export const InstallationOptionsDialog = ({
       
       // Close all dialogs
       setConfirmationOpen(false);
-      onComplete(); // This will signal parent to close all dialogs
+      // Signal parent to close all dialogs - this is crucial for proper dialog flow
+      onComplete();
     } catch (error) {
       console.error("Error adding to cart with installation:", error);
       toast({

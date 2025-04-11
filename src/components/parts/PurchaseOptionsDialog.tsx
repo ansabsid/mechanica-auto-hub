@@ -32,12 +32,13 @@ export const PurchaseOptionsDialog = ({
   
   const handleBuyWithInstallation = () => {
     setShowInstallationOptions(true);
+    // Close the purchase options dialog when showing installation options
+    onClose();
   };
   
   const handleInstallationComplete = () => {
-    // Close both dialogs when installation is complete
+    // Close installation dialog only
     setShowInstallationOptions(false);
-    onClose();
   };
   
   const handleCartOnlyClick = async () => {
@@ -58,7 +59,7 @@ export const PurchaseOptionsDialog = ({
   
   return (
     <>
-      <Dialog open={isOpen && !showInstallationOptions} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Purchase Options</DialogTitle>
