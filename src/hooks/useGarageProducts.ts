@@ -35,22 +35,69 @@ export const useGarageProducts = (garageId?: string) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [availableGarages, setAvailableGarages] = useState<any[]>([]);
 
+  // Function to check if storage bucket exists and create it if it doesn't
+  const ensureStorageBucket = async () => {
+    try {
+      // Check if the 'parts' bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const partsBucketExists = buckets?.some(bucket => bucket.name === 'parts');
+      
+      if (!partsBucketExists) {
+        console.log("Parts bucket doesn't exist, attempting to create it...");
+        
+        // Create the bucket
+        const { error } = await supabase.storage.createBucket('parts', {
+          public: true, // Make the bucket public
+          fileSizeLimit: 10485760 // 10MB limit
+        });
+        
+        if (error) {
+          console.error("Error creating storage bucket:", error);
+          return false;
+        }
+        
+        console.log("Parts bucket created successfully");
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error checking/creating storage bucket:", error);
+      return false;
+    }
+  };
+
   // Function to upload image to Supabase storage
   const uploadImage = async (file: File, garageId: string): Promise<string | null> => {
     try {
-      setUploadProgress(10);
+      setUploadProgress(5);
       
       if (!file) return null;
       
+      // Ensure the storage bucket exists
+      const bucketReady = await ensureStorageBucket();
+      if (!bucketReady) {
+        toast.error("Could not prepare storage for upload");
+        setUploadProgress(0);
+        return null;
+      }
+      
+      setUploadProgress(15);
+      
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_'); // Sanitize filename
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}_${safeFileName}`;
       const filePath = `${garageId}/${fileName}`;
       
       console.log("Attempting to upload file to 'parts' bucket:", filePath);
+      console.log("File details:", {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)} KB`
+      });
       
       setUploadProgress(30);
       
-      // Upload the file to the existing 'parts' bucket
+      // Upload the file to the 'parts' bucket with appropriate options
       const { data, error } = await supabase.storage
         .from('parts')
         .upload(filePath, file, {
@@ -61,19 +108,39 @@ export const useGarageProducts = (garageId?: string) => {
       
       if (error) {
         console.error("Storage upload error:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
         
-        // Don't throw an error, just return null and log the issue
-        // This prevents the error from bubbling up and showing to the user
+        // More specific error handling
+        if (error.message.includes("The resource already exists")) {
+          toast.error("A file with this name already exists");
+        } else if (error.message.includes("permission")) {
+          toast.error("Permission denied for file upload");
+        } else if (error.message.includes("size")) {
+          toast.error("File is too large");
+        } else {
+          toast.error(`Upload failed: ${error.message}`);
+        }
+        
         setUploadProgress(0);
         return null;
       }
       
-      setUploadProgress(90);
+      setUploadProgress(70);
+      
+      console.log("Upload successful, getting public URL...");
       
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('parts')
         .getPublicUrl(filePath);
+      
+      if (!publicUrlData.publicUrl) {
+        console.error("Failed to get public URL");
+        toast.error("Failed to generate public URL for the image");
+        setUploadProgress(0);
+        return null;
+      }
       
       setUploadProgress(100);
       console.log("Image uploaded successfully, public URL:", publicUrlData.publicUrl);
@@ -81,8 +148,9 @@ export const useGarageProducts = (garageId?: string) => {
       return publicUrlData.publicUrl;
     } catch (error: any) {
       console.error("Image upload error:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+      toast.error(`Upload error: ${error.message || "Unknown error"}`);
       setUploadProgress(0);
-      // Return null instead of throwing error
       return null;
     }
   };
@@ -194,12 +262,14 @@ export const useGarageProducts = (garageId?: string) => {
       let imageUrl = product.imageUrl;
       
       if (imageFile) {
+        console.log("Attempting to upload image file:", imageFile.name);
         imageUrl = await uploadImage(imageFile, validGarageId);
         if (imageUrl) {
           console.log("Image uploaded successfully, URL:", imageUrl);
         } else {
           // If upload failed, continue with product creation without an image
           console.log("Image upload failed, proceeding without image");
+          toast.warning("Product will be added without an image as upload failed");
         }
       }
       
