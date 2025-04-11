@@ -32,7 +32,7 @@ interface Garage {
   name: string;
   location: string;
   area: string | null;
-  images: string | null;
+  images?: string | null;  // Make images optional to match the data structure
   rating?: number;
   services?: string[];
   phone?: string;
