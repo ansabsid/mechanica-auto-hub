@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, FileQuestion } from "lucide-react";
+import { Package2, SearchX } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -11,7 +11,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface PartsResultsProps {
   parts: Part[];
