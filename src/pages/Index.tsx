@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -121,62 +120,6 @@ const Index = () => {
                 className="rounded-xl shadow-card object-cover w-full"
               />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Quick Access */}
-      <section className="py-8 md:py-12 bg-white border-b border-gray-100">
-        <div className="container-custom">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Browse By Category</h2>
-            <Link to="/categories">
-              <Button variant="outline" size="sm" className="flex items-center">
-                View All Categories <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/categories" className="block">
-              <div className="bg-gray-50 hover:bg-gray-100 rounded-lg p-6 text-center transition-colors">
-                <div className="bg-mechanica-100 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Filter className="h-6 w-6 text-mechanica-600" />
-                </div>
-                <h3 className="font-medium">Browse All</h3>
-                <p className="text-sm text-gray-500 mt-1">Find parts by category</p>
-              </div>
-            </Link>
-            
-            <Link to="/categories" className="block">
-              <div className="bg-gray-50 hover:bg-gray-100 rounded-lg p-6 text-center transition-colors">
-                <div className="bg-mechanica-100 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Search className="h-6 w-6 text-mechanica-600" />
-                </div>
-                <h3 className="font-medium">Quick Search</h3>
-                <p className="text-sm text-gray-500 mt-1">Search by vehicle</p>
-              </div>
-            </Link>
-            
-            <Link to="/garages" className="block">
-              <div className="bg-gray-50 hover:bg-gray-100 rounded-lg p-6 text-center transition-colors">
-                <div className="bg-mechanica-100 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Settings className="h-6 w-6 text-mechanica-600" />
-                </div>
-                <h3 className="font-medium">Service</h3>
-                <p className="text-sm text-gray-500 mt-1">Book service appointments</p>
-              </div>
-            </Link>
-            
-            <Link to="/orders" className="block">
-              <div className="bg-gray-50 hover:bg-gray-100 rounded-lg p-6 text-center transition-colors">
-                <div className="bg-mechanica-100 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CreditCard className="h-6 w-6 text-mechanica-600" />
-                </div>
-                <h3 className="font-medium">Orders</h3>
-                <p className="text-sm text-gray-500 mt-1">Track your orders</p>
-              </div>
-            </Link>
           </div>
         </div>
       </section>
