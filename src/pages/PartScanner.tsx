@@ -97,7 +97,7 @@ const PartScanner = () => {
             ctx.drawImage(img, 0, 0);
             
             // Scan the image
-            scanImage(canvasRef.current);
+            scanImage(file);
           }
         }
       };
@@ -129,29 +129,27 @@ const PartScanner = () => {
       // Draw current video frame to canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Process the image
-      scanImage(canvas);
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          scanImage(blob);
+        } else {
+          toast({
+            title: "Image Capture Failed",
+            description: "Failed to capture image from camera",
+            variant: "destructive",
+          });
+        }
+      }, 'image/jpeg', 0.8);
     }
   };
   
-  // Process the image in the canvas using the AI model
-  const scanImage = async (canvas: HTMLCanvasElement) => {
+  // Process the image using the AI model
+  const scanImage = async (imageData: Blob | File) => {
     setIsScanning(true);
     setScanResult(null);
     
     try {
-      // Convert canvas to blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else throw new Error("Failed to create image blob");
-        }, 'image/jpeg', 0.8);
-      });
-      
-      // Create a form data object to send the image
-      const formData = new FormData();
-      formData.append('image', blob, 'car-part.jpg');
-      
       toast({
         title: "Scanning Part",
         description: "Analyzing the image with our AI model...",
@@ -159,13 +157,7 @@ const PartScanner = () => {
       
       // Call the edge function to process the image
       const { data: processingResult, error: functionError } = await supabase.functions.invoke(
-        'scan-car-part',
-        {
-          body: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
+        'scan-car-part'
       );
       
       if (functionError) {

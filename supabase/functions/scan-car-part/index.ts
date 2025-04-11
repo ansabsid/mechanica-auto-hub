@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
 
 /**
  * CORS headers for cross-origin requests
@@ -114,25 +113,8 @@ serve(async (req) => {
   try {
     console.log("Received request to scan car part");
     
-    // Check if this is a form data request
-    const contentType = req.headers.get('content-type') || '';
-    
-    if (!contentType.includes('multipart/form-data')) {
-      throw new Error("Request must include an image in multipart/form-data format");
-    }
-    
-    // Parse the form data to get the image
-    const formData = await req.formData();
-    const imageFile = formData.get('image');
-    
-    if (!imageFile || !(imageFile instanceof File)) {
-      throw new Error("No image file provided");
-    }
-    
-    console.log(`Received image: ${imageFile.name}, size: ${imageFile.size} bytes, type: ${imageFile.type}`);
-    
-    // For now, we'll use a mock implementation that identifies parts based on simple image analysis
-    // In a production environment, you'd use a real machine learning model here
+    // For simplicity, we won't parse the image data since this is a mock implementation
+    // Instead, we'll just return a random part from our mock database
     
     // Mock delay to simulate processing
     await new Promise(resolve => setTimeout(resolve, 1500));
