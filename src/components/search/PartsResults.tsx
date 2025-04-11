@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car, X } from "lucide-react";
+import { Package2, SearchX, Car } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -26,12 +26,21 @@ const PartsResults: React.FC<PartsResultsProps> = ({
   console.log("PartsResults rendering with:", { 
     partsCount: parts?.length || 0, 
     isLoading, 
-    searchCompleted 
+    searchCompleted,
+    parts // Log actual parts array
   });
   
-  // Only render when search is completed and not loading
+  // Only render the loading state
   if (isLoading) {
-    return null;
+    return (
+      <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
+        <div className="animate-pulse">
+          <Package2 className="mx-auto h-16 w-16 text-blue-500 mb-4" />
+          <h3 className="text-2xl font-bold text-blue-800 mb-3">Searching for parts...</h3>
+          <p className="text-gray-600">Please wait while we find matching parts.</p>
+        </div>
+      </div>
+    );
   }
   
   // Only render when search is completed
@@ -89,7 +98,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({
                         {part.manufacturer_id} - {part.model_id} - {part.year}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        Compatible with vehicles matching these exact specifications
+                        {part.description || "Compatible with vehicles matching these exact specifications"}
                       </div>
                     </div>
                   </div>

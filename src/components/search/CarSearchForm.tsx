@@ -24,6 +24,8 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     years,
     isLoading,
     isSearching,
+    searchCompleted,
+    parts,
     fetchManufacturers,
     fetchModels,
     searchParts,
@@ -36,12 +38,20 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
 
   useEffect(() => {
     if (manufacturer) {
-      console.log("Fetching models for manufacturer:", manufacturer);
+      console.log("Manufacturer selected:", manufacturer);
       fetchModels(manufacturer);
       // Reset model when manufacturer changes
       setModel("");
     }
   }, [manufacturer, fetchModels]);
+
+  // Update search complete handler when search status changes
+  useEffect(() => {
+    if (searchCompleted) {
+      console.log("Search completed state change detected, parts:", parts?.length);
+      onSearch(parts?.length || 0);
+    }
+  }, [searchCompleted, parts, onSearch]);
 
   const handleSearch = async () => {
     if (!manufacturer || !model || !year) {
@@ -59,11 +69,8 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       // Reset previous search results
       resetSearch();
       
-      const count = await searchParts(manufacturer, model, year);
-      console.log(`Search completed: ${count} parts found`);
-      
-      // Notify parent component about search completion
-      onSearch(count);
+      await searchParts(manufacturer, model, year);
+      console.log("Search initiated");
     } catch (error: any) {
       console.error("Search failed:", error);
       toast({
@@ -71,9 +78,6 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
         title: "Search failed",
         description: error.message || "An error occurred while searching"
       });
-      
-      // Even on error, notify parent that search is complete (with 0 results)
-      onSearch(0);
     }
   };
 

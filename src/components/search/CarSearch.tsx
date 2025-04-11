@@ -25,7 +25,8 @@ const CarSearch = () => {
       partsCount: parts?.length || 0, 
       isLoading, 
       isSearching, 
-      searchCompleted 
+      searchCompleted,
+      parts // Log the actual parts array
     });
   }, [parts, isLoading, isSearching, searchCompleted]);
 
@@ -33,9 +34,10 @@ const CarSearch = () => {
     console.log("Search completed with", resultsCount, "results");
     
     // Scroll to results section with a slight delay when results are found
-    if (resultsCount > 0) {
+    if (searchCompleted) {
       setTimeout(() => {
         if (resultsRef.current) {
+          console.log("Scrolling to results");
           resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 300);
