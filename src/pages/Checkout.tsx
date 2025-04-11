@@ -38,6 +38,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { formatPrice } from "@/lib/utils";
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
@@ -206,7 +207,7 @@ const Checkout = () => {
             </p>
           </div>
           <p className="font-medium">
-            ${(item.part.price * item.quantity).toFixed(2)}
+            {formatPrice(item.part.price * item.quantity)}
           </p>
         </div>
       ))}
@@ -215,15 +216,15 @@ const Checkout = () => {
       
       <div className="flex justify-between">
         <p className="font-medium">Subtotal</p>
-        <p className="font-medium">${calculateTotal().toFixed(2)}</p>
+        <p className="font-medium">{formatPrice(calculateTotal())}</p>
       </div>
       <div className="flex justify-between">
         <p className="font-medium">Shipping</p>
-        <p className="font-medium">$0.00</p>
+        <p className="font-medium">{formatPrice(0)}</p>
       </div>
       <div className="flex justify-between">
         <p className="font-medium">Tax</p>
-        <p className="font-medium">$0.00</p>
+        <p className="font-medium">{formatPrice(0)}</p>
       </div>
       
       <Separator />
@@ -231,7 +232,7 @@ const Checkout = () => {
       <div className="flex justify-between">
         <p className="font-bold text-lg">Total</p>
         <p className="font-bold text-lg">
-          ${calculateTotal().toFixed(2)}
+          {formatPrice(calculateTotal())}
         </p>
       </div>
 
@@ -271,7 +272,7 @@ const Checkout = () => {
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     View Order Summary
                   </span>
-                  <span className="font-bold">${calculateTotal().toFixed(2)}</span>
+                  <span className="font-bold">{formatPrice(calculateTotal())}</span>
                 </Button>
               </DrawerTrigger>
               <DrawerContent>
@@ -350,7 +351,7 @@ const Checkout = () => {
                                 Processing...
                               </>
                             ) : (
-                              <>Pay ${calculateTotal().toFixed(2)}</>
+                              <>Pay {formatPrice(calculateTotal())}</>
                             )}
                           </Button>
                         </div>
@@ -518,7 +519,7 @@ const Checkout = () => {
                             </>
                           ) : (
                             <>
-                              Complete Order (${calculateTotal().toFixed(2)})
+                              Complete Order ({formatPrice(calculateTotal())})
                             </>
                           )}
                         </Button>

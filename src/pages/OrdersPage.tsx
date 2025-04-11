@@ -16,6 +16,7 @@ import { useOrders } from "@/hooks/useOrders";
 import { Package, Clock, Check, X, ChevronLeft, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/utils";
 
 const OrderDetailPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -113,12 +114,12 @@ const OrderDetailPage = () => {
                             <div>
                               <p className="font-medium">{item.part?.name || `Part #${item.part_id}`}</p>
                               <p className="text-sm text-muted-foreground">
-                                Qty: {item.quantity} × AED {item.price.toFixed(2)}
+                                Qty: {item.quantity} × {formatPrice(item.price)}
                               </p>
                             </div>
                           </div>
                           <p className="font-medium">
-                            AED {(item.price * item.quantity).toFixed(2)}
+                            {formatPrice(item.price * item.quantity)}
                           </p>
                         </div>
                       ))}
@@ -159,15 +160,15 @@ const OrderDetailPage = () => {
                     
                     <div className="flex justify-between">
                       <p className="font-medium">Subtotal</p>
-                      <p className="font-medium">AED {currentOrder.total_amount.toFixed(2)}</p>
+                      <p className="font-medium">{formatPrice(currentOrder.total_amount)}</p>
                     </div>
                     <div className="flex justify-between">
                       <p className="font-medium">Shipping</p>
-                      <p className="font-medium">AED 0.00</p>
+                      <p className="font-medium">{formatPrice(0)}</p>
                     </div>
                     <div className="flex justify-between">
                       <p className="font-medium">Tax</p>
-                      <p className="font-medium">AED 0.00</p>
+                      <p className="font-medium">{formatPrice(0)}</p>
                     </div>
                     
                     <Separator />
@@ -175,7 +176,7 @@ const OrderDetailPage = () => {
                     <div className="flex justify-between">
                       <p className="font-bold text-lg">Total</p>
                       <p className="font-bold text-lg">
-                        AED {currentOrder.total_amount.toFixed(2)}
+                        {formatPrice(currentOrder.total_amount)}
                       </p>
                     </div>
                   </div>

@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/utils";
 
 export const CartDrawer = () => {
   const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal, refreshCart } = useCart();
@@ -99,7 +100,7 @@ export const CartDrawer = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h4 className="font-medium">{item.part.name}</h4>
-                      <p className="text-sm text-muted-foreground">${item.part.price.toFixed(2)} each</p>
+                      <p className="text-sm text-muted-foreground">{formatPrice(item.part.price)} each</p>
                       {item.part.availableGarages && item.part.availableGarages.length > 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
                           Sold by: {item.part.availableGarages[0].name}
@@ -115,7 +116,7 @@ export const CartDrawer = () => {
                             at {item.installation_data.garageName}
                           </p>
                           <p className="text-xs font-medium text-mechanica-600 mt-1">
-                            +${item.installation_data.installationFee.toFixed(2)} installation fee
+                            +{formatPrice(item.installation_data.installationFee)} installation fee
                           </p>
                         </div>
                       )}
@@ -151,8 +152,8 @@ export const CartDrawer = () => {
                       </Button>
                     </div>
                     <div className="font-medium">
-                      ${((item.part.price * item.quantity) + 
-                         (item.installation_data ? item.installation_data.installationFee : 0)).toFixed(2)}
+                      {formatPrice((item.part.price * item.quantity) + 
+                         (item.installation_data ? item.installation_data.installationFee : 0))}
                     </div>
                   </div>
                   
@@ -165,7 +166,7 @@ export const CartDrawer = () => {
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total</span>
                 <span className="font-bold text-lg">
-                  ${calculateTotal().toFixed(2)}
+                  {formatPrice(calculateTotal())}
                 </span>
               </div>
               
