@@ -1,6 +1,7 @@
 
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "@/hooks/auth";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
@@ -73,7 +74,11 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }
 
 export default App;
