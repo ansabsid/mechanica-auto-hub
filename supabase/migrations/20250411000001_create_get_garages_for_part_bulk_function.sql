@@ -1,4 +1,11 @@
 
+-- This function retrieves garages for multiple parts in a single query
+-- It's optimized for bulk operations like loading garage data for all items in a cart
+-- Parameters:
+--   part_ids: An array of part IDs to find garages for
+-- Returns:
+--   Table containing part_id, garage details (id, name, location) and installation fee
+
 CREATE OR REPLACE FUNCTION get_garages_for_part_bulk(part_ids INT[])
 RETURNS TABLE (
   part_id INT,

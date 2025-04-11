@@ -5,6 +5,11 @@ import { EnhancedSupabaseClient } from "./supabaseTypes";
 // Cast supabase client to enhanced type with RPC functions
 const enhancedSupabase = supabase as unknown as EnhancedSupabaseClient;
 
+/**
+ * Fetches the role of a user from their profile
+ * @param userId The UUID of the user to fetch the role for
+ * @returns Promise resolving to the user's role or null if not found
+ */
 export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | null> => {
   try {
     const { data, error } = await supabase
@@ -25,6 +30,13 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
   return null;
 };
 
+/**
+ * Creates a profile for a user with a specific role
+ * Checks for existing profile first to avoid duplicate key errors
+ * @param userId The UUID of the user to create a profile for
+ * @param email The email address of the user
+ * @param role The role to assign to the user
+ */
 export const createUserProfile = async (userId: string, email: string, role: "customer" | "garage") => {
   try {
     // Check if profile already exists to avoid duplicate errors
@@ -58,10 +70,20 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
   }
 };
 
+/**
+ * Checks if an email is a demo account
+ * @param email The email address to check
+ * @returns True if the email is a demo account
+ */
 export const isDemoAccount = (email: string): boolean => {
   return email === "demo-garage@bookmyparts.com";
 };
 
+/**
+ * Handles authentication for demo accounts with special logic
+ * Creates account if it doesn't exist and ensures profile is created
+ * @returns Promise resolving to the demo user and role or null on error
+ */
 export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" } | null> => {
   try {
     const demoEmail = "demo-garage@bookmyparts.com";

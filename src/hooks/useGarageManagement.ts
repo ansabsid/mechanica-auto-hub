@@ -11,11 +11,19 @@ export interface GarageInfo {
   installationFee: string;
 }
 
+/**
+ * Hook for managing garage operations (admin functionality)
+ * Provides functions for fetching and adding garages
+ */
 export const useGarageManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [garages, setGarages] = useState<GarageInfo[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
 
+  /**
+   * Fetches all garages from the database
+   * @returns Promise resolving to an array of formatted garage info
+   */
   const fetchGarages = async () => {
     setFetchLoading(true);
     try {
@@ -44,6 +52,11 @@ export const useGarageManagement = () => {
     }
   };
 
+  /**
+   * Adds a new garage to the database
+   * @param garage The garage information to add
+   * @returns Promise resolving to the created garage data or null on error
+   */
   const addGarage = async (garage: GarageInfo) => {
     setIsLoading(true);
     try {

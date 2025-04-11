@@ -1,7 +1,11 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem, Cart, InstallationOptions, Garage } from "@/types/cart.types";
 
-// Get user's cart or create a new one if it doesn't exist
+/**
+ * Gets the user's cart or creates a new one if it doesn't exist
+ * @returns Promise resolving to the user's cart or null if no user is logged in
+ */
 export async function getUserCart(): Promise<Cart | null> {
   const { data } = await supabase.auth.getSession();
   
@@ -12,7 +16,7 @@ export async function getUserCart(): Promise<Cart | null> {
   const userId = data.session.user.id;
   
   try {
-    // Try to get the existing cart
+    // Try to get an existing cart
     const { data: carts, error } = await (supabase
       .from('carts') as any)
       .select('*')
@@ -38,10 +42,14 @@ export async function getUserCart(): Promise<Cart | null> {
   }
 }
 
-// Get all items in the cart with part details
+/**
+ * Gets all items in a cart with their part details and available garages for installation
+ * @param cartId The UUID of the cart to fetch items for
+ * @returns Promise resolving to an array of cart items with part details
+ */
 export async function getCartItems(cartId: string): Promise<CartItem[]> {
   try {
-    // Query to get cart items with part details
+    // Get all cart items with their part details
     const { data, error } = await (supabase
       .from('cart_items') as any)
       .select(`
@@ -122,7 +130,15 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
   }
 }
 
-// Add a part to the cart
+/**
+ * Adds a part to the cart, with optional installation options
+ * If the part is already in the cart with same installation options, updates the quantity instead
+ * @param partId The ID of the part to add
+ * @param cartId The UUID of the cart to add to
+ * @param quantity The quantity to add (default: 1)
+ * @param installationOptions Optional installation details
+ * @returns Promise resolving to the created or updated cart item
+ */
 export async function addToCart(
   partId: number, 
   cartId: string, 
@@ -194,7 +210,13 @@ export async function addToCart(
   }
 }
 
-// Update the quantity of a cart item
+/**
+ * Updates the quantity of an item in the cart
+ * If quantity is <= 0, removes the item from the cart
+ * @param cartItemId The UUID of the cart item to update
+ * @param quantity The new quantity to set
+ * @returns Promise resolving to the updated cart item
+ */
 export async function updateCartItemQuantity(cartItemId: string, quantity: number): Promise<CartItem> {
   try {
     if (quantity <= 0) {
@@ -218,7 +240,11 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
   }
 }
 
-// Remove an item from the cart
+/**
+ * Removes an item from the cart
+ * @param cartItemId The UUID of the cart item to remove
+ * @returns Promise resolving to void
+ */
 export async function removeFromCart(cartItemId: string): Promise<void> {
   try {
     const { error } = await (supabase
@@ -233,7 +259,11 @@ export async function removeFromCart(cartItemId: string): Promise<void> {
   }
 }
 
-// Clear all items from the cart
+/**
+ * Clears all items from a cart
+ * @param cartId The UUID of the cart to clear
+ * @returns Promise resolving to void
+ */
 export async function clearCart(cartId: string): Promise<void> {
   try {
     const { error } = await (supabase
@@ -248,7 +278,12 @@ export async function clearCart(cartId: string): Promise<void> {
   }
 }
 
-// Get available garages for a part
+/**
+ * Gets all garages that can install a specific part
+ * Uses the get_garages_for_part RPC function
+ * @param partId The ID of the part to find garages for
+ * @returns Promise resolving to an array of garages
+ */
 export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   try {
     // Using RPC function with proper type casting
@@ -283,7 +318,10 @@ export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   }
 }
 
-// Get user session
+/**
+ * Gets the current user session
+ * @returns User session data from Supabase
+ */
 export async function getUserSession() {
   const { data } = await supabase.auth.getSession();
   return data;

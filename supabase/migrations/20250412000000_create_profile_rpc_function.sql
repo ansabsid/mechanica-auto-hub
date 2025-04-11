@@ -1,5 +1,14 @@
 
--- Create a secure RPC function for profile creation that bypasses RLS
+-- This function creates a user profile with specified role and email
+-- It's designed to be called when a new user account is created
+-- Uses SECURITY DEFINER to bypass Row Level Security (RLS) policies
+-- Parameters:
+--   user_id: UUID of the user to create a profile for
+--   user_email: Email address of the user
+--   user_role: Role to assign to the user (e.g., 'customer', 'garage')
+-- Returns:
+--   VOID (no return value)
+
 CREATE OR REPLACE FUNCTION public.create_profile_for_user(
   user_id UUID,
   user_email TEXT,

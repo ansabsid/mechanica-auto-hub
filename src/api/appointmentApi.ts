@@ -2,6 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AvailableSlot } from "@/types/appointment.types";
 
+/**
+ * Fetches all appointments for a specific user from the database
+ * @param userId The UUID of the user to fetch appointments for
+ * @returns Promise resolving to an array of Appointment objects
+ */
 export const fetchUserAppointmentsFromApi = async (userId: string): Promise<Appointment[]> => {
   try {
     // Using raw SQL query to avoid type issues with type assertion
@@ -39,6 +44,13 @@ export const fetchUserAppointmentsFromApi = async (userId: string): Promise<Appo
   }
 };
 
+/**
+ * Mock function that simulates fetching available time slots for appointments
+ * In a production environment, this would query the database for actual availability
+ * @param garageId The ID of the garage to fetch slots for
+ * @param date Optional date to filter slots by
+ * @returns Array of available appointment slots
+ */
 export const mockFetchAvailableSlots = (garageId: string, date?: string): AvailableSlot[] => {
   // This is a mock implementation - in real app, this would query the database
   // for available time slots based on garage schedule and existing appointments
@@ -59,6 +71,17 @@ export const mockFetchAvailableSlots = (garageId: string, date?: string): Availa
   }
 };
 
+/**
+ * Books a new appointment in the database
+ * Tries to use an RPC function first, falls back to direct insert if unavailable
+ * @param userId The user booking the appointment
+ * @param garageId The garage where the appointment will take place
+ * @param serviceType The type of service requested
+ * @param date The appointment date
+ * @param time The appointment time
+ * @param notes Optional notes for the appointment
+ * @returns The created appointment data
+ */
 export const bookAppointmentApi = async (
   userId: string,
   garageId: string,
@@ -68,6 +91,7 @@ export const bookAppointmentApi = async (
   notes?: string
 ) => {
   try {
+    // Try to use the RPC function if available
     const { data, error } = await (supabase as any).rpc('insert_appointment', {
       p_user_id: userId,
       p_garage_id: garageId,
@@ -104,8 +128,15 @@ export const bookAppointmentApi = async (
   }
 };
 
+/**
+ * Cancels an existing appointment by updating its status
+ * Tries to use an RPC function first, falls back to direct update if unavailable
+ * @param appointmentId The ID of the appointment to cancel
+ * @returns True if cancellation was successful
+ */
 export const cancelAppointmentApi = async (appointmentId: string) => {
   try {
+    // Try to use the RPC function if available
     const { error } = await (supabase as any).rpc('update_appointment_status', { 
       p_appointment_id: appointmentId,
       p_status: 'cancelled'

@@ -4,15 +4,17 @@ import { Part } from "./types";
 
 /**
  * Hook that manages state for parts search functionality with optimized state updates
+ * Centralizes state management for parts search to avoid prop drilling and redundant re-renders
  * @returns State and memoized state updater functions
  */
 export const usePartsSearchState = () => {
-  const [parts, setParts] = useState<Part[]>([]);
-  const [allParts, setAllParts] = useState<Part[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchCompleted, setSearchCompleted] = useState<boolean>(false);
-  const [queryTime, setQueryTime] = useState<number>(0);
+  // State declarations for parts search
+  const [parts, setParts] = useState<Part[]>([]);            // Parts that match current search criteria
+  const [allParts, setAllParts] = useState<Part[]>([]);      // All available parts in system
+  const [isLoading, setIsLoading] = useState<boolean>(false);// Loading state during API calls
+  const [isSearching, setIsSearching] = useState<boolean>(false);// Active search in progress
+  const [searchCompleted, setSearchCompleted] = useState<boolean>(false);// Flag for search completion
+  const [queryTime, setQueryTime] = useState<number>(0);     // Performance metric for query time
   
   // Memoize state updaters to prevent unnecessary re-renders
   const updateParts = useCallback((newParts: Part[]) => {

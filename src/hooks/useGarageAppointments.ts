@@ -30,11 +30,20 @@ export interface Appointment {
   car?: string;
 }
 
+/**
+ * Hook for garage owners to manage appointments and service slots
+ * Provides functions for fetching appointments and creating service time slots
+ */
 export const useGarageAppointments = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
 
+  /**
+   * Fetches all appointments for a specific garage
+   * @param garageId The UUID of the garage to fetch appointments for
+   * @returns Promise resolving to an array of appointments
+   */
   const fetchAppointments = async (garageId: string) => {
     if (!garageId) return [];
     
@@ -58,6 +67,13 @@ export const useGarageAppointments = () => {
     }
   };
 
+  /**
+   * Creates service time slots for a garage
+   * In a production app, this would create actual database entries
+   * @param slot The service slot configuration (service type, date, time range, interval)
+   * @param garageId The UUID of the garage to create slots for
+   * @returns Promise resolving to boolean indicating success
+   */
   const createServiceSlots = async (slot: ServiceSlot, garageId: string) => {
     setIsLoading(true);
     try {

@@ -1,5 +1,11 @@
 
--- Create a function to insert a part with admin privileges
+-- This function inserts a new part into the database with administrative privileges
+-- It bypasses Row Level Security (RLS) using SECURITY DEFINER
+-- Parameters:
+--   part_data: A JSONB object containing all the part details
+-- Returns:
+--   JSONB object containing the ID of the newly inserted part
+
 CREATE OR REPLACE FUNCTION public.insert_part(part_data JSONB)
 RETURNS JSONB
 LANGUAGE plpgsql

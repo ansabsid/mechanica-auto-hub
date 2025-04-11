@@ -3,10 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
 
-// Get all orders for a user
+/**
+ * Fetches all orders for a specific user
+ * Tries to use an RPC function first, falls back to direct query if unavailable
+ * @param userId The UUID of the user to fetch orders for
+ * @returns Promise resolving to an array of Order objects
+ */
 export async function getUserOrders(userId: string): Promise<Order[]> {
   try {
-    // Using direct from to avoid type errors
+    // Try to use the RPC function first
     const { data, error } = await (supabase as any).rpc('get_user_orders', {
       p_user_id: userId
     });
@@ -57,10 +62,15 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
   }
 }
 
-// Get a single order with its items
+/**
+ * Fetches details for a single order including all its items
+ * Tries to use an RPC function first, falls back to direct queries if unavailable
+ * @param orderId The UUID of the order to fetch
+ * @returns Promise resolving to a complete Order object with items, or null if not found
+ */
 export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
-    // Get order details
+    // Try to get order details from RPC function
     const { data: orderData, error: orderError } = await (supabase as any).rpc('get_order', {
       p_order_id: orderId
     });
@@ -146,7 +156,14 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   }
 }
 
-// Create a new order from cart items
+/**
+ * Creates a new order with items from the user's cart
+ * Tries to use an RPC function first, falls back to manual transaction if unavailable
+ * @param userId The UUID of the user placing the order
+ * @param cartItems Array of cart items to convert to order items
+ * @param totalAmount The total amount of the order
+ * @returns Promise resolving to the created order data
+ */
 export async function createOrder(userId: string, cartItems: CartItem[], totalAmount: number): Promise<any> {
   try {
     if (cartItems.length === 0) {
@@ -161,7 +178,7 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       price: item.part.price,
     }));
     
-    // Create order using RPC
+    // Try to create order using RPC
     const { data, error } = await (supabase as any).rpc('create_order_with_items', {
       p_user_id: userId,
       p_total_amount: totalAmount,
@@ -208,10 +225,15 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
   }
 }
 
-// Cancel an order
+/**
+ * Cancels an existing order by updating its status
+ * Tries to use an RPC function first, falls back to direct update if unavailable
+ * @param orderId The UUID of the order to cancel
+ * @returns Promise resolving to void
+ */
 export async function cancelOrder(orderId: string): Promise<void> {
   try {
-    // Use RPC to cancel order
+    // Try to use RPC to cancel order
     const { error } = await (supabase as any).rpc('cancel_order', {
       p_order_id: orderId
     });
