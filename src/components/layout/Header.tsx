@@ -1,16 +1,17 @@
+
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, ShoppingCart } from "lucide-react";
+import { Menu, X, User, LogOut, Wrench } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useMobile } from "@/hooks/use-mobile";
-import CartDrawer from "@/components/cart/CartDrawer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { isAuthenticated, signOut, user } = useAuth();
-  const { isMobile } = useMobile();
+  const { isMobile } = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
 

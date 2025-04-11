@@ -150,3 +150,5 @@ export const CartDrawer = () => {
     </Sheet>
   );
 };
+
+export default CartDrawer;
