@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
@@ -21,20 +21,23 @@ export const CartDrawer = () => {
   const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal, refreshCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
   
-  // Refresh cart when component mounts
+  // Only refresh cart when component mounts and when the drawer is opened
   useEffect(() => {
     console.log("CartDrawer mounted, refreshing cart");
     refreshCart();
     
-    // Set up an interval to refresh the cart every 5 seconds
-    const intervalId = setInterval(() => {
-      console.log("Auto-refreshing cart");
-      refreshCart();
-    }, 5000);
-    
-    return () => clearInterval(intervalId);
+    // No need for continuous polling - cart will refresh when opened
   }, [refreshCart]);
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      console.log("Cart drawer opened, refreshing cart");
+      refreshCart();
+    }
+  };
   
   const handleCheckout = () => {
     if (cartItems.length === 0) {
@@ -50,13 +53,12 @@ export const CartDrawer = () => {
   };
   
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
           size="icon" 
           className="relative"
-          onClick={() => refreshCart()} // Force refresh when opening
         >
           <ShoppingCart className="h-5 w-5" />
           {cartItems.length > 0 && (
