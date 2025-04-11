@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { Manufacturer, Model, Part } from "./types";
 import { useToast } from "@/hooks/use-toast";
@@ -23,9 +22,10 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
 
   /**
    * Fetches all available parts from the database
+   * @param showToast Whether to show a toast notification
    */
-  const fetchAllParts = useCallback(async () => {
-    console.log("Fetching all available parts");
+  const fetchAllParts = useCallback(async (showToast = false) => {
+    console.log("Fetching all available parts, showToast:", showToast);
     
     if (isLoading) {
       console.log("Already loading parts, skipping duplicate fetch");
@@ -43,11 +43,14 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         // We only want to set filtered parts after a search
         setSearchCompleted(false);
         
-        toast({
-          title: "Parts Loaded Successfully",
-          description: `Loaded ${processedParts.length} parts from database`,
-          duration: 3000,
-        });
+        // Only show toast notification if explicitly requested
+        if (showToast) {
+          toast({
+            title: "Parts Loaded Successfully",
+            description: `Loaded ${processedParts.length} parts from database`,
+            duration: 3000,
+          });
+        }
       } else {
         console.log("No parts found in database, ready for search");
         setAllParts([]);
@@ -56,12 +59,14 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     } catch (error: any) {
       console.error("Error fetching all parts:", error.message);
       
-      toast({
-        title: "Error Loading Parts",
-        description: `Could not load parts: ${error.message}. Please try again.`,
-        variant: "destructive",
-        duration: 5000,
-      });
+      if (showToast) {
+        toast({
+          title: "Error Loading Parts",
+          description: `Could not load parts: ${error.message}. Please try again.`,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
       
       setAllParts([]);
       setParts([]);

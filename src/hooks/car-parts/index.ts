@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useManufacturers } from "./useManufacturers";
 import { useModels } from "./useModels";
@@ -58,11 +59,12 @@ export const useCarParts = () => {
     }
   }, [fetchManufacturers]);
   
-  // Fetch all parts when manufacturers are loaded
+  // Fetch all parts when manufacturers are loaded, but don't show toast
   useEffect(() => {
     if (initializedRef.current && manufacturers.length > 0 && !allParts.length && !isLoadingParts) {
-      console.log("Manufacturers loaded, now fetching all parts");
-      fetchAllParts();
+      console.log("Manufacturers loaded, now fetching all parts (silently)");
+      // Pass false to indicate we don't want to show a toast message
+      fetchAllParts(false);
     }
   }, [manufacturers.length, allParts.length, isLoadingParts, fetchAllParts]);
 
