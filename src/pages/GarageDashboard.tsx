@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   MapPin,
   Check,
   X,
+  Loader2
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -26,56 +28,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
-import { supabase } from "@/integrations/supabase/client";
+import { useGarageAppointments, ServiceSlot } from "@/hooks/useGarageAppointments";
+import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
-// Mock product data
-const products = [
-  {
-    id: 1,
-    name: "Bosch Premium Oil Filter",
-    category: "Filters",
-    price: 35,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
-    status: "In Stock",
-    quantity: 15,
-    added: "2025-03-15",
-  },
-  {
-    id: 2,
-    name: "Michelin Pilot Sport 4 Tire",
-    category: "Tires",
-    price: 199,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
-    status: "Limited",
-    quantity: 4,
-    added: "2025-03-20",
-  },
-  {
-    id: 3,
-    name: "NGK Laser Platinum Spark Plugs",
-    category: "Ignition",
-    price: 45,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
-    status: "In Stock",
-    quantity: 22,
-    added: "2025-03-25",
-  },
-  {
-    id: 4,
-    name: "AC Delco Brake Pads",
-    category: "Brakes",
-    price: 85,
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format",
-    status: "In Stock",
-    quantity: 8,
-    added: "2025-04-01",
-  },
-];
-
-// Mock appointments
+// Mock appointments for now
 const appointments = [
   {
     id: 1,
@@ -109,23 +66,26 @@ const appointments = [
   },
 ];
 
-// Define slot and garage interfaces for type safety
-interface ServiceSlot {
-  service: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  interval: string;
-}
-
-interface GarageInfo {
-  name: string;
-  area: string;
-  location: string;
-  installationFee: string;
-}
+const dubaiAreas = [
+  "Dubai Marina",
+  "Downtown Dubai",
+  "Jumeirah",
+  "Deira",
+  "Business Bay",
+  "JLT",
+  "Palm Jumeirah",
+  "Al Barsha",
+  "Dubai Hills",
+  "Mirdif",
+  "Dubai Silicon Oasis",
+  "International City",
+  "Dubai Sports City",
+  "JVC",
+  "Arabian Ranches"
+];
 
 const GarageDashboard = () => {
+  // Product state
   const [newProduct, setNewProduct] = useState<GarageProduct>({
     name: "",
     category: "",
@@ -134,7 +94,7 @@ const GarageDashboard = () => {
     status: "In Stock",
   });
 
-  // Add the missing state variables
+  // Service slot state
   const [newSlot, setNewSlot] = useState<ServiceSlot>({
     service: "",
     date: "",
@@ -143,6 +103,7 @@ const GarageDashboard = () => {
     interval: "60",
   });
 
+  // Garage state
   const [newGarage, setNewGarage] = useState<GarageInfo>({
     name: "",
     area: "",
@@ -150,54 +111,42 @@ const GarageDashboard = () => {
     installationFee: "",
   });
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const { addProduct, isLoading } = useGarageProducts();
+  // Current garage ID - this would come from auth in a real app
   const [currentGarageId, setCurrentGarageId] = useState<string | null>(null);
-
-  const dubaiAreas = [
-    "Dubai Marina",
-    "Downtown Dubai",
-    "Jumeirah",
-    "Deira",
-    "Business Bay",
-    "JLT",
-    "Palm Jumeirah",
-    "Al Barsha",
-    "Dubai Hills",
-    "Mirdif",
-    "Dubai Silicon Oasis",
-    "International City",
-    "Dubai Sports City",
-    "JVC",
-    "Arabian Ranches"
-  ];
+  
+  // Custom hooks
+  const { 
+    addProduct, 
+    fetchProducts, 
+    products, 
+    isLoading: productLoading, 
+    fetchLoading: productsLoading 
+  } = useGarageProducts();
+  
+  const { 
+    createServiceSlots, 
+    isLoading: slotLoading 
+  } = useGarageAppointments();
+  
+  const { 
+    addGarage, 
+    fetchGarages, 
+    garages, 
+    isLoading: garageLoading,
+    fetchLoading: garagesLoading
+  } = useGarageManagement();
 
   useEffect(() => {
+    // In a real app, this would come from authentication
     const mockGarageId = "27f4e4a5-3e4b-4c4d-9d3f-cd3c4e5f6a7b";
     setCurrentGarageId(mockGarageId);
     
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('parts')
-          .select('*')
-          .eq('garage_id', mockGarageId);
-        
-        if (error) throw error;
-        setProducts(data || []);
-      } catch (error: any) {
-        console.error("Error fetching products:", error.message);
-        toast.error("Failed to load products");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    // Fetch initial data
     if (mockGarageId) {
-      fetchProducts();
+      fetchProducts(mockGarageId);
     }
+    
+    fetchGarages();
   }, []);
 
   const handleAddProduct = async (e: React.FormEvent) => {
@@ -207,29 +156,28 @@ const GarageDashboard = () => {
       return;
     }
 
-    const productId = await addProduct(newProduct, currentGarageId);
+    await addProduct(newProduct, currentGarageId);
     
-    if (productId) {
-      const { data } = await supabase
-        .from('parts')
-        .select('*')
-        .eq('garage_id', currentGarageId);
-      
-      setProducts(data || []);
-      
-      setNewProduct({
-        name: "",
-        category: "",
-        price: "",
-        quantity: "",
-        status: "In Stock",
-      });
-    }
+    // Reset form
+    setNewProduct({
+      name: "",
+      category: "",
+      price: "",
+      quantity: "",
+      status: "In Stock",
+    });
   };
 
-  const handleAddSlot = (e: React.FormEvent) => {
+  const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Adding new service slot:", newSlot);
+    if (!currentGarageId) {
+      toast.error("Garage ID not found. Please try again.");
+      return;
+    }
+    
+    await createServiceSlots(newSlot, currentGarageId);
+    
+    // Reset form
     setNewSlot({
       service: "",
       date: "",
@@ -239,9 +187,12 @@ const GarageDashboard = () => {
     });
   };
 
-  const handleAddGarage = (e: React.FormEvent) => {
+  const handleAddGarage = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Adding new garage:", newGarage);
+    
+    await addGarage(newGarage);
+    
+    // Reset form
     setNewGarage({
       name: "",
       area: "",
@@ -354,9 +305,14 @@ const GarageDashboard = () => {
                     <Button 
                       type="submit" 
                       className="bg-mechanica-500 hover:bg-mechanica-600"
-                      disabled={isLoading}
+                      disabled={productLoading}
                     >
-                      {isLoading ? "Adding..." : "Add Product"}
+                      {productLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : "Add Product"}
                     </Button>
                   </form>
                 </div>
@@ -374,9 +330,14 @@ const GarageDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {loading ? (
+                      {productsLoading ? (
                         <tr>
-                          <td colSpan={6} className="text-center p-4">Loading products...</td>
+                          <td colSpan={6} className="text-center p-4">
+                            <div className="flex justify-center items-center py-4">
+                              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                              Loading products...
+                            </div>
+                          </td>
                         </tr>
                       ) : products.length > 0 ? (
                         products.map((product: any) => (
@@ -512,8 +473,17 @@ const GarageDashboard = () => {
                         </Select>
                       </div>
                     </div>
-                    <Button type="submit" className="bg-mechanica-500 hover:bg-mechanica-600">
-                      Create Slots
+                    <Button 
+                      type="submit" 
+                      className="bg-mechanica-500 hover:bg-mechanica-600"
+                      disabled={slotLoading}
+                    >
+                      {slotLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : "Create Slots"}
                     </Button>
                   </form>
                 </div>
@@ -667,8 +637,17 @@ const GarageDashboard = () => {
                         <p className="text-sm text-gray-500">Base fee applied to installations at this garage</p>
                       </div>
                     </div>
-                    <Button type="submit" className="bg-mechanica-500 hover:bg-mechanica-600">
-                      Add Garage
+                    <Button 
+                      type="submit" 
+                      className="bg-mechanica-500 hover:bg-mechanica-600"
+                      disabled={garageLoading}
+                    >
+                      {garageLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : "Add Garage"}
                     </Button>
                   </form>
                 </div>
@@ -685,72 +664,45 @@ const GarageDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b">
-                        <td className="p-4">Mechanica Service Center - Dubai Marina</td>
-                        <td className="p-4">Dubai Marina</td>
-                        <td className="p-4">Dubai Marina, Sheikh Zayed Road, Dubai, UAE</td>
-                        <td className="p-4">AED 25.99</td>
-                        <td className="p-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>Edit Garage</DropdownMenuItem>
-                              <DropdownMenuItem>View Parts</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="p-4">Mechanica Service Center - Downtown</td>
-                        <td className="p-4">Downtown Dubai</td>
-                        <td className="p-4">Downtown Dubai, Financial Center Road, Dubai, UAE</td>
-                        <td className="p-4">AED 29.99</td>
-                        <td className="p-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>Edit Garage</DropdownMenuItem>
-                              <DropdownMenuItem>View Parts</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="p-4">Mechanica Service Center - Jumeirah</td>
-                        <td className="p-4">Jumeirah</td>
-                        <td className="p-4">Jumeirah Beach Road, Dubai, UAE</td>
-                        <td className="p-4">AED 32.99</td>
-                        <td className="p-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>Edit Garage</DropdownMenuItem>
-                              <DropdownMenuItem>View Parts</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
+                      {garagesLoading ? (
+                        <tr>
+                          <td colSpan={5} className="text-center p-4">
+                            <div className="flex justify-center items-center py-4">
+                              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                              Loading garages...
+                            </div>
+                          </td>
+                        </tr>
+                      ) : garages.length > 0 ? (
+                        garages.map((garage) => (
+                          <tr key={garage.id} className="border-b">
+                            <td className="p-4">{garage.name}</td>
+                            <td className="p-4">{garage.area}</td>
+                            <td className="p-4">{garage.location}</td>
+                            <td className="p-4">AED {garage.installationFee || "0.00"}</td>
+                            <td className="p-4">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem>Edit Garage</DropdownMenuItem>
+                                  <DropdownMenuItem>View Parts</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="text-center p-4">No garages found. Add your first garage!</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,8 +13,57 @@ export interface GarageProduct {
   garage_id?: string;
 }
 
-export const useGarageProducts = () => {
+export const useGarageProducts = (garageId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [fetchLoading, setFetchLoading] = useState(false);
+
+  // Fetch products for a specific garage
+  const fetchProducts = async (garageId: string) => {
+    if (!garageId) return;
+    
+    setFetchLoading(true);
+    try {
+      // First try to fetch from parts where garage_id matches
+      const { data: directParts, error: directError } = await supabase
+        .from('parts')
+        .select('*')
+        .eq('garage_id', garageId);
+
+      if (directError) throw directError;
+      
+      // Then fetch from parts_garages association table
+      const { data: associatedParts, error: associationError } = await supabase
+        .from('parts_garages')
+        .select('part_id, installation_fee, parts(*)')
+        .eq('garage_id', garageId);
+        
+      if (associationError) throw associationError;
+      
+      // Combine results, giving priority to direct parts
+      const combinedProducts = [
+        ...(directParts || []), 
+        ...(associatedParts?.map(item => ({
+          ...item.parts,
+          installation_fee: item.installation_fee
+        })) || [])
+      ];
+      
+      // Remove duplicates based on id
+      const uniqueProducts = combinedProducts.filter((product, index, self) =>
+        index === self.findIndex((p) => p.id === product.id)
+      );
+      
+      setProducts(uniqueProducts);
+      return uniqueProducts;
+    } catch (error: any) {
+      console.error("Error fetching products:", error.message);
+      toast.error("Failed to load products");
+      return [];
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
   const addProduct = async (product: GarageProduct, garageId: string) => {
     setIsLoading(true);
@@ -60,6 +109,9 @@ export const useGarageProducts = () => {
       }
 
       toast.success("Product added successfully!");
+      
+      // Refresh the products list
+      await fetchProducts(garageId);
       return partData.id;
     } catch (error: any) {
       toast.error(error.message || "Failed to add product");
@@ -70,8 +122,18 @@ export const useGarageProducts = () => {
     }
   };
 
+  // Use effect to fetch products when garageId changes
+  useEffect(() => {
+    if (garageId) {
+      fetchProducts(garageId);
+    }
+  }, [garageId]);
+
   return {
     addProduct,
-    isLoading
+    fetchProducts,
+    products,
+    isLoading,
+    fetchLoading
   };
 };
