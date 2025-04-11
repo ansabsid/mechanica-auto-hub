@@ -1,5 +1,6 @@
 
 import { Database } from "@/integrations/supabase/types";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // Define the RPC function signatures for TypeScript type safety
 export type RPCFunctions = {
@@ -24,12 +25,15 @@ export type RPCFunctions = {
 };
 
 // Enhance the SupabaseClient type with our custom RPC function signatures
-export type EnhancedSupabaseClient = Database["supabase"] & {
+export type EnhancedSupabaseClient = SupabaseClient<Database> & {
   rpc<T extends keyof RPCFunctions>(
     fn: T,
     args: Parameters<RPCFunctions[T]>[0],
     options?: { count?: 'exact' | 'planned' | 'estimated' }
-  ): Omit<ReturnType<ReturnType<Database["supabase"]["from"]>['select']>, 'data'> & {
+  ): Promise<{
     data: ReturnType<RPCFunctions[T]>;
-  };
+    error: null | {
+      message: string;
+    };
+  }>;
 };
