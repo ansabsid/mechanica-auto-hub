@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Part } from "@/hooks/useCarParts";
 import { InstallationOptionsDialog } from "@/components/parts/InstallationOptionsDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface PurchaseOptionsDialogProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const PurchaseOptionsDialog = ({
   onAddToCartOnly,
 }: PurchaseOptionsDialogProps) => {
   const [showInstallationOptions, setShowInstallationOptions] = useState(false);
+  const { toast } = useToast();
   
   const handleBuyWithInstallation = () => {
     setShowInstallationOptions(true);
@@ -36,6 +38,23 @@ export const PurchaseOptionsDialog = ({
     // Close both dialogs when installation is complete
     setShowInstallationOptions(false);
     onClose();
+  };
+  
+  const handleCartOnlyClick = async () => {
+    try {
+      await onAddToCartOnly();
+      toast({
+        title: "Added to cart",
+        description: "Part added to your cart",
+      });
+    } catch (error) {
+      console.error("Error adding part to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add part to cart",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -51,7 +70,7 @@ export const PurchaseOptionsDialog = ({
           
           <div className="grid grid-cols-1 gap-4 py-4">
             <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                 onClick={onAddToCartOnly}>
+                 onClick={handleCartOnlyClick}>
               <div className="w-12 h-12 rounded-full bg-mechanica-100 flex items-center justify-center mb-3">
                 <ShoppingCart className="h-6 w-6 text-mechanica-600" />
               </div>

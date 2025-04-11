@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,20 +20,28 @@ export const PartCard = ({ part }: PartCardProps) => {
     item.part_id === part.id && item.installation_data
   )?.installation_data;
   
-  const handleAddToCartClick = () => {
+  const handleAddToCartClick = async () => {
     if (part.stock <= 0) return;
     
     if (existingInstallation) {
-      addToCart(part.id, 1, existingInstallation);
+      try {
+        await addToCart(part.id, 1, existingInstallation);
+      } catch (error) {
+        console.error("Error adding part with existing installation:", error);
+      }
       return;
     }
     
     setShowPurchaseOptions(true);
   };
   
-  const handleAddToCartOnly = () => {
-    addToCart(part.id, 1);
-    setShowPurchaseOptions(false);
+  const handleAddToCartOnly = async () => {
+    try {
+      await addToCart(part.id, 1);
+      setShowPurchaseOptions(false);
+    } catch (error) {
+      console.error("Error adding part only to cart:", error);
+    }
   };
   
   const onDialogClose = () => {

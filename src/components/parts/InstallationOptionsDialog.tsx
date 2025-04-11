@@ -93,13 +93,16 @@ export const InstallationOptionsDialog = ({
     if (!selectedGarage) return;
     
     try {
-      // Add part with installation info to cart
-      await addToCart(part.id, 1, {
+      // Create installation data object
+      const installationData = {
         installationRequired: true,
         garageId: selectedGarage.id,
         garageName: selectedGarage.name,
         installationFee: selectedGarage.installationFee
-      });
+      };
+      
+      // Add part with installation info to cart
+      await addToCart(part.id, 1, installationData);
       
       toast({
         title: "Added to cart",
