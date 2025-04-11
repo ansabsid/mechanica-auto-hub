@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem, Cart, InstallationOptions, Garage } from "@/types/cart.types";
 
@@ -67,7 +66,7 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       return []; // If no items in cart, return empty array
     }
     
-    // Use the RPC function to get garages data
+    // Use the RPC function to get garages data with proper typing
     const { data: garagesData, error: garagesError } = await supabase
       .rpc('get_garages_for_part_bulk', { part_ids: partIds }) as unknown as { 
         data: Array<{
@@ -236,7 +235,7 @@ export async function clearCart(cartId: string): Promise<void> {
 // Get available garages for a part
 export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   try {
-    // Using RPC function to avoid TypeScript issues with parts_garages table
+    // Using RPC function with proper type casting
     const { data, error } = await supabase
       .rpc('get_garages_for_part', { part_id_param: partId }) as unknown as {
         data: Array<{
@@ -252,7 +251,6 @@ export async function getGaragesForPart(partId: number): Promise<Garage[]> {
       console.error("RPC error:", error);
       
       // If RPC fails, return empty array
-      // We could implement a fallback but it would have the same typing issues
       console.error("Falling back to empty array due to RPC error");
       return [];
     }
