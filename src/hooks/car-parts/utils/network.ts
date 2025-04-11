@@ -72,11 +72,15 @@ export const fetchWithCache = async <T>(
   console.log(`🌐 Fetching fresh data for: ${cacheKey}`);
   const data = await fetchWithTimeout(fetchFn);
   
+  // Type safety: ensure data is of type T before caching
+  // This cast is necessary because TypeScript can't infer the runtime type
+  const typedData = data as T;
+  
   // Store in cache
   responseCache.set(cacheKey, {
-    data,
+    data: typedData,
     timestamp: now
   });
   
-  return data;
+  return typedData;
 };

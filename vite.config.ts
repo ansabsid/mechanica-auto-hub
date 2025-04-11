@@ -23,13 +23,10 @@ export default defineConfig(({ mode }) => ({
   // Add build optimizations
   build: {
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: true
-      }
-    },
+    minify: 'esbuild', // Use esbuild instead of terser for minification
+    sourcemap: mode !== 'production',
+    chunkSizeWarningLimit: 1000, // Increase the warning limit
+    reportCompressedSize: false, // Disable reporting compressed size for faster builds
     rollupOptions: {
       output: {
         manualChunks: {
@@ -49,7 +46,10 @@ export default defineConfig(({ mode }) => ({
       'react-router-dom', 
       '@supabase/supabase-js',
       '@tanstack/react-query'
-    ]
+    ],
+    esbuildOptions: {
+      target: 'esnext'
+    }
   },
   // Add esbuild optimization
   esbuild: {
