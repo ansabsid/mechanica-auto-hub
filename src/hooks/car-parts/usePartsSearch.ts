@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo } from "react";
 import { Manufacturer, Model, Part } from "./types";
 import { useToast } from "@/hooks/use-toast";
@@ -138,11 +137,12 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       console.log(`Database query completed in ${queryDuration.toFixed(2)}ms, found ${validParts.length} parts`);
       
       // If no parts found, use mock data
+      let mockPartsData: Part[] = [];
       if (validParts.length === 0) {
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
         
         // Generate mock parts for the vehicle - this will have image_url properly set now
-        const mockPartsData = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
+        mockPartsData = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
         console.log("Generated mock parts:", mockPartsData.length);
         
@@ -181,8 +181,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setIsSearching(false);
       setSearchCompleted(true);
       
-      // Make sure we're referring to the mockPartsData variable defined above
-      return validParts.length > 0 ? validParts.length : (mockPartsData?.length || 0);
+      return validParts.length > 0 ? validParts.length : (mockPartsData.length || 0);
     } catch (error: any) {
       console.error("Error searching for parts:", error);
       
