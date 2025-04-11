@@ -37,7 +37,7 @@ import { toast } from "sonner";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
-  const { orders, fetchOrders, loading: ordersLoading } = useOrders();
+  const { orders, fetchUserOrders, isLoading: ordersLoading } = useOrders();
   const { 
     fetchUserAppointments, 
     cancelAppointment 
@@ -69,7 +69,7 @@ const CustomerDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      fetchOrders();
+      fetchUserOrders();
       fetchAppointments();
     }
   }, [user]);
@@ -228,10 +228,10 @@ const CustomerDashboard = () => {
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-base">{order.service_type}</CardTitle>
+                          <CardTitle className="text-base">{(order as any).service_type || "Order"}</CardTitle>
                           <div className="text-sm text-gray-500 flex items-center mt-1">
                             <MapPin className="h-3.5 w-3.5 mr-1 text-mechanica-500" />
-                            {order.garage?.name}
+                            {(order as any).garage?.name || "N/A"}
                           </div>
                         </div>
                         {getAppointmentStatusIcon(order.status)}
@@ -241,15 +241,19 @@ const CustomerDashboard = () => {
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center text-sm">
                           <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                          <span>{formatDate(order.appointment_date)}</span>
+                          <span>{formatDate((order as any).appointment_date || order.created_at)}</span>
                         </div>
                         <div className="flex items-center text-sm">
                           <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                          <span>{formatTime(order.appointment_time)}</span>
+                          <span>{formatTime((order as any).appointment_time || "")}</span>
                         </div>
                         <div className="flex items-center text-sm">
                           <Car className="h-4 w-4 mr-2 text-gray-500" />
-                          <span>{order.vehicle?.make} {order.vehicle?.model} ({order.vehicle?.year})</span>
+                          <span>
+                            {(order as any).vehicle ? 
+                              `${(order as any).vehicle?.make} ${(order as any).vehicle?.model} (${(order as any).vehicle?.year})` : 
+                              "Vehicle information not available"}
+                          </span>
                         </div>
                       </div>
                       
@@ -271,7 +275,7 @@ const CustomerDashboard = () => {
                             Details <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
                           
-                          {(order.status === 'pending' || order.status === 'confirmed') && (
+                          {(order.status === 'pending' || order.status === 'processing') && (
                             <Button 
                               variant="outline" 
                               size="sm" 

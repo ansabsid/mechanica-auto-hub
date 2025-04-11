@@ -921,6 +921,9 @@ const GarageDashboard = () => {
           onClose={() => setEditModalOpen(false)}
           product={selectedProduct}
           onSave={handleUpdateProduct}
+          manufacturers={manufacturers}
+          models={filteredModels}
+          years={years}
         />
       )}
       
