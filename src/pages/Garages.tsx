@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   MapPin, 
   Search, 
@@ -26,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useGarageManagement } from "@/hooks/useGarageManagement";
 
 interface Garage {
   id: string;
@@ -42,20 +42,32 @@ interface Garage {
 
 const GaragePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [garages, setGarages] = useState<Garage[]>([]);
   const [filteredGarages, setFilteredGarages] = useState<Garage[]>([]);
-  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [sort, setSort] = useState<"name" | "location">("location");
-  const [error, setError] = useState<string | null>(null);
+  
+  // Use the useGarageManagement hook to fetch garages
+  const { garages, fetchLoading: loading, error, fetchGarages } = useGarageManagement();
 
   useEffect(() => {
+    // Fetch garages when component mounts
     fetchGarages();
   }, []);
 
   useEffect(() => {
     if (garages.length > 0) {
-      const filtered = garages.filter(garage => {
+      // Enhance garages with additional mock data for UI purposes
+      const enhancedGarages = garages.map(garage => ({
+        ...garage,
+        rating: Math.floor(Math.random() * 5) + 1,
+        services: ["Oil Change", "Brake Repair", "Engine Diagnostics", "Tire Replacement"].slice(0, Math.floor(Math.random() * 4) + 1),
+        phone: "+971 5" + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
+        email: `contact@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
+        workingHours: "8:00 AM - 6:00 PM"
+      }));
+      
+      // Filter and sort garages
+      const filtered = enhancedGarages.filter(garage => {
         const searchLower = searchQuery.toLowerCase();
         return (
           garage.name.toLowerCase().includes(searchLower) ||
@@ -73,49 +85,10 @@ const GaragePage = () => {
       });
 
       setFilteredGarages(sorted);
+    } else {
+      setFilteredGarages([]);
     }
   }, [searchQuery, garages, sort]);
-
-  const fetchGarages = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error: fetchError } = await supabase
-        .from('garages')
-        .select('*');
-        
-      if (fetchError) {
-        throw fetchError;
-      }
-      
-      if (!data || data.length === 0) {
-        setGarages([]);
-        setFilteredGarages([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Mock additional data for our new approach
-      const enhancedGarages = data.map(garage => ({
-        ...garage,
-        rating: Math.floor(Math.random() * 5) + 1,
-        services: ["Oil Change", "Brake Repair", "Engine Diagnostics", "Tire Replacement"].slice(0, Math.floor(Math.random() * 4) + 1),
-        phone: "+971 5" + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
-        email: `contact@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        workingHours: "8:00 AM - 6:00 PM"
-      }));
-      
-      setGarages(enhancedGarages);
-      setFilteredGarages(enhancedGarages);
-    } catch (error: any) {
-      console.error("Error fetching garages:", error.message);
-      setError(error.message);
-      toast.error("Failed to load garages");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleRetry = () => {
     toast.info("Retrying...");
@@ -336,14 +309,16 @@ const GaragePage = () => {
                   <Building2 className="w-16 h-16 mx-auto text-gray-400" />
                 </div>
                 <p className="text-lg text-gray-600 mb-4">
-                  No garages found matching your search criteria.
+                  {loading ? "Loading garages..." : "No garages found matching your search criteria."}
                 </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSearchQuery("")}
-                >
-                  Clear Search
-                </Button>
+                {!loading && searchQuery && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSearchQuery("")}
+                  >
+                    Clear Search
+                  </Button>
+                )}
               </div>
             ) : view === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
