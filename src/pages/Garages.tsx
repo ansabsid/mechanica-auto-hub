@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2, AlertTriangle } from "lucide-react";
+import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 // Define the type for garage data
 interface Garage {
@@ -39,6 +41,7 @@ const Garages = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { fetchGarages, fetchLoading, error } = useGarageManagement();
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const { user } = useAuth();
   
   // Fetch garages from Supabase - now with additional protection against multiple calls
   useEffect(() => {
@@ -131,6 +134,9 @@ const Garages = () => {
   };
 
   const isLoading = loadingInitial || fetchLoading;
+  
+  // Check if there's an authentication error
+  const isAuthError = error?.includes("Authentication") || error?.includes("JWTError") || error?.includes("invalid token");
 
   return (
     <>
@@ -207,8 +213,24 @@ const Garages = () => {
             </div>
           </div>
           
-          {/* Error State */}
-          {error && (
+          {/* Authentication Error State */}
+          {isAuthError && (
+            <Alert variant="destructive" className="mb-6">
+              <Lock className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                You need to log in to view garage information. The garage data is protected by Row Level Security.
+                <div className="mt-2">
+                  <Button variant="outline" size="sm" onClick={() => window.location.href = "/login"}>
+                    Go to Login
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* General Error State */}
+          {error && !isAuthError && (
             <Alert variant="destructive" className="mb-6">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
