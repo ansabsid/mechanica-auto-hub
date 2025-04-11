@@ -114,7 +114,6 @@ const GarageDashboard = () => {
 
   const [currentGarageId, setCurrentGarageId] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("inventory");
   const [manufacturers, setManufacturers] = useState<any[]>([]);
