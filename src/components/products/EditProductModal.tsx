@@ -65,10 +65,10 @@ const EditProductModal = ({
     
     setIsLoading(true);
     try {
-      // Convert quantity to number for consistent handling
+      // Explicitly convert quantity to number for consistent handling
       const productToSave = {
         ...editedProduct,
-        quantity: Number(editedProduct.quantity)
+        quantity: Number(editedProduct.quantity) // Ensure it's a number
       };
       
       console.log("Saving product with data:", productToSave);

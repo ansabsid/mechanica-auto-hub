@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -447,7 +448,7 @@ export const useGarageProducts = (garageId?: string) => {
     try {
       console.log("Updating product with data:", product);
       
-      // Convert quantity to a number if it's a string
+      // Convert quantity to a number - IMPORTANT: ensure this is a valid number before passing to the database
       const quantity = typeof product.quantity === 'string' 
         ? parseInt(product.quantity, 10) 
         : product.quantity;
@@ -456,7 +457,7 @@ export const useGarageProducts = (garageId?: string) => {
       const updateData = {
         name: product.name,
         price: parseFloat(product.price.toString()),
-        stock: quantity,
+        stock: quantity, // This updates the stock column in the database
         description: product.description || '',
         manufacturer_id: product.manufacturer_id || 1,
         model_id: product.model_id || 1,
@@ -478,12 +479,16 @@ export const useGarageProducts = (garageId?: string) => {
         return false;
       }
       
+      // Important: Wait for the database update to complete before refreshing
+      console.log("Database update successful, now refreshing UI data");
+      
       // Refresh products after update to ensure UI is updated
       if (product.garage_id) {
         console.log("Refreshing products for garage:", product.garage_id);
         await fetchProducts(product.garage_id);
       }
       
+      toast.success("Product updated successfully!");
       return true;
     } catch (error: any) {
       console.error("Error updating product:", error);
