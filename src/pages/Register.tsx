@@ -1,9 +1,9 @@
+
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -60,87 +60,85 @@ const Register = () => {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="your@email.com" type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input placeholder="********" type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Type</FormLabel>
-                  <FormControl>
-                    <div className="flex gap-4">
-                      <Button
-                        type="button"
-                        variant={field.value === "customer" ? "default" : "outline"}
-                        className="flex-1"
-                        onClick={() => form.setValue("role", "customer")}
-                      >
-                        Customer
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={field.value === "garage" ? "default" : "outline"}
-                        className="flex-1"
-                        onClick={() => form.setValue("role", "garage")}
-                      >
-                        Garage
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button type="submit" className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create Account"}
-            </Button>
-          </form>
-        </Form>
-        
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link to="/login" className="text-bookmyparts-600 hover:underline">
-              Log in
-            </Link>
-          </p>
-        </div>
+    <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="your@email.com" type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input placeholder="********" type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Account Type</FormLabel>
+                <FormControl>
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant={field.value === "customer" ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => form.setValue("role", "customer")}
+                    >
+                      Customer
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={field.value === "garage" ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => form.setValue("role", "garage")}
+                    >
+                      Garage
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <Button type="submit" className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600" disabled={isLoading}>
+            {isLoading ? "Creating account..." : "Create Account"}
+          </Button>
+        </form>
+      </Form>
+      
+      <div className="text-center mt-4">
+        <p className="text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/login" className="text-bookmyparts-600 hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
-    </MainLayout>
+    </div>
   );
 };
 
