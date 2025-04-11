@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -10,19 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ShoppingBag,
   Calendar,
-  Clock,
-  Check,
-  X,
   Plus,
   Package,
-  DollarSign,
-  Settings,
-  Users,
-  BarChart,
-  ShoppingCart,
-  ChevronDown,
   MoreHorizontal,
   MapPin,
+  Check,
+  X,
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -32,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 
 // Mock product data
 const products = [
@@ -136,10 +129,6 @@ const GarageDashboard = () => {
     installationFee: "",
   });
 
-  const totalProducts = products.length;
-  const totalAppointments = appointments.length;
-  const pendingAppointments = appointments.filter(app => app.status === "Pending").length;
-
   const dubaiAreas = [
     "Dubai Marina",
     "Downtown Dubai",
@@ -195,53 +184,10 @@ const GarageDashboard = () => {
 
   return (
     <MainLayout>
-      <section className="py-8 bg-mechanica-50">
-        <div className="container-custom">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">AutoCare Dubai Dashboard</h1>
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">Garage Management</h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Package className="h-5 w-5 text-mechanica-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{totalProducts}</div>
-                <p className="text-xs text-muted-foreground">
-                  Items in your inventory
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Appointments</CardTitle>
-                <Calendar className="h-5 w-5 text-mechanica-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{totalAppointments}</div>
-                <p className="text-xs text-muted-foreground">
-                  Total scheduled appointments
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-                <Clock className="h-5 w-5 text-mechanica-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{pendingAppointments}</div>
-                <p className="text-xs text-muted-foreground">
-                  Appointments awaiting confirmation
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-10">
-        <div className="container-custom">
           <Tabs defaultValue="inventory" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="inventory" className="flex items-center justify-center gap-2">
@@ -264,7 +210,7 @@ const GarageDashboard = () => {
                   </Button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-subtle p-6">
+                <div className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold mb-4">Add New Product</h3>
                   <form onSubmit={handleAddProduct} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -344,7 +290,7 @@ const GarageDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full bg-white rounded-xl shadow-subtle">
+                  <table className="w-full bg-white rounded-xl shadow-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-4">Product</th>
@@ -417,7 +363,7 @@ const GarageDashboard = () => {
                   </Button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-subtle p-6">
+                <div className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold mb-4">Add Service Slots</h3>
                   <form onSubmit={handleAddSlot} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -495,7 +441,7 @@ const GarageDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full bg-white rounded-xl shadow-subtle">
+                  <table className="w-full bg-white rounded-xl shadow-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-4">Customer</th>
@@ -583,7 +529,7 @@ const GarageDashboard = () => {
                   </Button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-subtle p-6">
+                <div className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold mb-4">Onboard New Garage</h3>
                   <form onSubmit={handleAddGarage} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -650,7 +596,7 @@ const GarageDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full bg-white rounded-xl shadow-subtle">
+                  <table className="w-full bg-white rounded-xl shadow-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left p-4">Garage Name</th>
