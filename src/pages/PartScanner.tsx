@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, RotateCw, Scan, XCircle, ImagePlus } from "lucide-react";
+import { Camera, RotateCw, Scan, XCircle, ImagePlus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { formatPrice } from "@/lib/utils";
@@ -217,12 +217,23 @@ const PartScanner = () => {
   }, [isFrontCamera]);
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Car Part Scanner</h1>
+    <div className="container max-w-full px-4 py-4 md:py-8">
+      {/* Mobile-friendly header with back button */}
+      <div className="flex items-center mb-4">
+        <Button 
+          variant="ghost" 
+          className="mr-2 p-0 h-9 w-9" 
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Back</span>
+        </Button>
+        <h1 className="text-xl font-bold md:text-3xl">Car Part Scanner</h1>
+      </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
         <div className="flex flex-col space-y-4">
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden shadow-sm">
             <CardContent className="p-0">
               {/* Main video display */}
               <div className="relative w-full bg-black aspect-video">
@@ -236,9 +247,9 @@ const PartScanner = () => {
                 
                 {!isStreaming && !isScanning && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white p-4">
-                    <Camera className="w-16 h-16 mb-4" />
-                    <p className="text-center">Camera is not active. Click the button below to start.</p>
-                    <Button onClick={startCamera} className="mt-4">
+                    <Camera className="w-12 h-12 mb-3 md:w-16 md:h-16 md:mb-4" />
+                    <p className="text-center text-sm md:text-base">Camera is not active. Click the button below to start.</p>
+                    <Button onClick={startCamera} className="mt-3 text-sm md:text-base">
                       Start Camera
                     </Button>
                   </div>
@@ -265,40 +276,52 @@ const PartScanner = () => {
             </CardContent>
           </Card>
           
-          {/* Camera controls */}
-          <div className="flex justify-between">
-            <div className="space-x-2">
+          {/* Mobile-optimized camera controls */}
+          <div className="flex flex-wrap gap-2 justify-between">
+            <div className="flex gap-2">
               {isStreaming ? (
-                <Button variant="outline" onClick={stopCamera}>
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Stop Camera
+                <Button variant="outline" size="sm" onClick={stopCamera} className="h-10">
+                  <XCircle className="mr-1 h-4 w-4" />
+                  <span className="text-xs md:text-sm">Stop</span>
                 </Button>
               ) : (
-                <Button variant="outline" onClick={startCamera}>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Start Camera
+                <Button variant="outline" size="sm" onClick={startCamera} className="h-10">
+                  <Camera className="mr-1 h-4 w-4" />
+                  <span className="text-xs md:text-sm">Start</span>
                 </Button>
               )}
               
-              <Button variant="outline" onClick={toggleCamera} disabled={!isStreaming}>
-                <RotateCw className="mr-2 h-4 w-4" />
-                Switch Camera
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleCamera} 
+                disabled={!isStreaming}
+                className="h-10"
+              >
+                <RotateCw className="mr-1 h-4 w-4" />
+                <span className="text-xs md:text-sm">Flip</span>
               </Button>
             </div>
             
-            <div className="space-x-2">
-              <Button variant="outline" onClick={selectImage}>
-                <ImagePlus className="mr-2 h-4 w-4" />
-                Upload Image
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={selectImage}
+                className="h-10"
+              >
+                <ImagePlus className="mr-1 h-4 w-4" />
+                <span className="text-xs md:text-sm">Upload</span>
               </Button>
               
               <Button 
+                size="sm"
                 onClick={captureAndScan} 
                 disabled={!isStreaming || isScanning}
-                className="bg-mechanica-500 hover:bg-mechanica-600"
+                className="bg-mechanica-500 hover:bg-mechanica-600 h-10"
               >
-                <Scan className="mr-2 h-4 w-4" />
-                {isScanning ? "Scanning..." : "Scan Part"}
+                <Scan className="mr-1 h-4 w-4" />
+                <span className="text-xs md:text-sm">{isScanning ? "Scanning..." : "Scan"}</span>
               </Button>
             </div>
           </div>
@@ -306,36 +329,36 @@ const PartScanner = () => {
           {/* Error message */}
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertTitle className="text-sm">Error</AlertTitle>
+              <AlertDescription className="text-xs md:text-sm">{error}</AlertDescription>
             </Alert>
           )}
         </div>
         
-        {/* Results section */}
+        {/* Results section - optimized for mobile */}
         <div className="flex flex-col space-y-4">
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-2xl font-semibold mb-4">Scan Results</h2>
+          <Card className="shadow-sm">
+            <CardContent className="pt-4 px-4 md:pt-6 md:px-6">
+              <h2 className="text-lg md:text-2xl font-semibold mb-3 md:mb-4">Scan Results</h2>
               
               {!scanResult && !isScanning && (
-                <div className="text-center py-12 text-gray-500">
-                  <Scan className="mx-auto h-12 w-12 mb-4" />
-                  <p>No part scanned yet. Capture or upload an image to identify a part.</p>
+                <div className="text-center py-8 md:py-12 text-gray-500">
+                  <Scan className="mx-auto h-8 w-8 mb-3 md:h-12 md:w-12 md:mb-4" />
+                  <p className="text-xs md:text-sm">No part scanned yet. Capture or upload an image to identify a part.</p>
                 </div>
               )}
               
               {isScanning && (
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="flex flex-col items-center justify-center py-8 md:py-12">
                   <LoadingSpinner size="md" />
-                  <p className="mt-4 text-gray-600">Analyzing image...</p>
+                  <p className="mt-3 text-xs md:text-sm text-gray-600">Analyzing image...</p>
                 </div>
               )}
               
               {scanResult && (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-md overflow-hidden mr-4">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gray-100 rounded-md overflow-hidden mr-3 md:mr-4">
                       {scanResult.image_url ? (
                         <img 
                           src={scanResult.image_url} 
@@ -344,21 +367,21 @@ const PartScanner = () => {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <span className="text-gray-400">No image</span>
+                          <span className="text-gray-400 text-xs">No image</span>
                         </div>
                       )}
                     </div>
                     <div>
-                      <h3 className="font-medium">{scanResult.name}</h3>
-                      <p className="text-sm text-gray-500">{scanResult.description}</p>
-                      <p className="font-bold text-mechanica-600 mt-1">
+                      <h3 className="font-medium text-sm md:text-base">{scanResult.name}</h3>
+                      <p className="text-xs text-gray-500 md:text-sm">{scanResult.description}</p>
+                      <p className="font-bold text-mechanica-600 mt-1 text-sm md:text-base">
                         {formatPrice(scanResult.price)}
                       </p>
                     </div>
                   </div>
                   
                   <div className="pt-2">
-                    <Button onClick={viewPart} className="w-full">
+                    <Button onClick={viewPart} className="w-full text-sm md:text-base">
                       View Part Details
                     </Button>
                   </div>
@@ -367,12 +390,12 @@ const PartScanner = () => {
             </CardContent>
           </Card>
           
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <h3 className="font-medium text-blue-800 mb-2">How to use the scanner</h3>
-            <ul className="list-disc pl-5 text-sm text-blue-700 space-y-1">
+          <div className="p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <h3 className="font-medium text-sm text-blue-800 mb-1 md:mb-2">How to use the scanner</h3>
+            <ul className="list-disc pl-4 md:pl-5 text-xs md:text-sm text-blue-700 space-y-0.5 md:space-y-1">
               <li>Position the car part in good lighting</li>
               <li>Keep the camera steady and ensure the part is clearly visible</li>
-              <li>Click "Scan Part" to analyze the image</li>
+              <li>Click "Scan" to analyze the image</li>
               <li>For better results, you can also upload an existing photo</li>
             </ul>
           </div>

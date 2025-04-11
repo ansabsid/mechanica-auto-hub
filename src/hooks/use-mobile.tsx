@@ -21,6 +21,6 @@ export function useIsMobile() {
 
 // For backward compatibility
 export const useMobile = () => {
-  const isMobile = useIsMobile();
-  return { isMobile };
+  return useIsMobile();
 };
+

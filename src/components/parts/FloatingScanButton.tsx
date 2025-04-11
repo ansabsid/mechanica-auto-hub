@@ -3,10 +3,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const FloatingScanButton = () => {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   
   if (!isMobile) return null;
   
