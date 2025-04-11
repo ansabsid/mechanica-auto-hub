@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2, AlertTriangle } from "lucide-react";
+import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2, AlertTriangle, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -132,6 +133,29 @@ const Garages = () => {
     fetchGarages();
   };
 
+  // Simple function to add a sample garage
+  const addSampleGarage = async () => {
+    const { addGarage } = useGarageManagement();
+    
+    try {
+      toast.info("Adding a sample garage...");
+      
+      const sampleGarage = {
+        name: "AutoFix Express",
+        area: "Dubai Marina",
+        location: "Sheikh Zayed Road, Dubai",
+        installationFee: "30.00",
+        images: "https://images.unsplash.com/photo-1597762117709-859f744b84c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      };
+      
+      await addGarage(sampleGarage);
+      toast.success("Sample garage added! Refreshing list...");
+      fetchGarages();
+    } catch (err: any) {
+      toast.error("Failed to add sample garage");
+    }
+  };
+
   const isLoading = loadingInitial || fetchLoading;
 
   return (
@@ -233,7 +257,7 @@ const Garages = () => {
             </div>
           )}
           
-          {/* Empty State */}
+          {/* Empty State - Now with a button to add a sample garage for testing */}
           {!isLoading && !error && filteredGarages.length === 0 && (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
               <div className="mb-4">
@@ -248,27 +272,42 @@ const Garages = () => {
                   ? "No garages found in our database yet." 
                   : "No garages found matching your criteria."}
               </p>
-              {garages.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setFilterOption("all");
-                    setSearchQuery("");
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              )}
-              {garages.length === 0 && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleRetry}
-                  className="flex items-center"
-                >
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Refresh
-                </Button>
-              )}
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                {garages.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setFilterOption("all");
+                      setSearchQuery("");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+                
+                {garages.length === 0 && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleRetry}
+                      className="flex items-center"
+                    >
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Refresh
+                    </Button>
+                    
+                    <Button 
+                      variant="default"
+                      onClick={addSampleGarage}
+                      className="flex items-center"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Sample Garage
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           )}
           

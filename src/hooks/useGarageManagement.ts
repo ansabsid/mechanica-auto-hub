@@ -47,7 +47,15 @@ export const useGarageManagement = () => {
         throw fetchError;
       }
       
-      if (!data || data.length === 0) {
+      console.log("Raw garage data response:", data);
+      
+      if (!data) {
+        console.log("No data returned from garage query");
+        setGarages([]);
+        return [];
+      }
+      
+      if (data.length === 0) {
         console.log("No garages found in the database");
         setGarages([]);
         return [];
@@ -64,6 +72,7 @@ export const useGarageManagement = () => {
         images: garage.images // Include the images field
       }));
       
+      console.log("Formatted garages:", formattedGarages);
       setGarages(formattedGarages);
       return formattedGarages;
     } catch (error: any) {
@@ -84,6 +93,8 @@ export const useGarageManagement = () => {
   const addGarage = async (garage: GarageInfo) => {
     setIsLoading(true);
     try {
+      console.log("Adding new garage:", garage);
+      
       const { data, error } = await supabase
         .from('garages')
         .insert({
@@ -97,6 +108,7 @@ export const useGarageManagement = () => {
         
       if (error) throw error;
       
+      console.log("Garage added successfully:", data);
       toast.success("Garage added successfully!");
       await fetchGarages(); // Refresh the garages list
       return data;
