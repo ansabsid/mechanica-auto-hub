@@ -49,8 +49,11 @@ export const CartDrawer = () => {
       return;
     }
     
+    console.log("Navigating to checkout...");
     setIsOpen(false); // Close the drawer before navigation
-    navigate("/checkout"); // Navigate to the checkout page
+    
+    // Force navigation using window.location instead of react-router
+    window.location.href = "/checkout";
   };
   
   return (
@@ -171,7 +174,6 @@ export const CartDrawer = () => {
                   <Trash className="mr-1 h-4 w-4" /> Clear
                 </Button>
                 
-                {/* Remove SheetClose and handle navigation in the onClick function */}
                 <Button
                   size="sm"
                   className="flex-1 bg-mechanica-500 hover:bg-mechanica-600"
