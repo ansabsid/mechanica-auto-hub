@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -108,10 +107,9 @@ export const useGarageProducts = (garageId?: string) => {
       
       if (error) {
         console.error("Storage upload error:", error);
-        console.error("Error code:", error.code);
         console.error("Error message:", error.message);
         
-        // More specific error handling
+        // More specific error handling without using error.code
         if (error.message.includes("The resource already exists")) {
           toast.error("A file with this name already exists");
         } else if (error.message.includes("permission")) {
