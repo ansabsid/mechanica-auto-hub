@@ -102,7 +102,7 @@ const OrdersListPage = () => {
                       </div>
                       <div className="flex items-center">
                         <span className="font-semibold mr-1">
-                          ${order.total_amount.toFixed(2)}
+                          AED {order.total_amount.toFixed(2)}
                         </span>
                         <ChevronRight className="h-5 w-5 text-gray-400" />
                       </div>

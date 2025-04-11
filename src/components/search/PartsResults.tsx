@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
@@ -143,7 +144,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-bold">${part.price.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-bold">AED {part.price.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

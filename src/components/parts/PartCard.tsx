@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -147,7 +148,7 @@ export const PartCard = ({ part }: PartCardProps) => {
           
           <div className="flex items-center justify-between mt-auto">
             <div>
-              <p className="text-mechanica-600 font-bold text-xl mb-1">${part.price.toFixed(2)}</p>
+              <p className="text-mechanica-600 font-bold text-xl mb-1">AED {part.price.toFixed(2)}</p>
               {part.garages && (
                 <div className="flex items-center text-gray-500 text-sm">
                   <MapPin size={14} className="mr-1" /> {part.garages.location}

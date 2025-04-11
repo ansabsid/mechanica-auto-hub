@@ -113,12 +113,12 @@ const OrderDetailPage = () => {
                             <div>
                               <p className="font-medium">{item.part?.name || `Part #${item.part_id}`}</p>
                               <p className="text-sm text-muted-foreground">
-                                Qty: {item.quantity} × ${item.price.toFixed(2)}
+                                Qty: {item.quantity} × AED {item.price.toFixed(2)}
                               </p>
                             </div>
                           </div>
                           <p className="font-medium">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            AED {(item.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
                       ))}
@@ -159,15 +159,15 @@ const OrderDetailPage = () => {
                     
                     <div className="flex justify-between">
                       <p className="font-medium">Subtotal</p>
-                      <p className="font-medium">${currentOrder.total_amount.toFixed(2)}</p>
+                      <p className="font-medium">AED {currentOrder.total_amount.toFixed(2)}</p>
                     </div>
                     <div className="flex justify-between">
                       <p className="font-medium">Shipping</p>
-                      <p className="font-medium">$0.00</p>
+                      <p className="font-medium">AED 0.00</p>
                     </div>
                     <div className="flex justify-between">
                       <p className="font-medium">Tax</p>
-                      <p className="font-medium">$0.00</p>
+                      <p className="font-medium">AED 0.00</p>
                     </div>
                     
                     <Separator />
@@ -175,7 +175,7 @@ const OrderDetailPage = () => {
                     <div className="flex justify-between">
                       <p className="font-bold text-lg">Total</p>
                       <p className="font-bold text-lg">
-                        ${currentOrder.total_amount.toFixed(2)}
+                        AED {currentOrder.total_amount.toFixed(2)}
                       </p>
                     </div>
                   </div>
