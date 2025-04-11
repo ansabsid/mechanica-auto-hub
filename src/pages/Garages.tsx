@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Users, Tools, Clock, PhoneCall, Mail, Calendar } from "lucide-react";
+import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar } from "lucide-react";
 
 const Garages = () => {
   const [filterOption, setFilterOption] = useState("all");
@@ -161,7 +160,7 @@ const Garages = () => {
                   
                   <div className="mb-4">
                     <div className="flex items-start mb-3">
-                      <Tools size={18} className="text-mechanica-600 mr-3 mt-1 flex-shrink-0" />
+                      <Wrench size={18} className="text-mechanica-600 mr-3 mt-1 flex-shrink-0" />
                       <div>
                         <h4 className="font-medium mb-1">Services</h4>
                         <div className="flex flex-wrap gap-2">
