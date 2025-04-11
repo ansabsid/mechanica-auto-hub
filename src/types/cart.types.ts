@@ -1,6 +1,13 @@
 
 import { Part } from "@/hooks/car-parts/types";
 
+export interface Garage {
+  id: string;
+  name: string;
+  location: string;
+  installationFee: number;
+}
+
 export interface InstallationOptions {
   installationRequired: boolean;
   garageId: string;
@@ -14,7 +21,9 @@ export interface CartItem {
   part_id: number;
   quantity: number;
   installation_data?: InstallationOptions;
-  part: Part;
+  part: Part & {
+    availableGarages?: Garage[];
+  };
 }
 
 export interface Cart {

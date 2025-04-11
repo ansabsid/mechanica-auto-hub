@@ -69,9 +69,9 @@ export const CartDrawer = () => {
                     <div className="flex-1">
                       <h4 className="font-medium">{item.part.name}</h4>
                       <p className="text-sm text-muted-foreground">${item.part.price.toFixed(2)} each</p>
-                      {item.part.garages && (
+                      {item.part.availableGarages && item.part.availableGarages.length > 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Sold by: {item.part.garages.name}
+                          Sold by: {item.part.availableGarages[0].name}
                         </p>
                       )}
                       

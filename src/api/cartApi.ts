@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { CartItem, Cart } from "@/types/cart.types";
+import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
 
 // Get user's cart or create a new one if it doesn't exist
 export async function getUserCart(): Promise<Cart | null> {
@@ -42,7 +42,7 @@ export async function getUserCart(): Promise<Cart | null> {
 // Get all items in the cart with part details
 export async function getCartItems(cartId: string): Promise<CartItem[]> {
   try {
-    // Modified query to properly join with parts table
+    // Query to get cart items with part details
     const { data, error } = await (supabase
       .from('cart_items') as any)
       .select(`
@@ -60,24 +60,47 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       
     if (error) throw error;
     
-    // Instead of querying a non-existent garages table, we'll mock the garage data for now
-    // In a real implementation, you'd query a profiles table that has garage information or similar
-    const itemsWithGarages = (data || []).map((item: any) => {
-      if (item.part?.garage_id) {
-        // Mock garage data based on the garage_id
-        // This is a temporary solution until a proper garage table is set up
-        return {
-          ...item,
-          part: {
-            ...item.part,
-            garages: {
-              name: `Garage ${item.part.garage_id.substring(0, 4)}`,
-              location: "Dubai, UAE"
-            }
-          }
-        };
-      }
-      return item;
+    // Get all part IDs from cart items to fetch available garages
+    const partIds = data.map((item: any) => item.part.id);
+    
+    // Fetch garages that can install these parts
+    const { data: garagesData, error: garagesError } = await (supabase
+      .from('parts_garages') as any)
+      .select(`
+        part_id,
+        installation_fee,
+        garage:garage_id (
+          id,
+          name,
+          location
+        )
+      `)
+      .in('part_id', partIds);
+    
+    if (garagesError) throw garagesError;
+    
+    // Create a map of part_id to garages for quick lookup
+    const partGaragesMap = partIds.reduce((acc: any, partId: number) => {
+      acc[partId] = garagesData.filter((pg: any) => pg.part_id === partId)
+        .map((pg: any) => ({
+          id: pg.garage.id,
+          name: pg.garage.name,
+          location: pg.garage.location,
+          installationFee: pg.installation_fee
+        }));
+      return acc;
+    }, {});
+    
+    // Add garages information to cart items
+    const itemsWithGarages = data.map((item: any) => {
+      const garages = partGaragesMap[item.part.id] || [];
+      return {
+        ...item,
+        part: {
+          ...item.part,
+          availableGarages: garages
+        }
+      };
     });
     
     return itemsWithGarages || [];
@@ -92,12 +115,7 @@ export async function addToCart(
   partId: number, 
   cartId: string, 
   quantity: number = 1,
-  installationOptions?: {
-    installationRequired: boolean;
-    garageId: string;
-    garageName: string;
-    installationFee: number;
-  }
+  installationOptions?: InstallationOptions
 ): Promise<CartItem> {
   try {
     // Check if the item already exists in the cart
@@ -198,6 +216,35 @@ export async function clearCart(cartId: string): Promise<void> {
     if (error) throw error;
   } catch (error) {
     console.error("Error clearing cart:", error);
+    throw error;
+  }
+}
+
+// Get available garages for a part
+export async function getGaragesForPart(partId: number) {
+  try {
+    const { data, error } = await (supabase
+      .from('parts_garages') as any)
+      .select(`
+        installation_fee,
+        garage:garage_id (
+          id,
+          name,
+          location
+        )
+      `)
+      .eq('part_id', partId);
+      
+    if (error) throw error;
+    
+    return data.map((item: any) => ({
+      id: item.garage.id,
+      name: item.garage.name,
+      location: item.garage.location,
+      installationFee: item.installation_fee
+    }));
+  } catch (error) {
+    console.error("Error getting garages for part:", error);
     throw error;
   }
 }

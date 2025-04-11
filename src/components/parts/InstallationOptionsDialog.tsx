@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { MapPin, Clock, PhoneCall } from "lucide-react";
+import { getGaragesForPart } from "@/api/cartApi";
+import { Garage } from "@/types/cart.types";
 
 interface InstallationOptionsDialogProps {
   isOpen: boolean;
@@ -25,15 +27,7 @@ interface InstallationOptionsDialogProps {
   part: Part;
 }
 
-// Mock data for garages
-const mockGarages = [
-  { id: "g1", name: "AutoCare Dubai", location: "Dubai Marina", distance: "2.3 km", installationFee: 45 },
-  { id: "g2", name: "SparkTech Auto", location: "Al Quoz", distance: "4.7 km", installationFee: 35 },
-  { id: "g3", name: "BrakeMax", location: "Deira", distance: "7.1 km", installationFee: 50 },
-  { id: "g4", name: "FilterPro", location: "Business Bay", distance: "3.5 km", installationFee: 40 },
-];
-
-// Mock data for areas
+// Areas for filtering
 const areas = [
   "Dubai Marina",
   "Jumeirah",
@@ -55,22 +49,50 @@ export const InstallationOptionsDialog = ({
 }: InstallationOptionsDialogProps) => {
   const [area, setArea] = useState("");
   const [step, setStep] = useState(1);
-  const [selectedGarage, setSelectedGarage] = useState<any>(null);
+  const [selectedGarage, setSelectedGarage] = useState<Garage | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [garages, setGarages] = useState<Garage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { addToCart } = useCart();
+  
+  // Fetch garages that have this part when the dialog opens
+  useEffect(() => {
+    if (isOpen && part) {
+      fetchGarages();
+    }
+  }, [isOpen, part]);
+  
+  const fetchGarages = async () => {
+    setIsLoading(true);
+    try {
+      const garagesData = await getGaragesForPart(part.id);
+      setGarages(garagesData);
+    } catch (error) {
+      console.error("Error fetching garages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load available garages",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const handleAreaSelect = (value: string) => {
     setArea(value);
     setStep(2);
   };
   
-  const handleGarageSelect = (garage: any) => {
+  const handleGarageSelect = (garage: Garage) => {
     setSelectedGarage(garage);
     setConfirmationOpen(true);
   };
   
   const handleConfirm = () => {
+    if (!selectedGarage) return;
+    
     // Add part with installation info to cart
     addToCart(part.id, 1, {
       installationRequired: true,
@@ -96,11 +118,16 @@ export const InstallationOptionsDialog = ({
     }
   };
   
+  // Filter garages by selected area if step 2
+  const filteredGarages = step === 2 && area 
+    ? garages.filter(garage => garage.location.includes(area)) 
+    : garages;
+  
   const totalPrice = part.price + (selectedGarage ? selectedGarage.installationFee : 0);
   
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen && !showInstallationOptions} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -135,31 +162,39 @@ export const InstallationOptionsDialog = ({
             </div>
           ) : (
             <div className="py-4 space-y-4 max-h-[50vh] overflow-y-auto pr-1">
-              {mockGarages.map((garage) => (
-                <div 
-                  key={garage.id}
-                  onClick={() => handleGarageSelect(garage)}
-                  className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-base">{garage.name}</h3>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <MapPin className="h-3.5 w-3.5 mr-1" /> {garage.location} ({garage.distance})
+              {isLoading ? (
+                <div className="text-center py-8">Loading available garages...</div>
+              ) : filteredGarages.length === 0 ? (
+                <div className="text-center py-8">
+                  No garages found in {area} that can install this part.
+                </div>
+              ) : (
+                filteredGarages.map((garage) => (
+                  <div 
+                    key={garage.id}
+                    onClick={() => handleGarageSelect(garage)}
+                    className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-base">{garage.name}</h3>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <MapPin className="h-3.5 w-3.5 mr-1" /> {garage.location}
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <Clock className="h-3.5 w-3.5 mr-1" /> Available tomorrow
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <Clock className="h-3.5 w-3.5 mr-1" /> Available tomorrow
+                      <div className="text-right">
+                        <p className="font-medium text-mechanica-600">
+                          ${garage.installationFee.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500">Installation fee</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-mechanica-600">
-                        ${garage.installationFee}
-                      </p>
-                      <p className="text-xs text-gray-500">Installation fee</p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
           
