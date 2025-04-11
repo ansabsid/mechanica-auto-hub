@@ -105,7 +105,7 @@ const CarSearch = () => {
   // CRITICAL FIX: Ensure we're showing the correct parts based on search state
   // When search is completed, show ONLY the filtered parts
   // Otherwise show all parts
-  const displayParts = searchCompleted ? parts : allParts;
+  const displayParts = searchCompleted && parts.length > 0 ? parts : allParts;
   
   // Critical debug logging
   console.log("⚠️ FINAL DISPLAY STATE:");

@@ -39,7 +39,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
-        // Reset filtered parts when fetching all parts
+        // Clear filtered parts when fetching all parts
         setParts([]);
         setSearchCompleted(false);
         
@@ -52,7 +52,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         console.log("No parts found in database, generating mock parts for initial display");
         const mockParts = createMockPartsForVehicle(1, 1, 2023, manufacturers, models);
         setAllParts(mockParts);
-        // Reset filtered parts when generating mock parts
+        // Clear filtered parts when generating mock parts
         setParts([]);
         setSearchCompleted(false);
         
@@ -168,11 +168,20 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       console.log("Sample final parts:", finalParts.slice(0, 2));
       
       // CRITICAL: Important order - first set the parts array, then update other states
-      setParts(finalParts);
+      // Make sure finalParts only contains parts that match our search criteria
+      const filteredParts = finalParts.filter(part => 
+        part.manufacturer_id === mfrId && 
+        part.model_id === mdlId && 
+        part.year === yearNum
+      );
+      
+      console.log("Filtered parts after additional verification:", filteredParts.length);
+      
+      setParts(filteredParts);
       setIsSearching(false);
       setSearchCompleted(true);
       
-      return finalParts.length;
+      return filteredParts.length;
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
