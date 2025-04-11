@@ -17,31 +17,34 @@ import About from './pages/About';
 import PartScanner from './pages/PartScanner';
 import CategoryPage from './components/categories/CategoryPage';
 import BookAppointment from './pages/BookAppointment';
+import { AuthProvider } from './hooks/auth';
 import './App.css';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Index />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-          <Route path="orders/:id" element={<OrdersPage />} />
-          <Route path="orders" element={<OrdersListPage />} />
-          <Route path="checkout" element={<Checkout />} />
-          <Route path="customer-dashboard" element={<CustomerDashboard />} />
-          <Route path="garages" element={<Garages />} />
-          <Route path="book-appointment/:id" element={<BookAppointment />} />
-          <Route path="garage-dashboard" element={<GarageDashboard />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="about" element={<About />} />
-          <Route path="category/:categoryName" element={<CategoryPage />} />
-          <Route path="scan" element={<PartScanner />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Index />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="orders/:id" element={<OrdersPage />} />
+            <Route path="orders" element={<OrdersListPage />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="customer-dashboard" element={<CustomerDashboard />} />
+            <Route path="garages" element={<Garages />} />
+            <Route path="book-appointment/:id" element={<BookAppointment />} />
+            <Route path="garage-dashboard" element={<GarageDashboard />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="about" element={<About />} />
+            <Route path="category/:categoryName" element={<CategoryPage />} />
+            <Route path="scan" element={<PartScanner />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

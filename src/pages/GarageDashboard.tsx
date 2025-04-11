@@ -915,10 +915,10 @@ const GarageDashboard = () => {
         </section>
       </div>
       
-      {selectedProduct && (
-        <EditProductModal 
+      {editModalOpen && selectedProduct && (
+        <EditProductModal
           isOpen={editModalOpen}
-          onOpenChange={setEditModalOpen}
+          onClose={() => setEditModalOpen(false)}
           product={selectedProduct}
           onSave={handleUpdateProduct}
         />
