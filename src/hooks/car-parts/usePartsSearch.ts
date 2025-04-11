@@ -39,6 +39,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
+        // Reset filtered parts when fetching all parts
         setParts([]);
         setSearchCompleted(false);
         
@@ -51,6 +52,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         console.log("No parts found in database, generating mock parts for initial display");
         const mockParts = createMockPartsForVehicle(1, 1, 2023, manufacturers, models);
         setAllParts(mockParts);
+        // Reset filtered parts when generating mock parts
         setParts([]);
         setSearchCompleted(false);
         
