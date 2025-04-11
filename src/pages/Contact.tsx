@@ -40,10 +40,10 @@ const Contact = () => {
               <h3 className="text-xl font-semibold mb-2">Call Us</h3>
               <p className="text-gray-600 mb-2">Our support team is available during business hours</p>
               <a 
-                href="tel:+97150123456" 
+                href="tel:+971552552476" 
                 className="text-mechanica-600 font-medium hover:underline"
               >
-                +971 50 123 4567
+                +971 552552476
               </a>
             </div>
 

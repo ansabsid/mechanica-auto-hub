@@ -1,6 +1,7 @@
 
 import React from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 import { useAuth } from "@/hooks/auth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
@@ -27,6 +28,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">{children}</main>
+      <Footer />
     </div>
   );
 };
