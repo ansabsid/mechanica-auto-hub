@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -93,7 +92,7 @@ const GarageDashboard = () => {
     price: "",
     quantity: "",
     status: "In Stock",
-    manufacturer_id: 1, // Default values
+    manufacturer_id: 1,
     model_id: 1,
     year: new Date().getFullYear(),
   });
@@ -155,13 +154,11 @@ const GarageDashboard = () => {
     fetchGarages();
     fetchManufacturers();
     
-    // Generate years for dropdown (last 30 years)
     const currentYear = new Date().getFullYear();
     const yearList = Array.from({ length: 30 }, (_, i) => currentYear - i);
     setYears(yearList);
   }, []);
 
-  // Fetch manufacturers from database
   const fetchManufacturers = async () => {
     try {
       const { data, error } = await supabase
@@ -177,7 +174,6 @@ const GarageDashboard = () => {
         setManufacturers(data);
       }
       
-      // Also fetch models
       fetchAllModels();
     } catch (error: any) {
       console.error("Error fetching manufacturers:", error.message);
@@ -185,7 +181,6 @@ const GarageDashboard = () => {
     }
   };
 
-  // Fetch all models
   const fetchAllModels = async () => {
     try {
       const { data, error } = await supabase
@@ -199,7 +194,6 @@ const GarageDashboard = () => {
       
       if (data) {
         setModels(data);
-        // Initially we show no models until manufacturer is selected
         setFilteredModels([]);
       }
     } catch (error: any) {
@@ -208,14 +202,11 @@ const GarageDashboard = () => {
     }
   };
 
-  // Update filtered models when manufacturer changes
   useEffect(() => {
     if (newProduct.manufacturer_id) {
       const filtered = models.filter(model => model.manufacturer_id === newProduct.manufacturer_id);
       setFilteredModels(filtered);
       
-      // If we have models and current selected model doesn't belong to this manufacturer,
-      // select the first model of the filtered list
       if (filtered.length > 0 && 
           !filtered.some(model => model.id === newProduct.model_id)) {
         setNewProduct(prev => ({
@@ -252,7 +243,6 @@ const GarageDashboard = () => {
       return;
     }
 
-    // Validate all required fields
     if (!newProduct.name || !newProduct.category || !newProduct.price || !newProduct.quantity) {
       toast.error("Please fill in all required fields");
       return;
@@ -262,33 +252,25 @@ const GarageDashboard = () => {
     let imageUrl = null;
 
     try {
-      // Handle image upload
       if (productImage) {
         const fileExt = productImage.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const filePath = `${currentGarageId}/${fileName}`;
         
-        // Create a progress handler for the upload
-        const progressHandler = (progress: number) => {
-          setUploadProgress(progress);
-        };
+        setUploadProgress(10);
         
         const { data, error } = await supabase.storage
           .from('parts')
           .upload(filePath, productImage, {
             cacheControl: '3600',
-            upsert: false,
-            onUploadProgress: (event) => {
-              if (event.totalBytes > 0) {
-                const progress = Math.round((event.loadedBytes / event.totalBytes) * 100);
-                progressHandler(progress);
-              }
-            }
+            upsert: false
           });
           
         if (error) {
           throw new Error(`Error uploading image: ${error.message}`);
         }
+        
+        setUploadProgress(90);
         
         const { data: { publicUrl } } = supabase.storage
           .from('parts')
@@ -296,9 +278,10 @@ const GarageDashboard = () => {
           
         imageUrl = publicUrl;
         console.log("Image uploaded successfully:", imageUrl);
+        
+        setUploadProgress(100);
       }
       
-      // Prepare the product data with all fields
       const productWithImage = {
         ...newProduct,
         imageUrl: imageUrl,
@@ -309,13 +292,11 @@ const GarageDashboard = () => {
       
       console.log("Saving product with data:", productWithImage);
       
-      // Add the product to the database
       const productId = await addProduct(productWithImage, currentGarageId);
       
       if (productId) {
         toast.success("Product added successfully!");
         
-        // Reset the form after successful addition
         setNewProduct({
           name: "",
           category: "",
@@ -444,7 +425,6 @@ const GarageDashboard = () => {
                         </Select>
                       </div>
                       
-                      {/* Manufacturer Field */}
                       <div className="space-y-2">
                         <Label htmlFor="product-manufacturer">Manufacturer*</Label>
                         <Select 
@@ -465,7 +445,6 @@ const GarageDashboard = () => {
                         </Select>
                       </div>
                       
-                      {/* Model Field */}
                       <div className="space-y-2">
                         <Label htmlFor="product-model">Model*</Label>
                         <Select 
@@ -487,7 +466,6 @@ const GarageDashboard = () => {
                         </Select>
                       </div>
                       
-                      {/* Year Field */}
                       <div className="space-y-2">
                         <Label htmlFor="product-year">Year*</Label>
                         <Select 
