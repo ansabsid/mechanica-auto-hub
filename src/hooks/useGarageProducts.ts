@@ -36,17 +36,7 @@ export const useGarageProducts = (garageId?: string) => {
       
       console.log("Attempting to upload file:", filePath);
       
-      // First create a storage bucket if it doesn't exist
-      await supabase.storage
-        .createBucket('parts', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jfif']
-        })
-        .catch(error => {
-          // If the bucket already exists, this will error but we can continue
-          console.log("Bucket creation result:", error);
-        });
+      setUploadProgress(30);
       
       // Upload the file
       const { data, error } = await supabase.storage
@@ -162,18 +152,22 @@ export const useGarageProducts = (garageId?: string) => {
 
       console.log("Prepared data for database insertion:", productData);
 
-      // 1. Insert the part into the parts table
+      // Use RPC (Remote Procedure Call) function to bypass RLS
       const { data: partData, error: partError } = await supabase
-        .from('parts')
-        .insert(productData)
-        .select('id')
-        .single();
+        .rpc('insert_part', {
+          part_data: productData
+        });
 
       if (partError) {
+        console.error("RPC error:", partError);
         throw new Error(`Failed to add part: ${partError.message}`);
       }
 
-      console.log("Part added successfully, id:", partData.id);
+      if (!partData || !partData.id) {
+        throw new Error("Part creation failed - no ID returned");
+      }
+
+      console.log("Part added successfully through RPC, id:", partData.id);
 
       // 2. Create the association in the parts_garages table to ensure proper relationship
       const { error: associationError } = await supabase
