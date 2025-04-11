@@ -40,26 +40,30 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
 };
 
 export const isDemoAccount = (email: string): boolean => {
-  return email === "demo@garage.com";
+  return email === "demo.garage@example.com";
 };
 
 export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" } | null> => {
   try {
+    const demoEmail = "demo.garage@example.com";
+    const demoPassword = "garage123";
+    
     // Try signing in first (if account exists)
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: "demo@garage.com",
-      password: "garage123"
+      email: demoEmail,
+      password: demoPassword
     });
 
     if (!signInError && signInData.user) {
+      console.log("Successfully signed in with demo account");
       return { user: signInData.user, role: "garage" };
     }
 
-    // If sign in fails, create a demo account and auto-confirm it
+    // If sign in fails, create a demo account
     console.log("Creating demo account...");
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: "demo@garage.com",
-      password: "garage123",
+      email: demoEmail,
+      password: demoPassword,
       options: {
         data: { role: 'garage' }
       }
@@ -71,15 +75,16 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
     }
 
     if (signUpData.user) {
-      await createUserProfile(signUpData.user.id, "demo@garage.com", 'garage');
+      await createUserProfile(signUpData.user.id, demoEmail, 'garage');
       
       // Auto-sign in the demo user
       const { data: autoSignIn, error: autoSignInError } = await supabase.auth.signInWithPassword({
-        email: "demo@garage.com",
-        password: "garage123"
+        email: demoEmail,
+        password: demoPassword
       });
       
       if (!autoSignInError && autoSignIn.user) {
+        console.log("Successfully signed in with newly created demo account");
         return { user: autoSignIn.user, role: "garage" };
       }
     }
