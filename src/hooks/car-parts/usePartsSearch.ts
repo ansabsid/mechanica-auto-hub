@@ -89,9 +89,9 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
-        // Important fix: Don't set filtered parts to all parts on initial load
-        // This ensures the parts array is only populated after a search
-        setSearchCompleted(true);
+        // Initialize parts array with all parts - will be replaced after search
+        setParts([]);
+        setSearchCompleted(false);
         
         // Show success toast only if we got real data
         toast({
@@ -103,8 +103,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         console.log("No parts found in database, generating mock parts for initial display");
         const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
         setAllParts(mockParts);
-        // Important fix: Don't set filtered parts to all parts on initial load
-        setSearchCompleted(true);
+        setParts([]);
+        setSearchCompleted(false);
         
         // Show toast for mock data
         toast({
@@ -129,7 +129,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       console.log("Generating mock parts as fallback due to fetch error");
       const mockParts = generateMockParts(1, 1, 2023, manufacturers, models);
       setAllParts(mockParts);
-      setSearchCompleted(true);
+      setParts([]);
+      setSearchCompleted(false);
     } finally {
       setIsLoading(false);
     }
@@ -138,8 +139,9 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
   // Reset search state
   const resetSearch = () => {
     console.log("Resetting search state");
+    // Reset to show all parts
     setParts(allParts);
-    setSearchCompleted(true);
+    setSearchCompleted(true); // Mark as completed so the UI knows to show all parts
     setQueryTime(0);
   };
 

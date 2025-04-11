@@ -105,8 +105,8 @@ const CarSearch = () => {
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
-  // CRITICAL FIX: Always use filtered parts when search is completed
-  // This ensures we only show parts matching the search criteria
+  // CRITICAL FIX: Now explicitly use the correct parts array based on search status
+  // This ensures we only show parts matching the search criteria after a search is completed
   const displayParts = searchCompleted ? parts : allParts;
   
   // Add debug logging
