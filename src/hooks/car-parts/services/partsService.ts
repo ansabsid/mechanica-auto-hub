@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Part, Manufacturer, Model } from "../types";
 import { fetchWithTimeout } from "../utils/network";
@@ -98,7 +97,8 @@ export const fetchAllPartsFromDB = async () => {
             installationFee: 23.50,
             area: "Deira"
           }
-        ]
+        ],
+        image_url: part.image_url || getDefaultImageUrlForPart(part.name)
       } as Part;
     });
     
@@ -108,6 +108,30 @@ export const fetchAllPartsFromDB = async () => {
     throw error;
   }
 };
+
+// Helper function to get default image URL based on part name
+function getDefaultImageUrlForPart(partName: string): string {
+  const name = partName.toLowerCase();
+  
+  if (name.includes('oil')) {
+    return "https://images.unsplash.com/photo-1635954749253-a0642359cdfa?w=800&h=600&auto=format";
+  } else if (name.includes('filter')) {
+    return "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format";
+  } else if (name.includes('brake')) {
+    return "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format";
+  } else if (name.includes('spark') || name.includes('ignition')) {
+    return "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format";
+  } else if (name.includes('tire') || name.includes('wheel')) {
+    return "https://images.unsplash.com/photo-1591839728094-39242732d4c1?w=800&h=600&auto=format";
+  } else if (name.includes('battery') || name.includes('electrical')) {
+    return "https://images.unsplash.com/photo-1619641464045-b201ebd9ec0c?w=800&h=600&auto=format";
+  } else if (name.includes('belt')) {
+    return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
+  } else {
+    // Default auto parts image for other categories
+    return "https://images.unsplash.com/photo-1647427060118-4911c9821b82?w=800&h=600&auto=format";
+  }
+}
 
 /**
  * Fetches parts for a specific vehicle from the database
@@ -150,7 +174,8 @@ export const fetchPartsForVehicle = async (
         } : { 
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
-        }
+        },
+        image_url: part.image_url || getDefaultImageUrlForPart(part.name)
       } as Part;
     });
     
@@ -178,7 +203,7 @@ export const createMockPartsForVehicle = (
   yearNum: number,
   manufacturers: Manufacturer[],
   models: Model[]
-) => {
+): Part[] => {
   console.log("Generating mock parts for the specific vehicle...");
   
   // Special case for Toyota(1) Corolla(2) 2022
@@ -200,6 +225,7 @@ export const createMockPartsForVehicle = (
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
         },
+        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format",
         availableGarages: [
           {
             id: "g1",
@@ -280,6 +306,7 @@ export const createMockPartsForVehicle = (
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
         },
+        image_url: "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format",
         availableGarages: [
           {
             id: "g1",
@@ -354,6 +381,7 @@ export const createMockPartsForVehicle = (
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
         },
+        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format",
         availableGarages: [
           {
             id: "g1",
@@ -420,6 +448,7 @@ export const createMockPartsForVehicle = (
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
         },
+        image_url: "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format",
         availableGarages: [
           {
             id: "g1",
@@ -429,7 +458,7 @@ export const createMockPartsForVehicle = (
             area: "Dubai Marina"
           },
           {
-            id: "g3", 
+            id: "g3",
             name: "Mechanica Service Center - Jumeirah",
             location: "Jumeirah, Dubai, UAE",
             installationFee: 39.99,
@@ -488,9 +517,10 @@ export const createMockPartsForVehicle = (
     part.year === yearNum
   );
 
-  // Add availableGarages to mock parts
+  // Add availableGarages to mock parts and ensure image_url is present
   return mockParts.map(part => ({
     ...part,
+    image_url: part.image_url || getDefaultImageUrlForPart(part.name),
     availableGarages: [
       {
         id: "g1",
