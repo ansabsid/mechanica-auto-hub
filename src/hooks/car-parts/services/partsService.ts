@@ -83,6 +83,20 @@ export const fetchAllPartsFromDB = async () => {
             location: "Naif Road, Deira, Dubai, UAE",
             installationFee: 26.50,
             area: "Deira"
+          },
+          {
+            id: "g8",
+            name: "Speedy Auto Repair - Deira",
+            location: "Port Saeed, Deira, Dubai, UAE",
+            installationFee: 28.99,
+            area: "Deira"
+          },
+          {
+            id: "g9",
+            name: "Al Muraqqabat Auto Center - Deira",
+            location: "Al Muraqqabat, Deira, Dubai, UAE",
+            installationFee: 23.50,
+            area: "Deira"
           }
         ]
       } as Part;
@@ -235,6 +249,20 @@ export const createMockPartsForVehicle = (
             location: "Naif Road, Deira, Dubai, UAE",
             installationFee: 15.50,
             area: "Deira"
+          },
+          {
+            id: "g8",
+            name: "Speedy Auto Repair - Deira",
+            location: "Port Saeed, Deira, Dubai, UAE",
+            installationFee: 17.99,
+            area: "Deira"
+          },
+          {
+            id: "g9",
+            name: "Al Muraqqabat Auto Center - Deira",
+            location: "Al Muraqqabat, Deira, Dubai, UAE",
+            installationFee: 14.50,
+            area: "Deira"
           }
         ]
       },
@@ -286,6 +314,20 @@ export const createMockPartsForVehicle = (
             name: "Dubai Auto Care - Deira",
             location: "Naif Road, Deira, Dubai, UAE",
             installationFee: 36.50,
+            area: "Deira"
+          },
+          {
+            id: "g8",
+            name: "Speedy Auto Repair - Deira",
+            location: "Port Saeed, Deira, Dubai, UAE",
+            installationFee: 38.99,
+            area: "Deira"
+          },
+          {
+            id: "g9",
+            name: "Al Muraqqabat Auto Center - Deira",
+            location: "Al Muraqqabat, Deira, Dubai, UAE",
+            installationFee: 33.50,
             area: "Deira"
           }
         ]
@@ -347,6 +389,20 @@ export const createMockPartsForVehicle = (
             location: "Al Muteena, Deira, Dubai, UAE",
             installationFee: 16.99,
             area: "Deira"
+          },
+          {
+            id: "g8",
+            name: "Speedy Auto Repair - Deira",
+            location: "Port Saeed, Deira, Dubai, UAE",
+            installationFee: 18.99,
+            area: "Deira"
+          },
+          {
+            id: "g9",
+            name: "Al Muraqqabat Auto Center - Deira",
+            location: "Al Muraqqabat, Deira, Dubai, UAE",
+            installationFee: 15.50,
+            area: "Deira"
           }
         ]
       },
@@ -398,6 +454,20 @@ export const createMockPartsForVehicle = (
             name: "Dubai Auto Care - Deira",
             location: "Naif Road, Deira, Dubai, UAE",
             installationFee: 37.50,
+            area: "Deira"
+          },
+          {
+            id: "g8",
+            name: "Speedy Auto Repair - Deira",
+            location: "Port Saeed, Deira, Dubai, UAE",
+            installationFee: 39.99,
+            area: "Deira"
+          },
+          {
+            id: "g9",
+            name: "Al Muraqqabat Auto Center - Deira",
+            location: "Al Muraqqabat, Deira, Dubai, UAE",
+            installationFee: 35.50,
             area: "Deira"
           }
         ]
@@ -469,6 +539,20 @@ export const createMockPartsForVehicle = (
         name: "Dubai Auto Care - Deira",
         location: "Naif Road, Deira, Dubai, UAE",
         installationFee: 26.50,
+        area: "Deira"
+      },
+      {
+        id: "g8",
+        name: "Speedy Auto Repair - Deira",
+        location: "Port Saeed, Deira, Dubai, UAE",
+        installationFee: 28.99,
+        area: "Deira"
+      },
+      {
+        id: "g9",
+        name: "Al Muraqqabat Auto Center - Deira",
+        location: "Al Muraqqabat, Deira, Dubai, UAE",
+        installationFee: 23.50,
         area: "Deira"
       }
     ]
