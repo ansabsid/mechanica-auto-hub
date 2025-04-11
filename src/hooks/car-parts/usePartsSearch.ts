@@ -79,7 +79,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     setSearchCompleted(false);
     setParts([]);
     setQueryTime(0);
-  }, [setParts, setSearchCompleted, setQueryTime]);
+    setIsSearching(false);
+  }, [setParts, setSearchCompleted, setQueryTime, setIsSearching]);
 
   /**
    * Search for parts based on vehicle criteria
@@ -141,7 +142,6 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       }
       
       console.log("🔢 RESULTS AFTER SEARCH: ", finalParts.length, "parts");
-      console.log("Sample results:", finalParts.slice(0, 2));
       
       // Double check that all parts match the search criteria
       const strictlyFilteredParts = finalParts.filter(part => 
@@ -160,6 +160,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       // Set the parts array with strictly filtered results
       setParts(strictlyFilteredParts);
+      
+      // Important: Update state in the correct order - set search completed after setting parts
       setIsSearching(false);
       setSearchCompleted(true);
       

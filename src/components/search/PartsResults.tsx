@@ -24,43 +24,20 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, searchCompleted }) =
     console.log("📋 Parts length:", parts?.length || 0);
     console.log("🔄 Search completed:", searchCompleted);
     
-    // Debug parts data in more detail
     if (parts && parts.length > 0) {
-      console.log("🔎 DETAILED INSPECTION OF FIRST 3 PARTS:");
-      parts.slice(0, 3).forEach((part, index) => {
-        console.log(`Part ${index + 1}:`, {
-          id: part.id,
-          name: part.name,
-          manufacturer_id: part.manufacturer_id,
-          model_id: part.model_id,
-          year: part.year,
-          price: part.price
-        });
-      });
-
-      // Log all unique manufacturer_ids, model_ids, and years to verify filtering
-      const uniqueMfrs = [...new Set(parts.map(p => p.manufacturer_id))];
-      const uniqueModels = [...new Set(parts.map(p => p.model_id))];
-      const uniqueYears = [...new Set(parts.map(p => p.year))];
-      
-      console.log("⚠️ FILTER VERIFICATION:");
-      console.log("- Unique manufacturer IDs:", uniqueMfrs);
-      console.log("- Unique model IDs:", uniqueModels);
-      console.log("- Unique years:", uniqueYears);
-      
-      if (uniqueMfrs.length > 1 || uniqueModels.length > 1) {
-        console.warn("⛔ FILTER ISSUE DETECTED: Multiple manufacturer/model IDs in results!");
-      }
+      console.log("🔎 First part:", parts[0]);
     }
   }, [parts, searchCompleted]);
 
   // Only render when search is completed
   if (!searchCompleted) {
+    console.log("Search not completed yet, not rendering results");
     return null;
   }
 
   // Check if parts array is empty
   if (!parts || parts.length === 0) {
+    console.log("No parts found in results");
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
         <SearchX className="mx-auto h-16 w-16 text-blue-500 mb-4" />
@@ -70,6 +47,8 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, searchCompleted }) =
       </div>
     );
   }
+  
+  console.log("Rendering parts table with", parts.length, "parts");
   
   return (
     <div className="parts-results-container animate-in fade-in-50 duration-300">
