@@ -36,7 +36,19 @@ export const useGarageProducts = (garageId?: string) => {
       
       console.log("Attempting to upload file:", filePath);
       
-      // Ensure we're using the correct bucket and setting content type
+      // First create a storage bucket if it doesn't exist
+      await supabase.storage
+        .createBucket('parts', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jfif']
+        })
+        .catch(error => {
+          // If the bucket already exists, this will error but we can continue
+          console.log("Bucket creation result:", error);
+        });
+      
+      // Upload the file
       const { data, error } = await supabase.storage
         .from('parts')
         .upload(filePath, file, {
@@ -134,18 +146,18 @@ export const useGarageProducts = (garageId?: string) => {
         }
       }
       
-      // Ensure numeric types are properly formatted for database insertion
+      // The parts table doesn't have a category column according to the error
+      // Remove category from the insertion data and handle it differently
       const productData = {
         name: product.name,
-        category: product.category,
         price: parseFloat(product.price.toString()),
-        stock: parseInt(product.quantity.toString()),
-        description: null,
-        manufacturer_id: product.manufacturer_id || 1, // Ensure manufacturer_id is set
-        model_id: product.model_id || 1, // Ensure model_id is set
-        year: product.year || new Date().getFullYear(), // Ensure year is set
+        stock: parseInt(product.quantity.toString()), 
+        description: product.category, // Store category as description for now
+        manufacturer_id: product.manufacturer_id || 1,
+        model_id: product.model_id || 1,
+        year: product.year || new Date().getFullYear(),
         garage_id: garageId,
-        image_url: imageUrl // Use the image URL directly
+        image_url: imageUrl
       };
 
       console.log("Prepared data for database insertion:", productData);
