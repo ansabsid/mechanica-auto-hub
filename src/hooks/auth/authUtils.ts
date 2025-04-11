@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
-export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | null> => {
+export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | "admin" | null> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -11,7 +11,7 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
       .single();
       
     if (data && !error) {
-      return data.role as "customer" | "garage";
+      return data.role as "customer" | "garage" | "admin";
     } else if (error) {
       console.error("Error fetching user profile:", error.message);
     }
@@ -22,7 +22,7 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
   return null;
 };
 
-export const createUserProfile = async (userId: string, email: string, role: "customer" | "garage") => {
+export const createUserProfile = async (userId: string, email: string, role: "customer" | "garage" | "admin") => {
   try {
     const { error } = await supabase
       .from('profiles')
@@ -39,3 +39,11 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
     console.error("Error in createUserProfile:", error);
   }
 };
+
+// Special function to check if user is admin
+export const isAdminUser = (email: string): boolean => {
+  // You can replace this with your own email to be the only admin
+  const adminEmails = ["admin@example.com"]; // Replace with your email
+  return adminEmails.includes(email.toLowerCase());
+};
+

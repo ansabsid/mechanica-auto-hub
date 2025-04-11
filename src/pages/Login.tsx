@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { isAdminUser } from "@/hooks/auth/authUtils";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,12 +19,21 @@ const Login = () => {
   const [garageEmail, setGarageEmail] = useState("");
   const [garagePassword, setGaragePassword] = useState("");
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const location = useLocation();
   const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  // Check if the user is an admin based on their email
+  const checkAdminStatus = (email: string) => {
+    setIsAdmin(isAdminUser(email));
+  };
+
+  useEffect(() => {
+    // Check admin status whenever emails change
+    checkAdminStatus(customerEmail);
+    
     const queryParams = new URLSearchParams(location.search);
     const type = queryParams.get("type");
     const email = queryParams.get("email");
@@ -44,7 +55,7 @@ const Login = () => {
         navigate("/customer-dashboard");
       }
     }
-  }, [location, isAuthenticated, user, userRole, navigate]);
+  }, [location, isAuthenticated, user, userRole, navigate, customerEmail]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -91,6 +102,12 @@ const Login = () => {
             value={activeTab}
             className="w-full"
             onValueChange={(value) => {
+              // Only allow admin to switch to garage tab
+              if (value === "garage" && !isAdmin) {
+                setError("Only administrators can access the garage login");
+                return;
+              }
+              
               setActiveTab(value);
               setError(""); // Clear errors when changing tabs
             }}
@@ -99,7 +116,11 @@ const Login = () => {
               <TabsTrigger value="customer" className="flex items-center justify-center gap-2">
                 <User size={18} /> Customer
               </TabsTrigger>
-              <TabsTrigger value="garage" className="flex items-center justify-center gap-2">
+              <TabsTrigger 
+                value="garage" 
+                className={`flex items-center justify-center gap-2 ${!isAdmin ? 'opacity-50' : ''}`}
+                disabled={!isAdmin}
+              >
                 <Wrench size={18} /> Garage
               </TabsTrigger>
             </TabsList>
@@ -108,6 +129,13 @@ const Login = () => {
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {isAdmin && (
+              <Alert className="mb-4 bg-green-100 border-green-400">
+                <Shield className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">Admin access granted. You may use the garage login.</AlertDescription>
               </Alert>
             )}
 
