@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -9,8 +10,8 @@ import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle, Shield } from "luci
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { isAdminUser } from "@/hooks/auth/authUtils";
-import { supabase } from "@/lib/supabase";
-import { toast } from "react-toastify";
+import { supabase } from "@/integrations/supabase/client"; // Fixed import path
+import { useToast } from "@/hooks/use-toast"; // Using shadcn toast instead of react-toastify
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,8 +25,9 @@ const Login = () => {
   const [showAdminConversion, setShowAdminConversion] = useState(false);
   
   const location = useLocation();
-  const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
+  const { signIn, signOut, isLoading, isAuthenticated, user, userRole } = useAuth(); // Add signOut to destructuring
   const navigate = useNavigate();
+  const { toast } = useToast(); // Use shadcn toast hook
 
   const checkAdminStatus = (email: string) => {
     setIsAdmin(isAdminUser(email));
