@@ -18,7 +18,7 @@ export type RPCFunctions = {
     installation_fee: number;
   }[];
   insert_part: (args: { part_data: any }) => {
-    id: number;  // Explicitly define id as a number
+    id: number;  // Ensure this is explicitly typed as a number
   };
   create_profile_for_user: (args: { 
     user_id: string; 
@@ -34,7 +34,7 @@ export type EnhancedSupabaseClient = SupabaseClient<Database> & {
     args: Parameters<RPCFunctions[T]>[0],
     options?: { count?: 'exact' | 'planned' | 'estimated' }
   ): Promise<{
-    data: ReturnType<RPCFunctions[T]>;
+    data: ReturnType<RPCFunctions[T]> | null;  // Make sure it can be null
     error: null | {
       message: string;
     };

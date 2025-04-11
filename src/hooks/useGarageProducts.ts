@@ -169,10 +169,10 @@ export const useGarageProducts = (garageId?: string) => {
       }
 
       // Safely extract and handle the part ID
-      const partId = response.data?.id;
+      const partId = response.data ? response.data.id : null;
       
       // Check if data exists and has a valid id
-      if (!partId || typeof partId !== 'number') {
+      if (partId === null || typeof partId !== 'number') {
         throw new Error("Part creation failed - no ID returned");
       }
 
