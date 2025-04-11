@@ -111,6 +111,30 @@ export type Database = {
         }
         Relationships: []
       }
+      garages: {
+        Row: {
+          created_at: string
+          id: string
+          location: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       manufacturers: {
         Row: {
           created_at: string | null
@@ -287,6 +311,42 @@ export type Database = {
           },
         ]
       }
+      parts_garages: {
+        Row: {
+          created_at: string
+          garage_id: string
+          installation_fee: number
+          part_id: number
+        }
+        Insert: {
+          created_at?: string
+          garage_id: string
+          installation_fee?: number
+          part_id: number
+        }
+        Update: {
+          created_at?: string
+          garage_id?: string
+          installation_fee?: number
+          part_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parts_garages_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_garages_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -316,7 +376,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_garages_for_part: {
+        Args: { part_id_param: number }
+        Returns: {
+          id: string
+          name: string
+          location: string
+          installation_fee: number
+        }[]
+      }
+      get_garages_for_part_bulk: {
+        Args: { part_ids: number[] }
+        Returns: {
+          part_id: number
+          id: string
+          name: string
+          location: string
+          installation_fee: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

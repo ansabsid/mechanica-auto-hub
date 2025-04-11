@@ -67,10 +67,18 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       return []; // If no items in cart, return empty array
     }
     
-    // We need to use a raw SQL query to get data from parts_garages table
-    // since it's not recognized in the TypeScript types
-    const { data: garagesData, error: garagesError } = await (supabase
-      .rpc('get_garages_for_part_bulk', { part_ids: partIds }) as any);
+    // Use the RPC function to get garages data
+    const { data: garagesData, error: garagesError } = await supabase
+      .rpc('get_garages_for_part_bulk', { part_ids: partIds }) as unknown as { 
+        data: Array<{
+          part_id: number;
+          id: string;
+          name: string;
+          location: string;
+          installation_fee: number;
+        }> | null;
+        error: any;
+      };
     
     if (garagesError) {
       console.error("Error fetching garages data:", garagesError);
@@ -83,7 +91,7 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     
     // Check if garagesData is not null before processing
     if (garagesData) {
-      garagesData.forEach((item: any) => {
+      garagesData.forEach((item) => {
         if (!partGaragesMap[item.part_id]) {
           partGaragesMap[item.part_id] = [];
         }
@@ -229,8 +237,16 @@ export async function clearCart(cartId: string): Promise<void> {
 export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   try {
     // Using RPC function to avoid TypeScript issues with parts_garages table
-    const { data, error } = await (supabase
-      .rpc('get_garages_for_part', { part_id_param: partId }) as any);
+    const { data, error } = await supabase
+      .rpc('get_garages_for_part', { part_id_param: partId }) as unknown as {
+        data: Array<{
+          id: string;
+          name: string;
+          location: string;
+          installation_fee: number;
+        }> | null;
+        error: any;
+      };
     
     if (error) {
       console.error("RPC error:", error);
@@ -241,7 +257,7 @@ export async function getGaragesForPart(partId: number): Promise<Garage[]> {
       return [];
     }
     
-    return (data || []).map((item: any) => ({
+    return (data || []).map((item) => ({
       id: item.id,
       name: item.name,
       location: item.location,
