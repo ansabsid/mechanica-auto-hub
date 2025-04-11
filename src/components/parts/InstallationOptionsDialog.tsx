@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -8,9 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Part, Garage } from "@/hooks/car-parts/types";
 import {
@@ -20,8 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/hooks/useCart";
 import { InstallationOptions } from "@/types/cart.types";
 
@@ -39,12 +36,48 @@ export const InstallationOptionsDialog = ({
   part,
 }: InstallationOptionsDialogProps) => {
   const [step, setStep] = useState(1);
-  const [area, setArea] = useState("");
+  const [selectedArea, setSelectedArea] = useState("");
   const [selectedGarage, setSelectedGarage] = useState<Garage | null>(null);
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [availableAreas, setAvailableAreas] = useState<string[]>([]);
+  const [filteredGarages, setFilteredGarages] = useState<Garage[]>([]);
   const { toast } = useToast();
   const { addToCart, refreshCart } = useCart();
+
+  // Extract unique areas from available garages when component mounts or part changes
+  useEffect(() => {
+    if (part.availableGarages && part.availableGarages.length > 0) {
+      // Extract all locations as areas
+      const areas = Array.from(new Set(
+        part.availableGarages.map(garage => {
+          // Use location as area if no specific area is defined
+          return garage.area || garage.location.split(',')[0].trim();
+        })
+      ));
+      
+      setAvailableAreas(areas);
+      
+      // If there's only one area, auto-select it
+      if (areas.length === 1) {
+        setSelectedArea(areas[0]);
+      }
+    }
+  }, [part]);
+
+  // Filter garages based on selected area
+  useEffect(() => {
+    if (selectedArea && part.availableGarages) {
+      const garagesInArea = part.availableGarages.filter(garage => {
+        const garageArea = garage.area || garage.location.split(',')[0].trim();
+        return garageArea === selectedArea;
+      });
+      
+      setFilteredGarages(garagesInArea);
+      
+      // Clear selected garage when area changes
+      setSelectedGarage(null);
+    }
+  }, [selectedArea, part.availableGarages]);
   
   const handleConfirmInstallation = async () => {
     if (!selectedGarage) {
@@ -78,10 +111,8 @@ export const InstallationOptionsDialog = ({
         description: `${part.name} with installation has been added to your cart`,
       });
       
-      setConfirmationOpen(false);
-      
       setStep(1);
-      setArea("");
+      setSelectedArea("");
       setSelectedGarage(null);
       
       onComplete();
@@ -107,26 +138,38 @@ export const InstallationOptionsDialog = ({
         return (
           <>
             <DialogDescription>
-              Let us know your general location so we can find local garages.
+              Select your area to find nearby garages for installation.
             </DialogDescription>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="area">Area</Label>
-                <Input
-                  id="area"
-                  placeholder="e.g. Dubai Marina"
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                />
+                <Select
+                  value={selectedArea}
+                  onValueChange={(value) => setSelectedArea(value)}
+                >
+                  <SelectTrigger id="area">
+                    <SelectValue placeholder="Select an area" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableAreas.map((area) => (
+                      <SelectItem key={area} value={area}>
+                        {area}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
               <Button
                 type="button"
                 onClick={() => setStep(2)}
-                disabled={!area}
+                disabled={!selectedArea}
               >
                 Next
+              </Button>
+              <Button type="button" variant="secondary" onClick={onClose}>
+                Cancel
               </Button>
             </DialogFooter>
           </>
@@ -135,20 +178,20 @@ export const InstallationOptionsDialog = ({
         return (
           <>
             <DialogDescription>
-              Select a garage for the installation of your part.
+              Select a garage in {selectedArea} for the installation of your part.
             </DialogDescription>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="garage">Garage</Label>
                 <Select onValueChange={(value) => {
-                  const garage = part.availableGarages?.find(g => g.id === value);
+                  const garage = filteredGarages.find(g => g.id === value);
                   setSelectedGarage(garage || null);
                 }}>
                   <SelectTrigger id="garage">
                     <SelectValue placeholder="Select a garage" />
                   </SelectTrigger>
                   <SelectContent>
-                    {part.availableGarages?.map((garage) => (
+                    {filteredGarages.map((garage) => (
                       <SelectItem key={garage.id} value={garage.id}>
                         {garage.name} - {garage.location} (+
                         {garage.installationFee})
@@ -172,6 +215,9 @@ export const InstallationOptionsDialog = ({
                 disabled={!selectedGarage}
               >
                 Next
+              </Button>
+              <Button type="button" variant="secondary" onClick={onClose}>
+                Cancel
               </Button>
             </DialogFooter>
           </>
@@ -197,6 +243,9 @@ export const InstallationOptionsDialog = ({
                   <strong>Installation Fee:</strong>{" "}
                   {selectedGarage?.installationFee}
                 </p>
+                <p className="text-sm text-gray-500 mt-4">
+                  The part will be shipped to the garage for installation.
+                </p>
               </div>
             </div>
             <DialogFooter>
@@ -212,7 +261,10 @@ export const InstallationOptionsDialog = ({
                 onClick={handleConfirmInstallation}
                 disabled={loading}
               >
-                Confirm Installation
+                {loading ? "Processing..." : "Confirm Installation"}
+              </Button>
+              <Button type="button" variant="secondary" onClick={onClose}>
+                Cancel
               </Button>
             </DialogFooter>
           </>
@@ -229,9 +281,6 @@ export const InstallationOptionsDialog = ({
           <DialogTitle>Installation Options</DialogTitle>
         </DialogHeader>
         {renderStepContent()}
-        <Button type="button" variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
       </DialogContent>
     </Dialog>
   );
