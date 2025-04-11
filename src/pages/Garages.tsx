@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define the type for garage data
 interface Garage {
@@ -25,47 +26,23 @@ interface Garage {
   email?: string;
 }
 
-// Sample garages to add if none are found in the database
-const sampleGarages = [
-  {
-    name: "AutoExpress Service Center",
-    location: "Sheikh Zayed Road, Dubai",
-    area: "Dubai Marina",
-    images: "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    name: "Premium Auto Workshop",
-    location: "Al Quoz Industrial Area, Dubai",
-    area: "Al Quoz",
-    images: "https://images.unsplash.com/photo-1567093322102-6bdd32fba69c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    name: "Motors Specialist Garage",
-    location: "Dubai Silicon Oasis, Dubai",
-    area: "Dubai Silicon Oasis",
-    images: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  }
+// Sample services for each garage
+const serviceOptions = [
+  ["Oil Change", "Brake Service", "Air Conditioning", "Engine Diagnostics"],
+  ["Wheel Alignment", "Battery Service", "Suspension Repair", "Oil Change"],
+  ["Engine Repair", "Transmission Service", "Electrical Systems", "Computer Diagnostics"],
+  ["Oil Change", "Tire Service", "Brake Repair", "Air Conditioning"]
 ];
 
 const Garages = () => {
   const [filterOption, setFilterOption] = useState("all");
   const [garages, setGarages] = useState<Garage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const { fetchGarages } = useGarageManagement();
-  
-  // Sample services for each garage
-  const serviceOptions = [
-    ["Oil Change", "Brake Service", "Air Conditioning", "Engine Diagnostics"],
-    ["Wheel Alignment", "Battery Service", "Suspension Repair", "Oil Change"],
-    ["Engine Repair", "Transmission Service", "Electrical Systems", "Computer Diagnostics"],
-    ["Oil Change", "Tire Service", "Brake Repair", "Air Conditioning"]
-  ];
+  const { fetchGarages, fetchLoading, error } = useGarageManagement();
   
   // Fetch garages from Supabase
   useEffect(() => {
     const loadGarages = async () => {
-      setIsLoading(true);
       try {
         console.log("Fetching garages from database...");
         const garagesList = await fetchGarages();
@@ -73,13 +50,13 @@ const Garages = () => {
         if (!garagesList || garagesList.length === 0) {
           console.log("No garages found in the database");
           setGarages([]);
-          setIsLoading(false);
           return;
         }
         
         // Enhance garages with additional frontend properties
         const enhancedGarages = garagesList.map((garage, index) => ({
           ...garage,
+          id: garage.id as string,
           rating: 4.5 + (Math.random() * 0.5), // Random rating between 4.5-5.0
           reviews: Math.floor(50 + Math.random() * 200), // Random reviews between 50-250
           services: serviceOptions[index % serviceOptions.length],
@@ -92,11 +69,9 @@ const Garages = () => {
         
         console.log("Enhanced garages:", enhancedGarages);
         setGarages(enhancedGarages);
-      } catch (error: any) {
-        console.error("Error fetching garages:", error.message);
+      } catch (err: any) {
+        console.error("Error in loadGarages:", err.message);
         toast.error("Failed to load garages");
-      } finally {
-        setIsLoading(false);
       }
     };
     
@@ -131,6 +106,11 @@ const Garages = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // The filtering is already reactive via the filteredGarages computed value
+  };
+
+  const handleRetry = () => {
+    toast.info("Retrying...");
+    fetchGarages();
   };
 
   return (
@@ -208,8 +188,24 @@ const Garages = () => {
             </div>
           </div>
           
+          {/* Error State */}
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+                <div className="mt-2">
+                  <Button variant="outline" size="sm" onClick={handleRetry}>
+                    Retry
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {/* Loading State */}
-          {isLoading && (
+          {fetchLoading && (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner size="md" className="mr-2" />
               <span className="text-lg text-gray-600">Loading garages...</span>
@@ -217,11 +213,18 @@ const Garages = () => {
           )}
           
           {/* Empty State */}
-          {!isLoading && filteredGarages.length === 0 && (
-            <div className="text-center py-12">
+          {!fetchLoading && !error && filteredGarages.length === 0 && (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="mb-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1562519990-50eb51e282b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                  alt="No garages" 
+                  className="w-32 h-32 object-cover rounded-full mx-auto opacity-70"
+                />
+              </div>
               <p className="text-lg text-gray-600 mb-4">
                 {garages.length === 0 
-                  ? "No garages found in database." 
+                  ? "No garages found in our database yet." 
                   : "No garages found matching your criteria."}
               </p>
               {garages.length > 0 && (
@@ -235,86 +238,98 @@ const Garages = () => {
                   Clear Filters
                 </Button>
               )}
+              {garages.length === 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  className="flex items-center"
+                >
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Refresh
+                </Button>
+              )}
             </div>
           )}
           
           {/* Garage Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-            {filteredGarages.map(garage => (
-              <Card key={garage.id} className="overflow-hidden border-none shadow-card hover:shadow-xl transition-shadow">
-                <div className="h-40 md:h-48 overflow-hidden">
-                  <img 
-                    src={garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                    alt={garage.name} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Fallback image if the main one fails to load
-                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                    }}
-                  />
-                </div>
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex justify-between items-start mb-3 md:mb-4">
-                    <div>
-                      <h3 className="text-lg md:text-xl font-bold">{garage.name}</h3>
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <MapPin size={14} className="mr-1" />
-                        <span className="text-sm">{garage.location}</span>
+          {!fetchLoading && filteredGarages.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+              {filteredGarages.map(garage => (
+                <Card key={garage.id} className="overflow-hidden border-none shadow-card hover:shadow-xl transition-shadow">
+                  <div className="h-40 md:h-48 overflow-hidden">
+                    <img 
+                      src={garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
+                      alt={garage.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback image if the main one fails to load
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                      }}
+                    />
+                  </div>
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex justify-between items-start mb-3 md:mb-4">
+                      <div>
+                        <h3 className="text-lg md:text-xl font-bold">{garage.name}</h3>
+                        <div className="flex items-center text-gray-500 mt-1">
+                          <MapPin size={14} className="mr-1" />
+                          <span className="text-sm">{garage.location}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center bg-green-50 text-green-700 px-2 py-1 rounded">
+                        <Star size={14} className="mr-1 fill-current" />
+                        <span className="font-medium text-sm">{garage.rating?.toFixed(1)}</span>
+                        <span className="text-xs ml-1 text-gray-500">({garage.reviews})</span>
                       </div>
                     </div>
-                    <div className="flex items-center bg-green-50 text-green-700 px-2 py-1 rounded">
-                      <Star size={14} className="mr-1 fill-current" />
-                      <span className="font-medium text-sm">{garage.rating?.toFixed(1)}</span>
-                      <span className="text-xs ml-1 text-gray-500">({garage.reviews})</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-3 md:mb-4">
-                    <div className="flex items-start mb-2 md:mb-3">
-                      <Wrench size={16} className="text-mechanica-600 mr-2 md:mr-3 mt-1 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Services</h4>
-                        <div className="flex flex-wrap gap-1 md:gap-2">
-                          {garage.services?.map((service, index) => (
-                            <span 
-                              key={index} 
-                              className="bg-gray-100 text-gray-800 text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded"
-                            >
-                              {service}
-                            </span>
-                          ))}
+                    
+                    <div className="mb-3 md:mb-4">
+                      <div className="flex items-start mb-2 md:mb-3">
+                        <Wrench size={16} className="text-mechanica-600 mr-2 md:mr-3 mt-1 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Services</h4>
+                          <div className="flex flex-wrap gap-1 md:gap-2">
+                            {garage.services?.map((service, index) => (
+                              <span 
+                                key={index} 
+                                className="bg-gray-100 text-gray-800 text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded"
+                              >
+                                {service}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center mb-2 md:mb-3">
+                        <Clock size={16} className="text-mechanica-600 mr-2 md:mr-3 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-medium text-sm">Working Hours</h4>
+                          <p className="text-gray-600 text-xs">{garage.hours}</p>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center mb-2 md:mb-3">
-                      <Clock size={16} className="text-mechanica-600 mr-2 md:mr-3 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-medium text-sm">Working Hours</h4>
-                        <p className="text-gray-600 text-xs">{garage.hours}</p>
-                      </div>
+                    <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
+                      <Button variant="outline" size="sm" className="flex items-center justify-center h-8 md:h-10 text-xs md:text-sm">
+                        <PhoneCall size={14} className="mr-1 md:mr-2" />
+                        Call
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex items-center justify-center h-8 md:h-10 text-xs md:text-sm">
+                        <Mail size={14} className="mr-1 md:mr-2" />
+                        Email
+                      </Button>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
-                    <Button variant="outline" size="sm" className="flex items-center justify-center h-8 md:h-10 text-xs md:text-sm">
-                      <PhoneCall size={14} className="mr-1 md:mr-2" />
-                      Call
+                    
+                    <Button size="sm" className="w-full h-8 md:h-10 text-xs md:text-sm">
+                      <Calendar size={14} className="mr-1 md:mr-2" />
+                      Book Appointment
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center justify-center h-8 md:h-10 text-xs md:text-sm">
-                      <Mail size={14} className="mr-1 md:mr-2" />
-                      Email
-                    </Button>
-                  </div>
-                  
-                  <Button size="sm" className="w-full h-8 md:h-10 text-xs md:text-sm">
-                    <Calendar size={14} className="mr-1 md:mr-2" />
-                    Book Appointment
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
           
           {/* Join as Garage CTA */}
           <div className="mt-8 md:mt-16 bg-mechanica-50 rounded-xl p-4 md:p-8 text-center">

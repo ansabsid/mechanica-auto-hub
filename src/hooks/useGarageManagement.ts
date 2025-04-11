@@ -20,6 +20,7 @@ export const useGarageManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [garages, setGarages] = useState<GarageInfo[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * Fetches all garages from the database
@@ -27,12 +28,22 @@ export const useGarageManagement = () => {
    */
   const fetchGarages = async () => {
     setFetchLoading(true);
+    setError(null);
     try {
+      console.log("Fetching garages from the database...");
       const { data, error } = await supabase
         .from('garages')
         .select('*');
         
       if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        console.log("No garages found in the database");
+        setGarages([]);
+        return [];
+      }
+      
+      console.log("Garages fetched successfully:", data);
       
       const formattedGarages = data.map(garage => ({
         id: garage.id,
@@ -47,6 +58,7 @@ export const useGarageManagement = () => {
       return formattedGarages;
     } catch (error: any) {
       console.error("Error fetching garages:", error.message);
+      setError(error.message);
       toast.error("Failed to load garages");
       return [];
     } finally {
@@ -92,6 +104,7 @@ export const useGarageManagement = () => {
     addGarage,
     garages,
     isLoading,
-    fetchLoading
+    fetchLoading,
+    error
   };
 };
