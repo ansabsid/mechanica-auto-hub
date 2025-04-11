@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   MapPin, 
   Search, 
   X, 
   Building2,
-  Calendar
+  Calendar,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useGarageManagement } from "@/hooks/useGarageManagement";
+import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 
 // Simplified Garage interface with only the essential fields
 interface Garage {
@@ -28,6 +28,7 @@ interface Garage {
   area: string | null;
   location: string;
   images?: string | null;
+  installationFee?: number | null;
 }
 
 const GaragePage = () => {
@@ -90,7 +91,12 @@ const GaragePage = () => {
         </div>
       </CardHeader>
       <CardContent className="flex-grow pb-2 pt-0">
-        {/* Intentionally kept minimal as per request */}
+        {garage.installationFee !== null && garage.installationFee !== undefined && (
+          <div className="flex items-center text-sm text-gray-600 mt-2">
+            <DollarSign className="h-3.5 w-3.5 mr-1 text-green-600" />
+            <span>Installation Fee: ${garage.installationFee.toFixed(2)}</span>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="pt-0">
         <Button 

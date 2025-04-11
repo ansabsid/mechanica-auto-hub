@@ -108,6 +108,11 @@ export const useGarageManagement = () => {
     try {
       console.log("Adding new garage:", garage);
       
+      // Convert installationFee string to number or null before insertion
+      const installation_fee = garage.installationFee 
+        ? parseFloat(garage.installationFee) 
+        : null;
+        
       const { data, error } = await supabase
         .from('garages')
         .insert({
@@ -115,7 +120,7 @@ export const useGarageManagement = () => {
           area: garage.area,
           location: garage.location,
           images: garage.images,
-          installation_fee: garage.installationFee
+          installation_fee: installation_fee
         })
         .select()
         .single();
