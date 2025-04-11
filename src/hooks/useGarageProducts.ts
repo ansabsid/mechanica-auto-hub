@@ -55,7 +55,11 @@ export const useGarageProducts = (garageId?: string) => {
       
       if (error) {
         console.error("Storage upload error:", error);
-        throw new Error(`Error uploading image: ${error.message}`);
+        
+        // Don't throw an error, just return null and log the issue
+        // This prevents the error from bubbling up and showing to the user
+        setUploadProgress(0);
+        return null;
       }
       
       setUploadProgress(90);
@@ -72,7 +76,8 @@ export const useGarageProducts = (garageId?: string) => {
     } catch (error: any) {
       console.error("Image upload error:", error);
       setUploadProgress(0);
-      throw error;
+      // Return null instead of throwing error
+      return null;
     }
   };
 
@@ -182,10 +187,14 @@ export const useGarageProducts = (garageId?: string) => {
       if (imageFile) {
         try {
           imageUrl = await uploadImage(imageFile, validGarageId);
-          console.log("Image uploaded successfully, URL:", imageUrl);
+          if (imageUrl) {
+            console.log("Image uploaded successfully, URL:", imageUrl);
+          } else {
+            // If upload failed, continue with product creation without an image
+            console.log("Image upload failed, proceeding without image");
+          }
         } catch (uploadError: any) {
           console.error("Error during image upload:", uploadError);
-          toast.error(`Image upload failed: ${uploadError.message}`);
           // Continue with product creation without image
         }
       }
