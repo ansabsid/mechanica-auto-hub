@@ -11,7 +11,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { isAuthenticated, signOut, user } = useAuth();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
 

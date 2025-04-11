@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCarParts } from "@/hooks/useCarParts";
@@ -8,7 +7,7 @@ import { ArrowLeft, Car, Calendar } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Separator } from "@/components/ui/separator";
 import { Part } from "@/hooks/car-parts/types";
-import PartCard from "@/components/parts/PartCard";
+import { PartCard } from "@/components/parts/PartCard";
 
 interface CategoryItem {
   id: number;
