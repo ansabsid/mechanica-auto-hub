@@ -169,6 +169,7 @@ export const useGarageProducts = (garageId?: string) => {
       }
 
       // Check if data exists and has a valid id
+      // TypeScript knows data should have the shape defined in supabaseTypes.ts
       if (!data || typeof data.id !== 'number') {
         throw new Error("Part creation failed - no ID returned");
       }
