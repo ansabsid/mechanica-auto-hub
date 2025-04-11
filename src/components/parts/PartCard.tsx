@@ -5,15 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
 import { useCart } from "@/hooks/useCart";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { PurchaseOptionsDialog } from "@/components/parts/PurchaseOptionsDialog";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 interface PartCardProps {
   part: Part;
@@ -39,7 +32,7 @@ export const PartCard = ({ part }: PartCardProps) => {
   
   return (
     <>
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-mechanica-100 transition-all duration-300 hover:shadow-xl hover:border-mechanica-300 group">
+      <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl group border border-gray-200 rounded-xl h-full flex flex-col">
         <div className="h-48 overflow-hidden relative">
           <img
             src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&h=600&auto=format"
@@ -47,7 +40,7 @@ export const PartCard = ({ part }: PartCardProps) => {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute top-0 left-0 w-full p-3 flex justify-between items-start">
-            <Badge className={`${part.stock > 0 ? 'bg-green-500' : 'bg-red-500'} text-white px-2 py-1 text-xs font-medium`}>
+            <Badge className={`${part.stock > 0 ? 'bg-green-500' : 'bg-red-500'} text-white px-2 py-1 text-xs font-medium shadow-sm`}>
               {part.stock > 0 ? (
                 <div className="flex items-center">
                   <CheckCircle className="mr-1 h-3 w-3" />
@@ -56,16 +49,16 @@ export const PartCard = ({ part }: PartCardProps) => {
               ) : "Out of Stock"}
             </Badge>
             
-            <Badge className="bg-mechanica-600 text-white" variant="outline">
+            <Badge className="bg-mechanica-600 text-white shadow-sm" variant="outline">
               <Tag className="mr-1 h-3 w-3" />
               {part.price > 100 ? "Premium" : "Standard"}
             </Badge>
           </div>
         </div>
         
-        <div className="p-5">
+        <CardContent className="p-5 flex-grow">
           <div className="mb-3">
-            <h3 className="font-bold text-lg text-gray-800 group-hover:text-mechanica-600 transition-colors">{part.name}</h3>
+            <h3 className="font-bold text-lg text-gray-800 group-hover:text-mechanica-600 transition-colors line-clamp-2">{part.name}</h3>
             {part.description && (
               <div className="text-sm text-gray-600 mt-1 line-clamp-2">{part.description}</div>
             )}
@@ -81,7 +74,7 @@ export const PartCard = ({ part }: PartCardProps) => {
             <span className="text-xs text-gray-500 ml-2">4.0 (12 reviews)</span>
           </div>
           
-          <div className="flex justify-between items-end">
+          <div className="flex items-center justify-between mt-auto">
             <div>
               <p className="text-mechanica-600 font-bold text-xl mb-1">${part.price.toFixed(2)}</p>
               {part.garages && (
@@ -90,27 +83,29 @@ export const PartCard = ({ part }: PartCardProps) => {
                 </div>
               )}
             </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="flex items-center"
-              >
-                <Info className="mr-1 h-4 w-4" /> Details
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-mechanica-500 hover:bg-mechanica-600 flex items-center"
-                onClick={handleAddToCartClick}
-                disabled={isLoading || part.stock <= 0}
-              >
-                <ShoppingCart className="mr-1 h-4 w-4" /> Add
-              </Button>
-            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+        
+        <CardFooter className="p-4 pt-0 border-t border-gray-100 mt-auto">
+          <div className="flex gap-2 w-full">
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="flex items-center flex-1"
+            >
+              <Info className="mr-1 h-4 w-4" /> Details
+            </Button>
+            <Button 
+              size="sm" 
+              className="bg-mechanica-500 hover:bg-mechanica-600 flex items-center flex-1 shadow-sm transition-all duration-200 hover:translate-y-[-2px]"
+              onClick={handleAddToCartClick}
+              disabled={isLoading || part.stock <= 0}
+            >
+              <ShoppingCart className="mr-1 h-4 w-4" /> Add to Cart
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
 
       {/* Purchase Options Dialog */}
       <PurchaseOptionsDialog 
