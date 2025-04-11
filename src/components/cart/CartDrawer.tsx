@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,23 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
 export const CartDrawer = () => {
-  const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal } = useCart();
+  const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal, refreshCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Refresh cart when component mounts
+  useEffect(() => {
+    console.log("CartDrawer mounted, refreshing cart");
+    refreshCart();
+    
+    // Set up an interval to refresh the cart every 5 seconds
+    const intervalId = setInterval(() => {
+      console.log("Auto-refreshing cart");
+      refreshCart();
+    }, 5000);
+    
+    return () => clearInterval(intervalId);
+  }, [refreshCart]);
   
   const handleCheckout = () => {
     if (cartItems.length === 0) {
@@ -38,7 +52,12 @@ export const CartDrawer = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="relative"
+          onClick={() => refreshCart()} // Force refresh when opening
+        >
           <ShoppingCart className="h-5 w-5" />
           {cartItems.length > 0 && (
             <span className="absolute -top-2 -right-2 bg-mechanica-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">

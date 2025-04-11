@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShoppingCart, Wrench } from "lucide-react";
 import {
   Dialog,
@@ -32,6 +32,13 @@ export const PurchaseOptionsDialog = ({
   const { toast } = useToast();
   const { refreshCart } = useCart();
   
+  // Force refresh cart when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      refreshCart();
+    }
+  }, [isOpen, refreshCart]);
+  
   const handleBuyWithInstallation = () => {
     setShowInstallationOptions(true);
     // Close the purchase options dialog when showing installation options
@@ -41,18 +48,25 @@ export const PurchaseOptionsDialog = ({
   const handleInstallationComplete = () => {
     // Close installation dialog only
     setShowInstallationOptions(false);
-    // Refresh cart to ensure we see the updated items with installation
-    refreshCart();
+    // Force a refresh of the cart to ensure we see the updated items with installation
+    setTimeout(() => {
+      refreshCart();
+    }, 100);
   };
   
   const handleCartOnlyClick = async () => {
     try {
       // Call the passed callback to add to cart
       await onAddToCartOnly();
-      // Refresh cart to make sure we see the new items
+      // Force refresh cart to make sure we see the new items
       await refreshCart();
       // Close the dialog after adding to cart
       onClose();
+      
+      toast({
+        title: "Success",
+        description: "Item has been added to your cart",
+      });
     } catch (error) {
       console.error("Error adding part to cart:", error);
       toast({
