@@ -93,6 +93,7 @@ export const InstallationOptionsDialog = ({
     if (!selectedGarage) return;
     
     try {
+      setIsLoading(true);
       // Create installation data object
       const installationData = {
         installationRequired: true,
@@ -113,12 +114,14 @@ export const InstallationOptionsDialog = ({
       setConfirmationOpen(false);
       onComplete(); // This will signal parent to close all dialogs
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Error adding to cart with installation:", error);
       toast({
         title: "Error",
-        description: "Failed to add item to cart",
+        description: "Failed to add item with installation to cart",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -257,9 +260,13 @@ export const InstallationOptionsDialog = ({
           )}
           
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} className="bg-mechanica-500 hover:bg-mechanica-600">
-              Add to Cart
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirm} 
+              className="bg-mechanica-500 hover:bg-mechanica-600"
+              disabled={isLoading}
+            >
+              {isLoading ? "Adding..." : "Add to Cart"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -42,11 +42,10 @@ export const PurchaseOptionsDialog = ({
   
   const handleCartOnlyClick = async () => {
     try {
+      // Call the passed callback to add to cart
       await onAddToCartOnly();
-      toast({
-        title: "Added to cart",
-        description: "Part added to your cart",
-      });
+      // Close the dialog after adding to cart
+      onClose();
     } catch (error) {
       console.error("Error adding part to cart:", error);
       toast({

@@ -53,6 +53,7 @@ export type Database = {
           cart_id: string
           created_at: string
           id: string
+          installation_data: Json | null
           part_id: number
           quantity: number
           updated_at: string
@@ -61,6 +62,7 @@ export type Database = {
           cart_id: string
           created_at?: string
           id?: string
+          installation_data?: Json | null
           part_id: number
           quantity?: number
           updated_at?: string
@@ -69,6 +71,7 @@ export type Database = {
           cart_id?: string
           created_at?: string
           id?: string
+          installation_data?: Json | null
           part_id?: number
           quantity?: number
           updated_at?: string

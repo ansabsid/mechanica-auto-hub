@@ -7,6 +7,7 @@ import { Part } from "@/hooks/useCarParts";
 import { useCart } from "@/hooks/useCart";
 import { PurchaseOptionsDialog } from "@/components/parts/PurchaseOptionsDialog";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 interface PartCardProps {
   part: Part;
@@ -15,6 +16,7 @@ interface PartCardProps {
 export const PartCard = ({ part }: PartCardProps) => {
   const { cartItems, addToCart, isLoading } = useCart();
   const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
+  const { toast } = useToast();
   
   const existingInstallation = cartItems.find(item => 
     item.part_id === part.id && item.installation_data
@@ -26,8 +28,17 @@ export const PartCard = ({ part }: PartCardProps) => {
     if (existingInstallation) {
       try {
         await addToCart(part.id, 1, existingInstallation);
+        toast({
+          title: "Added to cart",
+          description: `${part.name} added to cart with existing installation option`,
+        });
       } catch (error) {
         console.error("Error adding part with existing installation:", error);
+        toast({
+          title: "Error",
+          description: "Failed to add part to cart",
+          variant: "destructive",
+        });
       }
       return;
     }
@@ -38,9 +49,17 @@ export const PartCard = ({ part }: PartCardProps) => {
   const handleAddToCartOnly = async () => {
     try {
       await addToCart(part.id, 1);
-      setShowPurchaseOptions(false);
+      toast({
+        title: "Added to cart",
+        description: `${part.name} added to your cart`,
+      });
     } catch (error) {
       console.error("Error adding part only to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add part to cart",
+        variant: "destructive",
+      });
     }
   };
   

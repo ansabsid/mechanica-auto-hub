@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem, Cart, InstallationOptions, Garage } from "@/types/cart.types";
 
@@ -175,42 +174,19 @@ export async function addToCart(
         installation_data: installationOptions || null
       };
       
-      // Check if the installation_data column exists - if not, modify the insert
-      try {
-        const { data: insertedItem, error: addError } = await (supabase
-          .from('cart_items') as any)
-          .insert(newItem)
-          .select()
-          .single();
-          
-        if (addError) throw addError;
-        return insertedItem;
-      } catch (error: any) {
-        // If the error is about installation_data column not found,
-        // try inserting without that field
-        if (error.message?.includes("installation_data")) {
-          // Fallback to inserting without installation data
-          const basicItem = {
-            cart_id: cartId,
-            part_id: partId,
-            quantity: quantity
-          };
-          
-          const { data: basicInsertedItem, error: basicAddError } = await (supabase
-            .from('cart_items') as any)
-            .insert(basicItem)
-            .select()
-            .single();
-            
-          if (basicAddError) throw basicAddError;
-          
-          // For now, return the item without installation data
-          console.log("Added item without installation data due to schema limitations");
-          return basicInsertedItem;
-        } else {
-          throw error;
-        }
+      // Insert new item with installation data
+      const { data: insertedItem, error: addError } = await (supabase
+        .from('cart_items') as any)
+        .insert(newItem)
+        .select()
+        .single();
+        
+      if (addError) {
+        console.error("Error adding to cart:", addError);
+        throw addError;
       }
+      
+      return insertedItem;
     }
   } catch (error) {
     console.error("Error adding to cart:", error);
