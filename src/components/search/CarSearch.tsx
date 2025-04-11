@@ -31,7 +31,7 @@ const CarSearch = () => {
     console.log("🔄 Search completed effect triggered:", searchCompleted);
     console.log("🔢 Parts in effect:", parts?.length || 0);
     
-    if (searchCompleted) {
+    if (searchCompleted && parts && parts.length > 0) {
       // Scroll to results section with a slight delay
       setTimeout(() => {
         if (resultsRef.current) {
@@ -145,36 +145,36 @@ const CarSearch = () => {
             <span className="text-lg font-medium">Searching for parts...</span>
           </div>
         </div>
-      ) : null}
-      
-      <div 
-        id="search-results-section" 
-        ref={resultsRef}
-        className={`mt-8 transition-all duration-300 ${searchCompleted ? 'border-t-4 border-mechanica-300 pt-8' : ''}`}
-      >
-        {isLoading ? (
-          <div className="flex flex-col justify-center items-center p-12 bg-white rounded-xl shadow-md">
-            <div className="animate-pulse text-center">
-              <Loader2 className="animate-spin h-12 w-12 text-mechanica-500 mx-auto mb-4" />
-              <p className="text-xl font-medium text-gray-700">Loading parts...</p>
-              <p className="text-gray-500 mt-2">This may take a moment</p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-mechanica-200">
-            {queryTime > 0 && (
-              <div className="mb-4 flex items-center justify-end text-sm text-gray-500">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>Query time: {formattedQueryTime}</span>
+      ) : (
+        <div 
+          id="search-results-section" 
+          ref={resultsRef}
+          className={`mt-8 transition-all duration-300 ${searchCompleted ? 'border-t-4 border-mechanica-300 pt-8' : ''}`}
+        >
+          {isLoading ? (
+            <div className="flex flex-col justify-center items-center p-12 bg-white rounded-xl shadow-md">
+              <div className="animate-pulse text-center">
+                <Loader2 className="animate-spin h-12 w-12 text-mechanica-500 mx-auto mb-4" />
+                <p className="text-xl font-medium text-gray-700">Loading parts...</p>
+                <p className="text-gray-500 mt-2">This may take a moment</p>
               </div>
-            )}
-            <PartsResults 
-              parts={parts || []} 
-              searchCompleted={searchCompleted} 
-            />
-          </div>
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-mechanica-200">
+              {queryTime > 0 && (
+                <div className="mb-4 flex items-center justify-end text-sm text-gray-500">
+                  <Clock className="h-4 w-4 mr-1" />
+                  <span>Query time: {formattedQueryTime}</span>
+                </div>
+              )}
+              <PartsResults 
+                parts={parts || []} 
+                searchCompleted={searchCompleted} 
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
