@@ -8,7 +8,6 @@ export interface GarageInfo {
   name: string;
   area: string | null;
   location: string;
-  installationFee: string;
   images?: string | null;
 }
 
@@ -17,7 +16,6 @@ export interface NewGarageInfo {
   name: string;
   area: string | null;
   location: string;
-  installationFee?: string;
   images?: string | null;
 }
 
@@ -47,9 +45,10 @@ export const useGarageManagement = () => {
     try {
       console.log("Fetching garages from the database...");
       
+      // Only select the fields we need for the card display
       const { data, error: fetchError } = await supabase
         .from('garages')
-        .select('*')
+        .select('id, name, location, area, images')
         .order('location');
         
       if (fetchError) {
@@ -62,38 +61,29 @@ export const useGarageManagement = () => {
       if (!data) {
         console.log("No data returned from garage query");
         setGarages([]);
-        setFetchLoading(false); // Ensure loading state is updated even with no data
+        setFetchLoading(false);
         return [];
       }
       
       if (data.length === 0) {
         console.log("No garages found in the database");
         setGarages([]);
-        setFetchLoading(false); // Ensure loading state is updated with empty array
+        setFetchLoading(false);
         return [];
       }
       
       console.log("Garages fetched successfully:", data);
       
-      const formattedGarages = data.map(garage => ({
-        id: garage.id,
-        name: garage.name,
-        area: garage.area || null,
-        location: garage.location,
-        installationFee: '25.00', // Default installation fee
-        images: garage.images // Include the images field
-      }));
-      
-      console.log("Formatted garages:", formattedGarages);
-      setGarages(formattedGarages);
-      return formattedGarages;
+      // Map the data directly since we're only selecting what we need
+      setGarages(data);
+      return data;
     } catch (error: any) {
       console.error("Error fetching garages:", error.message);
       setError(error.message);
       toast.error("Failed to load garages");
       return [];
     } finally {
-      setFetchLoading(false); // Ensure this always runs to update loading state
+      setFetchLoading(false);
     }
   };
 

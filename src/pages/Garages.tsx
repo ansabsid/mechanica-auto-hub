@@ -4,12 +4,8 @@ import {
   MapPin, 
   Search, 
   X, 
-  Building2, 
-  Phone, 
-  Mail, 
-  Clock, 
-  Star, 
-  Calendar 
+  Building2,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,34 +13,27 @@ import { toast } from "sonner";
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
   CardFooter, 
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
 
+// Simplified Garage interface with only the essential fields
 interface Garage {
   id: string;
   name: string;
-  location: string;
   area: string | null;
-  images?: string | null;  // Make images optional to match the data structure
-  rating?: number;
-  services?: string[];
-  phone?: string;
-  email?: string;
-  workingHours?: string;
+  location: string;
+  images?: string | null;
 }
 
 const GaragePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredGarages, setFilteredGarages] = useState<Garage[]>([]);
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [sort, setSort] = useState<"name" | "location">("location");
   
   // Use the useGarageManagement hook to fetch garages
   const { garages, fetchLoading: loading, error, fetchGarages } = useGarageManagement();
@@ -56,18 +45,8 @@ const GaragePage = () => {
 
   useEffect(() => {
     if (garages.length > 0) {
-      // Enhance garages with additional mock data for UI purposes
-      const enhancedGarages = garages.map(garage => ({
-        ...garage,
-        rating: Math.floor(Math.random() * 5) + 1,
-        services: ["Oil Change", "Brake Repair", "Engine Diagnostics", "Tire Replacement"].slice(0, Math.floor(Math.random() * 4) + 1),
-        phone: "+971 5" + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'),
-        email: `contact@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        workingHours: "8:00 AM - 6:00 PM"
-      }));
-      
-      // Filter and sort garages
-      const filtered = enhancedGarages.filter(garage => {
+      // Filter garages based on search query
+      const filtered = garages.filter(garage => {
         const searchLower = searchQuery.toLowerCase();
         return (
           garage.name.toLowerCase().includes(searchLower) ||
@@ -76,90 +55,24 @@ const GaragePage = () => {
         );
       });
 
-      const sorted = [...filtered].sort((a, b) => {
-        if (sort === "name") {
-          return a.name.localeCompare(b.name);
-        } else {
-          return a.location.localeCompare(b.location);
-        }
-      });
-
-      setFilteredGarages(sorted);
+      setFilteredGarages(filtered);
     } else {
       setFilteredGarages([]);
     }
-  }, [searchQuery, garages, sort]);
+  }, [searchQuery, garages]);
 
   const handleRetry = () => {
     toast.info("Retrying...");
     fetchGarages();
   };
 
-  const GarageListItem = ({ garage }: { garage: Garage }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <div className="flex flex-col md:flex-row">
-        <div className="relative md:w-1/4 aspect-video md:aspect-square overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
-          <img
-            src={garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
-            alt={garage.name}
-            className="h-full w-full object-cover"
-          />
-          <Badge className="absolute top-2 right-2 bg-yellow-100 text-yellow-800">
-            {garage.rating} <Star className="h-3 w-3 ml-1 fill-yellow-500 text-yellow-500" />
-          </Badge>
-        </div>
-        <div className="flex-1 p-4">
-          <div className="flex flex-col md:flex-row justify-between">
-            <div>
-              <h3 className="text-xl font-bold">{garage.name}</h3>
-              <p className="flex items-center text-sm text-gray-500 mt-1">
-                <MapPin className="h-3.5 w-3.5 mr-1" /> {garage.location}
-                {garage.area && ` (${garage.area})`}
-              </p>
-            </div>
-            <div className="mt-2 md:mt-0 flex flex-col items-start md:items-end text-sm">
-              <p className="flex items-center text-gray-600">
-                <Phone className="h-3.5 w-3.5 mr-1" /> {garage.phone}
-              </p>
-              <p className="flex items-center text-gray-600 mt-1">
-                <Mail className="h-3.5 w-3.5 mr-1" /> {garage.email}
-              </p>
-              <p className="flex items-center text-gray-600 mt-1">
-                <Clock className="h-3.5 w-3.5 mr-1" /> {garage.workingHours}
-              </p>
-            </div>
-          </div>
-          
-          <Separator className="my-3" />
-          
-          <div className="mt-2">
-            <p className="text-sm font-medium mb-1">Services:</p>
-            <div className="flex flex-wrap gap-1">
-              {garage.services?.map((service, index) => (
-                <Badge key={index} variant="outline" className="bg-gray-100">
-                  {service}
-                </Badge>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" className="bg-mechanica-600">
-              Book Service
-            </Button>
-            <Button size="sm" variant="outline">
-              View Details
-            </Button>
-            <Button size="sm" variant="outline" className="flex items-center">
-              <Calendar className="h-4 w-4 mr-1" /> Check Availability
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
+  const handleBookAppointment = (garageId: string, garageName: string) => {
+    toast.success(`Appointment booking initiated for ${garageName}`);
+    // In a real app, this would navigate to a booking form or open a modal
+    console.log(`Booking appointment for garage: ${garageId}`);
+  };
 
-  const GarageGridItem = ({ garage }: { garage: Garage }) => (
+  const GarageCard = ({ garage }: { garage: Garage }) => (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
       <div className="relative aspect-video overflow-hidden rounded-t-lg">
         <img
@@ -167,43 +80,25 @@ const GaragePage = () => {
           alt={garage.name}
           className="h-full w-full object-cover"
         />
-        <Badge className="absolute top-2 right-2 bg-yellow-100 text-yellow-800">
-          {garage.rating} <Star className="h-3 w-3 ml-1 fill-yellow-500 text-yellow-500" />
-        </Badge>
       </div>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">{garage.name}</CardTitle>
-        <CardDescription className="flex items-center">
+        <div className="flex items-center text-sm text-gray-500">
           <MapPin className="h-3.5 w-3.5 mr-1 text-mechanica-500" />
           {garage.location}
           {garage.area && ` (${garage.area})`}
-        </CardDescription>
+        </div>
       </CardHeader>
-      <CardContent className="pb-2 pt-0 flex-grow">
-        <div className="flex flex-wrap gap-1 mb-3">
-          {garage.services?.slice(0, 2).map((service, index) => (
-            <Badge key={index} variant="outline" className="bg-gray-100">
-              {service}
-            </Badge>
-          ))}
-          {(garage.services?.length || 0) > 2 && (
-            <Badge variant="outline" className="bg-gray-100">
-              +{(garage.services?.length || 0) - 2} more
-            </Badge>
-          )}
-        </div>
-        <div className="text-sm space-y-1 text-gray-600">
-          <p className="flex items-center">
-            <Phone className="h-3.5 w-3.5 mr-1" /> {garage.phone}
-          </p>
-          <p className="flex items-center">
-            <Clock className="h-3.5 w-3.5 mr-1" /> {garage.workingHours}
-          </p>
-        </div>
+      <CardContent className="flex-grow pb-2 pt-0">
+        {/* Intentionally kept minimal as per request */}
       </CardContent>
       <CardFooter className="pt-0">
-        <Button size="sm" className="w-full bg-mechanica-600">
-          Book Service
+        <Button 
+          size="sm" 
+          className="w-full bg-mechanica-600 flex items-center"
+          onClick={() => handleBookAppointment(garage.id, garage.name)}
+        >
+          <Calendar className="h-4 w-4 mr-1" /> Book Service
         </Button>
       </CardFooter>
     </Card>
@@ -262,44 +157,12 @@ const GaragePage = () => {
           </div>
         ) : (
           <>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-              <div className="mb-4 sm:mb-0">
+            <div className="flex justify-between items-center mb-6">
+              <div>
                 <p className="text-gray-600">
                   Showing <span className="font-medium">{filteredGarages.length}</span> garages
                   {searchQuery && <span> for "<span className="font-medium">{searchQuery}</span>"</span>}
                 </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <div className="flex border rounded-md overflow-hidden">
-                  <button
-                    className={`px-3 py-1 text-sm ${sort === "location" ? "bg-mechanica-100 text-mechanica-800" : "bg-white"}`}
-                    onClick={() => setSort("location")}
-                  >
-                    Sort by Location
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-sm ${sort === "name" ? "bg-mechanica-100 text-mechanica-800" : "bg-white"}`}
-                    onClick={() => setSort("name")}
-                  >
-                    Sort by Name
-                  </button>
-                </div>
-                
-                <div className="flex border rounded-md overflow-hidden">
-                  <button
-                    className={`px-3 py-1 text-sm ${view === "grid" ? "bg-mechanica-100 text-mechanica-800" : "bg-white"}`}
-                    onClick={() => setView("grid")}
-                  >
-                    Grid
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-sm ${view === "list" ? "bg-mechanica-100 text-mechanica-800" : "bg-white"}`}
-                    onClick={() => setView("list")}
-                  >
-                    List
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -320,16 +183,10 @@ const GaragePage = () => {
                   </Button>
                 )}
               </div>
-            ) : view === "grid" ? (
+            ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredGarages.map((garage) => (
-                  <GarageGridItem key={garage.id} garage={garage} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredGarages.map((garage) => (
-                  <GarageListItem key={garage.id} garage={garage} />
+                  <GarageCard key={garage.id} garage={garage} />
                 ))}
               </div>
             )}
