@@ -27,10 +27,15 @@ const PartsResults: React.FC<PartsResultsProps> = ({
     partsCount: parts?.length || 0, 
     isLoading, 
     searchCompleted,
-    parts // Log actual parts array
+    parts // Log actual parts array for debugging
   });
   
-  // Only render the loading state
+  // Don't render anything if search is not completed
+  if (!searchCompleted) {
+    return null;
+  }
+  
+  // Loading state (should be handled by parent component)
   if (isLoading) {
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
@@ -41,11 +46,6 @@ const PartsResults: React.FC<PartsResultsProps> = ({
         </div>
       </div>
     );
-  }
-  
-  // Only render when search is completed
-  if (!searchCompleted) {
-    return null;
   }
 
   // Check if parts array is empty

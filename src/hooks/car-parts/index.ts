@@ -76,7 +76,8 @@ export const useCarParts = () => {
 
     try {
       // Reset previous search results
-      resetSearch();
+      setParts([]);
+      setSearchCompleted(false);
       
       // Start the search
       setIsSearching(true);
@@ -85,6 +86,8 @@ export const useCarParts = () => {
       const mfrId = parseInt(manufacturerId);
       const mdlId = parseInt(modelId);
       const yearNum = parseInt(year);
+      
+      console.log(`Searching with criteria: mfr=${mfrId}, model=${mdlId}, year=${yearNum}`);
       
       // Start timing the query
       const startTime = performance.now();
@@ -123,7 +126,12 @@ export const useCarParts = () => {
       
       console.log("Found parts:", processedParts.length, processedParts);
       
-      // If we found parts, show them
+      // Update state in the correct order
+      setParts(processedParts);
+      setIsSearching(false);
+      setSearchCompleted(true);
+      
+      // Show toast notification
       if (processedParts.length > 0) {
         toast({
           title: "Parts Found",
@@ -138,11 +146,6 @@ export const useCarParts = () => {
           duration: 5000,
         });
       }
-      
-      // Update state
-      setParts(processedParts);
-      setIsSearching(false);
-      setSearchCompleted(true);
       
       return processedParts.length;
     } catch (error: any) {
@@ -162,7 +165,7 @@ export const useCarParts = () => {
       
       return 0;
     }
-  }, [resetSearch, toast]);
+  }, [toast]);
 
   return {
     manufacturers,

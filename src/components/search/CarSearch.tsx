@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
@@ -16,6 +16,8 @@ const CarSearch = () => {
     queryTime, 
     resetSearch
   } = useCarParts();
+  
+  const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -26,15 +28,18 @@ const CarSearch = () => {
       isLoading, 
       isSearching, 
       searchCompleted,
-      parts // Log the actual parts array
+      showResults,
     });
-  }, [parts, isLoading, isSearching, searchCompleted]);
+  }, [parts, isLoading, isSearching, searchCompleted, showResults]);
 
   const handleSearchComplete = (resultsCount: number) => {
     console.log("Search completed with", resultsCount, "results");
     
-    // Scroll to results section with a slight delay when results are found
-    if (searchCompleted) {
+    // Only show results if search is completed
+    setShowResults(searchCompleted && !isSearching);
+    
+    // Scroll to results section with a slight delay when search is completed
+    if (searchCompleted && !isSearching) {
       setTimeout(() => {
         if (resultsRef.current) {
           console.log("Scrolling to results");
@@ -46,6 +51,7 @@ const CarSearch = () => {
   
   const handleClearSearch = () => {
     resetSearch();
+    setShowResults(false);
     toast({
       title: "Search Cleared",
       description: "Ready for a new search",
@@ -61,6 +67,7 @@ const CarSearch = () => {
     });
     
     resetSearch();
+    setShowResults(false);
   };
 
   // Format the query time to display nicely
@@ -70,46 +77,50 @@ const CarSearch = () => {
     <div className="w-full max-w-6xl mx-auto">
       <CarSearchForm onSearch={handleSearchComplete} />
       
-      <div className="flex justify-between items-center mt-6 mb-2 px-4">
-        {searchCompleted && queryTime > 0 && (
-          <div className="flex items-center text-mechanica-600">
-            <Clock className="mr-2 h-5 w-5" />
-            <span className="text-sm font-medium">Search completed in {formattedQueryTime}</span>
-          </div>
-        )}
-        
-        <div className="flex items-center gap-2 ml-auto">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="text-sm"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+      {(searchCompleted || isSearching) && (
+        <div className="flex justify-between items-center mt-6 mb-2 px-4">
+          {searchCompleted && queryTime > 0 && (
+            <div className="flex items-center text-mechanica-600">
+              <Clock className="mr-2 h-5 w-5" />
+              <span className="text-sm font-medium">Search completed in {formattedQueryTime}</span>
+            </div>
+          )}
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleClearSearch}
-            className="text-sm"
-          >
-            <Search className="mr-2 h-4 w-4" />
-            Clear Search
-          </Button>
+          <div className="flex items-center gap-2 ml-auto">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="text-sm"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleClearSearch}
+              className="text-sm"
+            >
+              <Search className="mr-2 h-4 w-4" />
+              Clear Search
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       
-      {isSearching ? (
+      {isSearching && (
         <div className="flex items-center justify-center mt-8 mb-4">
           <div className="flex items-center text-mechanica-600 animate-pulse">
             <Loader2 className="mr-2 h-6 w-6 animate-spin" />
             <span className="text-lg font-medium">Searching for parts...</span>
           </div>
         </div>
-      ) : (
+      )}
+      
+      {searchCompleted && !isSearching && (
         <div 
           id="search-results-section" 
           ref={resultsRef}

@@ -45,10 +45,11 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     }
   }, [manufacturer, fetchModels]);
 
-  // Update search complete handler when search status changes
+  // Notify parent when search is completed and we have results
   useEffect(() => {
     if (searchCompleted) {
-      console.log("Search completed state change detected, parts:", parts?.length);
+      console.log("Search completed state change detected, parts count:", parts?.length);
+      // Pass the parts count to the parent component
       onSearch(parts?.length || 0);
     }
   }, [searchCompleted, parts, onSearch]);
@@ -69,6 +70,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       // Reset previous search results
       resetSearch();
       
+      // Search for parts - this will update the parts state in useCarParts
       await searchParts(manufacturer, model, year);
       console.log("Search initiated");
     } catch (error: any) {
