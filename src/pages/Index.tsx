@@ -1,8 +1,10 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CarSearch from "@/components/search/CarSearch";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Search, 
   Settings, 
@@ -83,6 +85,8 @@ const testimonials = [
 ];
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <MainLayout>
       {/* Hero Section */}
@@ -101,11 +105,13 @@ const Index = () => {
                 <Button className="btn-primary">
                   <Smartphone className="mr-2 h-5 w-5" /> Download App
                 </Button>
-                <Link to="/login">
-                  <Button variant="outline" className="btn-secondary w-full sm:w-auto">
-                    Login
-                  </Button>
-                </Link>
+                {!isAuthenticated && (
+                  <Link to="/login">
+                    <Button variant="outline" className="btn-secondary w-full sm:w-auto">
+                      Login
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
             <div className="lg:block hidden">
@@ -119,7 +125,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* NEW: Categories Quick Access */}
+      {/* Categories Quick Access */}
       <section className="py-8 md:py-12 bg-white border-b border-gray-100">
         <div className="container-custom">
           <div className="flex justify-between items-center mb-6">
@@ -175,12 +181,14 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="container-custom">
-          <CarSearch />
-        </div>
-      </section>
+      {/* Search Section - Only show if not authenticated */}
+      {!isAuthenticated && (
+        <section className="py-12 md:py-16 bg-white">
+          <div className="container-custom">
+            <CarSearch />
+          </div>
+        </section>
+      )}
 
       {/* Featured Products */}
       <section className="py-12 md:py-16 bg-gray-50">

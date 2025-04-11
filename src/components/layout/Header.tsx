@@ -59,7 +59,7 @@ const Header = () => {
                 location.pathname === "/categories" ? "font-semibold text-mechanica-600" : ""
               }`}
             >
-              Categories
+              Find Parts
             </Link>
             <Link
               to="/garages"
@@ -151,7 +151,7 @@ const Header = () => {
                 }`}
                 onClick={() => setShowMobileMenu(false)}
               >
-                Categories
+                Find Parts
               </Link>
               <Link
                 to="/garages"
