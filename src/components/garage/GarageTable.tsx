@@ -31,40 +31,29 @@ const GarageTable = ({ garages, loading }: GarageTableProps) => {
   }
   
   return (
-    <div className="space-y-4">
-      <div className="text-xs text-gray-500 mb-2">
-        Found {garages.length} garages in the database.
-      </div>
-      
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Area</TableHead>
-              <TableHead>Installation Fee</TableHead>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead>Area</TableHead>
+            <TableHead>Installation Fee</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {garages.map((garage) => (
+            <TableRow key={garage.id}>
+              <TableCell className="font-mono text-xs">{garage.id}</TableCell>
+              <TableCell>{garage.name}</TableCell>
+              <TableCell>{garage.location}</TableCell>
+              <TableCell>{garage.area || '-'}</TableCell>
+              <TableCell>{garage.installationFee ? `$${garage.installationFee.toFixed(2)}` : '-'}</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {garages.map((garage) => (
-              <TableRow key={garage.id}>
-                <TableCell className="font-mono text-xs">{garage.id}</TableCell>
-                <TableCell>{garage.name}</TableCell>
-                <TableCell>{garage.location}</TableCell>
-                <TableCell>{garage.area || '-'}</TableCell>
-                <TableCell>{garage.installationFee ? `$${garage.installationFee.toFixed(2)}` : '-'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      
-      <div className="text-xs p-2 bg-gray-50 rounded border border-gray-200 font-mono overflow-auto">
-        <div className="font-semibold">Sample garage data (first entry):</div>
-        {garages.length > 0 ? JSON.stringify(garages[0], null, 2) : "No garage data available"}
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

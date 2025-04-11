@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   MapPin, 
@@ -6,9 +7,6 @@ import {
   Building2,
   Calendar,
   DollarSign,
-  Database,
-  Trash2,
-  RefreshCw,
   Grid,
   List
 } from "lucide-react";
@@ -47,7 +45,6 @@ const GaragePage = () => {
     error, 
     fetchGarages, 
     seedSampleGarages,
-    clearAllGarages,
     isLoading 
   } = useGarageManagement();
 
@@ -90,11 +87,6 @@ const GaragePage = () => {
   const handleSeedSampleGarages = async () => {
     console.log("User clicked Add Sample Garages button");
     await seedSampleGarages();
-  };
-
-  const handleClearAllGarages = async () => {
-    console.log("User clicked Clear All Garages button");
-    await clearAllGarages();
   };
 
   const toggleView = () => {
@@ -212,43 +204,7 @@ const GaragePage = () => {
             >
               {view === "grid" ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="text-blue-600 border-blue-200 hover:bg-blue-50"
-              onClick={handleRetry}
-              disabled={loading || isLoading}
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
-            {garages.length > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-red-600 border-red-200 hover:bg-red-50"
-                onClick={handleClearAllGarages}
-                disabled={isLoading}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Clear All Garages
-              </Button>
-            )}
           </div>
-        </div>
-
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Debug Information:</h3>
-          <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
-            {JSON.stringify({
-              garagesTotalCount: garages.length,
-              filteredCount: filteredGarages.length,
-              isLoading,
-              fetchLoading: loading,
-              error,
-              view
-            }, null, 2)}
-          </pre>
         </div>
 
         {loading ? (
