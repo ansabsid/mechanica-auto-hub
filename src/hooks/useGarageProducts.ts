@@ -158,29 +158,31 @@ export const useGarageProducts = (garageId?: string) => {
       console.log("Prepared data for database insertion:", productData);
 
       // Use RPC (Remote Procedure Call) function to bypass RLS
-      const { data, error: partError } = await enhancedSupabase
+      const response = await enhancedSupabase
         .rpc('insert_part', {
           part_data: productData
         });
 
-      if (partError) {
-        console.error("RPC error:", partError);
-        throw new Error(`Failed to add part: ${partError.message}`);
+      if (response.error) {
+        console.error("RPC error:", response.error);
+        throw new Error(`Failed to add part: ${response.error.message}`);
       }
 
+      // Safely extract and handle the part ID
+      const partId = response.data?.id;
+      
       // Check if data exists and has a valid id
-      // TypeScript knows data should have the shape defined in supabaseTypes.ts
-      if (!data || typeof data.id !== 'number') {
+      if (!partId || typeof partId !== 'number') {
         throw new Error("Part creation failed - no ID returned");
       }
 
-      console.log("Part added successfully through RPC, id:", data.id);
+      console.log("Part added successfully through RPC, id:", partId);
 
       // First check if an association already exists to avoid duplicate key errors
       const { data: existingAssociation, error: checkError } = await supabase
         .from('parts_garages')
         .select('*')
-        .eq('part_id', data.id)
+        .eq('part_id', partId)
         .eq('garage_id', garageId)
         .maybeSingle();
 
@@ -194,7 +196,7 @@ export const useGarageProducts = (garageId?: string) => {
         const { error: associationError } = await supabase
           .from('parts_garages')
           .insert({
-            part_id: data.id,
+            part_id: partId,
             garage_id: garageId,
             installation_fee: 0 // Default installation fee
           });
@@ -213,7 +215,7 @@ export const useGarageProducts = (garageId?: string) => {
       
       // Refresh the products list to show the newly added product
       await fetchProducts(garageId);
-      return data.id;
+      return partId;
     } catch (error: any) {
       toast.error(error.message || "Failed to add product");
       console.error("Add product error:", error);
