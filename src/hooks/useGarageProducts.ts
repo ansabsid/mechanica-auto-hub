@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -456,8 +457,8 @@ export const useGarageProducts = (garageId?: string) => {
         manufacturer_id: product.manufacturer_id || 1,
         model_id: product.model_id || 1,
         year: product.year || new Date().getFullYear(),
-        category: product.category,
-        status: product.status
+        category: product.category
+        // Remove 'status' from here as it's not in the parts table schema
       };
       
       console.log("Prepared data for database update:", updateData);
@@ -472,6 +473,20 @@ export const useGarageProducts = (garageId?: string) => {
         console.error("Update error:", error);
         toast.error(`Failed to update product: ${error.message}`);
         return false;
+      }
+      
+      // Update status separately if it's changed
+      if (product.status) {
+        const { error: statusError } = await supabase
+          .from('parts')
+          .update({ status: product.status })
+          .eq('id', product.id);
+          
+        if (statusError) {
+          console.error("Status update error:", statusError);
+          toast.warning(`Product updated but status change failed: ${statusError.message}`);
+          // We still consider the main update successful
+        }
       }
       
       // Refresh products after update

@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 interface ConfirmDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => Promise<void> | void;
+  onConfirm: () => Promise<void | boolean> | void; // Updated to accept Promise<boolean> or void
   title: string;
   description: string;
   confirmText?: string;
@@ -37,7 +37,8 @@ const ConfirmDialog = ({
   isLoading = false
 }: ConfirmDialogProps) => {
   const handleConfirm = async () => {
-    await onConfirm();
+    const result = await onConfirm();
+    // Ignore the boolean result if it's returned
     onClose();
   };
 
