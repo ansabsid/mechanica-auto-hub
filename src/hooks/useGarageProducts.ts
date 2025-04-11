@@ -175,21 +175,38 @@ export const useGarageProducts = (garageId?: string) => {
 
       console.log("Part added successfully through RPC, id:", data.id);
 
-      // 2. Create the association in the parts_garages table to ensure proper relationship
-      const { error: associationError } = await supabase
+      // First check if an association already exists to avoid duplicate key errors
+      const { data: existingAssociation, error: checkError } = await supabase
         .from('parts_garages')
-        .insert({
-          part_id: data.id,
-          garage_id: garageId,
-          installation_fee: 0 // Default installation fee
-        });
+        .select('*')
+        .eq('part_id', data.id)
+        .eq('garage_id', garageId)
+        .maybeSingle();
 
-      if (associationError) {
-        console.error("Association failed but part was created:", associationError);
-        throw new Error(`Failed to associate part with garage: ${associationError.message}`);
+      if (checkError) {
+        console.error("Error checking for existing association:", checkError);
       }
 
-      console.log("Parts_garages association created successfully");
+      // Only create the association if it doesn't already exist
+      if (!existingAssociation) {
+        // Create the association in the parts_garages table to ensure proper relationship
+        const { error: associationError } = await supabase
+          .from('parts_garages')
+          .insert({
+            part_id: data.id,
+            garage_id: garageId,
+            installation_fee: 0 // Default installation fee
+          });
+
+        if (associationError) {
+          console.error("Association failed but part was created:", associationError);
+          throw new Error(`Failed to associate part with garage: ${associationError.message}`);
+        }
+
+        console.log("Parts_garages association created successfully");
+      } else {
+        console.log("Association already exists, skipping creation");
+      }
       
       toast.success("Product added successfully!");
       
