@@ -137,29 +137,19 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log(`Database query completed in ${queryDuration.toFixed(2)}ms, found ${validParts.length} parts`);
       
-      let finalParts: Part[];
-      
-      if (validParts.length > 0) {
-        finalParts = validParts;
-        console.log("Using database parts:", validParts.length);
-        
-        toast({
-          title: "Parts Found",
-          description: `Found ${validParts.length} parts matching your vehicle in ${queryDuration.toFixed(0)}ms`,
-          duration: 5000,
-        });
-      } else {
+      // If no parts found, use mock data
+      if (validParts.length === 0) {
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
         
-        // Generate mock parts for the vehicle
-        finalParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
+        // Generate mock parts for the vehicle - this will have image_url properly set now
+        const mockParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
-        console.log("Generated mock parts:", finalParts.length);
+        console.log("Generated mock parts:", mockParts.length);
         
-        if (finalParts.length > 0) {
+        if (mockParts.length > 0) {
           toast({
             title: "Using Sample Data",
-            description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${finalParts.length} sample parts.`,
+            description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockParts.length} sample parts.`,
             variant: "default",
             duration: 5000,
           });
@@ -171,36 +161,25 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
             duration: 5000,
           });
         }
+        
+        setParts(mockParts);
+      } else {
+        console.log("Using database parts:", validParts.length);
+        
+        toast({
+          title: "Parts Found",
+          description: `Found ${validParts.length} parts matching your vehicle in ${queryDuration.toFixed(0)}ms`,
+          duration: 5000,
+        });
+        
+        setParts(validParts);
       }
-      
-      console.log("🔢 RESULTS AFTER SEARCH: ", finalParts.length, "parts");
-      
-      // Double check that all parts match the search criteria - using memoization would improve this
-      const strictlyFilteredParts = useMemo(() => 
-        finalParts.filter(part => 
-          part.manufacturer_id === mfrId && 
-          part.model_id === mdlId && 
-          part.year === yearNum
-        ), [finalParts, mfrId, mdlId, yearNum]
-      );
-      
-      console.log("🔎 STRICT FILTERING CHECK:");
-      console.log(`- Before strict filtering: ${finalParts.length} parts`);
-      console.log(`- After strict filtering: ${strictlyFilteredParts.length} parts`);
-      
-      if (strictlyFilteredParts.length !== finalParts.length) {
-        console.warn("⚠️ WARNING: Some parts were removed during strict filtering!");
-        console.log("Parts removed:", finalParts.length - strictlyFilteredParts.length);
-      }
-      
-      // Set the parts array with strictly filtered results
-      setParts(strictlyFilteredParts);
       
       // Important: Update state in the correct order - set search completed after setting parts
       setIsSearching(false);
       setSearchCompleted(true);
       
-      return strictlyFilteredParts.length;
+      return validParts.length > 0 ? validParts.length : (mockParts?.length || 0);
     } catch (error: any) {
       console.error("Error searching for parts:", error);
       

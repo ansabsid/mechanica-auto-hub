@@ -1,163 +1,51 @@
 
-import React, { useEffect } from "react";
-import { createBrowserRouter, RouterProvider, useLocation, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MainLayout from "@/components/layout/MainLayout";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
+import Garages from "@/pages/Garages";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
-import Garages from "@/pages/Garages";
 import CustomerDashboard from "@/pages/CustomerDashboard";
 import GarageDashboard from "@/pages/GarageDashboard";
 import OrdersPage from "@/pages/OrdersPage";
 import OrdersListPage from "@/pages/OrdersListPage";
 import Checkout from "@/pages/Checkout";
-import CategoryPage from "@/components/categories/CategoryPage";
+import { AuthProvider } from "@/hooks/auth/AuthProvider";
+import { Toaster } from "@/components/ui/sonner";
+import { initializePartImages } from "@/utils/initializeImages";
+import './App.css';
 
-import "./App.css";
-
-// Component to handle route protection and redirection
-const RouteGuard = ({ children }: { children: React.ReactNode }) => {
-  const { user, userRole, isLoading } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    console.log("RouteGuard checking access for path:", location.pathname);
-    console.log("Current user:", user?.email, "Role:", userRole);
-    
-    if (!isLoading) {
-      // Special case for demo garage dashboard - allow direct access for now
-      if (location.pathname === "/garage-dashboard" && 
-          location.search.includes("demo=true")) {
-        console.log("Allowing demo garage dashboard access");
-        return;
-      }
-      
-      // Handle garage-specific routes
-      if (location.pathname === "/garage-dashboard") {
-        if (!user) {
-          console.log("Access denied to garage dashboard - not logged in - redirecting to login");
-          navigate("/login");
-          return;
-        }
-        
-        if (userRole !== "garage") {
-          console.log("Access denied to garage dashboard - not a garage - redirecting to customer dashboard");
-          navigate("/customer-dashboard");
-          return;
-        }
-        
-        console.log("Access granted to garage dashboard for garage user");
-        return;
-      }
-      
-      // Handle customer-specific routes
-      if (location.pathname === "/customer-dashboard" || 
-          location.pathname === "/categories" || 
-          location.pathname.startsWith("/orders")) {
-        if (!user) {
-          console.log("Access denied to customer route - not logged in - redirecting to login");
-          navigate("/login");
-          return;
-        }
-        
-        if (userRole === "garage") {
-          console.log("Access denied to customer route - garage user - redirecting to garage dashboard");
-          navigate("/garage-dashboard");
-          return;
-        }
-        
-        console.log("Access granted to customer route for customer user");
-        return;
-      }
-      
-      // Redirect authenticated users from login page based on role
-      if (location.pathname === "/login" && user) {
-        if (userRole === "garage") {
-          console.log("User already logged in as garage - redirecting to garage dashboard");
-          navigate("/garage-dashboard");
-        } else {
-          console.log("User already logged in as customer - redirecting to customer dashboard");
-          navigate("/customer-dashboard");
-        }
-      }
-    }
-  }, [location.pathname, user, userRole, navigate, isLoading, location.search]);
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  
-  return <>{children}</>;
-};
-
-// Create the router with explicit route configuration
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <RouteGuard><Index /></RouteGuard>,
-  },
-  {
-    path: "/about",
-    element: <RouteGuard><About /></RouteGuard>,
-  },
-  {
-    path: "/contact",
-    element: <RouteGuard><Contact /></RouteGuard>,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/garages",
-    element: <RouteGuard><Garages /></RouteGuard>,
-  },
-  {
-    path: "/customer-dashboard",
-    element: <RouteGuard><CustomerDashboard /></RouteGuard>,
-  },
-  {
-    path: "/garage-dashboard",
-    element: <RouteGuard><GarageDashboard /></RouteGuard>,
-  },
-  {
-    path: "/orders/:orderId",
-    element: <RouteGuard><OrdersPage /></RouteGuard>,
-  },
-  {
-    path: "/orders",
-    element: <RouteGuard><OrdersListPage /></RouteGuard>,
-  },
-  {
-    path: "/checkout",
-    element: <RouteGuard><Checkout /></RouteGuard>,
-  },
-  {
-    path: "/categories",
-    element: <RouteGuard><CategoryPage /></RouteGuard>,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
-
-// Main App component
 function App() {
+  // Run initialization once when the app loads
+  useEffect(() => {
+    initializePartImages();
+  }, []);
+
   return (
     <AuthProvider>
-      <RouterProvider 
-        router={router} 
-        fallbackElement={<div>Loading...</div>}
-      />
+      <Router>
+        <Toaster />
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Index />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="garages" element={<Garages />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="dashboard" element={<CustomerDashboard />} />
+            <Route path="garage-dashboard" element={<GarageDashboard />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders-list" element={<OrdersListPage />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Router>
     </AuthProvider>
   );
 }

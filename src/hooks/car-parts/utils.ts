@@ -32,7 +32,8 @@ export const generateMockParts = (
       garages: {
         name: "AutoCare Dubai",
         location: "Dubai Marina"
-      }
+      },
+      image_url: "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format"
     },
     {
       id: 2,
@@ -47,7 +48,8 @@ export const generateMockParts = (
       garages: {
         name: "SparkTech Auto",
         location: "Al Quoz"
-      }
+      },
+      image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format"
     },
     {
       id: 3,
@@ -62,7 +64,8 @@ export const generateMockParts = (
       garages: {
         name: "AutoCare Dubai",
         location: "Dubai Marina"
-      }
+      },
+      image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format"
     },
     {
       id: 4,
@@ -77,7 +80,8 @@ export const generateMockParts = (
       garages: {
         name: "Elite Auto Parts",
         location: "Jumeirah"
-      }
+      },
+      image_url: "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format"
     }
   ];
 };
