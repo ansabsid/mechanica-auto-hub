@@ -18,7 +18,7 @@ export type RPCFunctions = {
     installation_fee: number;
   }[];
   insert_part: (args: { part_data: any }) => {
-    id: number;
+    id: number;  // This is now properly typed as a number
   };
   create_profile_for_user: (args: { 
     user_id: string; 
