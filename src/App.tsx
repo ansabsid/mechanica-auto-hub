@@ -77,10 +77,12 @@ const router = createBrowserRouter([
 // Main App component
 function App() {
   return (
-    <RouterProvider 
-      router={router} 
-      fallbackElement={<div>Loading...</div>}
-    />
+    <AuthProvider>
+      <RouterProvider 
+        router={router} 
+        fallbackElement={<div>Loading...</div>}
+      />
+    </AuthProvider>
   );
 }
 

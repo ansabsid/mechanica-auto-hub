@@ -54,11 +54,10 @@ export const CartDrawer = () => {
     // First close the drawer
     setIsOpen(false);
     
-    // Use a more direct approach to navigation with a slightly longer delay
+    // Use react-router's navigate with a longer delay to ensure drawer closes first
     setTimeout(() => {
-      // Using replace: true to prevent back navigation issues
-      window.location.href = "/checkout";
-    }, 300);
+      navigate("/checkout");
+    }, 500);
   };
   
   return (
