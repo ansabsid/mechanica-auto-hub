@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -104,7 +103,6 @@ const BookAppointment = () => {
       return;
     }
     
-    // Load the available dates for the garage
     fetchServiceSlots(garageId);
   }, [garageId, user]);
 
@@ -139,7 +137,6 @@ const BookAppointment = () => {
         year: new Date().getFullYear(),
         license_plate: ""
       });
-      // Select the newly added vehicle
       setSelectedVehicle(result.id || "");
     }
   };
@@ -200,9 +197,20 @@ const BookAppointment = () => {
   };
 
   const formatDate = (dateStr: string) => {
-    // Convert string date (YYYY-MM-DD) to Date object
     const date = new Date(dateStr);
     return format(date, 'EEEE, MMMM do, yyyy');
+  };
+
+  const calculateDurationMinutes = (startTime: string, endTime: string): number => {
+    if (!startTime || !endTime) return 0;
+    
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    
+    return endTotalMinutes - startTotalMinutes;
   };
 
   if (showConfirmation && appointment) {
@@ -388,7 +396,7 @@ const BookAppointment = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-600">{Math.round((new Date(`2000-01-01T${slot.end_time}`) - new Date(`2000-01-01T${slot.start_time}`)) / 60000)} mins</p>
+                        <p className="text-sm text-gray-600">{calculateDurationMinutes(slot.start_time, slot.end_time)} mins</p>
                       </div>
                     </button>
                   ))}
