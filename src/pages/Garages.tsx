@@ -32,7 +32,7 @@ const Garages = () => {
       hours: "9:00 AM - 7:00 PM",
       phone: "+971 552552476",
       email: "service@carcarepro.com",
-      image: "https://images.unsplash.com/photo-1597762470488-3877a1f26f80?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      image: "https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
     },
     {
       id: 3,
