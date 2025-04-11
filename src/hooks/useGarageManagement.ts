@@ -4,11 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface GarageInfo {
-  id: string; // Changed from optional to required to match the Garage interface
+  id: string; // Required field
   name: string;
   area: string | null;
   location: string;
   installationFee: string;
+  images?: string | null;
+}
+
+// New interface for adding a new garage (without id)
+export interface NewGarageInfo {
+  name: string;
+  area: string | null;
+  location: string;
+  installationFee?: string;
   images?: string | null;
 }
 
@@ -53,12 +62,14 @@ export const useGarageManagement = () => {
       if (!data) {
         console.log("No data returned from garage query");
         setGarages([]);
+        setFetchLoading(false); // Ensure loading state is updated even with no data
         return [];
       }
       
       if (data.length === 0) {
         console.log("No garages found in the database");
         setGarages([]);
+        setFetchLoading(false); // Ensure loading state is updated with empty array
         return [];
       }
       
@@ -82,16 +93,16 @@ export const useGarageManagement = () => {
       toast.error("Failed to load garages");
       return [];
     } finally {
-      setFetchLoading(false);
+      setFetchLoading(false); // Ensure this always runs to update loading state
     }
   };
 
   /**
    * Adds a new garage to the database
-   * @param garage The garage information to add
+   * @param garage The garage information to add (without id)
    * @returns Promise resolving to the created garage data or null on error
    */
-  const addGarage = async (garage: Omit<GarageInfo, 'id'>) => {
+  const addGarage = async (garage: NewGarageInfo) => {
     setIsLoading(true);
     try {
       console.log("Adding new garage:", garage);
