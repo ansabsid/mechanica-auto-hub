@@ -113,6 +113,7 @@ const GarageDashboard = () => {
   const [productImage, setProductImage] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState("inventory");
 
   const { 
     addProduct, 
@@ -264,21 +265,9 @@ const GarageDashboard = () => {
               </h2>
               <p className="text-gray-600">Manage your garage, products, and appointments</p>
             </div>
-            
-            <div className="flex gap-2">
-              <Button className="bg-mechanica-500 hover:bg-mechanica-600">
-                <Plus className="mr-2 h-4 w-4" /> Add New Product
-              </Button>
-              <Button className="bg-mechanica-500 hover:bg-mechanica-600">
-                <Plus className="mr-2 h-4 w-4" /> Create Service Slots
-              </Button>
-              <Button className="bg-mechanica-500 hover:bg-mechanica-600">
-                <Plus className="mr-2 h-4 w-4" /> Add New Garage
-              </Button>
-            </div>
           </div>
           
-          <Tabs defaultValue="inventory" className="w-full">
+          <Tabs defaultValue="inventory" className="w-full" onValueChange={setActiveTab}>
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="inventory" className="flex items-center justify-center gap-2">
                 <ShoppingBag size={18} /> Inventory
@@ -295,12 +284,15 @@ const GarageDashboard = () => {
               <div className="flex flex-col space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Products & Parts</h2>
-                  <Button className="bg-mechanica-500 hover:bg-mechanica-600">
+                  <Button
+                    onClick={() => document.getElementById('product-form')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-mechanica-500 hover:bg-mechanica-600"
+                  >
                     <Plus className="mr-2 h-4 w-4" /> Add New Product
                   </Button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div id="product-form" className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold mb-4">Add New Product</h3>
                   <form onSubmit={handleAddProduct} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -519,12 +511,15 @@ const GarageDashboard = () => {
               <div className="flex flex-col space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Service Appointments</h2>
-                  <Button className="bg-mechanica-500 hover:bg-mechanica-600">
+                  <Button 
+                    onClick={() => document.getElementById('service-form')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-mechanica-500 hover:bg-mechanica-600"
+                  >
                     <Plus className="mr-2 h-4 w-4" /> Create Service Slots
                   </Button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div id="service-form" className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold mb-4">Add Service Slots</h3>
                   <form onSubmit={handleAddSlot} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -694,12 +689,15 @@ const GarageDashboard = () => {
               <div className="flex flex-col space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Garage Management</h2>
-                  <Button className="bg-mechanica-500 hover:bg-mechanica-600">
+                  <Button 
+                    onClick={() => document.getElementById('garage-form')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="bg-mechanica-500 hover:bg-mechanica-600"
+                  >
                     <Plus className="mr-2 h-4 w-4" /> Add New Garage
                   </Button>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div id="garage-form" className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold mb-4">Onboard New Garage</h3>
                   <form onSubmit={handleAddGarage} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
