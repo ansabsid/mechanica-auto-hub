@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,9 @@ import {
   X,
   Loader2,
   FileImage,
-  Upload
+  Upload,
+  Car,
+  Factory
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -91,6 +93,9 @@ const GarageDashboard = () => {
     price: "",
     quantity: "",
     status: "In Stock",
+    manufacturer_id: 1, // Default values
+    model_id: 1,
+    year: new Date().getFullYear(),
   });
 
   const [newSlot, setNewSlot] = useState<ServiceSlot>({
@@ -109,11 +114,14 @@ const GarageDashboard = () => {
   });
 
   const [currentGarageId, setCurrentGarageId] = useState<string | null>(null);
-
   const [productImage, setProductImage] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("inventory");
+  const [manufacturers, setManufacturers] = useState<any[]>([]);
+  const [models, setModels] = useState<any[]>([]);
+  const [filteredModels, setFilteredModels] = useState<any[]>([]);
+  const [years, setYears] = useState<number[]>([]);
 
   const { 
     addProduct, 
@@ -145,7 +153,80 @@ const GarageDashboard = () => {
     }
     
     fetchGarages();
+    fetchManufacturers();
+    
+    // Generate years for dropdown (last 30 years)
+    const currentYear = new Date().getFullYear();
+    const yearList = Array.from({ length: 30 }, (_, i) => currentYear - i);
+    setYears(yearList);
   }, []);
+
+  // Fetch manufacturers from database
+  const fetchManufacturers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('manufacturers')
+        .select('*')
+        .order('name');
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setManufacturers(data);
+      }
+      
+      // Also fetch models
+      fetchAllModels();
+    } catch (error: any) {
+      console.error("Error fetching manufacturers:", error.message);
+      toast.error("Failed to load manufacturers");
+    }
+  };
+
+  // Fetch all models
+  const fetchAllModels = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('models')
+        .select('*')
+        .order('name');
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setModels(data);
+        // Initially we show no models until manufacturer is selected
+        setFilteredModels([]);
+      }
+    } catch (error: any) {
+      console.error("Error fetching models:", error.message);
+      toast.error("Failed to load models");
+    }
+  };
+
+  // Update filtered models when manufacturer changes
+  useEffect(() => {
+    if (newProduct.manufacturer_id) {
+      const filtered = models.filter(model => model.manufacturer_id === newProduct.manufacturer_id);
+      setFilteredModels(filtered);
+      
+      // If we have models and current selected model doesn't belong to this manufacturer,
+      // select the first model of the filtered list
+      if (filtered.length > 0 && 
+          !filtered.some(model => model.id === newProduct.model_id)) {
+        setNewProduct(prev => ({
+          ...prev,
+          model_id: filtered[0].id
+        }));
+      }
+    } else {
+      setFilteredModels([]);
+    }
+  }, [newProduct.manufacturer_id, models]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -171,20 +252,38 @@ const GarageDashboard = () => {
       return;
     }
 
+    // Validate all required fields
+    if (!newProduct.name || !newProduct.category || !newProduct.price || !newProduct.quantity) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     setIsUploading(true);
     let imageUrl = null;
 
     try {
+      // Handle image upload
       if (productImage) {
         const fileExt = productImage.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const filePath = `${currentGarageId}/${fileName}`;
         
+        // Create a progress handler for the upload
+        const progressHandler = (progress: number) => {
+          setUploadProgress(progress);
+        };
+        
         const { data, error } = await supabase.storage
           .from('parts')
           .upload(filePath, productImage, {
             cacheControl: '3600',
-            upsert: false
+            upsert: false,
+            onUploadProgress: (event) => {
+              if (event.totalBytes > 0) {
+                const progress = Math.round((event.loadedBytes / event.totalBytes) * 100);
+                progressHandler(progress);
+              }
+            }
           });
           
         if (error) {
@@ -196,25 +295,40 @@ const GarageDashboard = () => {
           .getPublicUrl(filePath);
           
         imageUrl = publicUrl;
+        console.log("Image uploaded successfully:", imageUrl);
       }
       
+      // Prepare the product data with all fields
       const productWithImage = {
         ...newProduct,
-        imageUrl: imageUrl
+        imageUrl: imageUrl,
+        manufacturer_id: Number(newProduct.manufacturer_id),
+        model_id: Number(newProduct.model_id),
+        year: Number(newProduct.year)
       };
       
-      await addProduct(productWithImage, currentGarageId);
+      console.log("Saving product with data:", productWithImage);
       
-      setNewProduct({
-        name: "",
-        category: "",
-        price: "",
-        quantity: "",
-        status: "In Stock",
-      });
-      setProductImage(null);
-      setUploadProgress(0);
+      // Add the product to the database
+      const productId = await addProduct(productWithImage, currentGarageId);
       
+      if (productId) {
+        toast.success("Product added successfully!");
+        
+        // Reset the form after successful addition
+        setNewProduct({
+          name: "",
+          category: "",
+          price: "",
+          quantity: "",
+          status: "In Stock",
+          manufacturer_id: 1,
+          model_id: 1,
+          year: new Date().getFullYear(),
+        });
+        setProductImage(null);
+        setUploadProgress(0);
+      }
     } catch (error: any) {
       console.error("Error in handleAddProduct:", error);
       toast.error(error.message || "Failed to add product");
@@ -286,7 +400,7 @@ const GarageDashboard = () => {
                   <h2 className="text-xl font-semibold">Products & Parts</h2>
                   <Button
                     onClick={() => document.getElementById('product-form')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-mechanica-500 hover:bg-mechanica-600"
+                    variant="mechanica"
                   >
                     <Plus className="mr-2 h-4 w-4" /> Add New Product
                   </Button>
@@ -297,19 +411,21 @@ const GarageDashboard = () => {
                   <form onSubmit={handleAddProduct} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="product-name">Product Name</Label>
+                        <Label htmlFor="product-name">Product Name*</Label>
                         <Input 
                           id="product-name"
                           value={newProduct.name}
                           onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                           required
+                          placeholder="e.g. Premium Brake Pads"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="product-category">Category</Label>
+                        <Label htmlFor="product-category">Category*</Label>
                         <Select 
                           value={newProduct.category}
                           onValueChange={(value) => setNewProduct({...newProduct, category: value})}
+                          required
                         >
                           <SelectTrigger id="product-category">
                             <SelectValue placeholder="Select category" />
@@ -320,26 +436,97 @@ const GarageDashboard = () => {
                             <SelectItem value="tires">Tires</SelectItem>
                             <SelectItem value="ignition">Ignition</SelectItem>
                             <SelectItem value="oils">Oils & Fluids</SelectItem>
+                            <SelectItem value="engine">Engine Parts</SelectItem>
+                            <SelectItem value="electrical">Electrical</SelectItem>
+                            <SelectItem value="suspension">Suspension</SelectItem>
+                            <SelectItem value="cooling">Cooling System</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
+                      
+                      {/* Manufacturer Field */}
                       <div className="space-y-2">
-                        <Label htmlFor="product-price">Price (AED)</Label>
+                        <Label htmlFor="product-manufacturer">Manufacturer*</Label>
+                        <Select 
+                          value={newProduct.manufacturer_id?.toString()}
+                          onValueChange={(value) => setNewProduct({...newProduct, manufacturer_id: parseInt(value)})}
+                          required
+                        >
+                          <SelectTrigger id="product-manufacturer">
+                            <SelectValue placeholder="Select manufacturer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {manufacturers.map(manufacturer => (
+                              <SelectItem key={manufacturer.id} value={manufacturer.id.toString()}>
+                                {manufacturer.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Model Field */}
+                      <div className="space-y-2">
+                        <Label htmlFor="product-model">Model*</Label>
+                        <Select 
+                          value={newProduct.model_id?.toString()}
+                          onValueChange={(value) => setNewProduct({...newProduct, model_id: parseInt(value)})}
+                          disabled={filteredModels.length === 0}
+                          required
+                        >
+                          <SelectTrigger id="product-model">
+                            <SelectValue placeholder={filteredModels.length === 0 ? "Select a manufacturer first" : "Select model"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredModels.map(model => (
+                              <SelectItem key={model.id} value={model.id.toString()}>
+                                {model.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Year Field */}
+                      <div className="space-y-2">
+                        <Label htmlFor="product-year">Year*</Label>
+                        <Select 
+                          value={newProduct.year?.toString()}
+                          onValueChange={(value) => setNewProduct({...newProduct, year: parseInt(value)})}
+                          required
+                        >
+                          <SelectTrigger id="product-year">
+                            <SelectValue placeholder="Select year" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px] overflow-y-auto">
+                            {years.map(year => (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="product-price">Price (AED)*</Label>
                         <Input 
                           id="product-price"
                           type="number"
                           value={newProduct.price}
                           onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                          placeholder="e.g. 299.99"
                           required
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="product-quantity">Quantity</Label>
+                        <Label htmlFor="product-quantity">Stock Quantity*</Label>
                         <Input 
                           id="product-quantity"
                           type="number"
                           value={newProduct.quantity}
                           onChange={(e) => setNewProduct({...newProduct, quantity: e.target.value})}
+                          placeholder="e.g. 10"
                           required
                         />
                       </div>
@@ -405,7 +592,7 @@ const GarageDashboard = () => {
                     </div>
                     <Button 
                       type="submit" 
-                      className="bg-mechanica-500 hover:bg-mechanica-600"
+                      variant="mechanica"
                       disabled={productLoading || isUploading}
                     >
                       {(productLoading || isUploading) ? (
@@ -424,85 +611,98 @@ const GarageDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full bg-white rounded-xl shadow-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4">Product</th>
-                        <th className="text-left p-4">Category</th>
-                        <th className="text-left p-4">Price</th>
-                        <th className="text-left p-4">Quantity</th>
-                        <th className="text-left p-4">Status</th>
-                        <th className="text-left p-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {productsLoading ? (
-                        <tr>
-                          <td colSpan={6} className="text-center p-4">
-                            <div className="flex justify-center items-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                              Loading products...
-                            </div>
-                          </td>
+                  <div className="max-h-[500px] overflow-y-auto">
+                    <table className="w-full bg-white rounded-xl shadow-sm">
+                      <thead className="sticky top-0 bg-white z-10">
+                        <tr className="border-b">
+                          <th className="text-left p-4">Product</th>
+                          <th className="text-left p-4">Category</th>
+                          <th className="text-left p-4">Vehicle</th>
+                          <th className="text-left p-4">Price</th>
+                          <th className="text-left p-4">Quantity</th>
+                          <th className="text-left p-4">Status</th>
+                          <th className="text-left p-4">Actions</th>
                         </tr>
-                      ) : products.length > 0 ? (
-                        products.map((product: any) => (
-                          <tr key={product.id} className="border-b">
-                            <td className="p-4">
-                              <div className="flex items-center">
-                                <div className="h-10 w-10 rounded-md overflow-hidden mr-3 bg-gray-200">
-                                  {product.image_url ? (
-                                    <img 
-                                      src={product.image_url} 
-                                      alt={product.name}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <Package className="h-full w-full p-2 text-gray-400" />
-                                  )}
-                                </div>
-                                <span className="font-medium">{product.name}</span>
+                      </thead>
+                      <tbody>
+                        {productsLoading ? (
+                          <tr>
+                            <td colSpan={7} className="text-center p-4">
+                              <div className="flex justify-center items-center py-4">
+                                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                                Loading products...
                               </div>
                             </td>
-                            <td className="p-4">{product.category || "Uncategorized"}</td>
-                            <td className="p-4">AED {product.price}</td>
-                            <td className="p-4">{product.stock}</td>
-                            <td className="p-4">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                product.stock > 10 
-                                  ? "bg-green-100 text-green-800" 
-                                  : product.stock > 0
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}>
-                                {product.stock > 10 ? "In Stock" : product.stock > 0 ? "Limited" : "Out of Stock"}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem>Edit Product</DropdownMenuItem>
-                                  <DropdownMenuItem>Update Status</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={6} className="text-center p-4">No products found. Add your first product!</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        ) : products.length > 0 ? (
+                          products.map((product: any) => (
+                            <tr key={product.id} className="border-b">
+                              <td className="p-4">
+                                <div className="flex items-center">
+                                  <div className="h-10 w-10 rounded-md overflow-hidden mr-3 bg-gray-200">
+                                    {product.image_url ? (
+                                      <img 
+                                        src={product.image_url} 
+                                        alt={product.name}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <Package className="h-full w-full p-2 text-gray-400" />
+                                    )}
+                                  </div>
+                                  <span className="font-medium">{product.name}</span>
+                                </div>
+                              </td>
+                              <td className="p-4">{product.category || "Uncategorized"}</td>
+                              <td className="p-4">
+                                <div className="flex items-center">
+                                  <Car className="h-4 w-4 mr-1 text-mechanica-500" />
+                                  <span>
+                                    {product.manufacturer_id && product.model_id ? 
+                                      `${product.manufacturer_id}-${product.model_id} (${product.year || 'N/A'})` : 
+                                      'N/A'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-4">AED {product.price}</td>
+                              <td className="p-4">{product.stock}</td>
+                              <td className="p-4">
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  product.stock > 10 
+                                    ? "bg-green-100 text-green-800" 
+                                    : product.stock > 0
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}>
+                                  {product.stock > 10 ? "In Stock" : product.stock > 0 ? "Limited" : "Out of Stock"}
+                                </span>
+                              </td>
+                              <td className="p-4">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>Edit Product</DropdownMenuItem>
+                                    <DropdownMenuItem>Update Status</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={7} className="text-center p-4">No products found. Add your first product!</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -513,7 +713,7 @@ const GarageDashboard = () => {
                   <h2 className="text-xl font-semibold">Service Appointments</h2>
                   <Button 
                     onClick={() => document.getElementById('service-form')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-mechanica-500 hover:bg-mechanica-600"
+                    variant="mechanica"
                   >
                     <Plus className="mr-2 h-4 w-4" /> Create Service Slots
                   </Button>
@@ -524,10 +724,11 @@ const GarageDashboard = () => {
                   <form onSubmit={handleAddSlot} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="service-type">Service Type</Label>
+                        <Label htmlFor="service-type">Service Type*</Label>
                         <Select
                           value={newSlot.service}
                           onValueChange={(value) => setNewSlot({...newSlot, service: value})}
+                          required
                         >
                           <SelectTrigger id="service-type">
                             <SelectValue placeholder="Select service" />
@@ -542,7 +743,7 @@ const GarageDashboard = () => {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="service-date">Date</Label>
+                        <Label htmlFor="service-date">Date*</Label>
                         <Input 
                           id="service-date"
                           type="date"
@@ -552,7 +753,7 @@ const GarageDashboard = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="start-time">Start Time</Label>
+                        <Label htmlFor="start-time">Start Time*</Label>
                         <Input 
                           id="start-time"
                           type="time"
@@ -562,7 +763,7 @@ const GarageDashboard = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="end-time">End Time</Label>
+                        <Label htmlFor="end-time">End Time*</Label>
                         <Input 
                           id="end-time"
                           type="time"
@@ -572,10 +773,11 @@ const GarageDashboard = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="service-interval">Appointment Duration (minutes)</Label>
+                        <Label htmlFor="service-interval">Appointment Duration (minutes)*</Label>
                         <Select
                           value={newSlot.interval}
                           onValueChange={(value) => setNewSlot({...newSlot, interval: value})}
+                          required
                         >
                           <SelectTrigger id="service-interval">
                             <SelectValue placeholder="Select duration" />
@@ -592,7 +794,7 @@ const GarageDashboard = () => {
                     </div>
                     <Button 
                       type="submit" 
-                      className="bg-mechanica-500 hover:bg-mechanica-600"
+                      variant="mechanica"
                       disabled={slotLoading}
                     >
                       {slotLoading ? (
@@ -606,81 +808,83 @@ const GarageDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full bg-white rounded-xl shadow-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4">Customer</th>
-                        <th className="text-left p-4">Service</th>
-                        <th className="text-left p-4">Date & Time</th>
-                        <th className="text-left p-4">Car</th>
-                        <th className="text-left p-4">Status</th>
-                        <th className="text-left p-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appointments.map((appointment) => (
-                        <tr key={appointment.id} className="border-b">
-                          <td className="p-4">
-                            <div>
-                              <div className="font-medium">{appointment.customer}</div>
-                              <div className="text-sm text-gray-500">{appointment.phone}</div>
-                            </div>
-                          </td>
-                          <td className="p-4">{appointment.service}</td>
-                          <td className="p-4">
-                            <div>
-                              <div>
-                                {new Date(appointment.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </div>
-                              <div className="text-sm text-gray-500">{appointment.time}</div>
-                            </div>
-                          </td>
-                          <td className="p-4">{appointment.car}</td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              appointment.status === "Confirmed" 
-                                ? "bg-green-100 text-green-800" 
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                              {appointment.status}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex space-x-2">
-                              {appointment.status === "Pending" && (
-                                <>
-                                  <Button size="sm" variant="outline" className="h-8 bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
-                                    <Check className="h-4 w-4" />
-                                  </Button>
-                                  <Button size="sm" variant="outline" className="h-8 bg-red-50 text-red-600 border-red-200 hover:bg-red-100">
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem>View Details</DropdownMenuItem>
-                                  <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </td>
+                  <div className="max-h-[500px] overflow-y-auto">
+                    <table className="w-full bg-white rounded-xl shadow-sm">
+                      <thead className="sticky top-0 bg-white z-10">
+                        <tr className="border-b">
+                          <th className="text-left p-4">Customer</th>
+                          <th className="text-left p-4">Service</th>
+                          <th className="text-left p-4">Date & Time</th>
+                          <th className="text-left p-4">Car</th>
+                          <th className="text-left p-4">Status</th>
+                          <th className="text-left p-4">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {appointments.map((appointment) => (
+                          <tr key={appointment.id} className="border-b">
+                            <td className="p-4">
+                              <div>
+                                <div className="font-medium">{appointment.customer}</div>
+                                <div className="text-sm text-gray-500">{appointment.phone}</div>
+                              </div>
+                            </td>
+                            <td className="p-4">{appointment.service}</td>
+                            <td className="p-4">
+                              <div>
+                                <div>
+                                  {new Date(appointment.date).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                                <div className="text-sm text-gray-500">{appointment.time}</div>
+                              </div>
+                            </td>
+                            <td className="p-4">{appointment.car}</td>
+                            <td className="p-4">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                appointment.status === "Confirmed" 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}>
+                                {appointment.status}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex space-x-2">
+                                {appointment.status === "Pending" && (
+                                  <>
+                                    <Button size="sm" variant="outline" className="h-8 bg-green-50 text-green-600 border-green-200 hover:bg-green-100">
+                                      <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="h-8 bg-red-50 text-red-600 border-red-200 hover:bg-red-100">
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                                    <DropdownMenuItem>Reschedule</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </TabsContent>
@@ -691,7 +895,7 @@ const GarageDashboard = () => {
                   <h2 className="text-xl font-semibold">Garage Management</h2>
                   <Button 
                     onClick={() => document.getElementById('garage-form')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="bg-mechanica-500 hover:bg-mechanica-600"
+                    variant="mechanica"
                   >
                     <Plus className="mr-2 h-4 w-4" /> Add New Garage
                   </Button>
@@ -702,7 +906,7 @@ const GarageDashboard = () => {
                   <form onSubmit={handleAddGarage} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="garage-name">Garage Name</Label>
+                        <Label htmlFor="garage-name">Garage Name*</Label>
                         <Input 
                           id="garage-name"
                           value={newGarage.name}
@@ -713,15 +917,16 @@ const GarageDashboard = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="garage-area">Area</Label>
+                        <Label htmlFor="garage-area">Area*</Label>
                         <Select 
                           value={newGarage.area}
                           onValueChange={(value) => setNewGarage({...newGarage, area: value})}
+                          required
                         >
                           <SelectTrigger id="garage-area">
                             <SelectValue placeholder="Select area" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-[200px] overflow-y-auto">
                             {dubaiAreas.map((area) => (
                               <SelectItem key={area} value={area}>
                                 {area}
@@ -733,7 +938,7 @@ const GarageDashboard = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="garage-location">Full Address</Label>
+                        <Label htmlFor="garage-location">Full Address*</Label>
                         <Textarea 
                           id="garage-location"
                           value={newGarage.location}
@@ -745,7 +950,7 @@ const GarageDashboard = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="garage-fee">Base Installation Fee (AED)</Label>
+                        <Label htmlFor="garage-fee">Base Installation Fee (AED)*</Label>
                         <Input 
                           id="garage-fee"
                           type="number"
@@ -759,7 +964,7 @@ const GarageDashboard = () => {
                     </div>
                     <Button 
                       type="submit" 
-                      className="bg-mechanica-500 hover:bg-mechanica-600"
+                      variant="mechanica"
                       disabled={garageLoading}
                     >
                       {garageLoading ? (
@@ -773,58 +978,60 @@ const GarageDashboard = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full bg-white rounded-xl shadow-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-4">Garage Name</th>
-                        <th className="text-left p-4">Area</th>
-                        <th className="text-left p-4">Full Address</th>
-                        <th className="text-left p-4">Installation Fee</th>
-                        <th className="text-left p-4">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {garagesLoading ? (
-                        <tr>
-                          <td colSpan={5} className="text-center p-4">
-                            <div className="flex justify-center items-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                              Loading garages...
-                            </div>
-                          </td>
+                  <div className="max-h-[500px] overflow-y-auto">
+                    <table className="w-full bg-white rounded-xl shadow-sm">
+                      <thead className="sticky top-0 bg-white z-10">
+                        <tr className="border-b">
+                          <th className="text-left p-4">Garage Name</th>
+                          <th className="text-left p-4">Area</th>
+                          <th className="text-left p-4">Full Address</th>
+                          <th className="text-left p-4">Installation Fee</th>
+                          <th className="text-left p-4">Actions</th>
                         </tr>
-                      ) : garages.length > 0 ? (
-                        garages.map((garage) => (
-                          <tr key={garage.id} className="border-b">
-                            <td className="p-4">{garage.name}</td>
-                            <td className="p-4">{garage.area}</td>
-                            <td className="p-4">{garage.location}</td>
-                            <td className="p-4">AED {garage.installationFee || "0.00"}</td>
-                            <td className="p-4">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem>Edit Garage</DropdownMenuItem>
-                                  <DropdownMenuItem>View Parts</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                      </thead>
+                      <tbody>
+                        {garagesLoading ? (
+                          <tr>
+                            <td colSpan={5} className="text-center p-4">
+                              <div className="flex justify-center items-center py-4">
+                                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                                Loading garages...
+                              </div>
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={5} className="text-center p-4">No garages found. Add your first garage!</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        ) : garages.length > 0 ? (
+                          garages.map((garage) => (
+                            <tr key={garage.id} className="border-b">
+                              <td className="p-4">{garage.name}</td>
+                              <td className="p-4">{garage.area}</td>
+                              <td className="p-4">{garage.location}</td>
+                              <td className="p-4">AED {garage.installationFee || "0.00"}</td>
+                              <td className="p-4">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>Edit Garage</DropdownMenuItem>
+                                    <DropdownMenuItem>View Parts</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="text-center p-4">No garages found. Add your first garage!</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </TabsContent>

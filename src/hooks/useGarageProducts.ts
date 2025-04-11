@@ -12,6 +12,9 @@ export interface GarageProduct {
   status: string;
   garage_id?: string;
   imageUrl?: string | null;
+  manufacturer_id?: number;
+  model_id?: number;
+  year?: number;
 }
 
 export const useGarageProducts = (garageId?: string) => {
@@ -69,6 +72,8 @@ export const useGarageProducts = (garageId?: string) => {
   const addProduct = async (product: GarageProduct, garageId: string) => {
     setIsLoading(true);
     try {
+      console.log("Adding product with data:", product);
+      
       // Convert string values to appropriate types
       const productData = {
         name: product.name,
@@ -76,12 +81,14 @@ export const useGarageProducts = (garageId?: string) => {
         price: parseFloat(product.price.toString()),
         stock: parseInt(product.quantity.toString()),
         description: null,
-        manufacturer_id: 1, // Default values, in a real app these would be selected
-        model_id: 1,        // Default values, in a real app these would be selected
-        year: new Date().getFullYear(),
+        manufacturer_id: product.manufacturer_id || 1,
+        model_id: product.model_id || 1,
+        year: product.year || new Date().getFullYear(),
         garage_id: garageId,
         image_url: product.imageUrl // Use the image URL directly
       };
+
+      console.log("Prepared data for database insertion:", productData);
 
       // 1. Insert the part into the parts table
       const { data: partData, error: partError } = await supabase
