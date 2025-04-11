@@ -18,6 +18,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
 import FloatingScanButton from "@/components/parts/FloatingScanButton";
+import ComingSoonDialog from "@/components/ui/coming-soon-dialog";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -55,6 +56,7 @@ const Index = () => {
   const { isAuthenticated } = useAuth();
   const [featuredParts, setFeaturedParts] = useState<Part[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   
   // Fetch featured parts from the database with real garage data
   useEffect(() => {
@@ -166,6 +168,10 @@ const Index = () => {
     fetchFeaturedParts();
   }, []);
 
+  const handleAppDownloadClick = () => {
+    setIsComingSoonOpen(true);
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -181,7 +187,10 @@ const Index = () => {
                 and book service appointments for your vehicle.
               </p>
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={handleAppDownloadClick}
+                >
                   <Smartphone className="mr-2 h-5 w-5" /> Download App
                 </Button>
                 {!isAuthenticated && (
@@ -361,10 +370,16 @@ const Index = () => {
                 </li>
               </ul>
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-                <Button className="bg-white text-blue-700 hover:bg-gray-100">
+                <Button 
+                  className="bg-white text-blue-700 hover:bg-gray-100"
+                  onClick={handleAppDownloadClick}
+                >
                   Download on App Store
                 </Button>
-                <Button className="bg-white text-blue-700 hover:bg-gray-100">
+                <Button 
+                  className="bg-white text-blue-700 hover:bg-gray-100"
+                  onClick={handleAppDownloadClick}
+                >
                   Get it on Google Play
                 </Button>
               </div>
@@ -379,6 +394,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
+      {/* Coming Soon Dialog */}
+      <ComingSoonDialog 
+        open={isComingSoonOpen}
+        onOpenChange={setIsComingSoonOpen}
+      />
       
       {/* Floating scan button for mobile */}
       <FloatingScanButton />
