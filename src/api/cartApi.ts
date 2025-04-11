@@ -67,34 +67,30 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       return []; // If no items in cart, return empty array
     }
     
-    // Fetch garages that can install these parts
-    // Using raw query to work around type issues with parts_garages table
+    // We need to use a raw SQL query to get data from parts_garages table
+    // since it's not recognized in the TypeScript types
     const { data: garagesData, error: garagesError } = await supabase
-      .from('parts_garages')
-      .select(`
-        part_id,
-        installation_fee,
-        garage:garage_id (
-          id,
-          name,
-          location
-        )
-      `)
-      .in('part_id', partIds);
+      .rpc('get_garages_for_part_bulk', { part_ids: partIds });
     
-    if (garagesError) throw garagesError;
+    if (garagesError) {
+      console.error("Error fetching garages data:", garagesError);
+      // Return the items without garage information if there's an error
+      return data || [];
+    }
     
     // Create a map of part_id to garages for quick lookup
-    const partGaragesMap = partIds.reduce((acc: any, partId: number) => {
-      acc[partId] = garagesData.filter((pg: any) => pg.part_id === partId)
-        .map((pg: any) => ({
-          id: pg.garage.id,
-          name: pg.garage.name,
-          location: pg.garage.location,
-          installationFee: pg.installation_fee
-        }));
-      return acc;
-    }, {});
+    const partGaragesMap: Record<number, Garage[]> = {};
+    garagesData.forEach((item: any) => {
+      if (!partGaragesMap[item.part_id]) {
+        partGaragesMap[item.part_id] = [];
+      }
+      partGaragesMap[item.part_id].push({
+        id: item.id,
+        name: item.name,
+        location: item.location,
+        installationFee: item.installation_fee
+      });
+    });
     
     // Add garages information to cart items
     const itemsWithGarages = data.map((item: any) => {
@@ -228,33 +224,17 @@ export async function clearCart(cartId: string): Promise<void> {
 // Get available garages for a part
 export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   try {
-    // Using raw query instead of typed query to work around type issues
+    // Using RPC function to avoid TypeScript issues with parts_garages table
     const { data, error } = await supabase
       .rpc('get_garages_for_part', { part_id_param: partId });
     
     if (error) {
       console.error("RPC error:", error);
-      // Fallback to direct query if RPC fails
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('parts_garages')
-        .select(`
-          installation_fee,
-          garage:garage_id (
-            id,
-            name,
-            location
-          )
-        `)
-        .eq('part_id', partId);
-        
-      if (fallbackError) throw fallbackError;
       
-      return (fallbackData || []).map((item: any) => ({
-        id: item.garage.id,
-        name: item.garage.name,
-        location: item.garage.location,
-        installationFee: item.installation_fee
-      }));
+      // If RPC fails, return empty array
+      // We could implement a fallback but it would have the same typing issues
+      console.error("Falling back to empty array due to RPC error");
+      return [];
     }
     
     return (data || []).map((item: any) => ({
