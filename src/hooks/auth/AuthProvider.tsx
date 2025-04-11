@@ -1,10 +1,9 @@
-
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AuthContext from "./AuthContext";
-import { fetchUserRole, createUserProfile } from "./authUtils";
+import { fetchUserRole, createUserProfile, isDemoAccount, handleDemoAccount } from "./authUtils";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -116,69 +115,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log(`Attempting to sign in with email: ${email}, role: ${role}`);
       
       // Special demo login handling
-      if (email === "demo@garage.com" && password === "garage123") {
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
+      if (isDemoAccount(email)) {
+        const demoResult = await handleDemoAccount();
+        
+        if (demoResult) {
+          setUser(demoResult.user);
+          setUserRole(demoResult.role);
+          
+          toast({
+            title: "Demo login successful",
+            description: `Welcome to the Bookmyparts garage demo!`,
           });
           
-          if (!error && data.user) {
-            const role = await fetchUserRole(data.user.id);
-            
-            if (!role) {
-              throw new Error("User profile not found");
-            }
-            
-            setUserRole(role);
-            
-            toast({
-              title: "Demo login successful",
-              description: `Welcome to the Bookmyparts garage demo!`,
-            });
-            
-            return;
-          }
-        } catch (signInError) {
-          console.log("Sign in failed, trying to create demo account");
-        }
-        
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              role: 'garage'
-            }
-          }
-        });
-
-        if (signUpError) {
-          throw signUpError;
-        }
-
-        if (signUpData.user) {
-          await createUserProfile(signUpData.user.id, email, 'garage');
-          
-          try {
-            const { data: demoAuth } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-            
-            if (demoAuth.user) {
-              setUser(demoAuth.user);
-              setUserRole('garage');
-              
-              toast({
-                title: "Demo login successful",
-                description: `Welcome to the Bookmyparts garage demo!`,
-              });
-              return;
-            }
-          } catch (demoError) {
-            console.error("Could not auto-confirm demo account:", demoError);
-          }
+          setIsLoading(false);
+          return;
+        } else {
+          throw new Error("Unable to log in with demo account");
         }
       }
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -10,6 +9,7 @@ import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { isDemoAccount } from "@/hooks/auth/authUtils";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ const Login = () => {
   const [error, setError] = useState("");
   
   const location = useLocation();
-  const { signIn, signOut, isLoading, isAuthenticated, user, userRole } = useAuth();
+  const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -83,6 +83,17 @@ const Login = () => {
     } catch (err: any) {
       console.error("Login failed:", err);
       setError(err.message || "Login failed. Please try again.");
+    }
+  };
+
+  const handleDemoGarageLogin = async () => {
+    setError("");
+    try {
+      console.log("Attempting demo garage login");
+      await signIn("demo@garage.com", "garage123", "garage");
+    } catch (err: any) {
+      console.error("Demo login failed:", err);
+      setError(err.message || "Demo login failed. Please try again.");
     }
   };
 
@@ -263,7 +274,7 @@ const Login = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex flex-col">
+                  <CardFooter className="flex flex-col gap-3">
                     <Button 
                       type="submit" 
                       className="w-full bg-mechanica-500 hover:bg-mechanica-600"
@@ -271,7 +282,18 @@ const Login = () => {
                     >
                       {isLoading ? "Logging in..." : "Login"}
                     </Button>
-                    <p className="mt-4 text-center text-sm text-gray-600">
+                    
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleDemoGarageLogin}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Processing..." : "Try Demo Garage Account"}
+                    </Button>
+                    
+                    <p className="mt-2 text-center text-sm text-gray-600">
                       Not registered yet?{" "}
                       <Link to="/garages" className="text-mechanica-600 hover:underline font-medium">
                         Join as a garage
