@@ -23,15 +23,15 @@ const CarSearch = () => {
   const initialLoadRef = useRef<boolean>(false);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  console.log("CarSearch render - parts:", parts?.length || 0);
-  console.log("CarSearch render - allParts:", allParts?.length || 0);
-  console.log("CarSearch render - searchCompleted:", searchCompleted);
-  console.log("CarSearch render - showResults:", showResults);
-
+  // Add explicit logging for debugging
+  console.log("🔍 CarSearch render - parts length:", parts?.length || 0);
+  console.log("🔍 CarSearch render - allParts length:", allParts?.length || 0);
+  console.log("🔍 CarSearch render - searchCompleted:", searchCompleted);
+  
   // Update UI when search completes
   useEffect(() => {
-    console.log("Search completed effect triggered:", searchCompleted);
-    console.log("Parts in effect:", parts?.length || 0);
+    console.log("🔄 Search completed effect triggered:", searchCompleted);
+    console.log("🔢 Parts in effect:", parts?.length || 0);
     
     if (searchCompleted) {
       setShowResults(true);
@@ -102,13 +102,17 @@ const CarSearch = () => {
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
-  // CRITICAL FIX: Ensure we're using the correct parts array
-  // When search is completed, show ONLY the filtered parts results
-  // Otherwise show all parts when no search has been performed
+  // CRITICAL FIX: Ensure we're showing the correct parts based on search state
+  // When search is completed, show ONLY the filtered parts
+  // Otherwise show all parts
   const displayParts = searchCompleted ? parts : allParts;
   
-  // Add debug logging
-  console.log("Displaying parts:", displayParts?.length || 0, "Search completed:", searchCompleted, "Parts array length:", parts?.length || 0);
+  // Critical debug logging
+  console.log("⚠️ FINAL DISPLAY STATE:");
+  console.log("- Search completed:", searchCompleted);
+  console.log("- Filtered parts count:", parts?.length || 0);
+  console.log("- All parts count:", allParts?.length || 0);
+  console.log("- Actually displaying:", displayParts?.length || 0, "parts");
 
   return (
     <div className="w-full max-w-6xl mx-auto">

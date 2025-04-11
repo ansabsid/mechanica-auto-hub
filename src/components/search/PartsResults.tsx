@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car } from "lucide-react";
+import { Package2, SearchX, Car, AlertCircle } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -20,19 +20,21 @@ interface PartsResultsProps {
 const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
   // Add detailed console logging to inspect the received props
   useEffect(() => {
-    console.log("PartsResults mounted/updated");
-    console.log("PartsResults received parts:", parts);
-    console.log("PartsResults visibility:", visible);
-    console.log("PartsResults parts length:", parts?.length || 0);
+    console.log("🔍 PartsResults MOUNTED/UPDATED");
+    console.log("📋 Parts length:", parts?.length || 0);
     
-    // Debug parts data to identify any filtering issues
+    // Debug parts data in more detail
     if (parts && parts.length > 0) {
-      console.log("Sample part data:", {
-        id: parts[0].id,
-        name: parts[0].name,
-        manufacturer_id: parts[0].manufacturer_id,
-        model_id: parts[0].model_id,
-        year: parts[0].year
+      console.log("🔎 DETAILED INSPECTION OF FIRST 3 PARTS:");
+      parts.slice(0, 3).forEach((part, index) => {
+        console.log(`Part ${index + 1}:`, {
+          id: part.id,
+          name: part.name,
+          manufacturer_id: part.manufacturer_id,
+          model_id: part.model_id,
+          year: part.year,
+          price: part.price
+        });
       });
 
       // Log all unique manufacturer_ids, model_ids, and years to verify filtering
@@ -40,20 +42,23 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
       const uniqueModels = [...new Set(parts.map(p => p.model_id))];
       const uniqueYears = [...new Set(parts.map(p => p.year))];
       
-      console.log("Unique manufacturer IDs in results:", uniqueMfrs);
-      console.log("Unique model IDs in results:", uniqueModels);
-      console.log("Unique years in results:", uniqueYears);
+      console.log("⚠️ FILTER VERIFICATION:");
+      console.log("- Unique manufacturer IDs:", uniqueMfrs);
+      console.log("- Unique model IDs:", uniqueModels);
+      console.log("- Unique years:", uniqueYears);
+      
+      if (uniqueMfrs.length > 1 || uniqueModels.length > 1) {
+        console.warn("⛔ FILTER ISSUE DETECTED: Multiple manufacturer/model IDs in results!");
+      }
     }
-  }, [parts, visible]);
+  }, [parts]);
 
   if (!visible) {
-    console.log("PartsResults not visible, returning null");
     return null;
   }
 
   // Check if parts array is empty or undefined
   if (!parts || parts.length === 0) {
-    console.log("No parts found in PartsResults component");
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
         <SearchX className="mx-auto h-16 w-16 text-blue-500 mb-4" />
@@ -63,8 +68,6 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
       </div>
     );
   }
-
-  console.log("Rendering parts list with", parts.length, "items");
   
   return (
     <div className="parts-results-container animate-in fade-in-50 duration-300">
