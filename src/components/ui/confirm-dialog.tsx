@@ -38,6 +38,7 @@ const ConfirmDialog = ({
 }: ConfirmDialogProps) => {
   const handleConfirm = async () => {
     try {
+      // Call the onConfirm function and await its result
       const result = await onConfirm();
       
       // Only close if the result is true or undefined (not false)
