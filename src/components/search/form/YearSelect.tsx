@@ -12,7 +12,7 @@ const YearSelect: React.FC<YearSelectProps> = ({ years, value, onChange }) => {
   return (
     <div>
       <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
-        Make Year
+        Vehicle Year
       </label>
       <Select 
         onValueChange={(value) => {

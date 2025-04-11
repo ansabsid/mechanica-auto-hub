@@ -6,7 +6,7 @@ const MAX_RETRIES = 2;
 
 /**
  * Wraps a promise with a timeout and retry mechanism
- * @param promise The original promise to execute
+ * @param promiseFn The original promise function to execute
  * @param retryCount Current retry attempt (internal use)
  * @returns The result of the promise, or throws after max retries
  */

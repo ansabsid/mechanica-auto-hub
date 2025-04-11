@@ -12,18 +12,18 @@ export const fetchAllPartsFromDB = async () => {
   console.log("Fetching all available parts");
   
   try {
-    const { data, error } = await fetchWithTimeout(() => 
+    const response = await fetchWithTimeout(() => 
       supabase.from('parts').select('*')
     );
     
-    if (error) {
-      throw error;
+    if (response.error) {
+      throw response.error;
     }
     
-    console.log("All parts fetched from database:", data?.length || 0);
+    console.log("All parts fetched from database:", response.data?.length || 0);
     
     // Process the parts data with garage information
-    const processedParts: Part[] = (data || []).map(part => {
+    const processedParts: Part[] = (response.data || []).map(part => {
       return {
         ...part,
         garages: part.garage_id ? { 
@@ -58,7 +58,7 @@ export const fetchPartsForVehicle = async (
   console.log(`Querying Supabase for parts: mfr=${manufacturerId}, model=${modelId}, year=${yearNum}`);
   
   try {
-    const { data, error } = await fetchWithTimeout(() => 
+    const response = await fetchWithTimeout(() => 
       supabase
         .from('parts')
         .select('*')
@@ -67,14 +67,14 @@ export const fetchPartsForVehicle = async (
         .eq('year', yearNum)
     );
     
-    if (error) {
-      throw error;
+    if (response.error) {
+      throw response.error;
     }
     
-    console.log("Supabase query result:", data);
+    console.log("Supabase query result:", response.data);
     
     // Process and enhance the database results with default garage information
-    const validParts: Part[] = (data || []).map(part => {
+    const validParts: Part[] = (response.data || []).map(part => {
       return {
         ...part,
         garages: part.garage_id ? { 
