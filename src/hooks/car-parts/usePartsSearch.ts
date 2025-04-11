@@ -181,6 +181,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setIsSearching(false);
       setSearchCompleted(true);
       
+      // Make sure we're referring to the mockPartsData variable defined above
       return validParts.length > 0 ? validParts.length : (mockPartsData?.length || 0);
     } catch (error: any) {
       console.error("Error searching for parts:", error);
