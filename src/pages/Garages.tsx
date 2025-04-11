@@ -25,11 +25,34 @@ interface Garage {
   email?: string;
 }
 
+// Sample garages to add if none are found in the database
+const sampleGarages = [
+  {
+    name: "AutoExpress Service Center",
+    location: "Sheikh Zayed Road, Dubai",
+    area: "Dubai Marina",
+    images: "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    name: "Premium Auto Workshop",
+    location: "Al Quoz Industrial Area, Dubai",
+    area: "Al Quoz",
+    images: "https://images.unsplash.com/photo-1567093322102-6bdd32fba69c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    name: "Motors Specialist Garage",
+    location: "Dubai Silicon Oasis, Dubai",
+    area: "Dubai Silicon Oasis",
+    images: "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+  }
+];
+
 const Garages = () => {
   const [filterOption, setFilterOption] = useState("all");
   const [garages, setGarages] = useState<Garage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [isAddingSamples, setIsAddingSamples] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Sample services for each garage
@@ -179,6 +202,56 @@ const Garages = () => {
     }
   };
 
+  // Helper function to add sample garages
+  const addSampleGarages = async () => {
+    try {
+      setIsAddingSamples(true);
+      console.log("Adding sample garages...");
+      
+      const { data, error } = await supabase
+        .from('garages')
+        .insert(sampleGarages)
+        .select();
+        
+      if (error) {
+        console.error("Error adding sample garages:", error);
+        throw error;
+      }
+      
+      console.log("Sample garages created:", data);
+      toast.success("Sample garages added successfully!");
+      
+      // Refresh the garages list
+      const { data: updatedGarages, error: fetchError } = await supabase
+        .from('garages')
+        .select('*');
+        
+      if (fetchError) {
+        console.error("Error fetching updated garages:", fetchError);
+        throw fetchError;
+      }
+      
+      // Enhance garages with additional frontend properties
+      const enhancedGarages = updatedGarages.map((garage, index) => ({
+        ...garage,
+        rating: 4.5 + (Math.random() * 0.5),
+        reviews: Math.floor(50 + Math.random() * 200),
+        services: serviceOptions[index % serviceOptions.length],
+        hours: "8:00 AM - 6:00 PM",
+        phone: "+971 552552476",
+        email: `info@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
+        images: garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      }));
+      
+      setGarages(enhancedGarages);
+    } catch (error: any) {
+      console.error("Error in addSampleGarages:", error);
+      toast.error("Failed to add sample garages: " + error.message);
+    } finally {
+      setIsAddingSamples(false);
+    }
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -255,7 +328,7 @@ const Garages = () => {
           </div>
           
           {/* Debug Section - Only in development */}
-          <div className="mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             <Button 
               variant="outline" 
               onClick={addTestGarage} 
@@ -271,7 +344,26 @@ const Garages = () => {
                 "Add Test Garage (Debug)"
               )}
             </Button>
-            <div className="text-sm text-gray-500 mb-2">
+            
+            {garages.length === 0 && (
+              <Button 
+                variant="default" 
+                onClick={addSampleGarages} 
+                className="mb-4"
+                disabled={isAddingSamples}
+              >
+                {isAddingSamples ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding Samples...
+                  </>
+                ) : (
+                  "Add Sample Garages"
+                )}
+              </Button>
+            )}
+            
+            <div className="text-sm text-gray-500 mb-2 w-full">
               Total garages: {garages.length}, Filtered: {filteredGarages.length}
             </div>
           </div>
@@ -289,7 +381,7 @@ const Garages = () => {
             <div className="text-center py-12">
               <p className="text-lg text-gray-600 mb-4">
                 {garages.length === 0 
-                  ? "No garages found in database. Try adding a test garage with the button above." 
+                  ? "No garages found in database. Use the buttons above to add test or sample garages." 
                   : "No garages found matching your criteria."}
               </p>
               {garages.length > 0 && (
