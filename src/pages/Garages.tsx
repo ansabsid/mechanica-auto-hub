@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   MapPin, 
@@ -5,7 +6,8 @@ import {
   X, 
   Building2,
   Calendar,
-  DollarSign
+  DollarSign,
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +39,14 @@ const GaragePage = () => {
   const [view, setView] = useState<"grid" | "list">("grid");
   
   // Use the useGarageManagement hook to fetch garages
-  const { garages, fetchLoading: loading, error, fetchGarages } = useGarageManagement();
+  const { 
+    garages, 
+    fetchLoading: loading, 
+    error, 
+    fetchGarages, 
+    seedSampleGarages, 
+    isLoading 
+  } = useGarageManagement();
 
   useEffect(() => {
     // Fetch garages when component mounts
@@ -71,6 +80,10 @@ const GaragePage = () => {
     toast.success(`Appointment booking initiated for ${garageName}`);
     // In a real app, this would navigate to a booking form or open a modal
     console.log(`Booking appointment for garage: ${garageId}`);
+  };
+
+  const handleSeedSampleGarages = async () => {
+    await seedSampleGarages();
   };
 
   const GarageCard = ({ garage }: { garage: Garage }) => (
@@ -184,9 +197,23 @@ const GaragePage = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => setSearchQuery("")}
+                    className="mb-4"
                   >
                     Clear Search
                   </Button>
+                )}
+                {!loading && garages.length === 0 && (
+                  <div className="mt-4">
+                    <p className="text-gray-600 mb-4">Would you like to add some sample garages for testing?</p>
+                    <Button 
+                      onClick={handleSeedSampleGarages}
+                      className="bg-mechanica-600 flex items-center mx-auto"
+                      disabled={isLoading}
+                    >
+                      <Database className="h-4 w-4 mr-2" />
+                      {isLoading ? "Adding Sample Data..." : "Add Sample Garages"}
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (
