@@ -49,7 +49,8 @@ export const CartDrawer = () => {
       return;
     }
     
-    navigate("/checkout");
+    setIsOpen(false); // Close the drawer before navigation
+    navigate("/checkout"); // Navigate to the checkout page
   };
   
   return (
@@ -169,16 +170,16 @@ export const CartDrawer = () => {
                 >
                   <Trash className="mr-1 h-4 w-4" /> Clear
                 </Button>
-                <SheetClose asChild>
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-mechanica-500 hover:bg-mechanica-600"
-                    onClick={handleCheckout}
-                    disabled={isLoading || cartItems.length === 0}
-                  >
-                    Checkout <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </SheetClose>
+                
+                {/* Remove SheetClose and handle navigation in the onClick function */}
+                <Button
+                  size="sm"
+                  className="flex-1 bg-mechanica-500 hover:bg-mechanica-600"
+                  onClick={handleCheckout}
+                  disabled={isLoading || cartItems.length === 0}
+                >
+                  Checkout <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
