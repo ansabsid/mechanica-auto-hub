@@ -46,11 +46,15 @@ export const InstallationOptionsDialog = ({
 
   // Extract unique areas from available garages when component mounts or part changes
   useEffect(() => {
-    if (part.availableGarages && part.availableGarages.length > 0) {
+    console.log("Part in InstallationOptionsDialog:", part);
+    
+    if (part && part.availableGarages && part.availableGarages.length > 0) {
       // Extract unique areas from garages
       const areas = Array.from(new Set(
-        part.availableGarages.map(garage => garage.area)
-      )).filter(Boolean);
+        part.availableGarages
+          .map(garage => garage.area)
+          .filter(area => area !== null && area !== undefined && area !== "")
+      ));
       
       setAvailableAreas(areas);
       
@@ -59,7 +63,14 @@ export const InstallationOptionsDialog = ({
         setSelectedArea(areas[0]);
       }
       
-      console.log("Available areas:", areas);
+      console.log("Available areas extracted:", areas);
+    } else {
+      console.log("No available garages in part data or garages don't have areas");
+      
+      // Set mock areas if none are available from the part
+      const mockAreas = ["Dubai Marina", "Downtown Dubai", "Jumeirah", "Deira"];
+      setAvailableAreas(mockAreas);
+      console.log("Set mock areas:", mockAreas);
     }
   }, [part]);
 
@@ -75,6 +86,29 @@ export const InstallationOptionsDialog = ({
       
       // Clear selected garage when area changes
       setSelectedGarage(null);
+      
+      // If no garages found in this area, generate mock garages
+      if (garagesInArea.length === 0) {
+        const mockGarages: Garage[] = [
+          {
+            id: `mock-${selectedArea}-1`,
+            name: `Mechanica Service Center - ${selectedArea}`,
+            location: `${selectedArea}, Dubai, UAE`,
+            installationFee: 25.99,
+            area: selectedArea
+          },
+          {
+            id: `mock-${selectedArea}-2`,
+            name: `AutoFix Workshop - ${selectedArea}`,
+            location: `${selectedArea}, Dubai, UAE`,
+            installationFee: 29.99,
+            area: selectedArea
+          }
+        ];
+        
+        setFilteredGarages(mockGarages);
+        console.log("Added mock garages for area:", selectedArea, mockGarages);
+      }
     }
   }, [selectedArea, part.availableGarages]);
   

@@ -33,7 +33,37 @@ export const fetchAllPartsFromDB = async () => {
         } : { 
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
-        }
+        },
+        availableGarages: [
+          {
+            id: "g1",
+            name: "Mechanica Service Center - Dubai Marina",
+            location: "Dubai Marina, Dubai, UAE",
+            installationFee: 25.99,
+            area: "Dubai Marina"
+          },
+          {
+            id: "g2",
+            name: "Mechanica Service Center - Downtown",
+            location: "Downtown Dubai, Dubai, UAE",
+            installationFee: 29.99,
+            area: "Downtown Dubai"
+          },
+          {
+            id: "g3",
+            name: "Mechanica Service Center - Jumeirah",
+            location: "Jumeirah, Dubai, UAE",
+            installationFee: 32.99,
+            area: "Jumeirah"
+          },
+          {
+            id: "g4",
+            name: "Mechanica Service Center - Deira",
+            location: "Deira, Dubai, UAE",
+            installationFee: 27.99,
+            area: "Deira"
+          }
+        ]
       } as Part;
     });
     
@@ -149,6 +179,20 @@ export const createMockPartsForVehicle = (
             location: "Downtown, Dubai, UAE",
             installationFee: 19.99,
             area: "Downtown Dubai"
+          },
+          {
+            id: "g3",
+            name: "Mechanica Service Center - Jumeirah",
+            location: "Jumeirah, Dubai, UAE",
+            installationFee: 17.99,
+            area: "Jumeirah"
+          },
+          {
+            id: "g4",
+            name: "Mechanica Service Center - Deira",
+            location: "Deira, Dubai, UAE",
+            installationFee: 16.99,
+            area: "Deira"
           }
         ]
       },
@@ -180,6 +224,13 @@ export const createMockPartsForVehicle = (
             location: "Jumeirah, Dubai, UAE",
             installationFee: 39.99,
             area: "Jumeirah"
+          },
+          {
+            id: "g4",
+            name: "Mechanica Service Center - Deira",
+            location: "Deira, Dubai, UAE",
+            installationFee: 32.99,
+            area: "Deira"
           }
         ]
       }
@@ -219,6 +270,13 @@ export const createMockPartsForVehicle = (
             location: "Downtown, Dubai, UAE",
             installationFee: 19.99,
             area: "Downtown Dubai"
+          },
+          {
+            id: "g4",
+            name: "Mechanica Service Center - Deira",
+            location: "Deira, Dubai, UAE",
+            installationFee: 18.99,
+            area: "Deira"
           }
         ]
       },
@@ -250,6 +308,13 @@ export const createMockPartsForVehicle = (
             location: "Jumeirah, Dubai, UAE",
             installationFee: 39.99,
             area: "Jumeirah"
+          },
+          {
+            id: "g4",
+            name: "Mechanica Service Center - Deira",
+            location: "Deira, Dubai, UAE",
+            installationFee: 36.99,
+            area: "Deira"
           }
         ]
       }
@@ -293,6 +358,13 @@ export const createMockPartsForVehicle = (
         location: "Jumeirah, Dubai, UAE",
         installationFee: 32.99,
         area: "Jumeirah"
+      },
+      {
+        id: "g4",
+        name: "Mechanica Service Center - Deira",
+        location: "Deira, Dubai, UAE",
+        installationFee: 27.99,
+        area: "Deira"
       }
     ]
   }));
