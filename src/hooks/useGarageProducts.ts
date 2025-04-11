@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -478,12 +479,11 @@ export const useGarageProducts = (garageId?: string) => {
         return false;
       }
       
-      // Refresh products after update
+      // Refresh products after update to ensure UI is updated
       if (product.garage_id) {
         await fetchProducts(product.garage_id);
       }
       
-      toast.success("Product updated successfully!");
       return true;
     } catch (error: any) {
       console.error("Error updating product:", error);

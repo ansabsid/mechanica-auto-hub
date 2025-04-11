@@ -36,7 +36,8 @@ const EditProductModal = ({
   // Initialize form when product changes
   useEffect(() => {
     if (product) {
-      setEditedProduct({ ...product });
+      // Create a deep copy to prevent any reference issues
+      setEditedProduct(JSON.parse(JSON.stringify(product)));
     }
   }, [product]);
 
@@ -72,6 +73,7 @@ const EditProductModal = ({
       
       console.log("Saving product with data:", productToSave);
       const success = await onSave(productToSave);
+      
       if (success) {
         toast.success("Product updated successfully!");
         onClose();
