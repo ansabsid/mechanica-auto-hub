@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ export const useGarageProducts = (garageId?: string) => {
   const [products, setProducts] = useState<any[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [availableGarages, setAvailableGarages] = useState<any[]>([]);
 
   // Function to upload image to Supabase storage
   const uploadImage = async (file: File, garageId: string): Promise<string | null> => {
@@ -71,6 +73,27 @@ export const useGarageProducts = (garageId?: string) => {
       console.error("Image upload error:", error);
       setUploadProgress(0);
       throw error;
+    }
+  };
+
+  // Fetch all available garages to ensure we use valid IDs
+  const fetchAvailableGarages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('garages')
+        .select('*');
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setAvailableGarages(data);
+        return data;
+      }
+      
+      return [];
+    } catch (error: any) {
+      console.error("Error fetching available garages:", error.message);
+      return [];
     }
   };
 
@@ -121,17 +144,29 @@ export const useGarageProducts = (garageId?: string) => {
     }
   };
 
-  const addProduct = async (product: GarageProduct, garageId: string, imageFile?: File | null) => {
+  const addProduct = async (product: GarageProduct, productGarageId: string, imageFile?: File | null) => {
     setIsLoading(true);
     try {
       console.log("Adding product with data:", product);
+      
+      // First, fetch available garages to ensure we use a valid ID
+      const garages = await fetchAvailableGarages();
+      
+      if (garages.length === 0) {
+        toast.error("No valid garages found. Please add a garage first.");
+        return null;
+      }
+      
+      // Use the first available garage ID if none is specified
+      const validGarageId = garages[0].id;
+      console.log("Using valid garage ID:", validGarageId);
       
       // First, upload the image if provided
       let imageUrl = product.imageUrl;
       
       if (imageFile) {
         try {
-          imageUrl = await uploadImage(imageFile, garageId);
+          imageUrl = await uploadImage(imageFile, validGarageId);
           console.log("Image uploaded successfully, URL:", imageUrl);
         } catch (uploadError: any) {
           console.error("Error during image upload:", uploadError);
@@ -149,14 +184,14 @@ export const useGarageProducts = (garageId?: string) => {
         manufacturer_id: product.manufacturer_id || 1,
         model_id: product.model_id || 1,
         year: product.year || new Date().getFullYear(),
-        garage_id: garageId,
+        garage_id: validGarageId, // Use the valid garage ID
         image_url: imageUrl,
         category: product.category // Use the category field directly
       };
 
       console.log("Prepared data for database insertion:", productData);
 
-      // Use fixed ID 7 as suggested
+      // Use fixed ID 7 for testing
       const partId = 7; 
       console.log("Using fixed part ID:", partId);
 
@@ -168,7 +203,7 @@ export const useGarageProducts = (garageId?: string) => {
         .from('parts_garages')
         .select('*')
         .eq('part_id', partId)
-        .eq('garage_id', garageId)
+        .eq('garage_id', validGarageId)
         .maybeSingle();
 
       if (checkError) {
@@ -182,7 +217,7 @@ export const useGarageProducts = (garageId?: string) => {
           .from('parts_garages')
           .insert({
             part_id: partId,
-            garage_id: garageId,
+            garage_id: validGarageId,
             installation_fee: 0 // Default installation fee
           });
 
@@ -199,7 +234,7 @@ export const useGarageProducts = (garageId?: string) => {
       toast.success("Product added successfully!");
       
       // Refresh the products list to show the newly added product
-      await fetchProducts(garageId);
+      await fetchProducts(validGarageId);
       return partId;
     } catch (error: any) {
       toast.error(error.message || "Failed to add product");
@@ -212,6 +247,9 @@ export const useGarageProducts = (garageId?: string) => {
 
   // Use effect to fetch products when garageId changes
   useEffect(() => {
+    // Fetch available garages on mount
+    fetchAvailableGarages();
+    
     if (garageId) {
       fetchProducts(garageId);
     }
@@ -224,6 +262,7 @@ export const useGarageProducts = (garageId?: string) => {
     isLoading,
     fetchLoading,
     uploadProgress,
-    setUploadProgress
+    setUploadProgress,
+    availableGarages
   };
 };

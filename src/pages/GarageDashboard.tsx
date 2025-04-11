@@ -129,7 +129,8 @@ const GarageDashboard = () => {
     isLoading: productLoading, 
     fetchLoading: productsLoading,
     uploadProgress,
-    setUploadProgress
+    setUploadProgress,
+    availableGarages
   } = useGarageProducts();
   
   const { 
@@ -146,14 +147,18 @@ const GarageDashboard = () => {
   } = useGarageManagement();
 
   useEffect(() => {
-    const mockGarageId = "27f4e4a5-3e4b-4c4d-9d3f-cd3c4e5f6a7b";
-    setCurrentGarageId(mockGarageId);
+    fetchGarages().then(() => {
+      if (garages.length > 0) {
+        const firstGarageId = garages[0]?.id;
+        if (firstGarageId) {
+          setCurrentGarageId(firstGarageId);
+          fetchProducts(firstGarageId);
+        } else {
+          toast.warning("No garages found. Please add a garage first.");
+        }
+      }
+    });
     
-    if (mockGarageId) {
-      fetchProducts(mockGarageId);
-    }
-    
-    fetchGarages();
     fetchManufacturers();
     
     const currentYear = new Date().getFullYear();
@@ -241,7 +246,7 @@ const GarageDashboard = () => {
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGarageId) {
-      toast.error("Garage ID not found. Please try again.");
+      toast.error("Garage ID not found. Please add a garage first.");
       return;
     }
 
