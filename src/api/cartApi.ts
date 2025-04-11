@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
+import { CartItem, Cart, InstallationOptions, Garage } from "@/types/cart.types";
 
 // Get user's cart or create a new one if it doesn't exist
 export async function getUserCart(): Promise<Cart | null> {
@@ -63,9 +63,14 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     // Get all part IDs from cart items to fetch available garages
     const partIds = data.map((item: any) => item.part.id);
     
+    if (partIds.length === 0) {
+      return []; // If no items in cart, return empty array
+    }
+    
     // Fetch garages that can install these parts
-    const { data: garagesData, error: garagesError } = await (supabase
-      .from('parts_garages') as any)
+    // Using raw query to work around type issues with parts_garages table
+    const { data: garagesData, error: garagesError } = await supabase
+      .from('parts_garages')
       .select(`
         part_id,
         installation_fee,
@@ -221,26 +226,41 @@ export async function clearCart(cartId: string): Promise<void> {
 }
 
 // Get available garages for a part
-export async function getGaragesForPart(partId: number) {
+export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   try {
-    const { data, error } = await (supabase
-      .from('parts_garages') as any)
-      .select(`
-        installation_fee,
-        garage:garage_id (
-          id,
-          name,
-          location
-        )
-      `)
-      .eq('part_id', partId);
-      
-    if (error) throw error;
+    // Using raw query instead of typed query to work around type issues
+    const { data, error } = await supabase
+      .rpc('get_garages_for_part', { part_id_param: partId });
     
-    return data.map((item: any) => ({
-      id: item.garage.id,
-      name: item.garage.name,
-      location: item.garage.location,
+    if (error) {
+      console.error("RPC error:", error);
+      // Fallback to direct query if RPC fails
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('parts_garages')
+        .select(`
+          installation_fee,
+          garage:garage_id (
+            id,
+            name,
+            location
+          )
+        `)
+        .eq('part_id', partId);
+        
+      if (fallbackError) throw fallbackError;
+      
+      return (fallbackData || []).map((item: any) => ({
+        id: item.garage.id,
+        name: item.garage.name,
+        location: item.garage.location,
+        installationFee: item.installation_fee
+      }));
+    }
+    
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      location: item.location,
       installationFee: item.installation_fee
     }));
   } catch (error) {

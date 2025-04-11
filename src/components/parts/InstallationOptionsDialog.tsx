@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Part } from "@/hooks/useCarParts";
 import { useToast } from "@/hooks/use-toast";
@@ -127,7 +126,7 @@ export const InstallationOptionsDialog = ({
   
   return (
     <>
-      <Dialog open={isOpen && !showInstallationOptions} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
