@@ -27,6 +27,12 @@ export const useGarageManagement = () => {
    * @returns Promise resolving to an array of formatted garage info
    */
   const fetchGarages = async () => {
+    // If already loading, prevent duplicate fetches
+    if (fetchLoading) {
+      console.log("Already fetching garages, request ignored");
+      return garages;
+    }
+    
     setFetchLoading(true);
     setError(null);
     try {

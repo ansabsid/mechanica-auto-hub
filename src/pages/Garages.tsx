@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,17 +38,23 @@ const Garages = () => {
   const [garages, setGarages] = useState<Garage[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { fetchGarages, fetchLoading, error } = useGarageManagement();
+  const [loadingInitial, setLoadingInitial] = useState(true);
   
-  // Fetch garages from Supabase
+  // Fetch garages from Supabase - now with additional protection against multiple calls
   useEffect(() => {
+    let isMounted = true;
+    
     const loadGarages = async () => {
       try {
         console.log("Fetching garages from database...");
         const garagesList = await fetchGarages();
         
+        if (!isMounted) return;
+        
         if (!garagesList || garagesList.length === 0) {
           console.log("No garages found in the database");
           setGarages([]);
+          setLoadingInitial(false);
           return;
         }
         
@@ -71,11 +76,22 @@ const Garages = () => {
         setGarages(enhancedGarages);
       } catch (err: any) {
         console.error("Error in loadGarages:", err.message);
-        toast.error("Failed to load garages");
+        if (isMounted) {
+          toast.error("Failed to load garages");
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingInitial(false);
+        }
       }
     };
     
     loadGarages();
+    
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+    };
   }, [fetchGarages]);
 
   // Filter and search functionality
@@ -110,8 +126,11 @@ const Garages = () => {
 
   const handleRetry = () => {
     toast.info("Retrying...");
+    setLoadingInitial(true);
     fetchGarages();
   };
+
+  const isLoading = loadingInitial || fetchLoading;
 
   return (
     <>
@@ -205,7 +224,7 @@ const Garages = () => {
           )}
           
           {/* Loading State */}
-          {fetchLoading && (
+          {isLoading && (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner size="md" className="mr-2" />
               <span className="text-lg text-gray-600">Loading garages...</span>
@@ -213,7 +232,7 @@ const Garages = () => {
           )}
           
           {/* Empty State */}
-          {!fetchLoading && !error && filteredGarages.length === 0 && (
+          {!isLoading && !error && filteredGarages.length === 0 && (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
               <div className="mb-4">
                 <img 
@@ -252,7 +271,7 @@ const Garages = () => {
           )}
           
           {/* Garage Cards */}
-          {!fetchLoading && filteredGarages.length > 0 && (
+          {!isLoading && filteredGarages.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
               {filteredGarages.map(garage => (
                 <Card key={garage.id} className="overflow-hidden border-none shadow-card hover:shadow-xl transition-shadow">
