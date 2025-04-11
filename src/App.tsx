@@ -18,6 +18,7 @@ import CategoryPage from "@/components/categories/CategoryPage";
 
 import "./App.css";
 
+// Create the router outside the App component
 const router = createBrowserRouter([
   {
     path: "/",
@@ -73,11 +74,13 @@ const router = createBrowserRouter([
   },
 ]);
 
+// The App component now wraps AuthProvider inside RouterProvider
 function App() {
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <RouterProvider 
+      router={router} 
+      fallbackElement={<div>Loading...</div>}
+    />
   );
 }
 

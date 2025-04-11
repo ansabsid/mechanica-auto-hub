@@ -1,6 +1,6 @@
+
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AuthContext from "./AuthContext";
@@ -12,7 +12,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [authChangeHandled, setAuthChangeHandled] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,8 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserRole(null);
           setAuthChangeHandled(false);
           
-          // Only redirect to login page if explicitly signed out
-          navigate("/login");
+          // Don't navigate here - will be handled in components when needed
           
           toast({
             title: "Logged out",
@@ -90,12 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (role) {
                 setUserRole(role);
                 
-                // Only navigate and show toast when SIGNED_IN event occurs and hasn't been handled yet
+                // Only show toast when SIGNED_IN event occurs and hasn't been handled yet
                 if (event === 'SIGNED_IN' && !authChangeHandled) {
                   setAuthChangeHandled(true);
                   
-                  // Navigate based on role when login is detected
-                  navigate(role === "customer" ? "/customer-dashboard" : "/garage-dashboard");
+                  // Navigation will happen in components using the context
                   
                   toast({
                     title: "Login successful",
@@ -114,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast, navigate, authChangeHandled]);
+  }, [toast, authChangeHandled]);
 
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);
@@ -137,7 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             
             setUserRole(role);
-            navigate("/garage-dashboard");
             
             toast({
               title: "Demo login successful",
@@ -176,7 +172,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (adminAuth.user) {
               setUser(adminAuth.user);
               setUserRole('garage');
-              navigate("/garage-dashboard");
               
               toast({
                 title: "Demo login successful",
@@ -281,7 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully logged out",
       });
       
-      // Navigation will happen in the auth state change listener
+      // Navigation will happen in components using the context
     } catch (error: any) {
       console.error("Error in signOut function:", error);
       toast({
