@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,24 +12,23 @@ interface PartCardProps {
   part: Part;
 }
 
-// Function to get an appropriate image URL based on part name or category
+// Function to get an appropriate image URL based on part name
 const getPartImageUrl = (part: Part): string => {
   const name = part.name.toLowerCase();
-  const category = part.category?.toLowerCase() || '';
   
-  if (name.includes('oil') || category.includes('oil')) {
+  if (name.includes('oil')) {
     return "https://images.unsplash.com/photo-1635954749253-a0642359cdfa?w=800&h=600&auto=format";
-  } else if (name.includes('filter') || category.includes('filter')) {
+  } else if (name.includes('filter')) {
     return "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format";
-  } else if (name.includes('brake') || category.includes('brake')) {
+  } else if (name.includes('brake')) {
     return "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format";
-  } else if (name.includes('spark') || category.includes('ignition')) {
+  } else if (name.includes('spark') || name.includes('ignition')) {
     return "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format";
-  } else if (name.includes('tire') || category.includes('tire') || name.includes('wheel')) {
+  } else if (name.includes('tire') || name.includes('wheel')) {
     return "https://images.unsplash.com/photo-1591839728094-39242732d4c1?w=800&h=600&auto=format";
-  } else if (name.includes('battery') || category.includes('electrical')) {
+  } else if (name.includes('battery') || name.includes('electrical')) {
     return "https://images.unsplash.com/photo-1619641464045-b201ebd9ec0c?w=800&h=600&auto=format";
-  } else if (name.includes('belt') || category.includes('belt')) {
+  } else if (name.includes('belt')) {
     return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
   } else {
     // Default auto parts image for other categories
