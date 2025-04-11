@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -447,17 +448,21 @@ export const useGarageProducts = (garageId?: string) => {
     try {
       console.log("Updating product with data:", product);
       
-      // Prepare the data for the database update
+      // Convert quantity to a number if it's a string
+      const quantity = typeof product.quantity === 'string' 
+        ? parseInt(product.quantity, 10) 
+        : product.quantity;
+      
+      // Prepare the data for the database update with proper type conversion
       const updateData = {
         name: product.name,
         price: parseFloat(product.price.toString()),
-        stock: parseInt(product.quantity.toString()),
+        stock: quantity,
         description: product.description || '',
         manufacturer_id: product.manufacturer_id || 1,
         model_id: product.model_id || 1,
         year: product.year || new Date().getFullYear(),
         category: product.category
-        // Remove 'status' from here as it's not in the parts table schema
       };
       
       console.log("Prepared data for database update:", updateData);
@@ -473,10 +478,6 @@ export const useGarageProducts = (garageId?: string) => {
         toast.error(`Failed to update product: ${error.message}`);
         return false;
       }
-      
-      // We can't update status directly since it's not in the schema
-      // If we need to track status, we would need to implement it differently
-      // For example, we could derive status from stock levels or other fields
       
       // Refresh products after update
       if (product.garage_id) {

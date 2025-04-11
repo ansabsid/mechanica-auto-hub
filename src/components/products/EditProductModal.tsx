@@ -65,7 +65,14 @@ const EditProductModal = ({
     
     setIsLoading(true);
     try {
-      const success = await onSave(editedProduct);
+      // Convert quantity to number for consistent handling
+      const productToSave = {
+        ...editedProduct,
+        quantity: Number(editedProduct.quantity)
+      };
+      
+      console.log("Saving product with data:", productToSave);
+      const success = await onSave(productToSave);
       if (success) {
         onClose();
       }
@@ -199,7 +206,7 @@ const EditProductModal = ({
               id="edit-product-price"
               type="number"
               value={editedProduct.price.toString()}
-              onChange={(e) => setEditedProduct({...editedProduct, price: e.target.value})}
+              onChange={(e) => setEditedProduct({...editedProduct, price: parseFloat(e.target.value)})}
               placeholder="e.g. 299.99"
               required
             />
@@ -210,7 +217,9 @@ const EditProductModal = ({
             <Input 
               id="edit-product-quantity"
               type="number"
-              value={editedProduct.quantity.toString()}
+              value={typeof editedProduct.quantity === 'number' 
+                ? editedProduct.quantity.toString() 
+                : editedProduct.quantity}
               onChange={(e) => setEditedProduct({...editedProduct, quantity: e.target.value})}
               placeholder="e.g. 10"
               required

@@ -37,9 +37,14 @@ const ConfirmDialog = ({
   isLoading = false
 }: ConfirmDialogProps) => {
   const handleConfirm = async () => {
-    const result = await onConfirm();
-    // Ignore the boolean result if it's returned
-    onClose();
+    try {
+      await onConfirm();
+      // Close the dialog regardless of the return value
+      onClose();
+    } catch (error) {
+      console.error("Error during confirmation:", error);
+      // Don't close the dialog on error
+    }
   };
 
   return (
