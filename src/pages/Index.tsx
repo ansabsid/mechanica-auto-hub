@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Loader2
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
 
 // Trusted garage logos
@@ -56,33 +57,81 @@ const Index = () => {
   const [featuredParts, setFeaturedParts] = useState<Part[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch featured parts from the database
+  // Fetch featured parts from the database with real garage data
   useEffect(() => {
     const fetchFeaturedParts = async () => {
       setIsLoading(true);
       try {
         // Get 4 random parts from the database
-        const { data, error } = await supabase
+        const { data: partsData, error: partsError } = await supabase
           .from('parts')
           .select('*')
           .limit(4);
           
-        if (error) throw error;
+        if (partsError) throw partsError;
         
-        if (data) {
-          // Process the parts data with default garage information
-          const processedParts: Part[] = data.map(part => {
-            return {
-              ...part,
-              garages: part.garage_id ? { 
-                name: 'AutoCare Dubai',
-                location: 'Dubai Marina'
-              } : { 
+        if (partsData && partsData.length > 0) {
+          // Get all part IDs to fetch their associated garages
+          const partIds = partsData.map(part => part.id);
+          
+          // Fetch garages for all parts using the bulk function
+          const { data: garageData, error: garageError } = await supabase
+            .rpc('get_garages_for_part_bulk', { part_ids: partIds });
+            
+          if (garageError) {
+            console.error("Error fetching garage data:", garageError);
+          }
+          
+          // Process the parts data with real garage information
+          const processedParts: Part[] = partsData.map(part => {
+            // Find all garages for this part
+            const partGarages = garageData ? garageData.filter(g => g.part_id === part.id) : [];
+            
+            // Default garage if none found
+            const mainGarage = partGarages.length > 0 ? 
+              { 
+                name: partGarages[0].name,
+                location: partGarages[0].location
+              } : 
+              { 
                 name: 'BookMyParts Service Center',
                 location: 'Dubai, UAE'
-              },
-              // Add any other required properties
-              availableGarages: [
+              };
+              
+            // Format all available garages for this part
+            const availableGaragesList = partGarages.map(garage => ({
+              id: garage.id,
+              name: garage.name,
+              location: garage.location,
+              installationFee: Number(garage.installation_fee),
+              area: garage.location.split(',')[0].trim() // Extract area from location
+            }));
+            
+            // If no garages found through association, check if part has a direct garage_id
+            if (part.garage_id && availableGaragesList.length === 0) {
+              // Fetch this specific garage
+              supabase
+                .from('garages')
+                .select('*')
+                .eq('id', part.garage_id)
+                .single()
+                .then(({ data: directGarage, error: directError }) => {
+                  if (!directError && directGarage) {
+                    availableGaragesList.push({
+                      id: directGarage.id,
+                      name: directGarage.name,
+                      location: directGarage.location,
+                      installationFee: 25.99, // Default installation fee
+                      area: directGarage.area || directGarage.location.split(',')[0].trim()
+                    });
+                  }
+                });
+            }
+            
+            // Ensure we always have some available garages for installation
+            const finalAvailableGarages = availableGaragesList.length > 0 
+              ? availableGaragesList 
+              : [
                 {
                   id: "g1",
                   name: "BookMyParts Service Center - Dubai Marina",
@@ -97,7 +146,12 @@ const Index = () => {
                   installationFee: 29.99,
                   area: "Downtown Dubai"
                 }
-              ]
+              ];
+              
+            return {
+              ...part,
+              garages: mainGarage,
+              availableGarages: finalAvailableGarages
             } as Part;
           });
           
@@ -163,8 +217,8 @@ const Index = () => {
 
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-              <span className="ml-2 text-gray-600">Loading featured parts...</span>
+              <LoadingSpinner size="md" />
+              <span className="ml-3 text-gray-600">Loading featured parts...</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
