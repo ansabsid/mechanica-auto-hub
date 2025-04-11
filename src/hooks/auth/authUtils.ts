@@ -66,11 +66,12 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
     const demoPassword = "garage123";
     
     // Try signing in first (if account exists)
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    let { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: demoEmail,
       password: demoPassword
     });
 
+    // If sign in is successful and we have a user
     if (!signInError && signInData.user) {
       console.log("Successfully signed in with demo account");
       
@@ -79,11 +80,7 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
         const role = await fetchUserRole(signInData.user.id);
         if (!role) {
           console.log("Creating profile for existing demo user");
-          await enhancedSupabase.rpc('create_profile_for_user', {
-            user_id: signInData.user.id,
-            user_email: demoEmail,
-            user_role: 'garage'
-          });
+          await createUserProfile(signInData.user.id, demoEmail, "garage");
         }
       } catch (profileErr) {
         console.error("Error ensuring profile exists:", profileErr);
@@ -92,42 +89,56 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
       return { user: signInData.user, role: "garage" };
     }
 
-    // If sign in fails, create a demo account
-    console.log("Creating demo account...");
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: demoEmail,
-      password: demoPassword,
-      options: {
-        data: { role: 'garage' }
-      }
-    });
-
-    if (signUpError) {
-      console.error("Error creating demo account:", signUpError);
-      return null;
-    }
-
-    if (signUpData.user) {
-      try {
-        await enhancedSupabase.rpc('create_profile_for_user', {
-          user_id: signUpData.user.id,
-          user_email: demoEmail,
-          user_role: 'garage'
-        });
-      } catch (profileErr) {
-        console.error("Error creating profile for new demo user:", profileErr);
-      }
-      
-      // Auto-sign in the demo user
-      const { data: autoSignIn, error: autoSignInError } = await supabase.auth.signInWithPassword({
+    // If sign in fails because the account doesn't exist, try creating it
+    if (signInError) {
+      console.log("Creating demo account...");
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: demoEmail,
-        password: demoPassword
+        password: demoPassword,
+        options: {
+          data: { role: 'garage' }
+        }
       });
-      
-      if (!autoSignInError && autoSignIn.user) {
-        console.log("Successfully signed in with newly created demo account");
-        return { user: autoSignIn.user, role: "garage" };
+
+      if (signUpError) {
+        console.error("Error creating demo account:", signUpError);
+        return null;
       }
+
+      if (signUpData.user) {
+        try {
+          await createUserProfile(signUpData.user.id, demoEmail, "garage");
+          
+          // Try signing in with the newly created account
+          const { data: autoSignIn, error: autoSignInError } = await supabase.auth.signInWithPassword({
+            email: demoEmail,
+            password: demoPassword
+          });
+          
+          if (!autoSignInError && autoSignIn.user) {
+            console.log("Successfully signed in with newly created demo account");
+            return { user: autoSignIn.user, role: "garage" };
+          }
+        } catch (profileErr) {
+          console.error("Error creating profile for new demo user:", profileErr);
+        }
+      }
+    }
+    
+    // If account exists but needs email confirmation
+    // For demo accounts, we'll use the admin function to directly create a profile and bypass confirmation
+    console.log("Trying alternative approach for demo account...");
+    
+    // Force create user profile if needed
+    try {
+      // This is a workaround for demo accounts
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        await createUserProfile(userData.user.id, demoEmail, "garage");
+        return { user: userData.user, role: "garage" };
+      }
+    } catch (error) {
+      console.error("Final attempt for demo account failed:", error);
     }
     
     return null;
