@@ -1,48 +1,50 @@
 
 // Common types for car parts functionality
+
+// Using readonly properties where possible to optimize React rendering
 export interface Manufacturer {
-  id: number;
-  name: string;
+  readonly id: number;
+  readonly name: string;
 }
 
 export interface Model {
-  id: number;
-  manufacturer_id: number;
-  name: string;
+  readonly id: number;
+  readonly manufacturer_id: number;
+  readonly name: string;
 }
 
 export interface Garage {
-  id: string;
-  name: string;
-  location: string;
-  installationFee: number;
-  area: string;
+  readonly id: string;
+  readonly name: string;
+  readonly location: string;
+  readonly installationFee: number;
+  readonly area: string;
 }
 
 export interface Part {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  stock: number;
-  manufacturer_id: number;
-  model_id: number;
-  year: number;
-  garage_id: string | null;
-  garages: {
-    name: string;
-    location: string;
+  readonly id: number;
+  readonly name: string;
+  readonly description: string | null;
+  readonly price: number;
+  readonly stock: number;
+  readonly manufacturer_id: number;
+  readonly model_id: number;
+  readonly year: number;
+  readonly garage_id: string | null;
+  readonly garages: {
+    readonly name: string;
+    readonly location: string;
   } | null;
-  availableGarages?: Garage[];
+  readonly availableGarages?: ReadonlyArray<Garage>;
 }
 
 // Search state interface
 export interface CarPartsSearchState {
-  manufacturers: Manufacturer[];
-  models: Model[];
-  parts: Part[];
-  years: number[];
-  isLoading: boolean;
-  isSearching: boolean;
-  searchCompleted: boolean;
+  readonly manufacturers: ReadonlyArray<Manufacturer>;
+  readonly models: ReadonlyArray<Model>;
+  readonly parts: ReadonlyArray<Part>;
+  readonly years: ReadonlyArray<number>;
+  readonly isLoading: boolean;
+  readonly isSearching: boolean;
+  readonly searchCompleted: boolean;
 }

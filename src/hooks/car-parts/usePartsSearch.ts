@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Manufacturer, Model, Part } from "./types";
 import { useToast } from "@/hooks/use-toast";
 import { usePartsSearchState } from "./usePartsSearchState";
@@ -8,6 +8,7 @@ import {
   fetchPartsForVehicle, 
   createMockPartsForVehicle 
 } from "./services/partsService";
+import { fetchWithCache } from "./utils/network";
 
 export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
   const { 
@@ -36,7 +37,13 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     setIsLoading(true);
     
     try {
-      const processedParts = await fetchAllPartsFromDB();
+      // Use cache to avoid redundant fetches
+      const processedParts = await fetchWithCache(
+        'all-parts',
+        fetchAllPartsFromDB,
+        300000 // 5 minutes cache for all parts
+      );
+      
       console.log("fetchAllPartsFromDB returned:", processedParts.length, "parts");
       
       if (processedParts.length > 0) {
@@ -113,8 +120,15 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log(`Using numeric values for search: mfrId=${mfrId}, mdlId=${mdlId}, yearNum=${yearNum}`);
       
-      // Fetch parts from database
-      let validParts = await fetchPartsForVehicle(mfrId, mdlId, yearNum);
+      // Create a unique cache key for this search
+      const cacheKey = `parts-${mfrId}-${mdlId}-${yearNum}`;
+      
+      // Fetch parts from database using cache
+      let validParts = await fetchWithCache(
+        cacheKey,
+        () => fetchPartsForVehicle(mfrId, mdlId, yearNum),
+        120000 // 2 minutes cache for specific vehicle parts
+      );
       
       // End timing the query
       const endTime = performance.now();
@@ -161,11 +175,13 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("🔢 RESULTS AFTER SEARCH: ", finalParts.length, "parts");
       
-      // Double check that all parts match the search criteria
-      const strictlyFilteredParts = finalParts.filter(part => 
-        part.manufacturer_id === mfrId && 
-        part.model_id === mdlId && 
-        part.year === yearNum
+      // Double check that all parts match the search criteria - using memoization would improve this
+      const strictlyFilteredParts = useMemo(() => 
+        finalParts.filter(part => 
+          part.manufacturer_id === mfrId && 
+          part.model_id === mdlId && 
+          part.year === yearNum
+        ), [finalParts, mfrId, mdlId, yearNum]
       );
       
       console.log("🔎 STRICT FILTERING CHECK:");

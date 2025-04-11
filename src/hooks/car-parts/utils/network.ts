@@ -33,6 +33,7 @@ export const fetchWithTimeout = async <T>(promiseFn: () => Promise<T> | any, ret
     
     if (retryCount < MAX_RETRIES) {
       console.log(`Retrying fetch (${retryCount + 1}/${MAX_RETRIES})...`);
+      // Use exponential backoff strategy for retries
       const backoffDelay = Math.pow(2, retryCount) * 1000;
       
       await new Promise(resolve => setTimeout(resolve, backoffDelay));
@@ -41,4 +42,41 @@ export const fetchWithTimeout = async <T>(promiseFn: () => Promise<T> | any, ret
     
     throw error;
   }
+};
+
+// Add a new cache utility to prevent duplicate requests
+const responseCache = new Map<string, {data: any, timestamp: number}>();
+const CACHE_TTL = 60000; // 1 minute cache TTL
+
+/**
+ * Fetches data with caching to prevent redundant network requests
+ * @param cacheKey A unique key to identify this request in cache
+ * @param fetchFn The fetch function to execute if cache miss
+ * @param ttl Optional TTL in ms (defaults to 1 minute)
+ */
+export const fetchWithCache = async <T>(
+  cacheKey: string, 
+  fetchFn: () => Promise<T>,
+  ttl: number = CACHE_TTL
+): Promise<T> => {
+  const now = Date.now();
+  const cached = responseCache.get(cacheKey);
+  
+  // Return cached data if it exists and is not expired
+  if (cached && (now - cached.timestamp < ttl)) {
+    console.log(`🔄 Using cached data for: ${cacheKey}`);
+    return cached.data as T;
+  }
+  
+  // Fetch fresh data
+  console.log(`🌐 Fetching fresh data for: ${cacheKey}`);
+  const data = await fetchWithTimeout(fetchFn);
+  
+  // Store in cache
+  responseCache.set(cacheKey, {
+    data,
+    timestamp: now
+  });
+  
+  return data;
 };
