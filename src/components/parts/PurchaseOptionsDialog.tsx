@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Part } from "@/hooks/useCarParts";
+import { Part } from "@/hooks/car-parts/types";
 import { InstallationOptionsDialog } from "@/components/parts/InstallationOptionsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
@@ -79,7 +79,9 @@ export const PurchaseOptionsDialog = ({
   
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) onClose();
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Purchase Options</DialogTitle>
@@ -91,8 +93,8 @@ export const PurchaseOptionsDialog = ({
           <div className="grid grid-cols-1 gap-4 py-4">
             <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                  onClick={handleCartOnlyClick}>
-              <div className="w-12 h-12 rounded-full bg-mechanica-100 flex items-center justify-center mb-3">
-                <ShoppingCart className="h-6 w-6 text-mechanica-600" />
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                <ShoppingCart className="h-6 w-6 text-blue-600" />
               </div>
               <h3 className="font-medium text-lg">Buy Part Only</h3>
               <p className="text-sm text-gray-500 text-center mt-1">
@@ -102,8 +104,8 @@ export const PurchaseOptionsDialog = ({
             
             <div className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                  onClick={handleBuyWithInstallation}>
-              <div className="w-12 h-12 rounded-full bg-mechanica-100 flex items-center justify-center mb-3">
-                <Wrench className="h-6 w-6 text-mechanica-600" />
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                <Wrench className="h-6 w-6 text-blue-600" />
               </div>
               <h3 className="font-medium text-lg">Buy With Installation</h3>
               <p className="text-sm text-gray-500 text-center mt-1">

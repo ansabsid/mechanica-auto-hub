@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Part } from "@/hooks/useCarParts";
+import { Part } from "@/hooks/car-parts/types";
 import { useCart } from "@/hooks/useCart";
 import { PurchaseOptionsDialog } from "@/components/parts/PurchaseOptionsDialog";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -55,28 +54,7 @@ export const PartCard = ({ part }: PartCardProps) => {
   const handleAddToCartClick = async () => {
     if (part.stock <= 0) return;
     
-    if (existingCartItem) {
-      try {
-        // If already in cart, just add one more with same installation option
-        await addToCart(part.id, 1, existingInstallation);
-        // Refresh cart to make sure we see the updated items
-        await refreshCart();
-        toast({
-          title: "Added to cart",
-          description: `${part.name} added to cart${existingInstallation ? " with installation" : ""}`,
-        });
-      } catch (error) {
-        console.error("Error adding part with existing installation:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add part to cart",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
-    
-    // If not in cart, show purchase options
+    // Always show purchase options when clicking Add button
     setShowPurchaseOptions(true);
   };
   
