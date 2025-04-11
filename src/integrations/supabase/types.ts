@@ -116,6 +116,7 @@ export type Database = {
       }
       garages: {
         Row: {
+          area: string | null
           created_at: string
           id: string
           location: string
@@ -123,6 +124,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          area?: string | null
           created_at?: string
           id?: string
           location: string
@@ -130,6 +132,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          area?: string | null
           created_at?: string
           id?: string
           location?: string
