@@ -37,6 +37,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
     
     try {
       const processedParts = await fetchAllPartsFromDB();
+      console.log("fetchAllPartsFromDB returned:", processedParts.length, "parts");
       
       if (processedParts.length > 0) {
         setAllParts(processedParts);
@@ -110,6 +111,8 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const mdlId = parseInt(modelId);
       const yearNum = parseInt(year);
       
+      console.log(`Using numeric values for search: mfrId=${mfrId}, mdlId=${mdlId}, yearNum=${yearNum}`);
+      
       // Fetch parts from database
       let validParts = await fetchPartsForVehicle(mfrId, mdlId, yearNum);
       
@@ -118,7 +121,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const queryDuration = endTime - startTime;
       setQueryTime(queryDuration);
       
-      console.log(`Database query completed in ${queryDuration.toFixed(2)}ms`);
+      console.log(`Database query completed in ${queryDuration.toFixed(2)}ms, found ${validParts.length} parts`);
       
       let finalParts: Part[];
       
@@ -137,14 +140,23 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         // Generate mock parts for the vehicle
         finalParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
-        console.log("Using mock parts:", finalParts.length);
+        console.log("Generated mock parts:", finalParts.length);
         
-        toast({
-          title: "Using Sample Data",
-          description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${finalParts.length} sample parts.`,
-          variant: "default",
-          duration: 5000,
-        });
+        if (finalParts.length > 0) {
+          toast({
+            title: "Using Sample Data",
+            description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${finalParts.length} sample parts.`,
+            variant: "default",
+            duration: 5000,
+          });
+        } else {
+          toast({
+            title: "No Parts Found",
+            description: "No parts match your search criteria.",
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
       }
       
       console.log("🔢 RESULTS AFTER SEARCH: ", finalParts.length, "parts");
@@ -162,6 +174,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       if (strictlyFilteredParts.length !== finalParts.length) {
         console.warn("⚠️ WARNING: Some parts were removed during strict filtering!");
+        console.log("Parts removed:", finalParts.length - strictlyFilteredParts.length);
       }
       
       // Set the parts array with strictly filtered results
@@ -173,7 +186,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       return strictlyFilteredParts.length;
     } catch (error: any) {
-      console.error("Error searching for parts:", error.message);
+      console.error("Error searching for parts:", error);
       
       setQueryTime(0);
       

@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import CarSearchForm from "./CarSearchForm";
 import PartsResults from "./PartsResults";
 import { useCarParts } from "@/hooks/useCarParts";
@@ -19,7 +19,19 @@ const CarSearch = () => {
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  // Log the state changes for debugging
+  useEffect(() => {
+    console.log("CarSearch state updated:", { 
+      partsCount: parts?.length || 0, 
+      isLoading, 
+      isSearching, 
+      searchCompleted 
+    });
+  }, [parts, isLoading, isSearching, searchCompleted]);
+
   const handleSearchComplete = (resultsCount: number) => {
+    console.log("Search completed with", resultsCount, "results");
+    
     // Scroll to results section with a slight delay when results are found
     if (resultsCount > 0) {
       setTimeout(() => {

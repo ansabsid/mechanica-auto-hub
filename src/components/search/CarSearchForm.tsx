@@ -36,6 +36,7 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
 
   useEffect(() => {
     if (manufacturer) {
+      console.log("Fetching models for manufacturer:", manufacturer);
       fetchModels(manufacturer);
       // Reset model when manufacturer changes
       setModel("");
@@ -52,11 +53,14 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       return;
     }
 
+    console.log("Searching for parts with criteria:", { manufacturer, model, year });
+    
     try {
       // Reset previous search results
       resetSearch();
       
       const count = await searchParts(manufacturer, model, year);
+      console.log(`Search completed: ${count} parts found`);
       
       // Notify parent component about search completion
       onSearch(count);

@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car } from "lucide-react";
+import { Package2, SearchX, Car, X } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -23,6 +23,12 @@ const PartsResults: React.FC<PartsResultsProps> = ({
   isLoading, 
   searchCompleted 
 }) => {
+  console.log("PartsResults rendering with:", { 
+    partsCount: parts?.length || 0, 
+    isLoading, 
+    searchCompleted 
+  });
+  
   // Only render when search is completed and not loading
   if (isLoading) {
     return null;
