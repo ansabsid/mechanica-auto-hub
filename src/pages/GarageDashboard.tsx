@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -259,6 +260,7 @@ const GarageDashboard = () => {
         
         setUploadProgress(10);
         
+        // Upload the file to Supabase Storage
         const { data, error } = await supabase.storage
           .from('parts')
           .upload(filePath, productImage, {
@@ -272,6 +274,7 @@ const GarageDashboard = () => {
         
         setUploadProgress(90);
         
+        // Get the public URL for the uploaded file
         const { data: { publicUrl } } = supabase.storage
           .from('parts')
           .getPublicUrl(filePath);
