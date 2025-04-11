@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +18,9 @@ import {
   FileImage,
   Upload,
   Car,
-  Factory
+  Factory,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -35,6 +36,8 @@ import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import EditProductModal from "@/components/products/EditProductModal";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 const appointments = [
   {
@@ -124,6 +127,13 @@ const GarageDashboard = () => {
   const [filteredModels, setFilteredModels] = useState<any[]>([]);
   const [years, setYears] = useState<number[]>([]);
   const isMobile = useIsMobile();
+  
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<GarageProduct | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [statusUpdateDialogOpen, setStatusUpdateDialogOpen] = useState(false);
+  const [statusProduct, setStatusProduct] = useState<{id: number, status: string} | null>(null);
 
   const { 
     addProduct, 
@@ -133,7 +143,10 @@ const GarageDashboard = () => {
     fetchLoading: productsLoading,
     uploadProgress,
     setUploadProgress,
-    availableGarages
+    availableGarages,
+    updateProduct,
+    updateProductStatus,
+    deleteProduct
   } = useGarageProducts(currentGarageId);
   
   const { 
@@ -334,6 +347,57 @@ const GarageDashboard = () => {
     console.log("Changing to garage ID:", garageId);
     setCurrentGarageId(garageId);
     fetchProducts(garageId);
+  };
+
+  const handleEditProduct = (product: any) => {
+    const formattedProduct: GarageProduct = {
+      id: product.id,
+      name: product.name,
+      category: product.category || "",
+      price: product.price,
+      quantity: product.stock,
+      status: product.status || "In Stock",
+      garage_id: product.garage_id,
+      imageUrl: product.image_url,
+      manufacturer_id: product.manufacturer_id,
+      model_id: product.model_id,
+      year: product.year,
+      description: product.description
+    };
+    
+    setSelectedProduct(formattedProduct);
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateProduct = async (updatedProduct: GarageProduct) => {
+    return await updateProduct(updatedProduct);
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!statusProduct) return false;
+    
+    return await updateProductStatus(
+      statusProduct.id, 
+      statusProduct.status, 
+      currentGarageId
+    );
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+    
+    const success = await deleteProduct(productToDelete, currentGarageId);
+    if (success) {
+      setProductToDelete(null);
+    }
+  };
+
+  const openStatusDialog = (product: any, newStatus: string) => {
+    setStatusProduct({
+      id: product.id,
+      status: newStatus
+    });
+    setStatusUpdateDialogOpen(true);
   };
 
   return (
@@ -681,20 +745,66 @@ const GarageDashboard = () => {
                                 </span>
                               </td>
                               <td className="p-2 md:p-4">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>Edit Product</DropdownMenuItem>
-                                    <DropdownMenuItem>Update Status</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div className="flex space-x-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-blue-600"
+                                    onClick={() => handleEditProduct(product)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-red-600"
+                                    onClick={() => {
+                                      setProductToDelete(product.id);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                        <Edit className="h-4 w-4 mr-2" /> Edit Product
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                      <DropdownMenuItem onClick={() => openStatusDialog(product, "In Stock")}>
+                                        <span className="h-2 w-2 rounded-full bg-green-500 mr-2" /> In Stock
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => openStatusDialog(product, "Limited")}>
+                                        <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2" /> Limited
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => openStatusDialog(product, "Sold Out")}>
+                                        <span className="h-2 w-2 rounded-full bg-red-500 mr-2" /> Sold Out
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => openStatusDialog(product, "Discontinued")}>
+                                        <span className="h-2 w-2 rounded-full bg-gray-500 mr-2" /> Discontinued
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem 
+                                        className="text-red-600"
+                                        onClick={() => {
+                                          setProductToDelete(product.id);
+                                          setDeleteDialogOpen(true);
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </td>
                             </tr>
                           ))
@@ -1047,6 +1157,42 @@ const GarageDashboard = () => {
           </Tabs>
         </section>
       </div>
+      
+      <EditProductModal 
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        product={selectedProduct}
+        onSave={handleUpdateProduct}
+        manufacturers={manufacturers}
+        models={models}
+        years={years}
+      />
+      
+      <ConfirmDialog 
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteProduct}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        isLoading={productLoading}
+      />
+      
+      <ConfirmDialog 
+        isOpen={statusUpdateDialogOpen}
+        onClose={() => setStatusUpdateDialogOpen(false)}
+        onConfirm={handleStatusUpdate}
+        title="Update Product Status"
+        description={`Are you sure you want to change the status to "${statusProduct?.status}"?`}
+        confirmText="Update"
+        cancelText="Cancel"
+        isLoading={productLoading}
+      />
     </div>
   );
 };

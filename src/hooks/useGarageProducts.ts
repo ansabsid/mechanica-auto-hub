@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -437,6 +436,147 @@ export const useGarageProducts = (garageId?: string) => {
     }
   };
 
+  const updateProduct = async (product: GarageProduct): Promise<boolean> => {
+    if (!product.id) {
+      toast.error("Product ID is missing");
+      return false;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      console.log("Updating product with data:", product);
+      
+      // Prepare the data for the database update
+      const updateData = {
+        name: product.name,
+        price: parseFloat(product.price.toString()),
+        stock: parseInt(product.quantity.toString()),
+        description: product.description || '',
+        manufacturer_id: product.manufacturer_id || 1,
+        model_id: product.model_id || 1,
+        year: product.year || new Date().getFullYear(),
+        category: product.category,
+        status: product.status
+      };
+      
+      console.log("Prepared data for database update:", updateData);
+      
+      // Update the product in the database
+      const { error } = await supabase
+        .from('parts')
+        .update(updateData)
+        .eq('id', product.id);
+      
+      if (error) {
+        console.error("Update error:", error);
+        toast.error(`Failed to update product: ${error.message}`);
+        return false;
+      }
+      
+      // Refresh products after update
+      if (product.garage_id) {
+        await fetchProducts(product.garage_id);
+      }
+      
+      toast.success("Product updated successfully!");
+      return true;
+    } catch (error: any) {
+      console.error("Error updating product:", error);
+      toast.error(error.message || "Failed to update product");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProductStatus = async (productId: number, status: string, garageId?: string): Promise<boolean> => {
+    if (!productId) {
+      toast.error("Product ID is missing");
+      return false;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Update only the status
+      const { error } = await supabase
+        .from('parts')
+        .update({ status })
+        .eq('id', productId);
+      
+      if (error) {
+        console.error("Status update error:", error);
+        toast.error(`Failed to update status: ${error.message}`);
+        return false;
+      }
+      
+      // Refresh products after update
+      if (garageId) {
+        await fetchProducts(garageId);
+      }
+      
+      toast.success(`Product status updated to "${status}"`);
+      return true;
+    } catch (error: any) {
+      console.error("Error updating product status:", error);
+      toast.error(error.message || "Failed to update product status");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteProduct = async (productId: number, garageId?: string): Promise<boolean> => {
+    if (!productId) {
+      toast.error("Product ID is missing");
+      return false;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      console.log("Deleting product with ID:", productId);
+      
+      // First remove any associations in parts_garages table
+      const { error: associationError } = await supabase
+        .from('parts_garages')
+        .delete()
+        .eq('part_id', productId);
+      
+      if (associationError) {
+        console.error("Error removing product associations:", associationError);
+        // Continue with deletion even if association removal fails
+      }
+      
+      // Delete the product from the parts table
+      const { error } = await supabase
+        .from('parts')
+        .delete()
+        .eq('id', productId);
+      
+      if (error) {
+        console.error("Delete error:", error);
+        toast.error(`Failed to delete product: ${error.message}`);
+        return false;
+      }
+      
+      // Refresh products after deletion
+      if (garageId) {
+        await fetchProducts(garageId);
+      }
+      
+      toast.success("Product deleted successfully!");
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting product:", error);
+      toast.error(error.message || "Failed to delete product");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Use effect to fetch products when garageId changes
   useEffect(() => {
     // Fetch available garages on mount
@@ -466,6 +606,9 @@ export const useGarageProducts = (garageId?: string) => {
 
   return {
     addProduct,
+    updateProduct,
+    updateProductStatus,
+    deleteProduct,
     fetchProducts,
     products,
     isLoading,
@@ -473,6 +616,6 @@ export const useGarageProducts = (garageId?: string) => {
     uploadProgress,
     setUploadProgress,
     availableGarages,
-    uploadImageToBucket // Add the new direct upload function to the return object
+    uploadImageToBucket
   };
 };
