@@ -47,7 +47,7 @@ export const useGarageManagement = () => {
     try {
       console.log("Fetching garages from the database...");
       
-      // Only select the fields we need for the card display
+      // Select the fields we need including the installation_fee column
       const { data, error: fetchError } = await supabase
         .from('garages')
         .select('id, name, location, area, images, installation_fee')
