@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { User, Wrench, Award, Settings, MapPin, Globe, ThumbsUp } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -7,10 +8,15 @@ import ComingSoonDialog from "@/components/ui/coming-soon-dialog";
 
 const About = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   
   const handleAppDownloadClick = () => {
     setIsComingSoonOpen(true);
+  };
+
+  const handleJoinAsGarage = () => {
+    navigate('/register');
   };
   
   return (
@@ -188,9 +194,8 @@ const About = () => {
               Download Our App
             </Button>
             <Button 
-              variant="outline" 
-              className="border-white text-white hover:text-white hover:bg-white/10 hover:border-white w-full sm:w-auto"
-              onClick={handleAppDownloadClick}
+              className="bg-mechanica-500 text-white hover:bg-mechanica-500 w-full sm:w-auto"
+              onClick={handleJoinAsGarage}
             >
               Join as a Garage
             </Button>
