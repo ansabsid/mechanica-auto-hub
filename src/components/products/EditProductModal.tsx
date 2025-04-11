@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { GarageProduct } from "@/hooks/useGarageProducts";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -74,10 +73,14 @@ const EditProductModal = ({
       console.log("Saving product with data:", productToSave);
       const success = await onSave(productToSave);
       if (success) {
+        toast.success("Product updated successfully!");
         onClose();
+      } else {
+        toast.error("Failed to update product");
       }
     } catch (error) {
       console.error("Error saving product:", error);
+      toast.error("Failed to update product");
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +96,7 @@ const EditProductModal = ({
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          {/* Product Name Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-name">Product Name*</Label>
             <Input 
@@ -104,6 +108,7 @@ const EditProductModal = ({
             />
           </div>
           
+          {/* Category Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-category">Category*</Label>
             <Select 
@@ -128,6 +133,7 @@ const EditProductModal = ({
             </Select>
           </div>
           
+          {/* Description Field */}
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="edit-product-description">Description</Label>
             <Textarea 
@@ -139,6 +145,7 @@ const EditProductModal = ({
             />
           </div>
           
+          {/* Manufacturer Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-manufacturer">Manufacturer*</Label>
             <Select 
@@ -159,6 +166,7 @@ const EditProductModal = ({
             </Select>
           </div>
           
+          {/* Model Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-model">Model*</Label>
             <Select 
@@ -180,6 +188,7 @@ const EditProductModal = ({
             </Select>
           </div>
           
+          {/* Year Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-year">Year*</Label>
             <Select 
@@ -200,6 +209,7 @@ const EditProductModal = ({
             </Select>
           </div>
           
+          {/* Price Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-price">Price (AED)*</Label>
             <Input 
@@ -212,6 +222,7 @@ const EditProductModal = ({
             />
           </div>
           
+          {/* Quantity Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-quantity">Stock Quantity*</Label>
             <Input 
@@ -226,6 +237,7 @@ const EditProductModal = ({
             />
           </div>
           
+          {/* Status Field */}
           <div className="space-y-2">
             <Label htmlFor="edit-product-status">Availability Status</Label>
             <Select 

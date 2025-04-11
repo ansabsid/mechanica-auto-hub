@@ -38,9 +38,11 @@ const ConfirmDialog = ({
 }: ConfirmDialogProps) => {
   const handleConfirm = async () => {
     try {
-      await onConfirm();
-      // Close the dialog regardless of the return value
-      onClose();
+      const result = await onConfirm();
+      // Check if we got a boolean result and only close if it's true or undefined
+      if (result !== false) {
+        onClose();
+      }
     } catch (error) {
       console.error("Error during confirmation:", error);
       // Don't close the dialog on error
