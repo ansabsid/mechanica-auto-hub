@@ -47,6 +47,9 @@ export const useGarageManagement = () => {
     try {
       console.log("Fetching garages from the database...");
       
+      // Log the SQL equivalent for debugging
+      console.log("SQL Equivalent: SELECT id, name, location, area, images, installation_fee FROM garages ORDER BY location");
+      
       // Select the fields we need including the installation_fee column
       const { data, error: fetchError } = await supabase
         .from('garages')
@@ -75,6 +78,7 @@ export const useGarageManagement = () => {
       }
       
       console.log("Garages fetched successfully:", data);
+      console.log("Sample first garage data:", data[0]);
       
       // Map the data to our expected format (converting installation_fee to installationFee)
       const formattedGarages = data.map(garage => ({
@@ -86,10 +90,12 @@ export const useGarageManagement = () => {
         installationFee: garage.installation_fee
       }));
       
+      console.log("Formatted garages:", formattedGarages);
       setGarages(formattedGarages);
       return formattedGarages;
     } catch (error: any) {
       console.error("Error fetching garages:", error.message);
+      console.error("Full error object:", error);
       setError(error.message);
       toast.error("Failed to load garages");
       return [];
@@ -179,21 +185,59 @@ export const useGarageManagement = () => {
         }
       ];
       
+      console.log("About to insert sample garages:", sampleGarages);
+      
       const { data, error } = await supabase
         .from('garages')
         .insert(sampleGarages)
         .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error inserting sample garages:", error);
+        throw error;
+      }
       
-      console.log("Sample garages added successfully:", data);
+      console.log("Sample garages added successfully. Response data:", data);
       toast.success("Sample garages added!");
-      await fetchGarages(); // Refresh the garages list
+      
+      // Fetch garages again to update the list
+      console.log("Refreshing garages list after seeding...");
+      await fetchGarages(); 
+      
       return data;
     } catch (error: any) {
+      console.error("Full error object when seeding garages:", error);
       toast.error(error.message || "Failed to add sample garages");
       console.error("Seed sample garages error:", error);
       return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Clears all garages from the database (for testing purposes)
+   */
+  const clearAllGarages = async () => {
+    setIsLoading(true);
+    try {
+      console.log("Clearing all garages...");
+      
+      const { error } = await supabase
+        .from('garages')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except this impossible ID (safety measure)
+        
+      if (error) throw error;
+      
+      console.log("All garages cleared successfully");
+      toast.success("All garages cleared!");
+      setGarages([]);
+      return true;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to clear garages");
+      console.error("Clear garages error:", error);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +247,7 @@ export const useGarageManagement = () => {
     fetchGarages,
     addGarage,
     seedSampleGarages,
+    clearAllGarages,
     garages,
     isLoading,
     fetchLoading,

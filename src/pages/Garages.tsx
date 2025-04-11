@@ -7,7 +7,8 @@ import {
   Building2,
   Calendar,
   DollarSign,
-  Database
+  Database,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,16 +45,20 @@ const GaragePage = () => {
     fetchLoading: loading, 
     error, 
     fetchGarages, 
-    seedSampleGarages, 
+    seedSampleGarages,
+    clearAllGarages,
     isLoading 
   } = useGarageManagement();
 
   useEffect(() => {
     // Fetch garages when component mounts
+    console.log("GaragePage component mounted, fetching garages...");
     fetchGarages();
   }, []);
 
   useEffect(() => {
+    console.log("Garages or search query changed, filtering garages...", { garagesCount: garages.length, searchQuery });
+    
     if (garages.length > 0) {
       // Filter garages based on search query
       const filtered = garages.filter(garage => {
@@ -65,8 +70,10 @@ const GaragePage = () => {
         );
       });
 
+      console.log(`Filtered ${garages.length} garages to ${filtered.length} based on search: "${searchQuery}"`);
       setFilteredGarages(filtered);
     } else {
+      console.log("No garages to filter, setting empty array");
       setFilteredGarages([]);
     }
   }, [searchQuery, garages]);
@@ -83,7 +90,13 @@ const GaragePage = () => {
   };
 
   const handleSeedSampleGarages = async () => {
+    console.log("User clicked Add Sample Garages button");
     await seedSampleGarages();
+  };
+
+  const handleClearAllGarages = async () => {
+    console.log("User clicked Clear All Garages button");
+    await clearAllGarages();
   };
 
   const GarageCard = ({ garage }: { garage: Garage }) => (
@@ -110,6 +123,9 @@ const GaragePage = () => {
             <span>Installation Fee: ${garage.installationFee.toFixed(2)}</span>
           </div>
         )}
+        <div className="text-xs text-gray-400 mt-2">
+          ID: {garage.id.substring(0, 8)}...
+        </div>
       </CardContent>
       <CardFooter className="pt-0">
         <Button 
@@ -183,6 +199,18 @@ const GaragePage = () => {
                   {searchQuery && <span> for "<span className="font-medium">{searchQuery}</span>"</span>}
                 </p>
               </div>
+              {garages.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={handleClearAllGarages}
+                  disabled={isLoading}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Clear All Garages
+                </Button>
+              )}
             </div>
 
             {filteredGarages.length === 0 ? (
