@@ -48,7 +48,8 @@ export const isAdminUser = (email: string): boolean => {
     "your.email@example.com",
     "demo@garage.com",
     "test@example.com",
-    "admin@test.com"
+    "admin@test.com",
+    "ansab.sid123@gmail.com" // Added your email
   ]; // Added demo emails
   return adminEmails.includes(email.toLowerCase());
 };
