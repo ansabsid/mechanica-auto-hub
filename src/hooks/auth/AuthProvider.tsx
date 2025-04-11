@@ -1,4 +1,3 @@
-
 import { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -65,8 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserRole(null);
           setAuthChangeHandled(false);
           
-          // Don't navigate here - will be handled in components when needed
-          
           toast({
             title: "Logged out",
             description: "You have been successfully logged out",
@@ -86,13 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const role = await fetchUserRole(currentUser.id);
               
               if (role) {
+                console.log("Setting user role in auth state change:", role);
                 setUserRole(role);
                 
                 // Only show toast when SIGNED_IN event occurs and hasn't been handled yet
                 if (event === 'SIGNED_IN' && !authChangeHandled) {
                   setAuthChangeHandled(true);
-                  
-                  // Navigation will happen in components using the context
                   
                   toast({
                     title: "Login successful",

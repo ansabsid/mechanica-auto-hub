@@ -1,7 +1,7 @@
 
-import React from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { AuthProvider } from "@/hooks/auth";
+import React, { useEffect } from "react";
+import { createBrowserRouter, RouterProvider, useLocation, useNavigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/hooks/auth";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
@@ -17,6 +17,33 @@ import Checkout from "@/pages/Checkout";
 import CategoryPage from "@/components/categories/CategoryPage";
 
 import "./App.css";
+
+// Component to handle route protection and redirection
+const RouteGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user, userRole, isLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    console.log("RouteGuard checking access for path:", location.pathname);
+    console.log("Current user:", user?.email, "Role:", userRole);
+    
+    // Add specific path protection for garage dashboard
+    if (location.pathname === "/garage-dashboard" && userRole !== "garage") {
+      console.log("Access denied to garage dashboard - redirecting");
+      navigate("/customer-dashboard");
+    }
+    
+    // Could add more path protection logic here
+    
+  }, [location.pathname, user, userRole, navigate]);
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+  
+  return <>{children}</>;
+};
 
 // Create the router with explicit route configuration
 const router = createBrowserRouter([

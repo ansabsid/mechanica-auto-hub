@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -19,16 +20,22 @@ const Login = () => {
   const [error, setError] = useState("");
   
   const location = useLocation();
-  const { signIn, isLoading, isAuthenticated, user } = useAuth();
+  const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users without delay flags
+  // Redirect authenticated users based on role
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log("Login page - User is authenticated, redirecting to dashboard");
-      navigate("/customer-dashboard");
+      console.log("Login page - User is authenticated with role:", userRole);
+      if (userRole === 'garage') {
+        console.log("Redirecting to garage dashboard");
+        navigate("/garage-dashboard");
+      } else {
+        console.log("Redirecting to customer dashboard");
+        navigate("/customer-dashboard");
+      }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, userRole, navigate]);
 
   // Parse URL query parameters for demo login
   useEffect(() => {
