@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, User, ShoppingCart, LogOut, Home, Settings } from "lucide-react";
@@ -36,7 +35,7 @@ const Header = () => {
   };
 
   const handleDashboardClick = () => {
-    if (userRole === "garage") {
+    if (userRole === "garage" || userRole === "admin") {
       navigate("/garage-dashboard");
     } else {
       navigate("/customer-dashboard");
@@ -77,7 +76,7 @@ const Header = () => {
               <>
                 <CartDrawer />
 
-                {userRole === "garage" && <InstallationRequestsNotification />}
+                {(userRole === "garage" || userRole === "admin") && <InstallationRequestsNotification />}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -91,10 +90,24 @@ const Header = () => {
                       <p className="text-sm text-gray-500 capitalize">{userRole || "User"}</p>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleDashboardClick}>
-                      <Home className="mr-2 h-4 w-4" />
-                      <span>{userRole === "garage" ? "Garage Dashboard" : "My Dashboard"}</span>
-                    </DropdownMenuItem>
+                    {userRole === "admin" && (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate("/garage-dashboard")}>
+                          <Home className="mr-2 h-4 w-4" />
+                          <span>Garage Dashboard</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/customer-dashboard")}>
+                          <Home className="mr-2 h-4 w-4" />
+                          <span>Customer Dashboard</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    {userRole !== "admin" && (
+                      <DropdownMenuItem onClick={handleDashboardClick}>
+                        <Home className="mr-2 h-4 w-4" />
+                        <span>{(userRole === "garage") ? "Garage Dashboard" : "My Dashboard"}</span>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate("/orders")}>
                       <ShoppingCart className="mr-2 h-4 w-4" />
                       <span>My Orders</span>
@@ -173,7 +186,7 @@ const Header = () => {
                 Contact
               </Link>
               
-              {isAuthenticated && userRole === "garage" && (
+              {isAuthenticated && (userRole === "garage" || userRole === "admin") && (
                 <Link 
                   to="/garage-dashboard"
                   className="text-mechanica-600 font-medium hover:text-mechanica-700 transition-colors"

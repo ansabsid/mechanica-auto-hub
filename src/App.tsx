@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { createBrowserRouter, RouterProvider, useLocation, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/hooks/auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
@@ -28,33 +28,42 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
     console.log("RouteGuard checking access for path:", location.pathname);
     console.log("Current user:", user?.email, "Role:", userRole);
     
-    // Handle protected routes based on user role
-    if (location.pathname === "/garage-dashboard") {
-      if (!user) {
-        console.log("Access denied to garage dashboard - not logged in - redirecting to login");
-        navigate("/login");
-        return;
+    if (!isLoading) {
+      // Handle protected routes based on user role
+      if (location.pathname === "/garage-dashboard") {
+        if (!user) {
+          console.log("Access denied to garage dashboard - not logged in - redirecting to login");
+          navigate("/login");
+          return;
+        }
+        
+        if (userRole !== "garage" && userRole !== "admin") {
+          console.log("Access denied to garage dashboard - not a garage or admin - redirecting to customer dashboard");
+          navigate("/customer-dashboard");
+          return;
+        }
+        
+        console.log("Access granted to garage dashboard for role:", userRole);
       }
       
-      if (userRole !== "garage" && userRole !== "admin") {
-        console.log("Access denied to garage dashboard - not a garage or admin - redirecting to customer dashboard");
-        navigate("/customer-dashboard");
-        return;
+      // Redirect authenticated users from login page based on role
+      if (location.pathname === "/login" && user) {
+        if (userRole === "garage" || userRole === "admin") {
+          console.log("User already logged in as garage or admin - redirecting to garage dashboard");
+          navigate("/garage-dashboard");
+        } else {
+          console.log("User already logged in as customer - redirecting to customer dashboard");
+          navigate("/customer-dashboard");
+        }
+      }
+      
+      // Handle customer dashboard access
+      if (location.pathname === "/customer-dashboard" && user && !userRole) {
+        // If role isn't loaded yet, wait for it
+        console.log("User role not yet loaded, waiting...");
       }
     }
-    
-    // Redirect authenticated users from login page based on role
-    if (location.pathname === "/login" && user) {
-      if (userRole === "garage" || userRole === "admin") {
-        console.log("User already logged in as garage or admin - redirecting to garage dashboard");
-        navigate("/garage-dashboard");
-      } else {
-        console.log("User already logged in as customer - redirecting to customer dashboard");
-        navigate("/customer-dashboard");
-      }
-    }
-    
-  }, [location.pathname, user, userRole, navigate]);
+  }, [location.pathname, user, userRole, navigate, isLoading]);
   
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
