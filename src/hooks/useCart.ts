@@ -192,8 +192,8 @@ export const useCart = () => {
       let itemTotal = item.part.price * item.quantity;
       
       // Add installation fee if applicable
-      if (item.installation_options) {
-        itemTotal += item.installation_options.installationFee;
+      if (item.installation_data) {
+        itemTotal += item.installation_data.installationFee;
       }
       
       return total + itemTotal;

@@ -1,5 +1,5 @@
 
-import { Part } from "@/hooks/useCarParts";
+import { Part } from "@/hooks/car-parts/types";
 
 export interface InstallationOptions {
   installationRequired: boolean;
@@ -13,7 +13,7 @@ export interface CartItem {
   cart_id: string;
   part_id: number;
   quantity: number;
-  installation_options?: InstallationOptions;
+  installation_data?: InstallationOptions;
   part: Part;
 }
 

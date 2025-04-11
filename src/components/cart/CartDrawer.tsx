@@ -75,16 +75,16 @@ export const CartDrawer = () => {
                         </p>
                       )}
                       
-                      {item.installation_options && (
+                      {item.installation_data && (
                         <div className="mt-2">
                           <Badge variant="outline" className="flex items-center gap-1 bg-mechanica-50">
                             <Wrench className="h-3 w-3" /> Installation
                           </Badge>
                           <p className="text-xs text-muted-foreground mt-1">
-                            at {item.installation_options.garageName}
+                            at {item.installation_data.garageName}
                           </p>
                           <p className="text-xs font-medium text-mechanica-600 mt-1">
-                            +${item.installation_options.installationFee.toFixed(2)} installation fee
+                            +${item.installation_data.installationFee.toFixed(2)} installation fee
                           </p>
                         </div>
                       )}
@@ -121,7 +121,7 @@ export const CartDrawer = () => {
                     </div>
                     <div className="font-medium">
                       ${((item.part.price * item.quantity) + 
-                         (item.installation_options ? item.installation_options.installationFee : 0)).toFixed(2)}
+                         (item.installation_data ? item.installation_data.installationFee : 0)).toFixed(2)}
                     </div>
                   </div>
                   

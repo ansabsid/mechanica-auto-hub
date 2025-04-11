@@ -2,10 +2,11 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, LogOut, Wrench } from "lucide-react";
+import { Menu, X, User, LogOut, Wrench, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { useCart } from "@/hooks/useCart";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,6 +15,7 @@ const Header = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
+  const { cartItems } = useCart();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -89,6 +91,9 @@ const Header = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-4">
+            {/* Cart */}
+            <CartDrawer />
+            
             {isAuthenticated && user ? (
               <Button 
                 variant="outline" 
@@ -184,9 +189,6 @@ const Header = () => {
           </div>
         )}
       </div>
-
-      {/* Cart Drawer */}
-      <CartDrawer />
     </header>
   );
 };

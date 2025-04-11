@@ -42,6 +42,7 @@ export async function getUserCart(): Promise<Cart | null> {
 // Get all items in the cart with part details
 export async function getCartItems(cartId: string): Promise<CartItem[]> {
   try {
+    // Modified query to properly join with parts table
     const { data, error } = await (supabase
       .from('cart_items') as any)
       .select(`
@@ -51,18 +52,39 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
           name,
           description,
           price,
-          garage_id,
           stock,
-          garages:garage_id (
-            name,
-            location
-          )
+          garage_id
         )
       `)
       .eq('cart_id', cartId);
       
     if (error) throw error;
-    return data || [];
+    
+    // Fetch garage details separately if needed
+    const itemsWithGarages = await Promise.all(
+      (data || []).map(async (item: any) => {
+        if (item.part?.garage_id) {
+          const { data: garageData } = await (supabase
+            .from('garages') as any)
+            .select('name, location')
+            .eq('id', item.part.garage_id)
+            .single();
+            
+          if (garageData) {
+            return {
+              ...item,
+              part: {
+                ...item.part,
+                garages: garageData
+              }
+            };
+          }
+        }
+        return item;
+      })
+    );
+    
+    return itemsWithGarages || [];
   } catch (error) {
     console.error("Error getting cart items:", error);
     throw error;
@@ -88,7 +110,7 @@ export async function addToCart(
       .select('*')
       .eq('cart_id', cartId)
       .eq('part_id', partId)
-      .eq('installation_options', installationOptions ? JSON.stringify(installationOptions) : null)
+      .is('installation_data', installationOptions ? null : installationOptions)
       .maybeSingle();
       
     if (checkError) throw checkError;
@@ -112,7 +134,7 @@ export async function addToCart(
         cart_id: cartId,
         part_id: partId,
         quantity: quantity,
-        installation_options: installationOptions || null
+        installation_data: installationOptions || null
       };
       
       const { data: insertedItem, error: addError } = await (supabase
