@@ -8,6 +8,7 @@ interface ScannerNavLinkProps {
   className?: string;
 }
 
+// Navigation link component that leads to the scanner functionality
 const ScannerNavLink: React.FC<ScannerNavLinkProps> = ({ className }) => {
   return (
     <Link
