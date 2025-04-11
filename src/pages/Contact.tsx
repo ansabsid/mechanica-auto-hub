@@ -1,244 +1,168 @@
 
 import React from "react";
-import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, PhoneCall, MapPin, Clock, Send } from "lucide-react";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
 const Contact = () => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Contact form submitted");
-    // Handle form submission logic
-  };
-
   return (
-    <MainLayout>
+    <>
       {/* Hero Section */}
-      <section className="py-12 md:py-20 bg-mechanica-50">
+      <section className="bg-mechanica-50 py-12 md:py-24">
         <div className="container-custom text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Contact <span className="text-mechanica-600">Bookmyparts</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Get in touch with our team for support, partnership inquiries, or any questions.
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Contact Us</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            We're here to help. Reach out to our team with any questions, feedback, or support needs.
           </p>
         </div>
       </section>
 
-      {/* Contact Information */}
-      <section className="py-16 bg-white">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-mechanica-50 rounded-xl p-6 text-center">
-              <div className="bg-white h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-subtle">
-                <PhoneCall className="h-8 w-8 text-mechanica-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Call Us</h3>
-              <p className="text-gray-600 mb-2">Our support team is available during business hours</p>
-              <a 
-                href="tel:+971552552476" 
-                className="text-mechanica-600 font-medium hover:underline"
-              >
-                +971 552552476
-              </a>
-            </div>
-
-            <div className="bg-mechanica-50 rounded-xl p-6 text-center">
-              <div className="bg-white h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-subtle">
-                <Mail className="h-8 w-8 text-mechanica-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Email Us</h3>
-              <p className="text-gray-600 mb-2">Send us an email and we'll respond as soon as possible</p>
-              <a 
-                href="mailto:support@bookmyparts.com" 
-                className="text-mechanica-600 font-medium hover:underline"
-              >
-                support@bookmyparts.com
-              </a>
-            </div>
-
-            <div className="bg-mechanica-50 rounded-xl p-6 text-center">
-              <div className="bg-white h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-subtle">
-                <MapPin className="h-8 w-8 text-mechanica-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Visit Us</h3>
-              <p className="text-gray-600 mb-2">Our headquarters are located in Dubai, UAE</p>
-              <address className="text-mechanica-600 font-medium not-italic">
-                Downtown Dubai, UAE
-              </address>
-            </div>
-          </div>
-
-          <div className="mt-12 bg-mechanica-50 rounded-xl p-6">
-            <div className="flex items-center mb-4">
-              <Clock className="h-6 w-6 text-mechanica-600 mr-2" />
-              <h3 className="text-xl font-semibold">Business Hours</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium mb-2">Weekdays</h4>
-                <p className="text-gray-600">Sunday - Thursday: 9:00 AM - 6:00 PM</p>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Weekend</h4>
-                <p className="text-gray-600">Friday: 10:00 AM - 3:00 PM</p>
-                <p className="text-gray-600">Saturday: Closed</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Map & Contact Form */}
-      <section className="py-16 bg-mechanica-50">
+      {/* Contact Info & Form Section */}
+      <section className="py-16">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Contact Information */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
-              <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-subtle">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Your Name</Label>
-                      <Input id="name" required />
+              <h2 className="text-3xl font-bold text-gray-900 mb-8">Get In Touch</h2>
+              
+              <div className="space-y-8">
+                <Card className="p-6 border-none shadow-subtle">
+                  <div className="flex">
+                    <div className="bg-mechanica-100 p-4 rounded-full mr-5">
+                      <Phone className="h-6 w-6 text-mechanica-600" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" required />
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Phone</h3>
+                      <p className="text-gray-600">+971 552552476</p>
+                      <p className="text-gray-600">Available 9am - 6pm, Sunday - Thursday</p>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number (Optional)</Label>
-                    <Input id="phone" />
+                </Card>
+                
+                <Card className="p-6 border-none shadow-subtle">
+                  <div className="flex">
+                    <div className="bg-mechanica-100 p-4 rounded-full mr-5">
+                      <Mail className="h-6 w-6 text-mechanica-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Email</h3>
+                      <p className="text-gray-600">support@bookmyparts.com</p>
+                      <p className="text-gray-600">We aim to respond within 24 hours</p>
+                    </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subject</Label>
-                    <Select>
-                      <SelectTrigger id="subject">
-                        <SelectValue placeholder="Select a subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="general">General Inquiry</SelectItem>
-                        <SelectItem value="support">Customer Support</SelectItem>
-                        <SelectItem value="partnership">Partnership Opportunity</SelectItem>
-                        <SelectItem value="feedback">Feedback</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                </Card>
+                
+                <Card className="p-6 border-none shadow-subtle">
+                  <div className="flex">
+                    <div className="bg-mechanica-100 p-4 rounded-full mr-5">
+                      <MapPin className="h-6 w-6 text-mechanica-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Office</h3>
+                      <p className="text-gray-600">Dubai, United Arab Emirates</p>
+                    </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Your Message</Label>
-                    <Textarea 
-                      id="message" 
-                      placeholder="How can we help you?" 
-                      className="min-h-[150px]"
-                      required
+                </Card>
+                
+                <Card className="p-6 border-none shadow-subtle">
+                  <div className="flex">
+                    <div className="bg-mechanica-100 p-4 rounded-full mr-5">
+                      <Clock className="h-6 w-6 text-mechanica-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">Business Hours</h3>
+                      <p className="text-gray-600">Sunday - Thursday: 9:00 AM - 6:00 PM</p>
+                      <p className="text-gray-600">Friday - Saturday: Closed</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+            
+            {/* Contact Form */}
+            <div>
+              <Card className="p-8 border-none shadow-card">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
+                
+                <form className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <Input
+                        id="name"
+                        placeholder="Your name"
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        Email Address
+                      </label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Your email"
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                      Subject
+                    </label>
+                    <Input
+                      id="subject"
+                      placeholder="How can we help?"
+                      className="w-full"
                     />
                   </div>
-
-                  <Button type="submit" className="w-full bg-mechanica-500 hover:bg-mechanica-600">
-                    <Send className="mr-2 h-4 w-4" /> Send Message
-                  </Button>
-                </div>
-              </form>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Find Us</h2>
-              <div className="bg-white p-2 rounded-xl shadow-subtle">
-                <div className="aspect-video bg-gray-200 rounded-lg">
-                  {/* Replace with actual Google Maps embed */}
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-                    <div className="text-center">
-                      <MapPin className="h-12 w-12 text-mechanica-300 mx-auto mb-2" />
-                      <p className="text-gray-500">Google Maps Embedded Here</p>
-                    </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                      Message
+                    </label>
+                    <Textarea
+                      id="message"
+                      placeholder="Tell us more about your inquiry..."
+                      rows={5}
+                      className="w-full"
+                    />
                   </div>
-                </div>
-              </div>
+                  
+                  <Button type="submit" className="w-full">
+                    Send Message
+                  </Button>
+                </form>
+              </Card>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 bg-white">
+      {/* Map Section */}
+      <section className="py-12 bg-mechanica-50">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Find quick answers to common questions
-            </p>
-          </div>
-
-          <div className="max-w-3xl mx-auto">
-            <div className="space-y-6">
-              <div className="bg-mechanica-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-2">How do I track my order?</h3>
-                <p className="text-gray-600">
-                  You can track your order in real-time through your customer dashboard.
-                  Simply log in to your account, navigate to "Orders," and select the order
-                  you want to track.
-                </p>
-              </div>
-
-              <div className="bg-mechanica-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-2">Can I cancel my service appointment?</h3>
-                <p className="text-gray-600">
-                  Yes, you can cancel your service appointment up to 24 hours before the
-                  scheduled time without any penalty. Cancellations made within 24 hours
-                  may be subject to a cancellation fee.
-                </p>
-              </div>
-
-              <div className="bg-mechanica-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-2">How do I become a garage partner?</h3>
-                <p className="text-gray-600">
-                  To join Bookmyparts as a garage partner, visit our "For Garages" page and
-                  complete the application form. Our team will review your application and
-                  contact you within 48 hours.
-                </p>
-              </div>
-
-              <div className="bg-mechanica-50 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold mb-2">What payment methods do you accept?</h3>
-                <p className="text-gray-600">
-                  We accept all major credit and debit cards, Apple Pay, Google Pay,
-                  and bank transfers for online payments. For in-garage services, you can
-                  also pay by cash or card directly to the garage.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <section className="py-16 bg-gradient-to-r from-mechanica-600 to-mechanica-700 text-white">
-        <div className="container-custom text-center">
-          <h2 className="text-3xl font-bold mb-4">Stay Updated</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Subscribe to our newsletter for the latest updates, promotions, and automotive tips.
-          </p>
-          <form className="max-w-md mx-auto flex">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus-visible:ring-mechanica-400"
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">Find Us</h2>
+          <div className="rounded-xl overflow-hidden h-96 shadow-subtle">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d462560.3011806427!2d54.947309235929374!3d25.076280447510162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f43496ad9c645%3A0xbde66e5084295162!2sDubai%20-%20United%20Arab%20Emirates!5e0!3m2!1sen!2sus!4v1618321387565!5m2!1sen!2sus"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              title="BookMyParts Location Map"
             />
-            <Button type="submit" className="ml-2 bg-white text-mechanica-700 hover:bg-gray-100">
-              Subscribe
-            </Button>
-          </form>
+          </div>
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 };
 

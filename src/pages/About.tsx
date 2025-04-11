@@ -1,12 +1,11 @@
 
 import React from "react";
-import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { User, Wrench, Award, Settings, MapPin, Globe, ThumbsUp } from "lucide-react";
 
 const About = () => {
   return (
-    <MainLayout>
+    <>
       {/* Hero Section */}
       <section className="py-12 md:py-24 bg-mechanica-50">
         <div className="container-custom text-center">
@@ -182,7 +181,7 @@ const About = () => {
           </div>
         </div>
       </section>
-    </MainLayout>
+    </>
   );
 };
 

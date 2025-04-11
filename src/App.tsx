@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import Index from "@/pages/Index";

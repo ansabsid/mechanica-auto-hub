@@ -91,7 +91,7 @@ const Footer = () => {
             </div>
             
             <h3 className="font-semibold text-white mb-3 mt-6 text-center md:text-left">Contact Us</h3>
-            <ul className="space-y-3 text-center md:text-left">
+            <ul className="space-y-3 w-full">
               <li className="flex items-start justify-center md:justify-start">
                 <MapPin size={20} className="text-gray-300 mt-1 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">Dubai, United Arab Emirates</span>
