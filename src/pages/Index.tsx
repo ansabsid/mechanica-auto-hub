@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Loader2
 } from "lucide-react";
+import Footer from "@/components/layout/Footer";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -113,7 +114,7 @@ const Index = () => {
   }, []);
 
   return (
-    <MainLayout>
+    <>
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-16 md:py-24">
         <div className="container-custom">
@@ -152,7 +153,7 @@ const Index = () => {
 
       {/* Featured Products */}
       <section className="py-12 md:py-16 bg-gray-50">
-        <div className="container-custom">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Parts</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -183,7 +184,7 @@ const Index = () => {
 
       {/* How It Works */}
       <section className="py-16 md:py-24 bg-white">
-        <div className="container-custom">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">How BookMyParts Works</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -227,7 +228,7 @@ const Index = () => {
 
       {/* Testimonials */}
       <section className="py-16 md:py-24 bg-blue-50">
-        <div className="container-custom">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Users Say</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -265,7 +266,7 @@ const Index = () => {
 
       {/* Trusted By */}
       <section className="py-12 md:py-16 bg-white">
-        <div className="container-custom">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-semibold text-gray-900">Trusted by Garages Across MENA</h2>
           </div>
@@ -284,7 +285,7 @@ const Index = () => {
 
       {/* App Download */}
       <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-        <div className="container-custom">
+        <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-6">Download the BookMyParts App</h2>
@@ -325,7 +326,9 @@ const Index = () => {
           </div>
         </div>
       </section>
-    </MainLayout>
+      
+      <Footer />
+    </>
   );
 };
 

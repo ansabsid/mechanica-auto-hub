@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import { PurchaseOptionsDialog } from "@/components/parts/PurchaseOptionsDialog";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { formatPrice } from "@/lib/utils";
 
 interface PartCardProps {
   part: Part;
@@ -121,7 +122,7 @@ export const PartCard = ({ part }: PartCardProps) => {
               ) : "Out of Stock"}
             </Badge>
             
-            <Badge className="bg-mechanica-600 text-white shadow-sm" variant="outline">
+            <Badge className="bg-blue-600 text-white shadow-sm" variant="outline">
               <Tag className="mr-1 h-3 w-3" />
               {part.price > 100 ? "Premium" : "Standard"}
             </Badge>
@@ -130,7 +131,7 @@ export const PartCard = ({ part }: PartCardProps) => {
         
         <CardContent className="p-5 flex-grow">
           <div className="mb-3">
-            <h3 className="font-bold text-lg text-gray-800 group-hover:text-mechanica-600 transition-colors line-clamp-2">{part.name}</h3>
+            <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">{part.name}</h3>
             {part.description && (
               <div className="text-sm text-gray-600 mt-1 line-clamp-2">{part.description}</div>
             )}
@@ -148,7 +149,7 @@ export const PartCard = ({ part }: PartCardProps) => {
           
           <div className="flex items-center justify-between mt-auto">
             <div>
-              <p className="text-mechanica-600 font-bold text-xl mb-1">AED {part.price.toFixed(2)}</p>
+              <p className="text-blue-600 font-bold text-xl mb-1">{formatPrice(part.price)}</p>
               {part.garages && (
                 <div className="flex items-center text-gray-500 text-sm">
                   <MapPin size={14} className="mr-1" /> {part.garages.location}
@@ -163,17 +164,17 @@ export const PartCard = ({ part }: PartCardProps) => {
             <Button 
               size="sm" 
               variant="outline"
-              className="flex items-center flex-1"
+              className="flex items-center flex-1 h-9"
             >
               <Info className="mr-1 h-4 w-4" /> Details
             </Button>
             <Button 
               size="sm" 
-              className="bg-mechanica-500 hover:bg-mechanica-600 flex items-center flex-1 shadow-sm transition-all duration-200 hover:translate-y-[-2px]"
+              className="bg-blue-500 hover:bg-blue-600 flex items-center flex-1 shadow-sm transition-all duration-200 hover:translate-y-[-2px] h-9"
               onClick={handleAddToCartClick}
               disabled={isLoading || part.stock <= 0}
             >
-              <ShoppingCart className="mr-1 h-4 w-4" /> Add to Cart
+              <ShoppingCart className="mr-1 h-4 w-4" /> Add
             </Button>
           </div>
         </CardFooter>

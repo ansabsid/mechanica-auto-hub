@@ -1,7 +1,6 @@
 
 import React from "react";
 import Header from "./Header";
-import Footer from "./Footer";
 import { useAuth } from "@/hooks/auth";
 
 interface MainLayoutProps {
@@ -19,7 +18,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <main className="flex-grow flex items-center justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -28,7 +26,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <div className="flex flex-col min-h-screen">
       <Header />
       <main className="flex-grow">{children}</main>
-      <Footer />
     </div>
   );
 };

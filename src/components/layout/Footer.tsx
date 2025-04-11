@@ -80,13 +80,13 @@ const Footer = () => {
           {/* Newsletter & Contact */}
           <div className="col-span-1">
             <h3 className="font-semibold text-white mb-4">Stay Updated</h3>
-            <div className="flex space-x-0 mb-6">
+            <div className="flex w-full max-w-full mb-6">
               <Input 
                 type="email" 
                 placeholder="Your email" 
-                className="rounded-r-none bg-gray-800 border-gray-700 text-white w-full focus:ring-0 focus:border-gray-600" 
+                className="rounded-r-none bg-gray-800 border-gray-700 text-white focus:ring-0 focus:border-gray-600 max-w-[70%]" 
               />
-              <Button className="rounded-l-none bg-blue-600 hover:bg-blue-700">
+              <Button className="rounded-l-none bg-blue-600 hover:bg-blue-700 px-3">
                 <Send size={16} />
               </Button>
             </div>
