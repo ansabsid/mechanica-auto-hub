@@ -174,15 +174,18 @@ export const useGarageProducts = (garageId?: string) => {
         return null;
       }
       
-      // Use the provided garage ID if it's valid, otherwise use the first available garage ID
+      // Validate the garage ID exists in the database
       let validGarageId = productGarageId;
-      
-      // Check if the provided garage ID exists in our list of available garages
       const garageExists = garages.some(garage => garage.id === productGarageId);
       
       if (!garageExists) {
         console.log("Provided garage ID not found in available garages, using first available garage");
         validGarageId = garages[0].id;
+        
+        if (!validGarageId) {
+          toast.error("Unable to find a valid garage. Please add a garage first.");
+          return null;
+        }
       }
       
       console.log("Using valid garage ID:", validGarageId);
@@ -300,7 +303,10 @@ export const useGarageProducts = (garageId?: string) => {
       else if (garages.length > 0) {
         const firstGarageId = garages[0]?.id;
         console.log("No garage ID provided, using first garage:", firstGarageId);
-        fetchProducts(firstGarageId);
+        
+        if (firstGarageId) {
+          fetchProducts(firstGarageId);
+        }
       } else {
         console.log("No garages available");
       }

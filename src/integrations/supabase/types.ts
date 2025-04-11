@@ -308,6 +308,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "parts_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "parts_manufacturer_id_fkey"
             columns: ["manufacturer_id"]
             isOneToOne: false
