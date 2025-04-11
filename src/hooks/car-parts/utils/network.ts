@@ -10,7 +10,7 @@ const MAX_RETRIES = 2;
  * @param retryCount Current retry attempt (internal use)
  * @returns The result of the promise, or throws after max retries
  */
-export const fetchWithTimeout = async <T>(promiseFn: () => Promise<T>, retryCount = 0): Promise<T> => {
+export const fetchWithTimeout = async <T>(promiseFn: () => Promise<T> | any, retryCount = 0): Promise<T> => {
   let timeoutId: NodeJS.Timeout;
   
   try {

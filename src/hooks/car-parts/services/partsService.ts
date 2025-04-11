@@ -12,7 +12,8 @@ export const fetchAllPartsFromDB = async () => {
   console.log("Fetching all available parts");
   
   try {
-    const response = await fetchWithTimeout(() => 
+    // Define the return type for better type safety
+    const response = await fetchWithTimeout<{data: any[], error: any}>(() => 
       supabase.from('parts').select('*')
     );
     
@@ -58,7 +59,8 @@ export const fetchPartsForVehicle = async (
   console.log(`Querying Supabase for parts: mfr=${manufacturerId}, model=${modelId}, year=${yearNum}`);
   
   try {
-    const response = await fetchWithTimeout(() => 
+    // Define the return type for better type safety
+    const response = await fetchWithTimeout<{data: any[], error: any}>(() => 
       supabase
         .from('parts')
         .select('*')
