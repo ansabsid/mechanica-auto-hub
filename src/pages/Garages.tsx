@@ -2,11 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2, AlertTriangle, PlusCircle } from "lucide-react";
+import { Loader2, AlertTriangle, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
@@ -173,7 +171,7 @@ const Garages = () => {
         </div>
       </section>
       
-      {/* Garage Listings */}
+      {/* General Content Section */}
       <section className="py-8 md:py-16">
         <div className="container-custom px-4 md:px-8">
           {/* General Error State */}
@@ -253,83 +251,16 @@ const Garages = () => {
             </div>
           )}
           
-          {/* Garage Cards */}
+          {/* Info message when no specific UI is shown */}
           {!isLoading && filteredGarages.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-              {filteredGarages.map(garage => (
-                <Card key={garage.id} className="overflow-hidden border-none shadow-card hover:shadow-xl transition-shadow">
-                  <div className="h-40 md:h-48 overflow-hidden">
-                    <img 
-                      src={garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
-                      alt={garage.name} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback image if the main one fails to load
-                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                      }}
-                    />
-                  </div>
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex justify-between items-start mb-3 md:mb-4">
-                      <div>
-                        <h3 className="text-lg md:text-xl font-bold">{garage.name}</h3>
-                        <div className="flex items-center text-gray-500 mt-1">
-                          <MapPin size={14} className="mr-1" />
-                          <span className="text-sm">{garage.location}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center bg-green-50 text-green-700 px-2 py-1 rounded">
-                        <Star size={14} className="mr-1 fill-current" />
-                        <span className="font-medium text-sm">{garage.rating?.toFixed(1)}</span>
-                        <span className="text-xs ml-1 text-gray-500">({garage.reviews})</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-3 md:mb-4">
-                      <div className="flex items-start mb-2 md:mb-3">
-                        <Wrench size={16} className="text-mechanica-600 mr-2 md:mr-3 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Services</h4>
-                          <div className="flex flex-wrap gap-1 md:gap-2">
-                            {garage.services?.map((service, index) => (
-                              <span 
-                                key={index} 
-                                className="bg-gray-100 text-gray-800 text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center mb-2 md:mb-3">
-                        <Clock size={16} className="text-mechanica-600 mr-2 md:mr-3 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-sm">Working Hours</h4>
-                          <p className="text-gray-600 text-xs">{garage.hours}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 md:gap-3 mb-3 md:mb-4">
-                      <Button variant="outline" size="sm" className="flex items-center justify-center h-8 md:h-10 text-xs md:text-sm">
-                        <PhoneCall size={14} className="mr-1 md:mr-2" />
-                        Call
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex items-center justify-center h-8 md:h-10 text-xs md:text-sm">
-                        <Mail size={14} className="mr-1 md:mr-2" />
-                        Email
-                      </Button>
-                    </div>
-                    
-                    <Button size="sm" className="w-full h-8 md:h-10 text-xs md:text-sm">
-                      <Calendar size={14} className="mr-1 md:mr-2" />
-                      Book Appointment
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="text-center py-12 bg-green-50 rounded-lg border border-green-100">
+              <h2 className="text-xl font-bold text-green-800 mb-2">Garages Found</h2>
+              <p className="text-green-700 mb-4">
+                {filteredGarages.length} garages available in our database.
+              </p>
+              <p className="text-sm text-gray-600">
+                The garage view section has been removed. Use the search bar above to find specific garages.
+              </p>
             </div>
           )}
           
