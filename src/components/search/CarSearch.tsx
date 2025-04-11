@@ -102,10 +102,9 @@ const CarSearch = () => {
   // Format the query time to display nicely
   const formattedQueryTime = queryTime > 0 ? `${queryTime.toFixed(0)}ms` : '';
 
-  // CRITICAL FIX: Ensure we're showing the correct parts based on search state
-  // When search is completed, show ONLY the filtered parts
-  // Otherwise show all parts
-  const displayParts = searchCompleted && parts.length > 0 ? parts : allParts;
+  // CRITICAL FIX: Ensure we're showing the correct parts
+  // ALWAYS show filtered parts when search is completed, never show all parts after search
+  const displayParts = searchCompleted ? parts : allParts;
   
   // Critical debug logging
   console.log("⚠️ FINAL DISPLAY STATE:");

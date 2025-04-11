@@ -114,7 +114,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       const yearNum = parseInt(year);
       
       // Fetch parts from database
-      const validParts = await fetchPartsForVehicle(mfrId, mdlId, yearNum);
+      let validParts = await fetchPartsForVehicle(mfrId, mdlId, yearNum);
       
       // End timing the query
       const endTime = performance.now();
@@ -129,15 +129,6 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         finalParts = validParts;
         console.log("Using database parts:", validParts.length);
         
-        // Verify that all parts match the criteria
-        const allMatch = finalParts.every(part => 
-          part.manufacturer_id === mfrId && 
-          part.model_id === mdlId && 
-          part.year === yearNum
-        );
-        
-        console.log("⚠️ All database parts match search criteria:", allMatch);
-        
         toast({
           title: "Parts Found",
           description: `Found ${validParts.length} parts matching your vehicle in ${queryDuration.toFixed(0)}ms`,
@@ -145,43 +136,44 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         });
       } else {
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
-        const mockStartTime = performance.now();
         
-        // Create mock parts for the vehicle
-        const mockParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
+        // Special case for Toyota(1) Corolla(2) 2022
+        finalParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
-        const mockEndTime = performance.now();
-        console.log("Using filtered mock parts:", mockParts.length);
-        console.log(`Mock data generated in ${(mockEndTime - mockStartTime).toFixed(2)}ms`);
-        
-        finalParts = mockParts;
+        console.log("Using mock parts:", finalParts.length);
         
         toast({
           title: "Using Sample Data",
-          description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockParts.length} sample parts.`,
+          description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${finalParts.length} sample parts.`,
           variant: "default",
           duration: 5000,
         });
       }
       
-      console.log("🔄 SETTING FINAL PARTS:", finalParts.length);
-      console.log("Sample final parts:", finalParts.slice(0, 2));
+      console.log("🔢 RESULTS AFTER SEARCH: ", finalParts.length, "parts");
+      console.log("Sample results:", finalParts.slice(0, 2));
       
-      // CRITICAL: Important order - first set the parts array, then update other states
-      // Make sure finalParts only contains parts that match our search criteria
-      const filteredParts = finalParts.filter(part => 
+      // Double check that all parts match the search criteria
+      const strictlyFilteredParts = finalParts.filter(part => 
         part.manufacturer_id === mfrId && 
         part.model_id === mdlId && 
         part.year === yearNum
       );
       
-      console.log("Filtered parts after additional verification:", filteredParts.length);
+      console.log("🔎 STRICT FILTERING CHECK:");
+      console.log(`- Before strict filtering: ${finalParts.length} parts`);
+      console.log(`- After strict filtering: ${strictlyFilteredParts.length} parts`);
       
-      setParts(filteredParts);
+      if (strictlyFilteredParts.length !== finalParts.length) {
+        console.warn("⚠️ WARNING: Some parts were removed during strict filtering!");
+      }
+      
+      // Set the parts array with strictly filtered results
+      setParts(strictlyFilteredParts);
       setIsSearching(false);
       setSearchCompleted(true);
       
-      return filteredParts.length;
+      return strictlyFilteredParts.length;
     } catch (error: any) {
       console.error("Error searching for parts:", error.message);
       
@@ -203,7 +195,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       
       console.log("Using filtered mock parts due to error:", mockParts.length);
       
-      // CRITICAL: Update state in the correct order
+      // Update state in the correct order
       setParts(mockParts);
       setIsSearching(false);
       setSearchCompleted(true);

@@ -116,7 +116,45 @@ export const createMockPartsForVehicle = (
 ) => {
   console.log("Generating mock parts for the specific vehicle...");
   
-  // Generate AND filter mock parts in one step - create only parts that match
+  // Special case for Toyota(1) Corolla(2) 2022 - only return air filter and brake pads
+  if (manufacturerId === 1 && modelId === 2 && yearNum === 2022) {
+    console.log("SPECIAL CASE: Toyota Corolla 2022 - returning only air filter and brake pads");
+    
+    return [
+      {
+        id: 101,
+        name: "Air Filter - Toyota Corolla",
+        description: "OEM compatible air filter for Toyota Corolla 2022",
+        price: 29.99,
+        stock: 15,
+        manufacturer_id: 1, // Toyota
+        model_id: 2, // Corolla
+        year: 2022,
+        garage_id: null,
+        garages: {
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      },
+      {
+        id: 102,
+        name: "Brake Pads - Toyota Corolla",
+        description: "Premium brake pads for Toyota Corolla 2022",
+        price: 79.99,
+        stock: 8,
+        manufacturer_id: 1, // Toyota
+        model_id: 2, // Corolla
+        year: 2022,
+        garage_id: null,
+        garages: {
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      }
+    ];
+  }
+  
+  // For all other vehicles, generate and filter mock parts
   const mockParts = generateMockParts(
     manufacturerId, 
     modelId, 
@@ -129,14 +167,7 @@ export const createMockPartsForVehicle = (
     part.year === yearNum
   );
   
-  // Verify that all parts match the criteria
-  const allMatch = mockParts.every(part => 
-    part.manufacturer_id === manufacturerId && 
-    part.model_id === modelId && 
-    part.year === yearNum
-  );
-  
-  console.log("⚠️ All mock parts match search criteria:", allMatch);
+  console.log(`Generated ${mockParts.length} mock parts for vehicle: mfr=${manufacturerId}, model=${modelId}, year=${yearNum}`);
   
   return mockParts;
 };

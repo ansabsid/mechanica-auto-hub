@@ -104,7 +104,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({ parts, visible }) => {
                     <Car className="h-5 w-5 text-mechanica-500 mt-0.5" />
                     <div>
                       <div className="text-sm font-medium text-gray-700">
-                        Manufacturer ID: {part.manufacturer_id}, Model ID: {part.model_id}, Year: {part.year}
+                        {part.manufacturer_id} - {part.model_id} - {part.year}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         Compatible with vehicles matching these exact specifications
