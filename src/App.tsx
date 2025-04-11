@@ -28,23 +28,43 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
     console.log("RouteGuard checking access for path:", location.pathname);
     console.log("Current user:", user?.email, "Role:", userRole);
     
-    // Special bypass for /garage-dashboard path (only applies for this path)
-    if (location.pathname === "/garage-dashboard") {
-      // Allow access to garage dashboard without login
-      console.log("Bypass auth enabled - allowing direct access to garage dashboard");
-      return;
-    }
-    
     if (!isLoading) {
-      // Handle protected routes based on user role (for other routes)
-      if (location.pathname === "/customer-dashboard") {
+      // Handle garage-specific routes
+      if (location.pathname === "/garage-dashboard") {
         if (!user) {
-          console.log("Access denied to customer dashboard - not logged in - redirecting to login");
+          console.log("Access denied to garage dashboard - not logged in - redirecting to login");
           navigate("/login");
           return;
         }
         
-        console.log("Access granted to customer dashboard for role:", userRole);
+        if (userRole !== "garage") {
+          console.log("Access denied to garage dashboard - not a garage - redirecting to customer dashboard");
+          navigate("/customer-dashboard");
+          return;
+        }
+        
+        console.log("Access granted to garage dashboard for garage user");
+        return;
+      }
+      
+      // Handle customer-specific routes
+      if (location.pathname === "/customer-dashboard" || 
+          location.pathname === "/categories" || 
+          location.pathname.startsWith("/orders")) {
+        if (!user) {
+          console.log("Access denied to customer route - not logged in - redirecting to login");
+          navigate("/login");
+          return;
+        }
+        
+        if (userRole === "garage") {
+          console.log("Access denied to customer route - garage user - redirecting to garage dashboard");
+          navigate("/garage-dashboard");
+          return;
+        }
+        
+        console.log("Access granted to customer route for customer user");
+        return;
       }
       
       // Redirect authenticated users from login page based on role
@@ -56,12 +76,6 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
           console.log("User already logged in as customer - redirecting to customer dashboard");
           navigate("/customer-dashboard");
         }
-      }
-      
-      // Handle customer dashboard access
-      if (location.pathname === "/customer-dashboard" && user && !userRole) {
-        // If role isn't loaded yet, wait for it
-        console.log("User role not yet loaded, waiting...");
       }
     }
   }, [location.pathname, user, userRole, navigate, isLoading]);

@@ -57,12 +57,19 @@ const Header = () => {
             <Link to="/" className="text-gray-700 hover:text-mechanica-500 transition-colors">
               Home
             </Link>
-            <Link to="/categories" className="text-gray-700 hover:text-mechanica-500 transition-colors">
-              Parts
-            </Link>
-            <Link to="/garages" className="text-gray-700 hover:text-mechanica-500 transition-colors">
-              Garages
-            </Link>
+            
+            {/* Show Parts and Garages links only to customers or non-authenticated users */}
+            {userRole !== "garage" && (
+              <>
+                <Link to="/categories" className="text-gray-700 hover:text-mechanica-500 transition-colors">
+                  Parts
+                </Link>
+                <Link to="/garages" className="text-gray-700 hover:text-mechanica-500 transition-colors">
+                  Garages
+                </Link>
+              </>
+            )}
+            
             <Link to="/about" className="text-gray-700 hover:text-mechanica-500 transition-colors">
               About
             </Link>
@@ -75,7 +82,8 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <CartDrawer />
+                {/* Only show cart for customers */}
+                {userRole !== "garage" && <CartDrawer />}
 
                 {userRole === "garage" && <InstallationRequestsNotification />}
 
@@ -95,10 +103,15 @@ const Header = () => {
                       <Home className="mr-2 h-4 w-4" />
                       <span>{(userRole === "garage") ? "Garage Dashboard" : "My Dashboard"}</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/orders")}>
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      <span>My Orders</span>
-                    </DropdownMenuItem>
+                    
+                    {/* Only show orders for customers */}
+                    {userRole !== "garage" && (
+                      <DropdownMenuItem onClick={() => navigate("/orders")}>
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        <span>My Orders</span>
+                      </DropdownMenuItem>
+                    )}
+                    
                     <DropdownMenuItem onClick={() => navigate("/settings")}>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
@@ -144,20 +157,27 @@ const Header = () => {
               >
                 Home
               </Link>
-              <Link
-                to="/categories"
-                className="text-gray-700 hover:text-mechanica-500 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Parts
-              </Link>
-              <Link
-                to="/garages"
-                className="text-gray-700 hover:text-mechanica-500 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Garages
-              </Link>
+              
+              {/* Show Parts and Garages links only to customers or non-authenticated users */}
+              {userRole !== "garage" && (
+                <>
+                  <Link
+                    to="/categories"
+                    className="text-gray-700 hover:text-mechanica-500 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Parts
+                  </Link>
+                  <Link
+                    to="/garages"
+                    className="text-gray-700 hover:text-mechanica-500 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Garages
+                  </Link>
+                </>
+              )}
+              
               <Link
                 to="/about"
                 className="text-gray-700 hover:text-mechanica-500 transition-colors"
