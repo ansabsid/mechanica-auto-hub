@@ -42,8 +42,7 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
 
 // Special function to check if user is admin
 export const isAdminUser = (email: string): boolean => {
-  // You can replace this with your own email to be the only admin
-  const adminEmails = ["admin@example.com"]; // Replace with your email
+  // Add your email here to grant admin access to the garage login tab
+  const adminEmails = ["admin@example.com", "your.email@example.com"]; // Replace with your actual email
   return adminEmails.includes(email.toLowerCase());
 };
-

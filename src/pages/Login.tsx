@@ -9,6 +9,8 @@ import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle, Shield } from "luci
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { isAdminUser } from "@/hooks/auth/authUtils";
+import { supabase } from "@/lib/supabase";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +21,7 @@ const Login = () => {
   const [garagePassword, setGaragePassword] = useState("");
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminConversion, setShowAdminConversion] = useState(false);
   
   const location = useLocation();
   const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
@@ -26,6 +29,37 @@ const Login = () => {
 
   const checkAdminStatus = (email: string) => {
     setIsAdmin(isAdminUser(email));
+  };
+
+  const handleConvertToAdmin = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'admin' })
+        .eq('id', user.id);
+        
+      if (error) {
+        console.error("Error updating to admin:", error);
+        setError("Failed to convert account to admin");
+        return;
+      }
+      
+      toast({
+        title: "Admin Role Granted",
+        description: "Your account has been converted to an admin. Please log out and back in.",
+      });
+      
+      // Force a role update in the UI
+      setTimeout(() => {
+        signOut();
+      }, 2000);
+      
+    } catch (err: any) {
+      console.error("Admin conversion error:", err);
+      setError(err.message || "Failed to convert to admin");
+    }
   };
 
   useEffect(() => {
@@ -44,6 +78,11 @@ const Login = () => {
     
     if (isAuthenticated && user) {
       console.log("Login page - User is authenticated with role:", userRole);
+      
+      if (isAdmin && userRole !== 'admin') {
+        setShowAdminConversion(true);
+      }
+      
       if (userRole === 'admin') {
         console.log("Admin user detected - redirecting to garage dashboard");
         navigate("/garage-dashboard");
@@ -55,7 +94,7 @@ const Login = () => {
         navigate("/customer-dashboard");
       }
     }
-  }, [location, isAuthenticated, user, userRole, navigate, customerEmail]);
+  }, [location, isAuthenticated, user, userRole, navigate, customerEmail, isAdmin]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -97,6 +136,23 @@ const Login = () => {
     <MainLayout>
       <section className="py-12 md:py-20">
         <div className="container max-w-md mx-auto px-4">
+          {showAdminConversion && (
+            <Alert className="mb-4 bg-blue-100 border-blue-400">
+              <Shield className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800 flex-1">
+                You are eligible for admin access. Would you like to convert your account?
+              </AlertDescription>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="ml-2 bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleConvertToAdmin}
+              >
+                Convert to Admin
+              </Button>
+            </Alert>
+          )}
+          
           <Tabs
             defaultValue="customer"
             value={activeTab}
