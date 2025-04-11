@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Part } from "@/hooks/car-parts/types";
 import { toast } from "sonner";
@@ -35,9 +36,28 @@ const downloadImage = async (url: string): Promise<Blob> => {
   return await response.blob();
 };
 
+// Helper function to convert database part to Part type
+const convertDbPartToPart = (dbPart: any): Part => {
+  return {
+    ...dbPart,
+    garages: dbPart.garage_id ? { 
+      name: 'AutoCare Dubai',
+      location: 'Dubai Marina'
+    } : { 
+      name: 'Mechanica Service Center',
+      location: 'Dubai, UAE'
+    },
+    // Ensure image_url is present
+    image_url: dbPart.image_url || getImageUrlForPart(dbPart.name)
+  };
+};
+
 // Function to update a single part with image
-const updatePartWithImage = async (part: Part): Promise<boolean> => {
+const updatePartWithImage = async (dbPart: any): Promise<boolean> => {
   try {
+    // Convert to our application's Part type
+    const part = convertDbPartToPart(dbPart);
+    
     // Skip if part already has an image_url
     if (part.image_url) {
       console.log(`Part ${part.id} already has an image: ${part.image_url}`);
@@ -90,7 +110,7 @@ const updatePartWithImage = async (part: Part): Promise<boolean> => {
     return true;
     
   } catch (error) {
-    console.error(`Error processing part ${part.id}:`, error);
+    console.error(`Error processing part ${dbPart.id}:`, error);
     return false;
   }
 };

@@ -142,19 +142,19 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
         console.log("No parts found in database, generating mock parts for the specific vehicle...");
         
         // Generate mock parts for the vehicle - this will have image_url properly set now
-        const mockParts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
+        const mockPartsData = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
         
-        console.log("Generated mock parts:", mockParts.length);
+        console.log("Generated mock parts:", mockPartsData.length);
         
-        if (mockParts.length > 0) {
+        if (mockPartsData.length > 0) {
           toast({
             title: "Using Sample Data",
-            description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockParts.length} sample parts.`,
+            description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockPartsData.length} sample parts.`,
             variant: "default",
             duration: 5000,
           });
           
-          setParts(mockParts);
+          setParts(mockPartsData);
         } else {
           toast({
             title: "No Parts Found",
@@ -181,7 +181,7 @@ export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) =
       setIsSearching(false);
       setSearchCompleted(true);
       
-      return validParts.length > 0 ? validParts.length : (mockParts?.length || 0);
+      return validParts.length > 0 ? validParts.length : (mockPartsData?.length || 0);
     } catch (error: any) {
       console.error("Error searching for parts:", error);
       
