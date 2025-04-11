@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle, Shield } from "lucide-react";
+import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { isAdminUser } from "@/hooks/auth/authUtils";
-import { supabase } from "@/integrations/supabase/client"; // Fixed import path
-import { useToast } from "@/hooks/use-toast"; // Using shadcn toast instead of react-toastify
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,52 +19,13 @@ const Login = () => {
   const [garageEmail, setGarageEmail] = useState("");
   const [garagePassword, setGaragePassword] = useState("");
   const [error, setError] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showAdminConversion, setShowAdminConversion] = useState(false);
   
   const location = useLocation();
-  const { signIn, signOut, isLoading, isAuthenticated, user, userRole } = useAuth(); // Add signOut to destructuring
+  const { signIn, signOut, isLoading, isAuthenticated, user, userRole } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast(); // Use shadcn toast hook
-
-  const checkAdminStatus = (email: string) => {
-    setIsAdmin(isAdminUser(email));
-  };
-
-  const handleConvertToAdmin = async () => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'admin' })
-        .eq('id', user.id);
-        
-      if (error) {
-        console.error("Error updating to admin:", error);
-        setError("Failed to convert account to admin");
-        return;
-      }
-      
-      toast({
-        title: "Admin Role Granted",
-        description: "Your account has been converted to an admin. Please log out and back in.",
-      });
-      
-      // Force a role update in the UI
-      setTimeout(() => {
-        signOut();
-      }, 2000);
-      
-    } catch (err: any) {
-      console.error("Admin conversion error:", err);
-      setError(err.message || "Failed to convert to admin");
-    }
-  };
+  const { toast } = useToast();
 
   useEffect(() => {
-    checkAdminStatus(customerEmail);
-    
     const queryParams = new URLSearchParams(location.search);
     const type = queryParams.get("type");
     const email = queryParams.get("email");
@@ -81,14 +40,7 @@ const Login = () => {
     if (isAuthenticated && user) {
       console.log("Login page - User is authenticated with role:", userRole);
       
-      if (isAdmin && userRole !== 'admin') {
-        setShowAdminConversion(true);
-      }
-      
-      if (userRole === 'admin') {
-        console.log("Admin user detected - redirecting to garage dashboard");
-        navigate("/garage-dashboard");
-      } else if (userRole === 'garage') {
+      if (userRole === 'garage') {
         console.log("Redirecting to garage dashboard");
         navigate("/garage-dashboard");
       } else {
@@ -96,7 +48,7 @@ const Login = () => {
         navigate("/customer-dashboard");
       }
     }
-  }, [location, isAuthenticated, user, userRole, navigate, customerEmail, isAdmin]);
+  }, [location, isAuthenticated, user, userRole, navigate]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -138,33 +90,11 @@ const Login = () => {
     <MainLayout>
       <section className="py-12 md:py-20">
         <div className="container max-w-md mx-auto px-4">
-          {showAdminConversion && (
-            <Alert className="mb-4 bg-blue-100 border-blue-400">
-              <Shield className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800 flex-1">
-                You are eligible for admin access. Would you like to convert your account?
-              </AlertDescription>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="ml-2 bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleConvertToAdmin}
-              >
-                Convert to Admin
-              </Button>
-            </Alert>
-          )}
-          
           <Tabs
             defaultValue="customer"
             value={activeTab}
             className="w-full"
             onValueChange={(value) => {
-              if (value === "garage" && !isAdmin) {
-                setError("Only administrators can access the garage login");
-                return;
-              }
-              
               setActiveTab(value);
               setError("");
             }}
@@ -175,8 +105,7 @@ const Login = () => {
               </TabsTrigger>
               <TabsTrigger 
                 value="garage" 
-                className={`flex items-center justify-center gap-2 ${!isAdmin ? 'opacity-50' : ''}`}
-                disabled={!isAdmin}
+                className="flex items-center justify-center gap-2"
               >
                 <Wrench size={18} /> Garage
               </TabsTrigger>
@@ -186,13 +115,6 @@ const Login = () => {
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {isAdmin && (
-              <Alert className="mb-4 bg-green-100 border-green-400">
-                <Shield className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">Admin access granted. You may use the garage login.</AlertDescription>
               </Alert>
             )}
 

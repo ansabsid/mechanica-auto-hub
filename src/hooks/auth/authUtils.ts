@@ -1,8 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 
-export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | "admin" | null> => {
+export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | null> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -11,7 +10,7 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
       .single();
       
     if (data && !error) {
-      return data.role as "customer" | "garage" | "admin";
+      return data.role as "customer" | "garage";
     } else if (error) {
       console.error("Error fetching user profile:", error.message);
     }
@@ -22,7 +21,7 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
   return null;
 };
 
-export const createUserProfile = async (userId: string, email: string, role: "customer" | "garage" | "admin") => {
+export const createUserProfile = async (userId: string, email: string, role: "customer" | "garage") => {
   try {
     const { error } = await supabase
       .from('profiles')
@@ -38,18 +37,4 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
   } catch (error) {
     console.error("Error in createUserProfile:", error);
   }
-};
-
-// Special function to check if user is admin
-export const isAdminUser = (email: string): boolean => {
-  // Add your email here to grant admin access to the garage login tab
-  const adminEmails = [
-    "admin@example.com", 
-    "your.email@example.com",
-    "demo@garage.com",
-    "test@example.com",
-    "admin@test.com",
-    "ansab.sid123@gmail.com" // Added your email
-  ]; // Added demo emails
-  return adminEmails.includes(email.toLowerCase());
 };

@@ -9,7 +9,7 @@ import { fetchUserRole, createUserProfile } from "./authUtils";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [userRole, setUserRole] = useState<"customer" | "garage" | "admin" | null>(null);
+  const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [authChangeHandled, setAuthChangeHandled] = useState(false);
   const { toast } = useToast();
@@ -161,13 +161,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await createUserProfile(signUpData.user.id, email, 'garage');
           
           try {
-            const { data: adminAuth } = await supabase.auth.signInWithPassword({
+            const { data: demoAuth } = await supabase.auth.signInWithPassword({
               email,
               password,
             });
             
-            if (adminAuth.user) {
-              setUser(adminAuth.user);
+            if (demoAuth.user) {
+              setUser(demoAuth.user);
               setUserRole('garage');
               
               toast({
@@ -176,13 +176,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               return;
             }
-          } catch (adminError) {
-            console.error("Could not auto-confirm demo account:", adminError);
+          } catch (demoError) {
+            console.error("Could not auto-confirm demo account:", demoError);
           }
         }
       }
 
-      // Regular login process - simplified for faster processing
+      // Regular login process
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

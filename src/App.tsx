@@ -37,8 +37,8 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        if (userRole !== "garage" && userRole !== "admin") {
-          console.log("Access denied to garage dashboard - not a garage or admin - redirecting to customer dashboard");
+        if (userRole !== "garage") {
+          console.log("Access denied to garage dashboard - not a garage - redirecting to customer dashboard");
           navigate("/customer-dashboard");
           return;
         }
@@ -48,8 +48,8 @@ const RouteGuard = ({ children }: { children: React.ReactNode }) => {
       
       // Redirect authenticated users from login page based on role
       if (location.pathname === "/login" && user) {
-        if (userRole === "garage" || userRole === "admin") {
-          console.log("User already logged in as garage or admin - redirecting to garage dashboard");
+        if (userRole === "garage") {
+          console.log("User already logged in as garage - redirecting to garage dashboard");
           navigate("/garage-dashboard");
         } else {
           console.log("User already logged in as customer - redirecting to customer dashboard");
