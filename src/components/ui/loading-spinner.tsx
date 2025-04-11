@@ -19,15 +19,15 @@ export const LoadingSpinner = ({
   };
 
   return (
-    <div className={cn("flex items-center justify-center", className)}>
-      <div className="relative animate-spin">
+    <span className={cn("inline-flex items-center justify-center", className)}>
+      <span className="relative animate-spin">
         <Cog 
           className={cn(
             sizeClasses[size], 
             "text-mechanica-500"
           )} 
         />
-      </div>
-    </div>
+      </span>
+    </span>
   );
 };
