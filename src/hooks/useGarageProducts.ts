@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +20,12 @@ export interface GarageProduct {
   model_id?: number;
   year?: number;
   description?: string;
+}
+
+// Define the expected response type from the insert_part RPC function
+interface InsertPartResponse {
+  id: number;
+  [key: string]: any; // Allow for other properties that might be in the response
 }
 
 export const useGarageProducts = (garageId?: string) => {
@@ -209,7 +216,7 @@ export const useGarageProducts = (garageId?: string) => {
 
       console.log("Prepared data for database insertion:", productData);
 
-      // Call the insert_part function to create a new part
+      // Call the insert_part function to create a new part with proper typing
       const { data, error } = await enhancedSupabase.rpc('insert_part', {
         part_data: productData
       });
@@ -221,8 +228,9 @@ export const useGarageProducts = (garageId?: string) => {
 
       console.log("Part created with response:", data);
 
-      // Extract part ID from response
-      const partId = data.id;
+      // Safely extract part ID from response by casting to our expected type
+      const response = data as InsertPartResponse;
+      const partId = response.id;
 
       if (!partId) {
         throw new Error("No part ID returned from database");
