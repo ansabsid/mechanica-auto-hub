@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
@@ -49,12 +50,15 @@ export const CartDrawer = () => {
     }
     
     console.log("Navigating to checkout...");
-    setIsOpen(false); // Close the drawer before navigation
     
-    // Use a timeout to ensure the drawer closing animation completes before navigation
+    // First close the drawer
+    setIsOpen(false);
+    
+    // Use a more direct approach to navigation with a slightly longer delay
     setTimeout(() => {
-      navigate("/checkout", { replace: true });
-    }, 100);
+      // Using replace: true to prevent back navigation issues
+      window.location.href = "/checkout";
+    }, 300);
   };
   
   return (
