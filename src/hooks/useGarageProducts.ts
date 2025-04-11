@@ -168,7 +168,8 @@ export const useGarageProducts = (garageId?: string) => {
         throw new Error(`Failed to add part: ${partError.message}`);
       }
 
-      if (!data || data.id === undefined) {
+      // Check if data exists and has an id property
+      if (!data || typeof data.id !== 'number') {
         throw new Error("Part creation failed - no ID returned");
       }
 

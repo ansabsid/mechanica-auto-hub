@@ -20,7 +20,8 @@ BEGIN
     model_id,
     year,
     garage_id,
-    image_url
+    image_url,
+    category
   ) VALUES (
     part_data->>'name',
     (part_data->>'price')::numeric,
@@ -30,7 +31,8 @@ BEGIN
     (part_data->>'model_id')::integer,
     (part_data->>'year')::integer,
     (part_data->>'garage_id')::uuid,
-    part_data->>'image_url'
+    part_data->>'image_url',
+    part_data->>'category'
   )
   RETURNING id INTO inserted_part_id;
   
@@ -40,6 +42,7 @@ BEGIN
 END;
 $$;
 
+-- Ensure we have RLS policies for parts table
 -- Drop the conflicting policy if it exists
 DROP POLICY IF EXISTS "Allow part creation" ON public.parts;
 
