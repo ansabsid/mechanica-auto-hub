@@ -89,25 +89,34 @@ export const InstallationOptionsDialog = ({
     setConfirmationOpen(true);
   };
   
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedGarage) return;
     
-    // Add part with installation info to cart
-    addToCart(part.id, 1, {
-      installationRequired: true,
-      garageId: selectedGarage.id,
-      garageName: selectedGarage.name,
-      installationFee: selectedGarage.installationFee
-    });
-    
-    toast({
-      title: "Added to cart",
-      description: `${part.name} with installation at ${selectedGarage.name} has been added to your cart`,
-    });
-    
-    // Close all dialogs
-    setConfirmationOpen(false);
-    onComplete(); // This will signal parent to close all dialogs
+    try {
+      // Add part with installation info to cart
+      await addToCart(part.id, 1, {
+        installationRequired: true,
+        garageId: selectedGarage.id,
+        garageName: selectedGarage.name,
+        installationFee: selectedGarage.installationFee
+      });
+      
+      toast({
+        title: "Added to cart",
+        description: `${part.name} with installation at ${selectedGarage.name} has been added to your cart`,
+      });
+      
+      // Close all dialogs
+      setConfirmationOpen(false);
+      onComplete(); // This will signal parent to close all dialogs
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleBack = () => {
