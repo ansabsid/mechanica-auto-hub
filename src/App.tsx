@@ -13,6 +13,7 @@ import GarageDashboard from "@/pages/GarageDashboard";
 import OrdersPage from "@/pages/OrdersPage";
 import OrdersListPage from "@/pages/OrdersListPage";
 import Checkout from "@/pages/Checkout";
+import PartScanner from "@/pages/PartScanner";
 import CategoryPage from "@/components/categories/CategoryPage";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -30,6 +31,7 @@ function App() {
             <Route path="contact" element={<Contact />} />
             <Route path="garages" element={<Garages />} />
             <Route path="categories" element={<CategoryPage />} />
+            <Route path="scanner" element={<PartScanner />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="customer-dashboard" element={<CustomerDashboard />} />

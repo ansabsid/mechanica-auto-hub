@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
+import FloatingScanButton from "@/components/parts/FloatingScanButton";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -378,6 +379,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
+      {/* Floating scan button for mobile */}
+      <FloatingScanButton />
     </>
   );
 };
