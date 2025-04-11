@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -147,6 +148,86 @@ export const useGarageProducts = (garageId?: string) => {
     } catch (error: any) {
       console.error("Image upload error:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
+      toast.error(`Upload error: ${error.message || "Unknown error"}`);
+      setUploadProgress(0);
+      return null;
+    }
+  };
+
+  // Function to directly upload an image to the parts bucket
+  const uploadImageToBucket = async (file: File): Promise<string | null> => {
+    try {
+      setUploadProgress(5);
+      
+      if (!file) {
+        toast.error("No file provided for upload");
+        return null;
+      }
+      
+      // Ensure the storage bucket exists
+      const bucketReady = await ensureStorageBucket();
+      if (!bucketReady) {
+        toast.error("Could not prepare storage for upload");
+        setUploadProgress(0);
+        return null;
+      }
+      
+      setUploadProgress(20);
+      
+      // Generate a safe and unique filename
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_'); // Sanitize filename
+      const uniqueId = Math.random().toString(36).substring(2, 15);
+      const timestamp = Date.now();
+      const fileName = `direct_upload_${uniqueId}_${timestamp}_${safeFileName}`;
+      
+      console.log("Attempting direct upload to 'parts' bucket:", fileName);
+      console.log("File details:", {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)} KB`
+      });
+      
+      setUploadProgress(40);
+      
+      // Upload the file to the 'parts' bucket root directory
+      const { data, error } = await supabase.storage
+        .from('parts')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true, // Use upsert true for direct uploads to avoid name conflicts
+          contentType: file.type
+        });
+      
+      if (error) {
+        console.error("Direct upload error:", error);
+        console.error("Error message:", error.message);
+        
+        // Handle specific error cases
+        toast.error(`Upload failed: ${error.message}`);
+        setUploadProgress(0);
+        return null;
+      }
+      
+      setUploadProgress(70);
+      
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('parts')
+        .getPublicUrl(fileName);
+      
+      if (!publicUrlData.publicUrl) {
+        toast.error("Failed to generate public URL for the image");
+        setUploadProgress(0);
+        return null;
+      }
+      
+      setUploadProgress(100);
+      console.log("Direct upload successful, public URL:", publicUrlData.publicUrl);
+      toast.success("Image uploaded successfully!");
+      
+      return publicUrlData.publicUrl;
+    } catch (error: any) {
+      console.error("Direct upload error:", error);
       toast.error(`Upload error: ${error.message || "Unknown error"}`);
       setUploadProgress(0);
       return null;
@@ -391,6 +472,7 @@ export const useGarageProducts = (garageId?: string) => {
     fetchLoading,
     uploadProgress,
     setUploadProgress,
-    availableGarages
+    availableGarages,
+    uploadImageToBucket // Add the new direct upload function to the return object
   };
 };
