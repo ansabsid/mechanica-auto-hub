@@ -47,13 +47,10 @@ export const InstallationOptionsDialog = ({
   // Extract unique areas from available garages when component mounts or part changes
   useEffect(() => {
     if (part.availableGarages && part.availableGarages.length > 0) {
-      // Extract all locations as areas
+      // Extract unique areas from garages
       const areas = Array.from(new Set(
-        part.availableGarages.map(garage => {
-          // Use location as area if no specific area is defined
-          return garage.area || garage.location.split(',')[0].trim();
-        })
-      ));
+        part.availableGarages.map(garage => garage.area)
+      )).filter(Boolean);
       
       setAvailableAreas(areas);
       
@@ -61,18 +58,20 @@ export const InstallationOptionsDialog = ({
       if (areas.length === 1) {
         setSelectedArea(areas[0]);
       }
+      
+      console.log("Available areas:", areas);
     }
   }, [part]);
 
   // Filter garages based on selected area
   useEffect(() => {
     if (selectedArea && part.availableGarages) {
-      const garagesInArea = part.availableGarages.filter(garage => {
-        const garageArea = garage.area || garage.location.split(',')[0].trim();
-        return garageArea === selectedArea;
-      });
+      const garagesInArea = part.availableGarages.filter(garage => 
+        garage.area === selectedArea
+      );
       
       setFilteredGarages(garagesInArea);
+      console.log("Filtered garages for area", selectedArea, ":", garagesInArea);
       
       // Clear selected garage when area changes
       setSelectedGarage(null);
@@ -151,11 +150,17 @@ export const InstallationOptionsDialog = ({
                     <SelectValue placeholder="Select an area" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableAreas.map((area) => (
-                      <SelectItem key={area} value={area}>
-                        {area}
+                    {availableAreas.length > 0 ? (
+                      availableAreas.map((area) => (
+                        <SelectItem key={area} value={area}>
+                          {area}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        No areas available
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -191,12 +196,18 @@ export const InstallationOptionsDialog = ({
                     <SelectValue placeholder="Select a garage" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredGarages.map((garage) => (
-                      <SelectItem key={garage.id} value={garage.id}>
-                        {garage.name} - {garage.location} (+
-                        {garage.installationFee})
+                    {filteredGarages.length > 0 ? (
+                      filteredGarages.map((garage) => (
+                        <SelectItem key={garage.id} value={garage.id}>
+                          {garage.name} - {garage.location} (+
+                          {garage.installationFee})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        No garages available in this area
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -235,6 +246,9 @@ export const InstallationOptionsDialog = ({
                 </p>
                 <p>
                   <strong>Garage:</strong> {selectedGarage?.name}
+                </p>
+                <p>
+                  <strong>Area:</strong> {selectedArea}
                 </p>
                 <p>
                   <strong>Location:</strong> {selectedGarage?.location}

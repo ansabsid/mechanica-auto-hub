@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ import {
   ShoppingCart,
   ChevronDown,
   MoreHorizontal,
+  MapPin,
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -32,6 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 
 // Mock product data
 const products = [
@@ -128,15 +129,38 @@ const GarageDashboard = () => {
     interval: "60",
   });
 
+  const [newGarage, setNewGarage] = useState({
+    name: "",
+    area: "",
+    location: "",
+    installationFee: "",
+  });
+
   const totalProducts = products.length;
   const totalAppointments = appointments.length;
   const pendingAppointments = appointments.filter(app => app.status === "Pending").length;
 
+  const dubaiAreas = [
+    "Dubai Marina",
+    "Downtown Dubai",
+    "Jumeirah",
+    "Deira",
+    "Business Bay",
+    "JLT",
+    "Palm Jumeirah",
+    "Al Barsha",
+    "Dubai Hills",
+    "Mirdif",
+    "Dubai Silicon Oasis",
+    "International City",
+    "Dubai Sports City",
+    "JVC",
+    "Arabian Ranches"
+  ];
+
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle adding new product
     console.log("Adding new product:", newProduct);
-    // Reset form
     setNewProduct({
       name: "",
       category: "",
@@ -148,15 +172,24 @@ const GarageDashboard = () => {
 
   const handleAddSlot = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle adding new service slot
     console.log("Adding new service slot:", newSlot);
-    // Reset form
     setNewSlot({
       service: "",
       date: "",
       startTime: "",
       endTime: "",
       interval: "60",
+    });
+  };
+
+  const handleAddGarage = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Adding new garage:", newGarage);
+    setNewGarage({
+      name: "",
+      area: "",
+      location: "",
+      installationFee: "",
     });
   };
 
@@ -210,12 +243,15 @@ const GarageDashboard = () => {
       <section className="py-10">
         <div className="container-custom">
           <Tabs defaultValue="inventory" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="inventory" className="flex items-center justify-center gap-2">
                 <ShoppingBag size={18} /> Inventory
               </TabsTrigger>
               <TabsTrigger value="appointments" className="flex items-center justify-center gap-2">
                 <Calendar size={18} /> Appointments
+              </TabsTrigger>
+              <TabsTrigger value="garages" className="flex items-center justify-center gap-2">
+                <MapPin size={18} /> Garages
               </TabsTrigger>
             </TabsList>
 
@@ -532,6 +568,165 @@ const GarageDashboard = () => {
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="garages">
+              <div className="flex flex-col space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Garage Management</h2>
+                  <Button className="bg-mechanica-500 hover:bg-mechanica-600">
+                    <Plus className="mr-2 h-4 w-4" /> Add New Garage
+                  </Button>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-subtle p-6">
+                  <h3 className="text-lg font-semibold mb-4">Onboard New Garage</h3>
+                  <form onSubmit={handleAddGarage} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="garage-name">Garage Name</Label>
+                        <Input 
+                          id="garage-name"
+                          value={newGarage.name}
+                          onChange={(e) => setNewGarage({...newGarage, name: e.target.value})}
+                          required
+                          placeholder="e.g. Mechanica Service Center - Dubai Marina"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="garage-area">Area</Label>
+                        <Select 
+                          value={newGarage.area}
+                          onValueChange={(value) => setNewGarage({...newGarage, area: value})}
+                        >
+                          <SelectTrigger id="garage-area">
+                            <SelectValue placeholder="Select area" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {dubaiAreas.map((area) => (
+                              <SelectItem key={area} value={area}>
+                                {area}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-sm text-gray-500">This groups garages by area for customer selection</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="garage-location">Full Address</Label>
+                        <Textarea 
+                          id="garage-location"
+                          value={newGarage.location}
+                          onChange={(e) => setNewGarage({...newGarage, location: e.target.value})}
+                          required
+                          placeholder="e.g. Dubai Marina, Sheikh Zayed Road, Dubai, UAE"
+                          className="resize-none"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="garage-fee">Base Installation Fee (AED)</Label>
+                        <Input 
+                          id="garage-fee"
+                          type="number"
+                          value={newGarage.installationFee}
+                          onChange={(e) => setNewGarage({...newGarage, installationFee: e.target.value})}
+                          required
+                          placeholder="e.g. 25.99"
+                        />
+                        <p className="text-sm text-gray-500">Base fee applied to installations at this garage</p>
+                      </div>
+                    </div>
+                    <Button type="submit" className="bg-mechanica-500 hover:bg-mechanica-600">
+                      Add Garage
+                    </Button>
+                  </form>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full bg-white rounded-xl shadow-subtle">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-4">Garage Name</th>
+                        <th className="text-left p-4">Area</th>
+                        <th className="text-left p-4">Full Address</th>
+                        <th className="text-left p-4">Installation Fee</th>
+                        <th className="text-left p-4">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="p-4">Mechanica Service Center - Dubai Marina</td>
+                        <td className="p-4">Dubai Marina</td>
+                        <td className="p-4">Dubai Marina, Sheikh Zayed Road, Dubai, UAE</td>
+                        <td className="p-4">AED 25.99</td>
+                        <td className="p-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>Edit Garage</DropdownMenuItem>
+                              <DropdownMenuItem>View Parts</DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="p-4">Mechanica Service Center - Downtown</td>
+                        <td className="p-4">Downtown Dubai</td>
+                        <td className="p-4">Downtown Dubai, Financial Center Road, Dubai, UAE</td>
+                        <td className="p-4">AED 29.99</td>
+                        <td className="p-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>Edit Garage</DropdownMenuItem>
+                              <DropdownMenuItem>View Parts</DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="p-4">Mechanica Service Center - Jumeirah</td>
+                        <td className="p-4">Jumeirah</td>
+                        <td className="p-4">Jumeirah Beach Road, Dubai, UAE</td>
+                        <td className="p-4">AED 32.99</td>
+                        <td className="p-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem>Edit Garage</DropdownMenuItem>
+                              <DropdownMenuItem>View Parts</DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>

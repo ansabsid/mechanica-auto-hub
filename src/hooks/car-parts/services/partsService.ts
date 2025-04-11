@@ -134,7 +134,23 @@ export const createMockPartsForVehicle = (
         garages: {
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
-        }
+        },
+        availableGarages: [
+          {
+            id: "g1",
+            name: "Mechanica Service Center - Dubai Marina",
+            location: "Dubai Marina, Dubai, UAE",
+            installationFee: 15.99,
+            area: "Dubai Marina"
+          },
+          {
+            id: "g2",
+            name: "Mechanica Service Center - Downtown",
+            location: "Downtown, Dubai, UAE",
+            installationFee: 19.99,
+            area: "Downtown Dubai"
+          }
+        ]
       },
       {
         id: 102,
@@ -149,7 +165,23 @@ export const createMockPartsForVehicle = (
         garages: {
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
-        }
+        },
+        availableGarages: [
+          {
+            id: "g1",
+            name: "Mechanica Service Center - Dubai Marina",
+            location: "Dubai Marina, Dubai, UAE",
+            installationFee: 35.99,
+            area: "Dubai Marina"
+          },
+          {
+            id: "g3",
+            name: "Mechanica Service Center - Jumeirah",
+            location: "Jumeirah, Dubai, UAE",
+            installationFee: 39.99,
+            area: "Jumeirah"
+          }
+        ]
       }
     ];
   }
@@ -172,7 +204,23 @@ export const createMockPartsForVehicle = (
         garages: {
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
-        }
+        },
+        availableGarages: [
+          {
+            id: "g1",
+            name: "Mechanica Service Center - Dubai Marina",
+            location: "Dubai Marina, Dubai, UAE",
+            installationFee: 15.99,
+            area: "Dubai Marina"
+          },
+          {
+            id: "g2",
+            name: "Mechanica Service Center - Downtown",
+            location: "Downtown, Dubai, UAE",
+            installationFee: 19.99,
+            area: "Downtown Dubai"
+          }
+        ]
       },
       {
         id: 202,
@@ -187,7 +235,23 @@ export const createMockPartsForVehicle = (
         garages: {
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
-        }
+        },
+        availableGarages: [
+          {
+            id: "g1",
+            name: "Mechanica Service Center - Dubai Marina",
+            location: "Dubai Marina, Dubai, UAE",
+            installationFee: 35.99,
+            area: "Dubai Marina"
+          },
+          {
+            id: "g3", 
+            name: "Mechanica Service Center - Jumeirah",
+            location: "Jumeirah, Dubai, UAE",
+            installationFee: 39.99,
+            area: "Jumeirah"
+          }
+        ]
       }
     ];
   }
@@ -204,8 +268,32 @@ export const createMockPartsForVehicle = (
     part.model_id === modelId && 
     part.year === yearNum
   );
-  
-  console.log(`Generated ${mockParts.length} mock parts for vehicle: mfr=${manufacturerId}, model=${modelId}, year=${yearNum}`);
-  
-  return mockParts;
+
+  // Add availableGarages to mock parts
+  return mockParts.map(part => ({
+    ...part,
+    availableGarages: [
+      {
+        id: "g1",
+        name: "Mechanica Service Center - Dubai Marina",
+        location: "Dubai Marina, Dubai, UAE",
+        installationFee: 25.99,
+        area: "Dubai Marina"
+      },
+      {
+        id: "g2",
+        name: "Mechanica Service Center - Downtown",
+        location: "Downtown, Dubai, UAE",
+        installationFee: 29.99,
+        area: "Downtown Dubai"
+      },
+      {
+        id: "g3",
+        name: "Mechanica Service Center - Jumeirah",
+        location: "Jumeirah, Dubai, UAE",
+        installationFee: 32.99,
+        area: "Jumeirah"
+      }
+    ]
+  }));
 };

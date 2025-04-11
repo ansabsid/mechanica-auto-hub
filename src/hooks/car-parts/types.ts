@@ -17,7 +17,7 @@ export interface Garage {
   location: string;
   installationFee: number;
   // Adding area for grouping garages
-  area?: string;
+  area: string;
 }
 
 export interface Part {
