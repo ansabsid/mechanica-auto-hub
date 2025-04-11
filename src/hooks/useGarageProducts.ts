@@ -11,6 +11,7 @@ export interface GarageProduct {
   quantity: string | number;
   status: string;
   garage_id?: string;
+  imageUrl?: string | null;
 }
 
 export const useGarageProducts = (garageId?: string) => {
@@ -78,7 +79,8 @@ export const useGarageProducts = (garageId?: string) => {
         manufacturer_id: 1, // Default values, in a real app these would be selected
         model_id: 1,        // Default values, in a real app these would be selected
         year: new Date().getFullYear(),
-        garage_id: garageId
+        garage_id: garageId,
+        image_url: product.imageUrl // Add the image URL to the product data
       };
 
       // 1. Insert the part into the parts table

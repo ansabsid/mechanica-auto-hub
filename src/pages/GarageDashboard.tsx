@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,9 @@ import {
   MapPin,
   Check,
   X,
-  Loader2
+  Loader2,
+  FileImage,
+  Upload
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -31,8 +32,8 @@ import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
 import { useGarageAppointments, ServiceSlot } from "@/hooks/useGarageAppointments";
 import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock appointments for now
 const appointments = [
   {
     id: 1,
@@ -85,7 +86,6 @@ const dubaiAreas = [
 ];
 
 const GarageDashboard = () => {
-  // Product state
   const [newProduct, setNewProduct] = useState<GarageProduct>({
     name: "",
     category: "",
@@ -94,7 +94,6 @@ const GarageDashboard = () => {
     status: "In Stock",
   });
 
-  // Service slot state
   const [newSlot, setNewSlot] = useState<ServiceSlot>({
     service: "",
     date: "",
@@ -103,7 +102,6 @@ const GarageDashboard = () => {
     interval: "60",
   });
 
-  // Garage state
   const [newGarage, setNewGarage] = useState<GarageInfo>({
     name: "",
     area: "",
@@ -111,10 +109,12 @@ const GarageDashboard = () => {
     installationFee: "",
   });
 
-  // Current garage ID - this would come from auth in a real app
   const [currentGarageId, setCurrentGarageId] = useState<string | null>(null);
-  
-  // Custom hooks
+
+  const [productImage, setProductImage] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+
   const { 
     addProduct, 
     fetchProducts, 
@@ -137,17 +137,32 @@ const GarageDashboard = () => {
   } = useGarageManagement();
 
   useEffect(() => {
-    // In a real app, this would come from authentication
     const mockGarageId = "27f4e4a5-3e4b-4c4d-9d3f-cd3c4e5f6a7b";
     setCurrentGarageId(mockGarageId);
     
-    // Fetch initial data
     if (mockGarageId) {
       fetchProducts(mockGarageId);
     }
     
     fetchGarages();
   }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image too large. Maximum size is 5MB.");
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast.error("Only image files are allowed.");
+        return;
+      }
+      
+      setProductImage(file);
+    }
+  };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,16 +171,59 @@ const GarageDashboard = () => {
       return;
     }
 
-    await addProduct(newProduct, currentGarageId);
-    
-    // Reset form
-    setNewProduct({
-      name: "",
-      category: "",
-      price: "",
-      quantity: "",
-      status: "In Stock",
-    });
+    setIsUploading(true);
+    let imageUrl = null;
+
+    try {
+      if (productImage) {
+        const fileExt = productImage.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `${currentGarageId}/${fileName}`;
+        
+        const { data, error } = await supabase.storage
+          .from('parts')
+          .upload(filePath, productImage, {
+            cacheControl: '3600',
+            upsert: false,
+            onUploadProgress: (progress) => {
+              setUploadProgress((progress.loaded / progress.total) * 100);
+            }
+          });
+          
+        if (error) {
+          throw new Error(`Error uploading image: ${error.message}`);
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('parts')
+          .getPublicUrl(filePath);
+          
+        imageUrl = publicUrl;
+      }
+      
+      const productWithImage = {
+        ...newProduct,
+        imageUrl: imageUrl
+      };
+      
+      await addProduct(productWithImage, currentGarageId);
+      
+      setNewProduct({
+        name: "",
+        category: "",
+        price: "",
+        quantity: "",
+        status: "In Stock",
+      });
+      setProductImage(null);
+      setUploadProgress(0);
+      
+    } catch (error: any) {
+      console.error("Error in handleAddProduct:", error);
+      toast.error(error.message || "Failed to add product");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleAddSlot = async (e: React.FormEvent) => {
@@ -177,7 +235,6 @@ const GarageDashboard = () => {
     
     await createServiceSlots(newSlot, currentGarageId);
     
-    // Reset form
     setNewSlot({
       service: "",
       date: "",
@@ -192,7 +249,6 @@ const GarageDashboard = () => {
     
     await addGarage(newGarage);
     
-    // Reset form
     setNewGarage({
       name: "",
       area: "",
@@ -299,20 +355,63 @@ const GarageDashboard = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="product-image">Product Image</Label>
-                        <Input id="product-image" type="file" />
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              id="product-image" 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleFileChange} 
+                              className="flex-1"
+                            />
+                            {productImage && (
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setProductImage(null)}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </div>
+                          
+                          {productImage && (
+                            <div className="flex items-center gap-2">
+                              <FileImage className="h-4 w-4 text-mechanica-500" />
+                              <span className="text-sm text-gray-500 truncate">
+                                {productImage.name} ({(productImage.size / 1024).toFixed(2)} KB)
+                              </span>
+                            </div>
+                          )}
+                          
+                          {isUploading && uploadProgress > 0 && (
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                              <div 
+                                className="bg-mechanica-500 h-2 rounded-full" 
+                                style={{ width: `${uploadProgress}%` }}
+                              ></div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <Button 
                       type="submit" 
                       className="bg-mechanica-500 hover:bg-mechanica-600"
-                      disabled={productLoading}
+                      disabled={productLoading || isUploading}
                     >
-                      {productLoading ? (
+                      {(productLoading || isUploading) ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Adding...
+                          {isUploading ? `Uploading (${Math.round(uploadProgress)}%)` : "Adding..."}
                         </>
-                      ) : "Add Product"}
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Add Product
+                        </>
+                      )}
                     </Button>
                   </form>
                 </div>
@@ -345,7 +444,15 @@ const GarageDashboard = () => {
                             <td className="p-4">
                               <div className="flex items-center">
                                 <div className="h-10 w-10 rounded-md overflow-hidden mr-3 bg-gray-200">
-                                  {/* Placeholder image */}
+                                  {product.image_url ? (
+                                    <img 
+                                      src={product.image_url} 
+                                      alt={product.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <Package className="h-full w-full p-2 text-gray-400" />
+                                  )}
                                 </div>
                                 <span className="font-medium">{product.name}</span>
                               </div>

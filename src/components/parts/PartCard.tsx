@@ -14,6 +14,11 @@ interface PartCardProps {
 
 // Function to get an appropriate image URL based on part name
 const getPartImageUrl = (part: Part): string => {
+  // If the part has an image_url, use it
+  if (part.image_url) {
+    return part.image_url;
+  }
+  
   const name = part.name.toLowerCase();
   
   if (name.includes('oil')) {

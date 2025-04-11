@@ -266,6 +266,7 @@ export type Database = {
           description: string | null
           garage_id: string | null
           id: number
+          image_url: string | null
           manufacturer_id: number
           model_id: number
           name: string
@@ -279,6 +280,7 @@ export type Database = {
           description?: string | null
           garage_id?: string | null
           id?: number
+          image_url?: string | null
           manufacturer_id: number
           model_id: number
           name: string
@@ -292,6 +294,7 @@ export type Database = {
           description?: string | null
           garage_id?: string | null
           id?: number
+          image_url?: string | null
           manufacturer_id?: number
           model_id?: number
           name?: string

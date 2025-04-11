@@ -36,6 +36,7 @@ export interface Part {
     readonly location: string;
   } | null;
   readonly availableGarages?: ReadonlyArray<Garage>;
+  readonly image_url?: string | null;
 }
 
 // Search state interface
