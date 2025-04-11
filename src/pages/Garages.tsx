@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Star, Users, Wrench, Clock, PhoneCall, Mail, Calendar, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Define the type for garage data
 interface Garage {
@@ -42,11 +44,24 @@ const Garages = () => {
     const fetchGarages = async () => {
       setIsLoading(true);
       try {
+        console.log("Fetching garages from Supabase...");
         const { data, error } = await supabase
           .from('garages')
           .select('*');
           
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
+        
+        console.log("Garages data received:", data);
+        
+        if (!data || data.length === 0) {
+          console.log("No garages found in the database");
+          setGarages([]);
+          setIsLoading(false);
+          return;
+        }
         
         // Enhance garages with additional frontend properties
         const enhancedGarages = data.map((garage, index) => ({
@@ -61,6 +76,7 @@ const Garages = () => {
           images: garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
         }));
         
+        console.log("Enhanced garages:", enhancedGarages);
         setGarages(enhancedGarages);
       } catch (error: any) {
         console.error("Error fetching garages:", error.message);
@@ -101,6 +117,48 @@ const Garages = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // The filtering is already reactive via the filteredGarages computed value
+  };
+
+  // Helper function to add a test garage
+  const addTestGarage = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('garages')
+        .insert({
+          name: "Test Garage " + Math.floor(Math.random() * 1000),
+          location: "Dubai Test Location",
+          area: "Dubai",
+          images: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+        })
+        .select();
+        
+      if (error) throw error;
+      
+      toast.success("Test garage added successfully!");
+      // Refresh the garages list
+      const { data: updatedGarages, error: fetchError } = await supabase
+        .from('garages')
+        .select('*');
+        
+      if (fetchError) throw fetchError;
+      
+      // Enhance garages with additional frontend properties
+      const enhancedGarages = updatedGarages.map((garage, index) => ({
+        ...garage,
+        rating: 4.5 + (Math.random() * 0.5),
+        reviews: Math.floor(50 + Math.random() * 200),
+        services: serviceOptions[index % serviceOptions.length],
+        hours: "8:00 AM - 6:00 PM",
+        phone: "+971 552552476",
+        email: `info@${garage.name.toLowerCase().replace(/\s+/g, '')}.com`,
+        images: garage.images || "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+      }));
+      
+      setGarages(enhancedGarages);
+    } catch (error: any) {
+      console.error("Error adding test garage:", error.message);
+      toast.error("Failed to add test garage");
+    }
   };
 
   return (
@@ -178,10 +236,24 @@ const Garages = () => {
             </div>
           </div>
           
+          {/* Debug Section - Only in development */}
+          <div className="mb-6">
+            <Button 
+              variant="outline" 
+              onClick={addTestGarage} 
+              className="mb-4"
+            >
+              Add Test Garage (Debug)
+            </Button>
+            <div className="text-sm text-gray-500 mb-2">
+              Total garages: {garages.length}, Filtered: {filteredGarages.length}
+            </div>
+          </div>
+          
           {/* Loading State */}
           {isLoading && (
             <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-mechanica-600 mr-2" />
+              <LoadingSpinner size="md" className="mr-2" />
               <span className="text-lg text-gray-600">Loading garages...</span>
             </div>
           )}
@@ -189,16 +261,22 @@ const Garages = () => {
           {/* Empty State */}
           {!isLoading && filteredGarages.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-lg text-gray-600 mb-4">No garages found matching your criteria.</p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setFilterOption("all");
-                  setSearchQuery("");
-                }}
-              >
-                Clear Filters
-              </Button>
+              <p className="text-lg text-gray-600 mb-4">
+                {garages.length === 0 
+                  ? "No garages found in database. Try adding a test garage with the button above." 
+                  : "No garages found matching your criteria."}
+              </p>
+              {garages.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setFilterOption("all");
+                    setSearchQuery("");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           )}
           
