@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Linkedin, Mail, Phone, MapPin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatPrice } from "@/lib/utils";
 
 const Footer = () => {
   return (
@@ -12,7 +11,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="col-span-1">
+          <div className="col-span-1 flex flex-col items-center md:items-start">
             <div className="mb-4">
               <img 
                 src="/lovable-uploads/bc5d716e-e89a-48a9-b038-082d8861b31d.png" 
@@ -20,10 +19,10 @@ const Footer = () => {
                 className="h-8" 
               />
             </div>
-            <p className="text-gray-300 mb-4">
+            <p className="text-gray-300 mb-4 text-center md:text-left">
               Connecting car owners with garages and suppliers across MENA to find the right parts and book servicing appointments.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 justify-center md:justify-start">
               <a href="#" className="text-gray-300 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook size={20} />
               </a>
@@ -40,9 +39,9 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="col-span-1">
-            <h3 className="font-semibold text-white mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+          <div className="col-span-1 flex flex-col items-center md:items-start">
+            <h3 className="font-semibold text-white mb-4 text-center md:text-left">Quick Links</h3>
+            <ul className="space-y-2 text-center md:text-left">
               <li>
                 <Link to="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
               </li>
@@ -59,9 +58,9 @@ const Footer = () => {
           </div>
 
           {/* Services */}
-          <div className="col-span-1">
-            <h3 className="font-semibold text-white mb-4">Services</h3>
-            <ul className="space-y-2">
+          <div className="col-span-1 flex flex-col items-center md:items-start">
+            <h3 className="font-semibold text-white mb-4 text-center md:text-left">Services</h3>
+            <ul className="space-y-2 text-center md:text-left">
               <li>
                 <a href="#" className="text-gray-300 hover:text-white transition-colors">Find Parts</a>
               </li>
@@ -78,9 +77,9 @@ const Footer = () => {
           </div>
 
           {/* Newsletter & Contact */}
-          <div className="col-span-1">
-            <h3 className="font-semibold text-white mb-4">Stay Updated</h3>
-            <div className="flex w-full max-w-full mb-6">
+          <div className="col-span-1 flex flex-col items-center md:items-start">
+            <h3 className="font-semibold text-white mb-4 text-center md:text-left">Stay Updated</h3>
+            <div className="flex w-full max-w-xs mx-auto md:mx-0 mb-6">
               <Input 
                 type="email" 
                 placeholder="Your email" 
@@ -91,17 +90,17 @@ const Footer = () => {
               </Button>
             </div>
             
-            <h3 className="font-semibold text-white mb-3 mt-6">Contact Us</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
+            <h3 className="font-semibold text-white mb-3 mt-6 text-center md:text-left">Contact Us</h3>
+            <ul className="space-y-3 text-center md:text-left">
+              <li className="flex items-start justify-center md:justify-start">
                 <MapPin size={20} className="text-gray-300 mt-1 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">Dubai, United Arab Emirates</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Phone size={20} className="text-gray-300 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">+971 552552476</span>
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center justify-center md:justify-start">
                 <Mail size={20} className="text-gray-300 mr-3 flex-shrink-0" />
                 <span className="text-gray-300">support@bookmyparts.com</span>
               </li>
@@ -111,7 +110,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-10 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm text-center md:text-left">
               © {new Date().getFullYear()} BookMyParts. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">

@@ -20,6 +20,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <main className="flex-grow flex items-center justify-center">
           <LoadingSpinner size="lg" />
         </main>
+        <Footer />
       </div>
     );
   }
