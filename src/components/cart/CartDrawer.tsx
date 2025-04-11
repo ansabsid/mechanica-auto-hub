@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
@@ -27,8 +26,6 @@ export const CartDrawer = () => {
   useEffect(() => {
     console.log("CartDrawer mounted, refreshing cart");
     refreshCart();
-    
-    // No need for continuous polling - cart will refresh when opened
   }, [refreshCart]);
   
   const handleOpenChange = (open: boolean) => {
@@ -51,13 +48,14 @@ export const CartDrawer = () => {
     
     console.log("Navigating to checkout...");
     
-    // First close the drawer
+    // Close the drawer first
     setIsOpen(false);
     
-    // Use react-router's navigate with a longer delay to ensure drawer closes first
+    // Force direct navigation to checkout page after a short delay
+    // This avoids potential issues with React Router navigation
     setTimeout(() => {
-      navigate("/checkout");
-    }, 500);
+      window.location.href = "/checkout";
+    }, 300);
   };
   
   return (
