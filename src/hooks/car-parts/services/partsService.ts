@@ -11,33 +11,36 @@ import { generateMockParts } from "../utils";
 export const fetchAllPartsFromDB = async () => {
   console.log("Fetching all available parts");
   
-  const fetchPromise = supabase
-    .from('parts')
-    .select('*');
-  
-  const { data, error } = await fetchWithTimeout(fetchPromise);
-  
-  if (error) {
+  try {
+    const { data, error } = await fetchWithTimeout(() => 
+      supabase.from('parts').select('*')
+    );
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log("All parts fetched from database:", data?.length || 0);
+    
+    // Process the parts data with garage information
+    const processedParts: Part[] = (data || []).map(part => {
+      return {
+        ...part,
+        garages: part.garage_id ? { 
+          name: 'AutoCare Dubai',
+          location: 'Dubai Marina'
+        } : { 
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      } as Part;
+    });
+    
+    return processedParts;
+  } catch (error) {
+    console.error("Error in fetchAllPartsFromDB:", error);
     throw error;
   }
-  
-  console.log("All parts fetched from database:", data?.length || 0);
-  
-  // Process the parts data with garage information
-  const processedParts: Part[] = (data || []).map(part => {
-    return {
-      ...part,
-      garages: part.garage_id ? { 
-        name: 'AutoCare Dubai',
-        location: 'Dubai Marina'
-      } : { 
-        name: 'Mechanica Service Center',
-        location: 'Dubai, UAE'
-      }
-    } as Part;
-  });
-  
-  return processedParts;
 };
 
 /**
@@ -54,38 +57,43 @@ export const fetchPartsForVehicle = async (
 ) => {
   console.log(`Querying Supabase for parts: mfr=${manufacturerId}, model=${modelId}, year=${yearNum}`);
   
-  const queryPromise = supabase
-    .from('parts')
-    .select('*')
-    .eq('manufacturer_id', manufacturerId)
-    .eq('model_id', modelId)
-    .eq('year', yearNum);
-  
-  const { data, error } = await fetchWithTimeout(queryPromise);
-  
-  if (error) {
+  try {
+    const { data, error } = await fetchWithTimeout(() => 
+      supabase
+        .from('parts')
+        .select('*')
+        .eq('manufacturer_id', manufacturerId)
+        .eq('model_id', modelId)
+        .eq('year', yearNum)
+    );
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log("Supabase query result:", data);
+    
+    // Process and enhance the database results with default garage information
+    const validParts: Part[] = (data || []).map(part => {
+      return {
+        ...part,
+        garages: part.garage_id ? { 
+          name: 'AutoCare Dubai',
+          location: 'Dubai Marina'
+        } : { 
+          name: 'Mechanica Service Center',
+          location: 'Dubai, UAE'
+        }
+      } as Part;
+    });
+    
+    console.log("🔢 Valid parts from DB:", validParts.length);
+    
+    return validParts;
+  } catch (error) {
+    console.error("Error in fetchPartsForVehicle:", error);
     throw error;
   }
-  
-  console.log("Supabase query result:", data);
-  
-  // Process and enhance the database results with default garage information
-  const validParts: Part[] = (data || []).map(part => {
-    return {
-      ...part,
-      garages: part.garage_id ? { 
-        name: 'AutoCare Dubai',
-        location: 'Dubai Marina'
-      } : { 
-        name: 'Mechanica Service Center',
-        location: 'Dubai, UAE'
-      }
-    } as Part;
-  });
-  
-  console.log("🔢 Valid parts from DB:", validParts.length);
-  
-  return validParts;
 };
 
 /**

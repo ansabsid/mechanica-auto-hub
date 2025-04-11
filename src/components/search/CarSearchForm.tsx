@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useCarParts, Manufacturer, Model } from "@/hooks/useCarParts";
+import { useCarParts, Model } from "@/hooks/useCarParts";
+import FormHeader from "./form/FormHeader";
+import ManufacturerSelect from "./form/ManufacturerSelect";
+import ModelSelect from "./form/ModelSelect";
+import YearSelect from "./form/YearSelect";
+import SearchButton from "./form/SearchButton";
 
 interface CarSearchFormProps {
   onSearch: (resultsCount: number) => void;
@@ -87,6 +89,9 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
     }
   };
 
+  // Find the selected model object
+  const selectedModel = models.find(m => m.id.toString() === model);
+
   // For debugging
   console.log("Current manufacturers:", manufacturers?.length || 0);
   console.log("Current models:", models?.length || 0);
@@ -95,107 +100,41 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-card max-w-4xl w-full mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-        Find the perfect parts for your vehicle
-      </h2>
+      <FormHeader />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-1">
-            Car Manufacturer
-          </label>
-          <Select 
-            onValueChange={(value) => {
-              console.log("Manufacturer selected:", value);
-              setManufacturer(value);
-              setModel(""); // Reset model when manufacturer changes
-            }}
-            value={manufacturer}
-          >
-            <SelectTrigger id="manufacturer" className="w-full">
-              <SelectValue placeholder="Select manufacturer" />
-            </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-50">
-              {manufacturers.map((mfr) => (
-                <SelectItem key={mfr.id} value={mfr.id.toString()}>
-                  {mfr.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ManufacturerSelect 
+          manufacturers={manufacturers}
+          value={manufacturer}
+          onChange={setManufacturer}
+          isLoading={isLoading}
+        />
 
-        <div>
-          <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
-            Car Model
-          </label>
-          <Select 
-            onValueChange={(value) => {
-              console.log("Model selected:", value);
-              setModel(value);
-            }} 
-            disabled={!manufacturer || isLoading}
-            value={model}
-          >
-            <SelectTrigger id="model" className="w-full">
-              <SelectValue placeholder={manufacturer ? (isLoading ? "Loading models..." : "Select model") : "Select manufacturer first"} />
-            </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-50 max-h-60 overflow-y-auto">
-              {models && models.length > 0 ? (
-                models.map((mdl) => (
-                  <SelectItem key={mdl.id} value={mdl.id.toString()}>
-                    {mdl.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-models" disabled>No models available</SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        <ModelSelect 
+          models={models}
+          value={model}
+          onChange={setModel}
+          disabled={!manufacturer || isLoading}
+          isLoading={isLoading}
+          manufacturerSelected={!!manufacturer}
+        />
 
-        <div>
-          <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
-            Make Year
-          </label>
-          <Select 
-            onValueChange={(value) => {
-              console.log("Year selected:", value);
-              setYear(value);
-            }}
-            value={year}
-          >
-            <SelectTrigger id="year" className="w-full">
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
-            <SelectContent position="popper" className="bg-white z-50 max-h-60 overflow-y-auto">
-              {years.map((yr) => (
-                <SelectItem key={yr} value={yr.toString()}>
-                  {yr}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <YearSelect 
+          years={years}
+          value={year}
+          onChange={setYear}
+        />
       </div>
 
       <div className="mt-6">
-        <Button 
-          onClick={handleSearch} 
-          className="w-full bg-mechanica-500 hover:bg-mechanica-600 h-12 text-base"
+        <SearchButton 
+          onClick={handleSearch}
           disabled={!manufacturer || !model || !year || isSearching}
-        >
-          <Search className="mr-2 h-5 w-5" /> 
-          {isSearching ? "Searching..." : "Find Parts"}
-        </Button>
-        
-        <div className="text-center mt-3 text-sm text-gray-500">
-          {!manufacturer || !model || !year ? (
-            <p>Please select all vehicle details above to search</p>
-          ) : (
-            <p>Click to search for parts compatible with your {year} {models.find(m => m.id.toString() === model)?.name}</p>
-          )}
-        </div>
+          isSearching={isSearching}
+          hasSelections={!!manufacturer && !!model && !!year}
+          year={year}
+          selectedModel={selectedModel}
+        />
       </div>
     </div>
   );
