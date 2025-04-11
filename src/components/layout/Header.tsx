@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, User, ShoppingCart, LogOut, Home, Settings } from "lucide-react";
@@ -20,7 +19,6 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close mobile menu when navigating
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location]);
@@ -47,18 +45,15 @@ const Header = () => {
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center">
             <span className="font-bold text-xl text-mechanica-600">BookMyParts</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             <Link to="/" className="text-gray-700 hover:text-mechanica-500 transition-colors">
               Home
             </Link>
             
-            {/* Show Parts and Garages links only to customers or non-authenticated users */}
             {userRole !== "garage" && (
               <>
                 <Link to="/categories" className="text-gray-700 hover:text-mechanica-500 transition-colors">
@@ -78,11 +73,9 @@ const Header = () => {
             </Link>
           </nav>
 
-          {/* User Menu & Action Buttons */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                {/* Only show cart for customers */}
                 {userRole !== "garage" && <CartDrawer />}
 
                 {userRole === "garage" && <InstallationRequestsNotification />}
@@ -104,7 +97,6 @@ const Header = () => {
                       <span>{(userRole === "garage") ? "Garage Dashboard" : "My Dashboard"}</span>
                     </DropdownMenuItem>
                     
-                    {/* Only show orders for customers */}
                     {userRole !== "garage" && (
                       <DropdownMenuItem onClick={() => navigate("/orders")}>
                         <ShoppingCart className="mr-2 h-4 w-4" />
@@ -135,7 +127,6 @@ const Header = () => {
               </div>
             )}
 
-            {/* Mobile menu button */}
             <button
               type="button"
               className="md:hidden p-2 -mr-1 text-gray-600 hover:text-mechanica-500"
@@ -146,7 +137,6 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4">
             <div className="flex flex-col space-y-4">
@@ -158,7 +148,6 @@ const Header = () => {
                 Home
               </Link>
               
-              {/* Show Parts and Garages links only to customers or non-authenticated users */}
               {userRole !== "garage" && (
                 <>
                   <Link
