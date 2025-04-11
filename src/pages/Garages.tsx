@@ -237,7 +237,6 @@ const GaragePage = () => {
                   className="bg-mechanica-600 flex items-center mx-auto"
                   disabled={isLoading}
                 >
-                  <Database className="h-4 w-4 mr-2" />
                   {isLoading ? "Adding Sample Data..." : "Add Sample Garages"}
                 </Button>
               </div>
