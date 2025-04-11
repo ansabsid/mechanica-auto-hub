@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -157,7 +156,7 @@ export const InstallationOptionsDialog = ({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-areas-available" disabled>
                         No areas available
                       </SelectItem>
                     )}
@@ -204,7 +203,7 @@ export const InstallationOptionsDialog = ({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-garages-available" disabled>
                         No garages available in this area
                       </SelectItem>
                     )}
