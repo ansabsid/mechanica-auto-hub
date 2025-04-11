@@ -36,7 +36,6 @@ const serviceOptions = [
 ];
 
 const Garages = () => {
-  const [filterOption, setFilterOption] = useState("all");
   const [garages, setGarages] = useState<Garage[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { fetchGarages, fetchLoading, error } = useGarageManagement();
@@ -97,30 +96,20 @@ const Garages = () => {
     };
   }, [fetchGarages]);
 
-  // Filter and search functionality
-  const filteredGarages = garages
-    .filter(garage => {
-      // First apply service type filter
-      if (filterOption !== "all") {
-        return garage.services?.some(service => 
-          service.toLowerCase().includes(filterOption.toLowerCase())
-        );
-      }
-      return true;
-    })
-    .filter(garage => {
-      // Then apply search query if present
-      if (searchQuery) {
-        return (
-          garage.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          garage.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          garage.services?.some(service => 
-            service.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        );
-      }
-      return true;
-    });
+  // Search functionality
+  const filteredGarages = garages.filter(garage => {
+    // Apply search query if present
+    if (searchQuery) {
+      return (
+        garage.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        garage.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        garage.services?.some(service => 
+          service.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+    return true;
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,52 +176,6 @@ const Garages = () => {
       {/* Garage Listings */}
       <section className="py-8 md:py-16">
         <div className="container-custom px-4 md:px-8">
-          {/* Filter Options */}
-          <div className="mb-6 md:mb-8 overflow-x-auto">
-            <div className="flex space-x-2 md:space-x-3 min-w-max pb-2">
-              <Button 
-                size="sm"
-                variant={filterOption === "all" ? "default" : "outline"}
-                onClick={() => setFilterOption("all")}
-                className="text-xs md:text-sm px-2 md:px-4 h-8 md:h-10"
-              >
-                All Garages
-              </Button>
-              <Button 
-                size="sm"
-                variant={filterOption === "oil change" ? "default" : "outline"}
-                onClick={() => setFilterOption("oil change")}
-                className="text-xs md:text-sm px-2 md:px-4 h-8 md:h-10"
-              >
-                Oil Change
-              </Button>
-              <Button 
-                size="sm"
-                variant={filterOption === "brake" ? "default" : "outline"}
-                onClick={() => setFilterOption("brake")}
-                className="text-xs md:text-sm px-2 md:px-4 h-8 md:h-10"
-              >
-                Brake Service
-              </Button>
-              <Button 
-                size="sm"
-                variant={filterOption === "air conditioning" ? "default" : "outline"}
-                onClick={() => setFilterOption("air conditioning")}
-                className="text-xs md:text-sm px-2 md:px-4 h-8 md:h-10"
-              >
-                AC Service
-              </Button>
-              <Button 
-                size="sm"
-                variant={filterOption === "engine" ? "default" : "outline"}
-                onClick={() => setFilterOption("engine")}
-                className="text-xs md:text-sm px-2 md:px-4 h-8 md:h-10"
-              >
-                Engine Work
-              </Button>
-            </div>
-          </div>
-          
           {/* General Error State */}
           {error && (
             <Alert variant="destructive" className="mb-6">
@@ -278,11 +221,10 @@ const Garages = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => {
-                      setFilterOption("all");
                       setSearchQuery("");
                     }}
                   >
-                    Clear Filters
+                    Clear Search
                   </Button>
                 )}
                 
