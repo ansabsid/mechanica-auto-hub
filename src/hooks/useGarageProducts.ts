@@ -19,6 +19,7 @@ export interface GarageProduct {
   manufacturer_id?: number;
   model_id?: number;
   year?: number;
+  description?: string;
 }
 
 export const useGarageProducts = (garageId?: string) => {
@@ -140,18 +141,18 @@ export const useGarageProducts = (garageId?: string) => {
         }
       }
       
-      // The parts table doesn't have a category column according to the error
-      // Remove category from the insertion data and handle it differently
+      // Now use the category field directly and store description separately
       const productData = {
         name: product.name,
         price: parseFloat(product.price.toString()),
         stock: parseInt(product.quantity.toString()), 
-        description: product.category, // Store category as description for now
+        description: product.description || '', // Use the description field
         manufacturer_id: product.manufacturer_id || 1,
         model_id: product.model_id || 1,
         year: product.year || new Date().getFullYear(),
         garage_id: garageId,
-        image_url: imageUrl
+        image_url: imageUrl,
+        category: product.category // Use the category field directly
       };
 
       console.log("Prepared data for database insertion:", productData);

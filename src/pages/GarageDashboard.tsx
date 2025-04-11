@@ -95,6 +95,7 @@ const GarageDashboard = () => {
     manufacturer_id: 1,
     model_id: 1,
     year: new Date().getFullYear(),
+    description: "",
   });
 
   const [newSlot, setNewSlot] = useState<ServiceSlot>({
@@ -268,6 +269,7 @@ const GarageDashboard = () => {
           manufacturer_id: 1,
           model_id: 1,
           year: new Date().getFullYear(),
+          description: "",
         });
         setProductImage(null);
         setUploadProgress(0);
@@ -385,6 +387,17 @@ const GarageDashboard = () => {
                             <SelectItem value="cooling">Cooling System</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+                      
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="product-description">Description</Label>
+                        <Textarea 
+                          id="product-description"
+                          value={newProduct.description || ''}
+                          onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                          placeholder="Enter product description"
+                          className="resize-none h-24"
+                        />
                       </div>
                       
                       <div className="space-y-2">

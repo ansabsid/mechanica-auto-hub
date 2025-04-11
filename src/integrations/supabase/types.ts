@@ -262,6 +262,7 @@ export type Database = {
       }
       parts: {
         Row: {
+          category: string | null
           created_at: string | null
           description: string | null
           garage_id: string | null
@@ -276,6 +277,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           garage_id?: string | null
@@ -290,6 +292,7 @@ export type Database = {
           year: number
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           garage_id?: string | null
@@ -403,6 +406,10 @@ export type Database = {
           location: string
           installation_fee: number
         }[]
+      }
+      insert_part: {
+        Args: { part_data: Json }
+        Returns: Json
       }
     }
     Enums: {
