@@ -33,6 +33,7 @@ export const PurchaseOptionsDialog = ({
   };
   
   const handleInstallationComplete = () => {
+    // Close both dialogs when installation is complete
     setShowInstallationOptions(false);
     onClose();
   };

@@ -105,8 +105,9 @@ export const InstallationOptionsDialog = ({
       description: `${part.name} with installation at ${selectedGarage.name} has been added to your cart`,
     });
     
+    // Close all dialogs
     setConfirmationOpen(false);
-    onComplete();
+    onComplete(); // This will signal parent to close all dialogs
   };
   
   const handleBack = () => {
