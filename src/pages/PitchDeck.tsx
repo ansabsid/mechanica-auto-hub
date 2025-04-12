@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw, Medal, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Define slide interface
 interface Slide {
@@ -20,6 +20,7 @@ const PitchDeck = () => {
   const { isCapacitor } = useCapacitor();
   const slideTimerRef = useRef<number | null>(null);
   const [isConfettiActive, setIsConfettiActive] = useState(false);
+  const isMobile = useIsMobile();
   
   // Clear any pending timers on unmount
   useEffect(() => {
@@ -48,12 +49,12 @@ const PitchDeck = () => {
       content: (
         <div className="flex flex-col items-center justify-center space-y-6 text-center w-full">
           <div className="relative">
-            <Rocket size={80} className="text-mechanica-500 animate-bounce" />
+            <Rocket size={isMobile ? 60 : 80} className="text-mechanica-500 animate-bounce" />
             <div className="absolute -bottom-2 -right-2">
-              <Sparkles size={24} className="text-yellow-400 animate-pulse" />
+              <Sparkles size={isMobile ? 18 : 24} className="text-yellow-400 animate-pulse" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold animate-fade-in">Revolutionizing Auto Parts Purchasing</h2>
+          <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold animate-fade-in`}>Revolutionizing Auto Parts Purchasing</h2>
           <p className="text-center text-muted-foreground text-lg animate-fade-in" style={{animationDelay: "0.3s"}}>
             Connect customers with auto parts and trusted garages
           </p>
@@ -80,7 +81,7 @@ const PitchDeck = () => {
               </div>
               <div className="animate-fade-in" style={{animationDelay: "0.1s"}}>
                 <h3 className="font-medium mb-1">Parts Uncertainty</h3>
-                <p className="text-muted-foreground">Car owners struggle to find genuine parts at fair prices</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Car owners struggle to find genuine parts at fair prices</p>
               </div>
             </li>
             <li className="flex items-start transform hover:scale-105 transition-all cursor-pointer rounded-lg p-2 hover:bg-red-50">
@@ -89,7 +90,7 @@ const PitchDeck = () => {
               </div>
               <div className="animate-fade-in" style={{animationDelay: "0.3s"}}>
                 <h3 className="font-medium mb-1">Trust Issues</h3>
-                <p className="text-muted-foreground">Finding trusted mechanics for installation is time-consuming</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>Finding trusted mechanics for installation is time-consuming</p>
               </div>
             </li>
             <li className="flex items-start transform hover:scale-105 transition-all cursor-pointer rounded-lg p-2 hover:bg-red-50">
@@ -98,7 +99,7 @@ const PitchDeck = () => {
               </div>
               <div className="animate-fade-in" style={{animationDelay: "0.5s"}}>
                 <h3 className="font-medium mb-1">Lack of Transparency</h3>
-                <p className="text-muted-foreground">No clarity in parts pricing and service quality</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>No clarity in parts pricing and service quality</p>
               </div>
             </li>
             <li className="flex items-start transform hover:scale-105 transition-all cursor-pointer rounded-lg p-2 hover:bg-red-50">
@@ -107,7 +108,7 @@ const PitchDeck = () => {
               </div>
               <div className="animate-fade-in" style={{animationDelay: "0.7s"}}>
                 <h3 className="font-medium mb-1">Fragmented Market</h3>
-                <p className="text-muted-foreground">No unified platform connecting all stakeholders</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>No unified platform connecting all stakeholders</p>
               </div>
             </li>
           </ul>
@@ -119,7 +120,8 @@ const PitchDeck = () => {
       title: "Our Solution",
       content: (
         <div className="space-y-6">
-          <div className="relative rounded-xl overflow-hidden px-12"> {/* Added px-12 for spacing */}
+          {/* Move the carousel to the top of the content */}
+          <div className={`${isMobile ? 'px-4' : 'px-12'} mt-4`}>
             <Carousel className="w-full">
               <CarouselContent>
                 <CarouselItem>
@@ -129,7 +131,7 @@ const PitchDeck = () => {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg">All-in-One Platform</h3>
-                      <p className="text-sm text-muted-foreground">Parts, service requests, and installations in one place</p>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>Parts, service requests, and installations in one place</p>
                     </div>
                   </div>
                 </CarouselItem>
@@ -140,7 +142,7 @@ const PitchDeck = () => {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg">Nearby Garages</h3>
-                      <p className="text-sm text-muted-foreground">Schedule appointments with local trusted mechanics</p>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>Schedule appointments with local trusted mechanics</p>
                     </div>
                   </div>
                 </CarouselItem>
@@ -151,44 +153,44 @@ const PitchDeck = () => {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg">Transparent Pricing</h3>
-                      <p className="text-sm text-muted-foreground">Compare prices and read reviews</p>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>Compare prices and read reviews</p>
                     </div>
                   </div>
                 </CarouselItem>
               </CarouselContent>
-              <CarouselPrevious className="left-0" />
-              <CarouselNext className="right-0" />
+              <CarouselPrevious />
+              <CarouselNext />
             </Carousel>
             
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
+            <div className="flex justify-center space-x-2 mt-4 mb-2">
               <div className="w-2 h-2 rounded-full bg-mechanica-500"></div>
               <div className="w-2 h-2 rounded-full bg-mechanica-200"></div>
               <div className="w-2 h-2 rounded-full bg-mechanica-200"></div>
             </div>
           </div>
           
-          <div className="mt-8 p-4 bg-white rounded-lg shadow-md">
+          <div className={`mt-2 p-4 bg-white rounded-lg shadow-md ${isMobile ? 'mx-2' : ''}`}>
             <h3 className="font-medium mb-2 text-center text-mechanica-600">How It Works</h3>
             <div className="flex justify-between items-center">
               <div className="flex flex-col items-center max-w-[30%]">
                 <div className="bg-mechanica-100 p-3 rounded-full mb-2">
                   <Gauge className="h-6 w-6 text-mechanica-500" />
                 </div>
-                <p className="text-xs text-center">Diagnose your car issue</p>
+                <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-center`}>Diagnose your car issue</p>
               </div>
               <div className="h-0.5 w-[10%] bg-mechanica-200"></div>
               <div className="flex flex-col items-center max-w-[30%]">
                 <div className="bg-mechanica-100 p-3 rounded-full mb-2">
                   <Car className="h-6 w-6 text-mechanica-500" />
                 </div>
-                <p className="text-xs text-center">Find the right parts</p>
+                <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-center`}>Find the right parts</p>
               </div>
               <div className="h-0.5 w-[10%] bg-mechanica-200"></div>
               <div className="flex flex-col items-center max-w-[30%]">
                 <div className="bg-mechanica-100 p-3 rounded-full mb-2">
                   <RotateCw className="h-6 w-6 text-mechanica-500" />
                 </div>
-                <p className="text-xs text-center">Get it installed</p>
+                <p className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-center`}>Get it installed</p>
               </div>
             </div>
           </div>
@@ -208,7 +210,7 @@ const PitchDeck = () => {
               <h3 className="text-lg font-medium text-blue-700">New Car Market</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-3`}>
               <Card className="bg-blue-50 border-blue-100 hover:bg-blue-100 transition-colors">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex flex-col">
@@ -257,7 +259,7 @@ const PitchDeck = () => {
               <h3 className="text-lg font-medium text-amber-700">Used Car Market</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} gap-3`}>
               <Card className="bg-amber-50 border-amber-100 hover:bg-amber-100 transition-colors">
                 <CardContent className="pt-4 pb-4">
                   <div className="flex flex-col">
@@ -315,7 +317,7 @@ const PitchDeck = () => {
       title: "Competitive Advantage",
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
             <Card className="bg-mechanica-50 border-mechanica-200 transition-all hover:shadow-md transform hover:-translate-y-1 cursor-pointer">
               <CardContent className="pt-6 flex flex-col items-center text-center">
                 <Award className="h-10 w-10 text-mechanica-500 mb-2 animate-pulse" />
@@ -585,7 +587,7 @@ const PitchDeck = () => {
     {
       title: "Our Team",
       content: (
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
           <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
             <CardContent className="pt-6 flex flex-col items-center">
               <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
@@ -630,7 +632,7 @@ const PitchDeck = () => {
             </CardContent>
           </Card>
           
-          <div className="col-span-2 bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-2">
+          <div className={`${isMobile ? '' : 'col-span-2'} bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-2`}>
             <div className="text-center">
               <h3 className="font-bold text-mechanica-600 mb-2">Advisory Board</h3>
               <div className="flex justify-center space-x-6">
@@ -659,8 +661,8 @@ const PitchDeck = () => {
       title: "Thank You",
       content: (
         <div className="flex flex-col items-center justify-center space-y-6 text-center h-full">
-          <h2 className="text-3xl font-bold text-mechanica-600 animate-fade-in">Join Us in Revolutionizing Auto Parts</h2>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto animate-fade-in" style={{animationDelay: "0.3s"}}>
+          <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-mechanica-600 animate-fade-in`}>Join Us in Revolutionizing Auto Parts</h2>
+          <p className={`text-muted-foreground ${isMobile ? 'text-base' : 'text-lg'} max-w-md mx-auto animate-fade-in`} style={{animationDelay: "0.3s"}}>
             Be part of the solution that connects customers with the right parts and trusted professionals
           </p>
           <div className="mt-8 animate-fade-in" style={{animationDelay: "0.6s"}}>
@@ -673,7 +675,7 @@ const PitchDeck = () => {
             </Button>
           </div>
           
-          <div className="mt-8 grid grid-cols-3 gap-6 w-full max-w-md animate-fade-in" style={{animationDelay: "0.9s"}}>
+          <div className={`mt-8 grid grid-cols-3 gap-${isMobile ? '2' : '6'} w-full max-w-md animate-fade-in`} style={{animationDelay: "0.9s"}}>
             <div className="flex flex-col items-center">
               <div className="bg-blue-100 rounded-full p-2 mb-2">
                 <span className="text-blue-600 text-lg font-bold">20+</span>
@@ -788,29 +790,29 @@ const PitchDeck = () => {
       
       {/* Slide container */}
       <div
-        className={`flex-grow flex items-center justify-center p-6 transition-all duration-300 ease-in-out ${slides[currentSlide].bgColor}`}
+        className={`flex-grow flex items-center justify-center ${isMobile ? 'p-2' : 'p-6'} transition-all duration-300 ease-in-out ${slides[currentSlide].bgColor}`}
       >
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-black">{slides[currentSlide].title}</h1>
+        <div className={`w-full ${isMobile ? 'max-w-full' : 'max-w-4xl'} mx-auto`}>
+          <div className="text-center mb-4">
+            <h1 className={`${isMobile ? 'text-2xl mb-2' : 'text-4xl mb-8'} font-bold text-black`}>{slides[currentSlide].title}</h1>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 transition-all duration-500 transform">
+          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl ${isMobile ? 'p-3' : 'p-6'} transition-all duration-500 transform`}>
             {slides[currentSlide].content}
           </div>
         </div>
       </div>
       
       {/* Navigation controls - Moved up to avoid overlapping with other elements */}
-      <div className="fixed bottom-12 left-0 right-0 flex justify-between items-center px-6 z-30">
+      <div className={`fixed ${isMobile ? 'bottom-16' : 'bottom-12'} left-0 right-0 flex justify-between items-center ${isMobile ? 'px-3' : 'px-6'} z-30`}>
         <Button
           variant="outline"
-          size="icon"
+          size={isMobile ? "sm" : "icon"}
           onClick={handlePrev}
           disabled={currentSlide === 0}
           className={`rounded-full ${currentSlide === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/80'}`}
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
         </Button>
         
         <div className="flex space-x-1">
@@ -828,12 +830,12 @@ const PitchDeck = () => {
         
         <Button
           variant="outline"
-          size="icon"
+          size={isMobile ? "sm" : "icon"}
           onClick={handleNext}
           disabled={currentSlide === slides.length - 1}
           className={`rounded-full ${currentSlide === slides.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/80'}`}
         >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'}`} />
         </Button>
       </div>
       
