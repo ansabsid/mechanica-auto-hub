@@ -93,23 +93,34 @@ export const useOrders = () => {
       // Handle installation requests if any cart items have installation_data
       const itemsWithInstallation = cartItems.filter(item => item.installation_data);
       
+      console.log("Items with installation:", itemsWithInstallation);
+      
       if (itemsWithInstallation.length > 0 && orderData && orderData.id) {
+        console.log("Processing installation items for order:", orderData.id);
+        
         // Process each item with installation data
         for (const item of itemsWithInstallation) {
           if (item.installation_data && item.installation_data.garageId) {
+            console.log(`Setting installation data for part ${item.part_id}:`, {
+              garage_id: item.installation_data.garageId,
+              installation_fee: item.installation_data.installationFee
+            });
+            
             // Update the order_items to include garage_id for installation
-            const { error } = await supabase
+            const { data, error } = await supabase
               .from('order_items')
               .update({ 
                 garage_id: item.installation_data.garageId,
                 installation_fee: item.installation_data.installationFee,
-                installation_status: 'new'  // Add initial status
+                installation_status: 'new'  // Set initial status explicitly
               })
               .eq('order_id', orderData.id)
               .eq('part_id', item.part_id);
               
             if (error) {
               console.error("Error updating order item with installation data:", error);
+            } else {
+              console.log("Successfully updated order item with installation data");
             }
           }
         }

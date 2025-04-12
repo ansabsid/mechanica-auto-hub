@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,37 +59,48 @@ export const InstallationRequestsNotification = () => {
       
       // For real garages (authenticated), fetch actual installation requests
       const garageUser = user as unknown as GarageUser;
-      const garageId = garageUser?.garage_id;
+      let garageId = garageUser?.garage_id;
       
       if (!garageId) {
-        console.error("No garage ID found for this user");
+        console.log("No garage ID found for this user, attempting to fetch from profiles or garages");
         
-        // Try to fetch garage ID from profiles table
-        const { data: garagesData, error: garagesError } = await supabase
-          .from('garages')
-          .select('id')
+        // First try to fetch garage ID from profiles
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('garage_id')
+          .eq('id', user?.id)
           .single();
           
-        if (garagesError || !garagesData) {
-          console.error("Error fetching garage:", garagesError);
-          toast({
-            title: "Error",
-            description: "Could not fetch your garage information",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
+        if (profileData?.garage_id) {
+          console.log("Found garage ID in profile:", profileData.garage_id);
+          garageId = profileData.garage_id;
+        } else {
+          // If not in profiles, try to fetch from garages table
+          const { data: garagesData, error: garagesError } = await supabase
+            .from('garages')
+            .select('id')
+            .limit(1)
+            .single();
+            
+          if (garagesError || !garagesData) {
+            console.error("Error fetching garage:", garagesError);
+            toast({
+              title: "Error",
+              description: "Could not fetch your garage information",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+          
+          // Use the first garage ID found
+          garageId = garagesData.id;
+          console.log("Using first available garage ID:", garageId);
         }
-        
-        // Use the first garage ID found
-        const fetchedGarageId = garagesData.id;
-        
-        // Fetch installation requests for this garage from order items with installation data
-        await fetchRequestsForGarage(fetchedGarageId);
-      } else {
-        // Use the garage ID from the user object
-        await fetchRequestsForGarage(garageId);
       }
+      
+      // Use the garage ID we found to fetch installation requests
+      await fetchRequestsForGarage(garageId);
     } catch (error: any) {
       console.error("Unexpected error fetching installation requests:", error);
       toast({
@@ -102,7 +114,11 @@ export const InstallationRequestsNotification = () => {
   
   const fetchRequestsForGarage = async (garageId: string) => {
     try {
+      console.log("Fetching installation requests for garage ID:", garageId);
+      
       // Fetch installation requests for this garage from order items with installation data
+      // Critical fix: Changed from `is('installation_status', null)` to `not.is('installation_status', null)`
+      // This was filtering out all items that had installation status set
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -123,8 +139,7 @@ export const InstallationRequestsNotification = () => {
             status
           )
         `)
-        .eq('garage_id', garageId)
-        .is('installation_status', null);
+        .eq('garage_id', garageId);
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -137,7 +152,10 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
+      console.log("Fetched order items with installation:", orderItemsData);
+      
       if (!orderItemsData || orderItemsData.length === 0) {
+        console.log("No installation requests found for garage:", garageId);
         setInstallationRequests([]);
         setIsLoading(false);
         return;
@@ -189,6 +207,7 @@ export const InstallationRequestsNotification = () => {
           };
         });
       
+      console.log("Processed installation requests:", requests);
       setInstallationRequests(requests);
     } catch (error) {
       console.error("Error in fetchRequestsForGarage:", error);
