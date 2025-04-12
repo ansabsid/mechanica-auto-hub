@@ -104,6 +104,28 @@ export const useOrders = () => {
       }
       
       setCurrentOrder(orderData);
+      
+      // Check if order should be confirmed based on installation status
+      if (orderData.status === 'pending') {
+        const hasScheduledInstallation = orderData.items?.some(item => 
+          item.installation_status === 'scheduled' && item.scheduled_date && item.scheduled_time
+        );
+        
+        if (hasScheduledInstallation) {
+          console.log("Order has scheduled installation, updating status to confirmed:", orderId);
+          await confirmOrderWithScheduledInstallation(orderId);
+          
+          // Update the current order status in memory
+          setCurrentOrder({
+            ...orderData,
+            status: 'confirmed'
+          });
+        } else {
+          // Continue with the usual auto-confirmation check
+          updateOrderStatusBasedOnInstallation(orderData.id);
+        }
+      }
+      
       return orderData;
     } catch (error: any) {
       console.error("Error fetching order details:", error.message, error);
@@ -115,6 +137,33 @@ export const useOrders = () => {
       return null;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // New function to confirm orders with scheduled installations
+  const confirmOrderWithScheduledInstallation = async (orderId: string) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ status: 'confirmed' })
+        .eq('id', orderId);
+        
+      if (updateError) {
+        console.error("Error confirming order with scheduled installation:", updateError);
+        toast({
+          title: "Error",
+          description: "Failed to update order status",
+          variant: "destructive",
+        });
+      } else {
+        console.log("Order confirmed successfully after finding scheduled installation:", orderId);
+        toast({
+          title: "Order status updated",
+          description: "Order has been confirmed",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error in confirmOrderWithScheduledInstallation:", error);
     }
   };
 
@@ -384,6 +433,7 @@ export const useOrders = () => {
     createOrder: handleCreateOrder,
     cancelOrder: handleCancelOrder,
     updateInstallationSchedule,
-    updateOrderStatusBasedOnInstallation
+    updateOrderStatusBasedOnInstallation,
+    confirmOrderWithScheduledInstallation  // Export the new function
   };
 };

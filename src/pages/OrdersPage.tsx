@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
@@ -61,9 +60,14 @@ const OrderPage = () => {
             console.log("Order details loaded successfully:", result);
             setErrorMessage(null);
             
-            // Check if the order should be auto-confirmed
-            if (result.status === 'pending') {
-              updateOrderStatusBasedOnInstallation(result.id);
+            // Check if any installation is already scheduled but order is still pending
+            const hasScheduledInstallation = result.items?.some(item => 
+              item.installation_status === 'scheduled' && item.scheduled_date && item.scheduled_time
+            );
+            
+            if (result.status === 'pending' && hasScheduledInstallation) {
+              console.log("Found scheduled installation for pending order, confirming...");
+              await updateOrderStatusBasedOnInstallation(result.id);
             }
           }
         }
