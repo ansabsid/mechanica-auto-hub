@@ -683,40 +683,54 @@ const CustomerDashboard = () => {
       <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">View and manage your orders, appointments, and vehicles</p>
       
       <div className="md:hidden mb-6 overflow-x-auto pb-2">
-        <TabsList className="w-auto inline-flex space-x-2">
-          <TabsTrigger 
-            value="orders" 
-            onClick={() => setCurrentMobileTab("orders")}
-            className={`flex items-center gap-1 py-2 px-3 ${currentMobileTab === "orders" ? "bg-primary text-white" : ""}`}
-          >
-            <ShoppingBag className="h-4 w-4" /> 
-            <span>Orders</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="appointments" 
-            onClick={() => setCurrentMobileTab("appointments")}
-            className={`flex items-center gap-1 py-2 px-3 ${currentMobileTab === "appointments" ? "bg-primary text-white" : ""}`}
-          >
-            <Calendar className="h-4 w-4" /> 
-            <span>Appointments</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="installations" 
-            onClick={() => setCurrentMobileTab("installations")}
-            className={`flex items-center gap-1 py-2 px-3 ${currentMobileTab === "installations" ? "bg-primary text-white" : ""}`}
-          >
-            <Wrench className="h-4 w-4" /> 
-            <span>Installations</span>
-          </TabsTrigger>
-          <TabsTrigger 
-            value="vehicles" 
-            onClick={() => setCurrentMobileTab("vehicles")}
-            className={`flex items-center gap-1 py-2 px-3 ${currentMobileTab === "vehicles" ? "bg-primary text-white" : ""}`}
-          >
-            <Car className="h-4 w-4" /> 
-            <span>Vehicles</span>
-          </TabsTrigger>
-        </TabsList>
+        <Tabs value={currentMobileTab} onValueChange={setCurrentMobileTab}>
+          <TabsList className="w-auto inline-flex space-x-2">
+            <TabsTrigger 
+              value="orders" 
+              className="flex items-center gap-1 py-2 px-3"
+            >
+              <ShoppingBag className="h-4 w-4" /> 
+              <span>Orders</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="appointments" 
+              className="flex items-center gap-1 py-2 px-3"
+            >
+              <Calendar className="h-4 w-4" /> 
+              <span>Appointments</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="installations" 
+              className="flex items-center gap-1 py-2 px-3"
+            >
+              <Wrench className="h-4 w-4" /> 
+              <span>Installations</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="vehicles" 
+              className="flex items-center gap-1 py-2 px-3"
+            >
+              <Car className="h-4 w-4" /> 
+              <span>Vehicles</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="orders">
+            {renderOrdersTab()}
+          </TabsContent>
+          
+          <TabsContent value="appointments">
+            {renderAppointmentsTab()}
+          </TabsContent>
+          
+          <TabsContent value="installations">
+            {renderInstallationsTab()}
+          </TabsContent>
+          
+          <TabsContent value="vehicles">
+            {renderVehiclesTab()}
+          </TabsContent>
+        </Tabs>
       </div>
       
       <Tabs defaultValue="orders" value={activeTab} onValueChange={setActiveTab} className="hidden md:block">
@@ -751,13 +765,6 @@ const CustomerDashboard = () => {
           {renderVehiclesTab()}
         </TabsContent>
       </Tabs>
-      
-      <div className="md:hidden">
-        {currentMobileTab === "orders" && renderOrdersTab()}
-        {currentMobileTab === "appointments" && renderAppointmentsTab()}
-        {currentMobileTab === "installations" && renderInstallationsTab()}
-        {currentMobileTab === "vehicles" && renderVehiclesTab()}
-      </div>
       
       <Dialog open={addVehicleDialogOpen} onOpenChange={setAddVehicleDialogOpen}>
         <DialogContent>
