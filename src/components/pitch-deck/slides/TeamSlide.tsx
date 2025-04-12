@@ -17,7 +17,7 @@ const TeamSlide: React.FC = () => {
       role: "Founder & CEO",
       initials: "MS",
       photo: "/lovable-uploads/3cba6a96-fa1a-4ab2-b825-24bdd2c67cd0.png",
-      fact: "Rebuilds vintage motorcycles in his spare time",
+      fact: "I once supported executive-level demos by day and went dune bashing by night — balance, right? 😎",
       description: "Visionary entrepreneur with a passion for automotive innovation",
       color: "from-blue-400 to-indigo-500",
       icon: Rocket
