@@ -12,23 +12,27 @@ const ContactSlide: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center text-center space-y-6">
-      <div className="relative animate-bounce">
-        <Settings className="h-12 w-12 text-mechanica-500" />
+    <div className="flex flex-col items-center justify-center text-center space-y-8">
+      <div className="relative group cursor-pointer transition-all duration-500 hover:scale-110">
+        <div className="p-6 bg-gradient-to-br from-mechanica-100 to-white rounded-full shadow-xl">
+          <Settings className="h-12 w-12 text-mechanica-500 group-hover:rotate-90 transition-transform duration-1000" />
+        </div>
         <div className="absolute -right-1 -bottom-1">
-          <Coffee className="h-6 w-6 text-amber-500" />
+          <div className="p-2 bg-amber-100 rounded-full shadow-md">
+            <Coffee className="h-6 w-6 text-amber-500 group-hover:rotate-12 transition-transform" />
+          </div>
         </div>
       </div>
       
-      <div>
-        <h3 className="text-2xl font-bold text-mechanica-600">Let's Build The Future Together</h3>
+      <div className="transform hover:scale-105 transition-transform duration-300">
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-mechanica-600 to-mechanica-400 bg-clip-text text-transparent">Let's Build The Future Together</h3>
         <p className="text-muted-foreground mt-2">Ready to transform the auto parts and service industry?</p>
       </div>
       
       <div>
         <Button 
           variant="mechanica" 
-          className="rounded-full shadow-md hover:shadow-lg transition-all"
+          className="bg-gradient-to-r from-mechanica-500 to-mechanica-600 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 border-none px-8 py-2.5"
           onClick={handleContactClick}
         >
           Contact Us
@@ -36,7 +40,7 @@ const ContactSlide: React.FC = () => {
       </div>
       
       <div className="pt-6 border-t border-gray-200 w-full max-w-xs mx-auto mt-4">
-        <p className="text-sm font-medium text-mechanica-700">Team@BookMyParts.com</p>
+        <p className="text-sm font-medium text-mechanica-700 hover:text-mechanica-500 transition-colors">Team@BookMyParts.com</p>
         <p className="text-sm text-muted-foreground">Dubai, UAE</p>
       </div>
     </div>

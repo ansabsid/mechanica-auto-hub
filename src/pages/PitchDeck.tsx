@@ -5,6 +5,7 @@ import SlideContainer from "@/components/pitch-deck/SlideContainer";
 import SlideNavigation from "@/components/pitch-deck/SlideNavigation";
 import Confetti from "@/components/pitch-deck/Confetti";
 import { useCapacitor } from "@/hooks/useCapacitor";
+import { KeyboardArrowDown, KeyboardArrowUp } from "lucide-react";
 import {
   IntroSlide,
   ProblemSlide,
@@ -25,6 +26,30 @@ const PitchDeck = () => {
   const { isCapacitor } = useCapacitor();
   const slideTimerRef = useRef<number | null>(null);
   const [isConfettiActive, setIsConfettiActive] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(true);
+  
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        handleNextSlide();
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        handlePrevSlide();
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentSlide, isAnimating]);
+  
+  // Auto-hide scroll hint after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowScrollHint(false);
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   useEffect(() => {
     return () => {
@@ -96,7 +121,7 @@ const PitchDeck = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <SlideNavigation
         currentSlide={currentSlide}
         totalSlides={slideData.length}
@@ -105,7 +130,7 @@ const PitchDeck = () => {
         titles={slideData.map(slide => slide.title)}
       />
       
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden p-4">
         {slideData.map((slide, index) => (
           <SlideContainer
             key={index}
@@ -120,6 +145,17 @@ const PitchDeck = () => {
             {renderSlideContent(index)}
           </SlideContainer>
         ))}
+        
+        {/* Touch swipe hint */}
+        {showScrollHint && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce opacity-70">
+            <p className="text-xs text-gray-500 mb-1">Swipe or use arrow keys</p>
+            <div className="flex space-x-3">
+              <KeyboardArrowUp className="h-5 w-5 text-gray-400" />
+              <KeyboardArrowDown className="h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+        )}
       </div>
       
       <Confetti isActive={isConfettiActive} />

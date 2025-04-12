@@ -34,7 +34,7 @@ const SlideContainer: React.FC<SlideContainerProps> = ({
   };
 
   return (
-    <div className={cn(getSlideClasses(), bgColor)}>
+    <div className={cn(getSlideClasses(), bgColor, "rounded-xl backdrop-blur-sm shadow-lg")}>
       <div className="max-w-3xl mx-auto">
         {children}
       </div>
