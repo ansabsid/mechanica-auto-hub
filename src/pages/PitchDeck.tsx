@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw, Medal, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -118,7 +119,7 @@ const PitchDeck = () => {
       title: "Our Solution",
       content: (
         <div className="space-y-6">
-          <div className="relative rounded-xl overflow-hidden">
+          <div className="relative rounded-xl overflow-hidden px-12"> {/* Added px-12 for spacing */}
             <Carousel className="w-full">
               <CarouselContent>
                 <CarouselItem>
@@ -155,11 +156,11 @@ const PitchDeck = () => {
                   </div>
                 </CarouselItem>
               </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
+              <CarouselPrevious className="left-0" />
+              <CarouselNext className="right-0" />
             </Carousel>
             
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
               <div className="w-2 h-2 rounded-full bg-mechanica-500"></div>
               <div className="w-2 h-2 rounded-full bg-mechanica-200"></div>
               <div className="w-2 h-2 rounded-full bg-mechanica-200"></div>
@@ -800,8 +801,8 @@ const PitchDeck = () => {
         </div>
       </div>
       
-      {/* Navigation controls */}
-      <div className="fixed bottom-4 left-0 right-0 flex justify-between items-center px-6">
+      {/* Navigation controls - Moved up to avoid overlapping with other elements */}
+      <div className="fixed bottom-12 left-0 right-0 flex justify-between items-center px-6 z-30">
         <Button
           variant="outline"
           size="icon"
@@ -836,8 +837,8 @@ const PitchDeck = () => {
         </Button>
       </div>
       
-      {/* Slide counter */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium">
+      {/* Slide counter - Moved below the navigation controls */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium z-20">
         {currentSlide + 1} / {slides.length}
       </div>
       
