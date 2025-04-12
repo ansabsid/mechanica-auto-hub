@@ -118,16 +118,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Special demo login handling
       if (isDemoAccount(email)) {
         console.log("Using demo account login flow");
-        const demoResult = await handleDemoAccount();
+        const demoResult = await handleDemoAccount(email);
         
         if (demoResult) {
           setUser(demoResult.user);
           setUserRole(demoResult.role);
           setAuthChangeHandled(true);
           
+          const isGarageMasters = email === "garage-masters@bookmyparts.com";
+          
           toast({
-            title: "Demo login successful",
-            description: `Welcome to the Bookmyparts garage demo!`,
+            title: isGarageMasters ? "Garage Masters login successful" : "Demo login successful",
+            description: isGarageMasters 
+              ? `Welcome to the Garage Masters dashboard!` 
+              : `Welcome to the Bookmyparts garage demo!`,
           });
           
           setIsLoading(false);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,7 +20,7 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { AlertTriangle, AlertCircle } from "lucide-react";
+import { AlertTriangle, AlertCircle, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
 const Login = () => {
@@ -98,6 +99,30 @@ const Login = () => {
     } catch (error: any) {
       console.error("Demo login error:", error);
       setError(error.message || "Failed to login with demo account");
+    }
+  };
+
+  const handleGarageMastersDemo = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // For Garage Masters demo specifically
+    const demoEmail = "garage-masters@bookmyparts.com";
+    const demoPassword = "garage-masters";
+    
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    
+    try {
+      toast.info("Logging in with Garage Masters demo account");
+      
+      // Use the auth system but with pre-filled credentials
+      await signIn(demoEmail, demoPassword, "garage");
+      
+      toast.success("Garage Masters account activated");
+      navigate("/garage-dashboard", { replace: true });
+    } catch (error: any) {
+      console.error("Garage Masters demo login error:", error);
+      setError(error.message || "Failed to login with Garage Masters demo account. Try the generic demo instead.");
     }
   };
 
@@ -184,14 +209,26 @@ const Login = () => {
                 </Button>
                 
                 {role === "garage" && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={handleDemoLogin}
-                    disabled={isLoading}
-                  >
-                    Try Demo Account
-                  </Button>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-blue-200 text-blue-700" 
+                      onClick={handleDemoLogin}
+                      disabled={isLoading}
+                    >
+                      Try Generic Demo Account
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-green-200 text-green-700 flex items-center" 
+                      onClick={handleGarageMastersDemo}
+                      disabled={isLoading}
+                    >
+                      <Wrench className="h-4 w-4 mr-2" />
+                      Try Garage Masters Demo
+                    </Button>
+                  </div>
                 )}
               </div>
             </form>

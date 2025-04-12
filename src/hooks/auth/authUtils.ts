@@ -76,7 +76,11 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
  * @returns True if the email is a demo account
  */
 export const isDemoAccount = (email: string): boolean => {
-  return email === "demo-garage@bookmyparts.com";
+  const demoEmails = [
+    "demo-garage@bookmyparts.com",
+    "garage-masters@bookmyparts.com"
+  ];
+  return demoEmails.includes(email);
 };
 
 /**
@@ -84,10 +88,11 @@ export const isDemoAccount = (email: string): boolean => {
  * Creates account if it doesn't exist and ensures profile is created
  * @returns Promise resolving to the demo user and role or null on error
  */
-export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" } | null> => {
+export const handleDemoAccount = async (demoEmail: string = "demo-garage@bookmyparts.com"): Promise<{ user: any, role: "garage" } | null> => {
   try {
-    const demoEmail = "demo-garage@bookmyparts.com";
-    const demoPassword = "demo-garage";
+    const demoPassword = demoEmail === "garage-masters@bookmyparts.com" 
+      ? "garage-masters" 
+      : "demo-garage";
     
     // Try signing in first (if account exists)
     let { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -97,13 +102,33 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
 
     // If sign in is successful and we have a user
     if (!signInError && signInData.user) {
-      console.log("Successfully signed in with demo account");
+      console.log("Successfully signed in with demo account:", demoEmail);
+      
+      // For Garage Masters account, set its profile with garage_id
+      if (demoEmail === "garage-masters@bookmyparts.com") {
+        // Fetch the Garage Masters garage ID
+        const { data: garageData } = await supabase
+          .from('garages')
+          .select('id')
+          .eq('name', 'Garage Masters')
+          .maybeSingle();
+          
+        const garageId = garageData?.id;
+        
+        if (garageId) {
+          // Update profile with garage ID
+          await supabase
+            .from('profiles')
+            .update({ garage_id: garageId })
+            .eq('id', signInData.user.id);
+        }
+      }
       
       // Ensure user has a profile
       try {
         const role = await fetchUserRole(signInData.user.id);
         if (!role) {
-          console.log("Creating profile for existing demo user");
+          console.log("Creating profile for existing demo user:", demoEmail);
           await createUserProfile(signInData.user.id, demoEmail, "garage");
         }
       } catch (profileErr) {
@@ -115,7 +140,7 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
 
     // If sign in fails because the account doesn't exist, try creating it
     if (signInError) {
-      console.log("Creating demo account...");
+      console.log("Creating demo account:", demoEmail);
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: demoEmail,
         password: demoPassword,
@@ -133,6 +158,26 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
         try {
           await createUserProfile(signUpData.user.id, demoEmail, "garage");
           
+          // For Garage Masters account, set its profile with garage_id
+          if (demoEmail === "garage-masters@bookmyparts.com") {
+            // Fetch the Garage Masters garage ID
+            const { data: garageData } = await supabase
+              .from('garages')
+              .select('id')
+              .eq('name', 'Garage Masters')
+              .maybeSingle();
+              
+            const garageId = garageData?.id;
+            
+            if (garageId) {
+              // Update profile with garage ID
+              await supabase
+                .from('profiles')
+                .update({ garage_id: garageId })
+                .eq('id', signUpData.user.id);
+            }
+          }
+          
           // Try signing in with the newly created account
           const { data: autoSignIn, error: autoSignInError } = await supabase.auth.signInWithPassword({
             email: demoEmail,
@@ -140,7 +185,7 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
           });
           
           if (!autoSignInError && autoSignIn.user) {
-            console.log("Successfully signed in with newly created demo account");
+            console.log("Successfully signed in with newly created demo account:", demoEmail);
             return { user: autoSignIn.user, role: "garage" };
           }
         } catch (profileErr) {
@@ -159,6 +204,27 @@ export const handleDemoAccount = async (): Promise<{ user: any, role: "garage" }
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
         await createUserProfile(userData.user.id, demoEmail, "garage");
+        
+        // For Garage Masters account, set its profile with garage_id
+        if (demoEmail === "garage-masters@bookmyparts.com") {
+          // Fetch the Garage Masters garage ID
+          const { data: garageData } = await supabase
+            .from('garages')
+            .select('id')
+            .eq('name', 'Garage Masters')
+            .maybeSingle();
+            
+          const garageId = garageData?.id;
+          
+          if (garageId) {
+            // Update profile with garage ID
+            await supabase
+              .from('profiles')
+              .update({ garage_id: garageId })
+              .eq('id', userData.user.id);
+          }
+        }
+        
         return { user: userData.user, role: "garage" };
       }
     } catch (error) {
