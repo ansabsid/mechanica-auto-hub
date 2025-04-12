@@ -11,8 +11,7 @@ import {
   CheckCircle, 
   XCircle,
   AlertTriangle,
-  Wrench,
-  Tool
+  Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/auth";
@@ -489,7 +488,7 @@ const CustomerDashboard = () => {
             ) : installations.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <Tool className="h-16 w-16 text-gray-300 mb-4" />
+                  <Wrench className="h-16 w-16 text-gray-300 mb-4" />
                   <p className="text-lg font-medium text-gray-900 mb-2">No Scheduled Installations</p>
                   <p className="text-gray-500 text-center max-w-sm mb-6">
                     You don't have any scheduled installations. When you purchase parts with installation, they will appear here.
