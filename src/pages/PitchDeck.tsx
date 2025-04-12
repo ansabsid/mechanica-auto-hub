@@ -189,7 +189,6 @@ const PitchDeck = () => {
       title: "Market Opportunity",
       content: (
         <div className="space-y-6">
-          {/* New Car Market Section */}
           <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100 hover:shadow-md transition-all transform hover:scale-[1.02]">
             <div className="flex items-center mb-3">
               <div className="bg-blue-100 p-3 rounded-full mr-3">
@@ -239,7 +238,6 @@ const PitchDeck = () => {
             </div>
           </div>
           
-          {/* Used Car Market Section */}
           <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100 hover:shadow-md transition-all transform hover:scale-[1.02]">
             <div className="flex items-center mb-3">
               <div className="bg-amber-100 p-3 rounded-full mr-3">
@@ -580,4 +578,260 @@ const PitchDeck = () => {
           <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
             <CardContent className="pt-6 flex flex-col items-center">
               <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
-                <
+                <UserRound className="h-10 w-10 text-mechanica-500" />
+              </div>
+              <h3 className="font-bold">Ahmed Al-Mansouri</h3>
+              <p className="text-mechanica-600 font-medium text-sm mb-1">CEO & Founder</p>
+              <p className="text-xs text-muted-foreground text-center px-2">15+ years in automotive industry</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
+            <CardContent className="pt-6 flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
+                <UserRound className="h-10 w-10 text-mechanica-500" />
+              </div>
+              <h3 className="font-bold">Samira Khan</h3>
+              <p className="text-mechanica-600 font-medium text-sm mb-1">CTO</p>
+              <p className="text-xs text-muted-foreground text-center px-2">Former tech lead at Dubai Auto Group</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
+            <CardContent className="pt-6 flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
+                <UserRound className="h-10 w-10 text-mechanica-500" />
+              </div>
+              <h3 className="font-bold">Khalid Rahman</h3>
+              <p className="text-mechanica-600 font-medium text-sm mb-1">COO</p>
+              <p className="text-xs text-muted-foreground text-center px-2">Operations expert with 10+ years experience</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
+            <CardContent className="pt-6 flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
+                <Medal className="h-10 w-10 text-mechanica-500" />
+              </div>
+              <h3 className="font-bold">Layla Al-Farsi</h3>
+              <p className="text-mechanica-600 font-medium text-sm mb-1">Partnerships Lead</p>
+              <p className="text-xs text-muted-foreground text-center px-2">Connected to 50+ regional garages</p>
+            </CardContent>
+          </Card>
+          
+          <div className="col-span-2 bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-2">
+            <div className="text-center">
+              <h3 className="font-bold text-mechanica-600 mb-2">Advisory Board</h3>
+              <div className="flex justify-center space-x-6">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-1">
+                    <UserRound className="h-6 w-6 text-gray-600" />
+                  </div>
+                  <span className="text-xs font-medium">Dr. Omar Saeed</span>
+                  <span className="text-xs text-muted-foreground">Automotive Expert</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-1">
+                    <UserRound className="h-6 w-6 text-gray-600" />
+                  </div>
+                  <span className="text-xs font-medium">Fatima Al-Zaabi</span>
+                  <span className="text-xs text-muted-foreground">Investor Relations</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      bgColor: "bg-gradient-to-br from-purple-50 to-indigo-100"
+    },
+    {
+      title: "Thank You",
+      content: (
+        <div className="flex flex-col items-center justify-center space-y-6 text-center h-full">
+          <h2 className="text-3xl font-bold text-mechanica-600 animate-fade-in">Join Us in Revolutionizing Auto Parts</h2>
+          <p className="text-muted-foreground text-lg max-w-md mx-auto animate-fade-in" style={{animationDelay: "0.3s"}}>
+            Be part of the solution that connects customers with the right parts and trusted professionals
+          </p>
+          <div className="mt-8 animate-fade-in" style={{animationDelay: "0.6s"}}>
+            <Button
+              variant="mechanica"
+              size="lg"
+              className="rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            >
+              Contact Us
+            </Button>
+          </div>
+          
+          <div className="mt-8 grid grid-cols-3 gap-6 w-full max-w-md animate-fade-in" style={{animationDelay: "0.9s"}}>
+            <div className="flex flex-col items-center">
+              <div className="bg-blue-100 rounded-full p-2 mb-2">
+                <span className="text-blue-600 text-lg font-bold">20+</span>
+              </div>
+              <span className="text-xs">Team Members</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="bg-green-100 rounded-full p-2 mb-2">
+                <span className="text-green-600 text-lg font-bold">100+</span>
+              </div>
+              <span className="text-xs">Garage Partners</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="bg-amber-100 rounded-full p-2 mb-2">
+                <span className="text-amber-600 text-lg font-bold">5+</span>
+              </div>
+              <span className="text-xs">Countries</span>
+            </div>
+          </div>
+          
+          {isConfettiActive && (
+            <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-bounce text-6xl">🎉</div>
+                <div className="animate-bounce delay-100 text-6xl" style={{animationDelay: "0.2s"}}>🚀</div>
+                <div className="animate-bounce delay-200 text-6xl" style={{animationDelay: "0.4s"}}>🎊</div>
+              </div>
+              <div className="absolute top-0 left-0 right-0 h-20 overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="absolute animate-confetti"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      animation: `confetti ${2 + Math.random() * 3}s linear forwards`,
+                      backgroundColor: ['#FFC700', '#FF0066', '#00C2FF', '#4DE94C'][Math.floor(Math.random() * 4)],
+                      width: `${5 + Math.random() * 5}px`,
+                      height: `${10 + Math.random() * 10}px`,
+                      animationDelay: `${Math.random() * 2}s`
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+      bgColor: "bg-gradient-to-br from-blue-50 to-mechanica-100"
+    }
+  ];
+
+  // Define navigation functionality
+  const handleNext = () => {
+    if (currentSlide < slides.length - 1 && !isAnimating) {
+      setDirection('next');
+      setIsAnimating(true);
+      slideTimerRef.current = window.setTimeout(() => {
+        setCurrentSlide(prev => prev + 1);
+        setIsAnimating(false);
+      }, 300);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentSlide > 0 && !isAnimating) {
+      setDirection('prev');
+      setIsAnimating(true);
+      slideTimerRef.current = window.setTimeout(() => {
+        setCurrentSlide(prev => prev - 1);
+        setIsAnimating(false);
+      }, 300);
+    }
+  };
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        handleNext();
+      } else if (e.key === 'ArrowLeft') {
+        handlePrev();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentSlide, isAnimating]);
+
+  return (
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Confetti styles */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes confetti {
+          0% { transform: translateY(-10px) rotateZ(0); opacity: 1; }
+          100% { transform: translateY(100vh) rotateZ(360deg); opacity: 0; }
+        }
+        @keyframes grow {
+          0% { width: 0; }
+          100% { width: 100%; }
+        }
+      `}} />
+      
+      {/* Progress bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+        <div 
+          className="h-full bg-mechanica-500 transition-all duration-300 ease-in-out"
+          style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
+        />
+      </div>
+      
+      {/* Slide container */}
+      <div
+        className={`flex-grow flex items-center justify-center p-6 transition-all duration-300 ease-in-out ${slides[currentSlide].bgColor}`}
+      >
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-black">{slides[currentSlide].title}</h1>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 transition-all duration-500 transform">
+            {slides[currentSlide].content}
+          </div>
+        </div>
+      </div>
+      
+      {/* Navigation controls */}
+      <div className="fixed bottom-4 left-0 right-0 flex justify-between items-center px-6">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handlePrev}
+          disabled={currentSlide === 0}
+          className={`rounded-full ${currentSlide === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/80'}`}
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+        
+        <div className="flex space-x-1">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                currentSlide === index ? 'bg-mechanica-500 w-4' : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+        
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleNext}
+          disabled={currentSlide === slides.length - 1}
+          className={`rounded-full ${currentSlide === slides.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/80'}`}
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      </div>
+      
+      {/* Slide counter */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium">
+        {currentSlide + 1} / {slides.length}
+      </div>
+    </div>
+  );
+};
+
+export default PitchDeck;
