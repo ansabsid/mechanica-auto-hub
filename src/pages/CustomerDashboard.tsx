@@ -689,29 +689,29 @@ const CustomerDashboard = () => {
               value="orders" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <ShoppingBag className="h-3.5 w-3.5" /> 
-              <span className="ml-0.5">Orders</span>
+              <ShoppingBag className="h-3.5 w-3.5 mr-1.5" /> 
+              <span>Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="appointments" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <Calendar className="h-3.5 w-3.5" /> 
-              <span className="ml-0.5">Appts</span>
+              <Calendar className="h-3.5 w-3.5 mr-1.5" /> 
+              <span>Appointments</span>
             </TabsTrigger>
             <TabsTrigger 
               value="installations" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <Wrench className="h-3.5 w-3.5" /> 
-              <span className="ml-0.5">Install</span>
+              <Wrench className="h-3.5 w-3.5 mr-1.5" /> 
+              <span>Installations</span>
             </TabsTrigger>
             <TabsTrigger 
               value="vehicles" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <Car className="h-3.5 w-3.5" /> 
-              <span className="ml-0.5">Cars</span>
+              <Car className="h-3.5 w-3.5 mr-1.5" /> 
+              <span>Vehicles</span>
             </TabsTrigger>
           </TabsList>
           

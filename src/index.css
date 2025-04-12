@@ -97,16 +97,16 @@
   
   /* Dashboard tabs styling */
   .dashboard-tabs-container {
-    @apply mb-6 -mx-0 px-1 overflow-x-visible;
+    @apply mb-6 px-1;
   }
   
   .dashboard-tabs {
-    @apply inline-flex p-1 bg-gray-50 rounded-lg w-full;
+    @apply grid grid-cols-2 gap-1 p-1 bg-gray-50 rounded-lg w-full;
   }
   
   .dashboard-tab {
-    @apply flex items-center gap-1 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-colors;
-    @apply text-gray-600 hover:text-gray-900 flex-1 justify-center;
+    @apply flex items-center justify-center py-2 px-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors;
+    @apply text-gray-600 hover:text-gray-900;
   }
   
   .dashboard-tab-active {
