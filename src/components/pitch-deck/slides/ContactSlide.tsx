@@ -1,14 +1,49 @@
 
 import React from "react";
-import { Settings, Coffee } from "lucide-react";
+import { Settings, Coffee, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const ContactSlide: React.FC = () => {
   const navigate = useNavigate();
+  const [isDownloading, setIsDownloading] = React.useState(false);
   
   const handleContactClick = () => {
     navigate("/contact");
+  };
+  
+  const handleDownloadClick = async () => {
+    try {
+      setIsDownloading(true);
+      
+      // Simulate downloading process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Create a link element to download the PDF
+      const link = document.createElement('a');
+      link.href = '/lovable-uploads/bc5d716e-e89a-48a9-b038-082d8861b31d.png'; // Replace with actual PDF URL
+      link.download = 'BookMyParts_PitchDeck_2025.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download started",
+        description: "Your pitch deck is downloading now",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download failed",
+        description: "There was a problem downloading the pitch deck. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
   
   return (
@@ -33,8 +68,23 @@ const ContactSlide: React.FC = () => {
         >
           Contact Us
         </Button>
-        <Button variant="outline" className="rounded-full border-mechanica-300 shadow-sm hover:bg-mechanica-50">
-          Download Pitch Deck
+        <Button 
+          variant="outline" 
+          className="rounded-full border-mechanica-300 shadow-sm hover:bg-mechanica-50 flex items-center gap-2"
+          onClick={handleDownloadClick}
+          disabled={isDownloading}
+        >
+          {isDownloading ? (
+            <>
+              <LoadingSpinner size="sm" className="h-4 w-4" />
+              <span>Downloading...</span>
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              <span>Download Pitch Deck</span>
+            </>
+          )}
         </Button>
       </div>
       
