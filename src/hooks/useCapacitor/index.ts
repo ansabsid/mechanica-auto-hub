@@ -1,0 +1,2 @@
+
+export { useCapacitor } from '../useCapacitor';

@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => ({
           // Split vendor code into separate chunks
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-select'],
-          'utils-vendor': ['@tanstack/react-query', '@supabase/supabase-js']
+          'utils-vendor': ['@tanstack/react-query', '@supabase/supabase-js', '@capacitor/core']
         }
       }
     }
@@ -45,7 +45,8 @@ export default defineConfig(({ mode }) => ({
       'react-dom', 
       'react-router-dom', 
       '@supabase/supabase-js',
-      '@tanstack/react-query'
+      '@tanstack/react-query',
+      '@capacitor/core'
     ],
     esbuildOptions: {
       target: 'esnext'
