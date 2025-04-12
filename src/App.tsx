@@ -15,6 +15,7 @@ import GarageDashboard from './pages/GarageDashboard';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import PartScanner from './pages/PartScanner';
+import Categories from './pages/Categories';
 import CategoryPage from './components/categories/CategoryPage';
 import BookAppointment from './pages/BookAppointment';
 import { AuthProvider } from './hooks/auth';
@@ -38,6 +39,7 @@ function App() {
             <Route path="garage-dashboard" element={<GarageDashboard />} />
             <Route path="contact" element={<Contact />} />
             <Route path="about" element={<About />} />
+            <Route path="categories" element={<Categories />} />
             <Route path="category/:categoryName" element={<CategoryPage />} />
             <Route path="scan" element={<PartScanner />} />
             <Route path="*" element={<NotFound />} />
