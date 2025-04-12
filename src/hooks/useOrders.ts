@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +48,8 @@ export const useOrders = () => {
     setIsLoading(true);
     
     try {
-      setCurrentOrder(null);
+      // Don't reset current order immediately to avoid flickering if fetch fails
+      // Only set to null if we get a new order
       
       const { data: { session } } = await supabase.auth.getSession();
       

@@ -53,7 +53,7 @@ const OrderPage = () => {
     };
 
     loadOrderDetails();
-  }, [orderId, retryCount]);
+  }, [orderId, fetchOrderDetails, retryCount]); // Added fetchOrderDetails to dependencies
 
   const formatDate = (dateStr: string) => {
     try {

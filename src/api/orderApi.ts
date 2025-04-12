@@ -70,17 +70,10 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .single();
+      .maybeSingle(); // Changed from single() to maybeSingle() to avoid errors when not found
       
     if (orderError) {
       console.error("Error fetching order:", orderError.message, orderError);
-      
-      // Check if it's a "not found" error
-      if (orderError.code === 'PGRST116') {
-        console.log("Order not found with ID:", orderId);
-        return null;
-      }
-      
       throw orderError;
     }
     
@@ -97,7 +90,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       return null;
     }
     
-    // Get order items with installation details - Simplify the query first for debugging
+    // Get order items with installation details
     const { data: itemsData, error: itemsError } = await supabase
       .from('order_items')
       .select(`
@@ -122,43 +115,67 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     
     console.log("Order items basic data:", itemsData);
     
+    // Only try to fetch part and garage details if we have items
+    if (!itemsData || itemsData.length === 0) {
+      console.log("No items found for order:", orderId);
+      
+      // Return order without items
+      return {
+        id: orderData.id,
+        user_id: orderData.user_id,
+        total_amount: orderData.total_amount,
+        status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+        created_at: orderData.created_at,
+        updated_at: orderData.updated_at,
+        items: []
+      };
+    }
+    
     // Now get the part and garage details separately to avoid nesting issues
     const partIds = itemsData?.map(item => item.part_id) || [];
     const garageIds = itemsData?.filter(item => item.garage_id).map(item => item.garage_id) || [];
     
     console.log("Fetching details for parts:", partIds, "and garages:", garageIds);
     
-    // Fetch parts
-    const { data: partsData, error: partsError } = await supabase
-      .from('parts')
-      .select('id, name, description')
-      .in('id', partIds.length > 0 ? partIds : [0]);  // Use [0] as fallback if empty
-      
-    if (partsError) {
-      console.error("Error fetching parts data:", partsError.message);
-    } else {
-      console.log("Parts data:", partsData);
+    // Fetch parts - only if we have part IDs
+    let partsData: any[] = [];
+    if (partIds.length > 0) {
+      const { data: parts, error: partsError } = await supabase
+        .from('parts')
+        .select('id, name, description')
+        .in('id', partIds);
+        
+      if (partsError) {
+        console.error("Error fetching parts data:", partsError.message);
+      } else {
+        console.log("Parts data:", parts);
+        partsData = parts || [];
+      }
     }
     
-    // Fetch garages
-    const { data: garagesData, error: garagesError } = await supabase
-      .from('garages')
-      .select('id, name, location')
-      .in('id', garageIds.length > 0 ? garageIds : ['00000000-0000-0000-0000-000000000000']);  // Use dummy UUID as fallback
-      
-    if (garagesError) {
-      console.error("Error fetching garages data:", garagesError.message);
-    } else {
-      console.log("Garages data:", garagesData);
+    // Fetch garages - only if we have garage IDs
+    let garagesData: any[] = [];
+    if (garageIds.length > 0) {
+      const { data: garages, error: garagesError } = await supabase
+        .from('garages')
+        .select('id, name, location')
+        .in('id', garageIds);
+        
+      if (garagesError) {
+        console.error("Error fetching garages data:", garagesError.message);
+      } else {
+        console.log("Garages data:", garages);
+        garagesData = garages || [];
+      }
     }
     
     // Map parts and garages to a lookup object for easy access
-    const partsLookup = (partsData || []).reduce((acc, part) => {
+    const partsLookup = partsData.reduce((acc, part) => {
       acc[part.id] = part;
       return acc;
     }, {} as Record<string, any>);
     
-    const garagesLookup = (garagesData || []).reduce((acc, garage) => {
+    const garagesLookup = garagesData.reduce((acc, garage) => {
       acc[garage.id] = garage;
       return acc;
     }, {} as Record<string, any>);
