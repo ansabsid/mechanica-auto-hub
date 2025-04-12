@@ -10,12 +10,14 @@ import {
   ClipboardCheck, 
   CheckCircle, 
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Wrench,
+  Tool
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/auth";
 import { useOrders } from "@/hooks/useOrders";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAppointmentBooking } from "@/hooks/useAppointmentBooking";
@@ -34,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
@@ -66,11 +69,14 @@ const CustomerDashboard = () => {
   const [vehicleToCancelId, setVehicleToCancelId] = useState<string | null>(null);
   const [cancelVehicleDialogOpen, setCancelVehicleDialogOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [installations, setInstallations] = useState<any[]>([]);
+  const [installationsLoading, setInstallationsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchUserOrders();
       fetchAppointments();
+      fetchInstallations();
     }
   }, [user]);
 
@@ -81,6 +87,72 @@ const CustomerDashboard = () => {
       setAppointments(data || []);
     } finally {
       setAppointmentsLoading(false);
+    }
+  };
+
+  const fetchInstallations = async () => {
+    if (!user) return;
+    
+    setInstallationsLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        toast.error("Authentication required");
+        return;
+      }
+      
+      const { data: orderItems, error } = await supabase
+        .from('order_items')
+        .select(`
+          id, 
+          price, 
+          quantity, 
+          installation_fee, 
+          installation_status, 
+          scheduled_date, 
+          scheduled_time,
+          order_id,
+          part_id,
+          garage_id,
+          orders!inner(id, status),
+          garages(id, name, location)
+        `)
+        .eq('orders.user_id', session.user.id)
+        .eq('installation_status', 'scheduled')
+        .not('garage_id', 'is', null);
+      
+      if (error) {
+        console.error("Error fetching installations:", error);
+        toast.error("Failed to load your scheduled installations");
+        return;
+      }
+      
+      const partIds = orderItems.map(item => item.part_id);
+      
+      const { data: parts, error: partsError } = await supabase
+        .from('parts')
+        .select('id, name, description')
+        .in('id', partIds);
+      
+      if (partsError) {
+        console.error("Error fetching part details:", partsError);
+      }
+      
+      const installationsWithDetails = orderItems.map(item => {
+        const part = parts?.find(p => p.id === item.part_id);
+        return {
+          ...item,
+          part: part || { name: `Part #${item.part_id}`, description: null }
+        };
+      });
+      
+      setInstallations(installationsWithDetails);
+    } catch (error) {
+      console.error("Error in fetchInstallations:", error);
+      toast.error("Failed to load installations");
+    } finally {
+      setInstallationsLoading(false);
     }
   };
 
@@ -182,12 +254,15 @@ const CustomerDashboard = () => {
       <p className="text-gray-600 mb-6">View and manage your orders, appointments, and vehicles</p>
       
       <Tabs defaultValue="orders" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-6">
+        <TabsList className="grid w-full grid-cols-4 max-w-md mx-auto mb-6">
           <TabsTrigger value="orders" className="flex gap-2 items-center justify-center">
             <ShoppingBag className="h-4 w-4" /> Orders
           </TabsTrigger>
           <TabsTrigger value="appointments" className="flex gap-2 items-center justify-center">
             <Calendar className="h-4 w-4" /> Appointments
+          </TabsTrigger>
+          <TabsTrigger value="installations" className="flex gap-2 items-center justify-center">
+            <Wrench className="h-4 w-4" /> Installations
           </TabsTrigger>
           <TabsTrigger value="vehicles" className="flex gap-2 items-center justify-center">
             <Car className="h-4 w-4" /> Vehicles
@@ -391,6 +466,98 @@ const CustomerDashboard = () => {
                         </div>
                       </div>
                     </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="installations">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">My Scheduled Installations</h2>
+              <Link to="/orders">
+                <Button>View All Orders</Button>
+              </Link>
+            </div>
+            
+            {installationsLoading ? (
+              <div className="flex justify-center py-16">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : installations.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Tool className="h-16 w-16 text-gray-300 mb-4" />
+                  <p className="text-lg font-medium text-gray-900 mb-2">No Scheduled Installations</p>
+                  <p className="text-gray-500 text-center max-w-sm mb-6">
+                    You don't have any scheduled installations. When you purchase parts with installation, they will appear here.
+                  </p>
+                  <Link to="/orders">
+                    <Button>Check Your Orders</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {installations.map((installation) => (
+                  <Card key={installation.id} className="overflow-hidden">
+                    <div className="h-2 bg-green-500"></div>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-base">{installation.part.name}</CardTitle>
+                          <div className="text-sm text-gray-500 flex items-center mt-1">
+                            <MapPin className="h-3.5 w-3.5 mr-1 text-mechanica-500" />
+                            {installation.garages?.name || "Unknown Garage"}
+                          </div>
+                        </div>
+                        <Badge className="bg-green-500">
+                          <CheckCircle className="mr-1 h-3 w-3" /> Scheduled
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm">
+                          <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                          <span>{formatDate(installation.scheduled_date)}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                          <span>{formatTime(installation.scheduled_time)}</span>
+                        </div>
+                        {installation.garages?.location && (
+                          <div className="flex items-center text-sm">
+                            <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                            <span>{installation.garages.location}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-sm border-t pt-3 mt-3">
+                        <div>
+                          <div className="font-medium">Order #{installation.order_id.substring(0, 6)}</div>
+                          <div className="text-muted-foreground mt-1">
+                            Qty: {installation.quantity} x ${installation.price}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-green-600">
+                            ${installation.installation_fee} 
+                          </div>
+                          <div className="text-xs text-muted-foreground">installation fee</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-0 pb-3">
+                      <Link to={`/orders/${installation.order_id}`} className="w-full">
+                        <Button variant="outline" size="sm" className="w-full">
+                          View Order Details
+                        </Button>
+                      </Link>
+                    </CardFooter>
                   </Card>
                 ))}
               </div>
