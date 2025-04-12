@@ -51,14 +51,12 @@ export const InstallationOptionsDialog = ({
     fetchGarages();
   }, [fetchGarages]);
 
-  // Extract unique areas from available garages when part changes
+  // Extract unique areas from all garages
   useEffect(() => {
-    console.log("Part in InstallationOptionsDialog:", part);
-    
-    if (part && part.availableGarages && part.availableGarages.length > 0) {
-      // Extract unique areas from garages
+    if (garages && garages.length > 0) {
+      // Extract unique areas from garages table
       const areas = Array.from(new Set(
-        part.availableGarages
+        garages
           .map(garage => garage.area)
           .filter(area => area !== null && area !== undefined && area !== "")
       ));
@@ -70,18 +68,18 @@ export const InstallationOptionsDialog = ({
         setSelectedArea(areas[0]);
       }
       
-      console.log("Available areas extracted:", areas);
+      console.log("Available areas extracted from all garages:", areas);
     } else {
-      console.log("No available garages in part data or garages don't have areas");
+      console.log("No garages available or garages don't have areas");
       setAvailableAreas([]);
     }
-  }, [part]);
+  }, [garages]);
 
   // Filter garages based on selected area
   useEffect(() => {
-    if (selectedArea && part.availableGarages) {
-      // Find garages that match the selected area
-      const garagesInArea = part.availableGarages.filter(
+    if (selectedArea && garages && garages.length > 0) {
+      // Find garages that match the selected area from all garages
+      const garagesInArea = garages.filter(
         garage => garage.area === selectedArea
       );
       
@@ -91,7 +89,7 @@ export const InstallationOptionsDialog = ({
       setSelectedGarage(null);
       setFilteredGarages(garagesInArea);
     }
-  }, [selectedArea, part.availableGarages]);
+  }, [selectedArea, garages]);
   
   const handleConfirmInstallation = async () => {
     if (!selectedGarage) {
@@ -219,8 +217,7 @@ export const InstallationOptionsDialog = ({
                     {filteredGarages.length > 0 ? (
                       filteredGarages.map((garage) => (
                         <SelectItem key={garage.id} value={garage.id}>
-                          {garage.name} - {garage.location} (+
-                          {garage.installationFee})
+                          {garage.name} - {garage.location} (+{garage.installationFee})
                         </SelectItem>
                       ))
                     ) : (
