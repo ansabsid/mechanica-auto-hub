@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Part, Manufacturer, Model } from "./types";
@@ -16,6 +17,8 @@ export const usePartsSearch = (
 
   // Function to fetch garages for a specific part
   const fetchGaragesForPart = async (partId: number) => {
+    console.log("Fetching garages for part ID:", partId);
+    
     const { data, error } = await supabase.rpc('get_garages_for_part', {
       part_id_param: partId
     });
@@ -25,6 +28,7 @@ export const usePartsSearch = (
       return [];
     }
 
+    console.log("Received garage data for part:", data);
     return data || [];
   };
 
@@ -32,6 +36,8 @@ export const usePartsSearch = (
   const fetchGaragesForParts = async (partIds: number[]) => {
     if (!partIds || partIds.length === 0) return {};
 
+    console.log("Fetching garages for part IDs:", partIds);
+    
     const { data, error } = await supabase.rpc('get_garages_for_part_bulk', {
       part_ids: partIds
     });
@@ -45,6 +51,8 @@ export const usePartsSearch = (
     const garagesMap: Record<number, any[]> = {};
     
     if (data && Array.isArray(data)) {
+      console.log("Raw garage data received:", data);
+      
       data.forEach(item => {
         if (!garagesMap[item.part_id]) {
           garagesMap[item.part_id] = [];
@@ -59,7 +67,7 @@ export const usePartsSearch = (
       });
     }
 
-    console.log("Fetched garages map:", garagesMap);
+    console.log("Processed garages map:", garagesMap);
     return garagesMap;
   };
 
@@ -107,18 +115,23 @@ export const usePartsSearch = (
         // Get all part IDs to fetch garages in bulk
         const partIds = data.map(part => part.id);
         
-        // Fetch garages for all parts in one call
+        // Fetch garages for all parts in one call - this will get fresh installation fees from parts_garages table
         const garagesMap = await fetchGaragesForParts(partIds);
         
         // Map garages to each part
-        const partsWithGarages = data.map(part => ({
-          ...part,
-          garages: { 
-            name: 'Mechanica Service Center',
-            location: 'Dubai, UAE'
-          },
-          availableGarages: garagesMap[part.id] || []
-        })) as Part[];
+        const partsWithGarages = data.map(part => {
+          const availableGarages = garagesMap[part.id] || [];
+          
+          // Create a proper Part object with garages information
+          return {
+            ...part,
+            garages: { 
+              name: 'Mechanica Service Center',
+              location: 'Dubai, UAE'
+            },
+            availableGarages: availableGarages
+          } as Part;
+        });
         
         console.log("Parts with garages:", partsWithGarages);
         setParts(partsWithGarages);
@@ -154,19 +167,25 @@ export const usePartsSearch = (
         // Get all part IDs to fetch garages in bulk
         const partIds = data.map(part => part.id);
         
-        // Fetch garages for all parts in one call
+        // Fetch garages for all parts in one call - this gets fresh installation fees
         const garagesMap = await fetchGaragesForParts(partIds);
         
         // Map garages to each part
-        const partsWithGarages = data.map(part => ({
-          ...part,
-          garages: { 
-            name: 'Mechanica Service Center',
-            location: 'Dubai, UAE'
-          },
-          availableGarages: garagesMap[part.id] || []
-        })) as Part[];
+        const partsWithGarages = data.map(part => {
+          const availableGarages = garagesMap[part.id] || [];
+          
+          // Create a proper Part object with garages information
+          return {
+            ...part,
+            garages: { 
+              name: 'Mechanica Service Center',
+              location: 'Dubai, UAE'
+            },
+            availableGarages: availableGarages
+          } as Part;
+        });
         
+        console.log("All parts with fresh garage data:", partsWithGarages);
         setAllParts(partsWithGarages);
         return partsWithGarages;
       }

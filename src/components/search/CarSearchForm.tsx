@@ -33,13 +33,14 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   } = useCarParts();
 
   useEffect(() => {
+    // Always fetch fresh manufacturers data when component mounts
     fetchManufacturers();
   }, [fetchManufacturers]);
 
   useEffect(() => {
     if (manufacturer) {
       console.log("Manufacturer selected:", manufacturer);
-      fetchModels(manufacturer);
+      fetchModels(parseInt(manufacturer, 10));
       // Reset model when manufacturer changes
       setModel("");
     }
@@ -71,12 +72,13 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       resetSearch();
       
       // Search for parts - this will update the parts state in useCarParts
-      const partsCount = await searchParts(
+      // Make sure we're passing numbers, not strings
+      await searchParts(
         parseInt(manufacturer, 10),
         parseInt(model, 10),
         parseInt(year, 10)
       );
-      console.log("Search initiated, parts count:", partsCount);
+      console.log("Search initiated");
     } catch (error: any) {
       console.error("Search failed:", error);
       toast({
