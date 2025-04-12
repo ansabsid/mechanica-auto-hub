@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, Package, Clock, MapPin, Truck, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
 
 const OrderPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -23,13 +24,16 @@ const OrderPage = () => {
 
   useEffect(() => {
     const loadOrderDetails = async () => {
-      if (!orderId) return;
+      if (!orderId) {
+        setErrorMessage("Order ID is missing");
+        return;
+      }
       
       console.log(`Attempting to load order details for ID: ${orderId} (attempt ${retryCount + 1})`);
       
       try {
-        const session = await supabase.auth.getSession();
-        if (!session.data.session) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
           setErrorMessage("Authentication required to view order details");
           return;
         }
@@ -49,7 +53,7 @@ const OrderPage = () => {
             setErrorMessage("Order could not be loaded after multiple attempts");
           }
         } else {
-          console.log("Order details loaded successfully:", result.id);
+          console.log("Order details loaded successfully:", result);
           setErrorMessage(null);
         }
       } catch (error: any) {
@@ -63,6 +67,7 @@ const OrderPage = () => {
   }, [orderId, fetchOrderDetails, retryCount]);
 
   const handleManualRetry = () => {
+    toast("Retrying to load order details...");
     setRetryCount(prev => prev + 1);
   };
 
@@ -172,6 +177,7 @@ const OrderPage = () => {
         {orderId && (
           <div className="mt-4 p-4 bg-gray-100 rounded-md mx-auto max-w-md">
             <p className="text-sm text-gray-600 mb-2">Order ID: {orderId}</p>
+            <p className="text-xs text-gray-500 mb-3">If you've just placed this order, it might take a moment to appear in the system.</p>
             <div className="flex justify-center">
               <Button 
                 variant="secondary" 
@@ -231,7 +237,7 @@ const OrderPage = () => {
       <h2 className="text-xl font-semibold mb-4">Order Items</h2>
       <div className="space-y-4">
         {currentOrder.items && currentOrder.items.length > 0 ? (
-          currentOrder.items.map((item) => (
+          currentOrder.items.map((item: any) => (
             <Card key={item.id} className="overflow-hidden">
               <div className="p-4">
                 <div className="flex flex-col md:flex-row justify-between">

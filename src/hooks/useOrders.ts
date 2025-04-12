@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,8 +47,6 @@ export const useOrders = () => {
     setIsLoading(true);
     
     try {
-      // Clear previous order data to avoid confusion if fetch fails
-      // This helps ensure we don't show stale data
       setCurrentOrder(null);
       
       const { data: { session } } = await supabase.auth.getSession();
@@ -92,7 +89,6 @@ export const useOrders = () => {
         return null;
       }
       
-      // Set current order with valid data
       setCurrentOrder(orderData);
       return orderData;
     } catch (error: any) {
@@ -252,7 +248,6 @@ export const useOrders = () => {
   ) => {
     setIsLoading(true);
     try {
-      // Update the order item with scheduled date and time
       const { error: updateError } = await supabase
         .from('order_items')
         .update({ 

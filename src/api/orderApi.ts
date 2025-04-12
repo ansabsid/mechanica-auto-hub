@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
@@ -90,116 +89,113 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       return null;
     }
     
-    // Get order items - use a delayed retry mechanism if no items are found on first attempt
-    let itemsData = [];
-    let retryCount = 0;
-    const maxRetries = 2;
-    
-    while (retryCount <= maxRetries) {
-      const { data: fetchedItems, error: itemsError } = await supabase
-        .from('order_items')
-        .select(`
-          id,
-          order_id,
-          part_id,
-          garage_id,
-          quantity,
-          price,
-          created_at,
-          scheduled_date,
-          scheduled_time,
-          installation_fee,
-          installation_status
-        `)
-        .eq('order_id', orderId);
-        
-      if (itemsError) {
-        console.error("Error fetching order items:", itemsError.message);
-        throw itemsError;
-      }
+    // Fetch order items directly
+    const { data: itemsData, error: itemsError } = await supabase
+      .from('order_items')
+      .select(`
+        id,
+        order_id,
+        part_id,
+        garage_id,
+        quantity,
+        price,
+        created_at,
+        scheduled_date,
+        scheduled_time,
+        installation_fee,
+        installation_status
+      `)
+      .eq('order_id', orderId);
       
-      console.log(`Order items attempt ${retryCount + 1}:`, fetchedItems);
-      
-      if (fetchedItems && fetchedItems.length > 0) {
-        itemsData = fetchedItems;
-        break; // We found items, exit the retry loop
-      } else if (retryCount < maxRetries) {
-        console.log(`No items found for order on attempt ${retryCount + 1}, retrying...`);
-        retryCount++;
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } else {
-        console.log(`No items found for order after ${maxRetries + 1} attempts`);
-        break;
-      }
+    if (itemsError) {
+      console.error("Error fetching order items:", itemsError.message);
+      throw itemsError;
     }
+    
+    console.log("Order items found:", itemsData?.length || 0);
     
     // Only try to fetch part and garage details if we have items
-    if (itemsData.length === 0) {
-      console.log("No items found for order:", orderId);
-      
-      // Return order without items
-      return {
-        id: orderData.id,
-        user_id: orderData.user_id,
-        total_amount: orderData.total_amount,
-        status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
-        created_at: orderData.created_at,
-        updated_at: orderData.updated_at,
-        items: []
-      };
-    }
+    const formattedItems: OrderItem[] = [];
     
-    // Now get the part and garage details separately to avoid nesting issues
-    const partIds = itemsData.map(item => item.part_id) || [];
-    const garageIds = itemsData.filter(item => item.garage_id).map(item => item.garage_id) || [];
-    
-    console.log("Fetching details for parts:", partIds, "and garages:", garageIds);
-    
-    // Fetch parts - only if we have part IDs
-    let partsData: any[] = [];
-    if (partIds.length > 0) {
-      const { data: parts, error: partsError } = await supabase
+    if (itemsData && itemsData.length > 0) {
+      // Fetch parts details
+      const partIds = itemsData.map(item => item.part_id);
+      const { data: partsData, error: partsError } = await supabase
         .from('parts')
         .select('id, name, description')
         .in('id', partIds);
         
       if (partsError) {
-        console.error("Error fetching parts data:", partsError.message);
-      } else {
-        console.log("Parts data:", parts);
-        partsData = parts || [];
+        console.error("Error fetching parts:", partsError.message);
       }
-    }
-    
-    // Fetch garages - only if we have garage IDs
-    let garagesData: any[] = [];
-    if (garageIds.length > 0) {
-      const { data: garages, error: garagesError } = await supabase
-        .from('garages')
-        .select('id, name, location')
-        .in('id', garageIds);
+      
+      // Build a lookup object for parts
+      const partsLookup: Record<number, { name: string; description?: string }> = {};
+      if (partsData) {
+        partsData.forEach(part => {
+          partsLookup[part.id] = {
+            name: part.name,
+            description: part.description
+          };
+        });
+      }
+      
+      // Fetch garages details for items with garage_id
+      const garageIds = itemsData
+        .filter(item => item.garage_id)
+        .map(item => item.garage_id);
         
-      if (garagesError) {
-        console.error("Error fetching garages data:", garagesError.message);
-      } else {
-        console.log("Garages data:", garages);
-        garagesData = garages || [];
+      let garagesLookup: Record<string, { name: string; location: string }> = {};
+      
+      if (garageIds.length > 0) {
+        const { data: garagesData, error: garagesError } = await supabase
+          .from('garages')
+          .select('id, name, location')
+          .in('id', garageIds);
+          
+        if (garagesError) {
+          console.error("Error fetching garages:", garagesError.message);
+        } else if (garagesData) {
+          garagesData.forEach(garage => {
+            garagesLookup[garage.id] = {
+              name: garage.name,
+              location: garage.location
+            };
+          });
+        }
       }
+      
+      // Map items with part and garage details
+      itemsData.forEach(item => {
+        const formattedItem: OrderItem = {
+          id: item.id,
+          order_id: item.order_id,
+          part_id: item.part_id,
+          quantity: item.quantity,
+          price: item.price,
+          created_at: item.created_at,
+          installation_fee: item.installation_fee || 0,
+          installation_status: item.installation_status as any,
+          scheduled_date: item.scheduled_date,
+          scheduled_time: item.scheduled_time,
+        };
+        
+        // Add part details if available
+        if (partsLookup[item.part_id]) {
+          formattedItem.part = partsLookup[item.part_id];
+        }
+        
+        // Add garage details if available
+        if (item.garage_id && garagesLookup[item.garage_id]) {
+          formattedItem.garage_id = item.garage_id;
+          formattedItem.garage = garagesLookup[item.garage_id];
+        }
+        
+        formattedItems.push(formattedItem);
+      });
     }
     
-    // Map parts and garages to a lookup object for easy access
-    const partsLookup = partsData.reduce((acc, part) => {
-      acc[part.id] = part;
-      return acc;
-    }, {} as Record<string, any>);
-    
-    const garagesLookup = garagesData.reduce((acc, garage) => {
-      acc[garage.id] = garage;
-      return acc;
-    }, {} as Record<string, any>);
-    
-    // Format order with items
+    // Format complete order with items
     const orderWithItems: Order = {
       id: orderData.id,
       user_id: orderData.user_id,
@@ -207,39 +203,13 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
       created_at: orderData.created_at,
       updated_at: orderData.updated_at,
-      items: itemsData.map((item: any) => {
-        console.log("Processing item:", item);
-        const part = partsLookup[item.part_id];
-        const garage = item.garage_id ? garagesLookup[item.garage_id] : undefined;
-        
-        return {
-          id: item.id,
-          order_id: item.order_id,
-          part_id: item.part_id,
-          garage_id: item.garage_id,
-          quantity: item.quantity,
-          price: item.price,
-          created_at: item.created_at,
-          installation_fee: item.installation_fee,
-          installation_status: item.installation_status,
-          scheduled_date: item.scheduled_date,
-          scheduled_time: item.scheduled_time,
-          part: part ? {
-            name: part.name,
-            description: part.description
-          } : undefined,
-          garage: garage ? {
-            name: garage.name,
-            location: garage.location
-          } : undefined
-        };
-      }) || []
+      items: formattedItems
     };
     
-    console.log("Formatted order with items:", orderWithItems.items);
+    console.log("Returning formatted order with", formattedItems.length, "items");
     return orderWithItems;
   } catch (error) {
-    console.error("Error fetching order details:", error);
+    console.error("Error in getOrderDetails:", error);
     throw error;
   }
 }
