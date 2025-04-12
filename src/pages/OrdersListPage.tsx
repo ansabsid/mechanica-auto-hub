@@ -12,7 +12,8 @@ import {
   X, 
   ShoppingBag,
   ChevronRight,
-  Loader2
+  Loader2,
+  CheckCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,8 @@ const OrdersListPage = () => {
     switch (status) {
       case 'completed':
         return <Badge className="bg-green-500"><Check className="mr-1 h-3 w-3" /> Completed</Badge>;
+      case 'confirmed':
+        return <Badge className="bg-green-500"><CheckCircle className="mr-1 h-3 w-3" /> Confirmed</Badge>;
       case 'processing':
         return <Badge className="bg-blue-500"><Clock className="mr-1 h-3 w-3" /> Processing</Badge>;
       case 'cancelled':
