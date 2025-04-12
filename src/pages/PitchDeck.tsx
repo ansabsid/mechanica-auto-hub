@@ -5,7 +5,7 @@ import SlideContainer from "@/components/pitch-deck/SlideContainer";
 import SlideNavigation from "@/components/pitch-deck/SlideNavigation";
 import Confetti from "@/components/pitch-deck/Confetti";
 import { useCapacitor } from "@/hooks/useCapacitor";
-import { KeyboardArrowDown, KeyboardArrowUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   IntroSlide,
   ProblemSlide,
@@ -151,8 +151,8 @@ const PitchDeck = () => {
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce opacity-70">
             <p className="text-xs text-gray-500 mb-1">Swipe or use arrow keys</p>
             <div className="flex space-x-3">
-              <KeyboardArrowUp className="h-5 w-5 text-gray-400" />
-              <KeyboardArrowDown className="h-5 w-5 text-gray-400" />
+              <ChevronUp className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-gray-400" />
             </div>
           </div>
         )}
