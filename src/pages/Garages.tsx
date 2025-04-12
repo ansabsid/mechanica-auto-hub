@@ -46,13 +46,17 @@ const GaragePage = () => {
     fetchLoading: loading, 
     error, 
     fetchGarages, 
-    seedSampleGarages,
     isLoading 
   } = useGarageManagement();
 
   useEffect(() => {
     console.log("GaragePage component mounted, fetching garages...");
-    fetchGarages();
+    // Force refresh the garages data
+    fetchGarages().then(fetchedGarages => {
+      console.log("Garages fetched:", fetchedGarages);
+    }).catch(err => {
+      console.error("Error fetching garages:", err);
+    });
   }, []);
 
   useEffect(() => {
@@ -238,13 +242,13 @@ const GaragePage = () => {
             )}
             {!loading && garages.length === 0 && (
               <div className="mt-4">
-                <p className="text-gray-600 mb-4">Would you like to add some sample garages for testing?</p>
+                <p className="text-gray-600 mb-4">No garages found in the database.</p>
                 <Button 
-                  onClick={handleSeedSampleGarages}
+                  onClick={handleRetry}
                   className="bg-mechanica-600 flex items-center mx-auto"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Adding Sample Data..." : "Add Sample Garages"}
+                  {isLoading ? "Fetching Data..." : "Retry Fetching Garages"}
                 </Button>
               </div>
             )}

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -147,75 +146,6 @@ export const useGarageManagement = () => {
   };
 
   /**
-   * Seeds the database with sample garages for testing
-   */
-  const seedSampleGarages = async () => {
-    setIsLoading(true);
-    try {
-      console.log("Seeding sample garages...");
-      
-      const sampleGarages = [
-        {
-          name: "AutoFix Garage",
-          area: "Downtown",
-          location: "Dubai",
-          images: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-          installation_fee: 150
-        },
-        {
-          name: "MechaXpert",
-          area: "Business Bay",
-          location: "Dubai",
-          images: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-          installation_fee: 200
-        },
-        {
-          name: "GearMasters",
-          area: "Jumeirah",
-          location: "Dubai",
-          images: "https://images.unsplash.com/photo-1449130015084-2d48a345ae62?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-          installation_fee: 175
-        },
-        {
-          name: "SpeedWrench",
-          area: "Marina",
-          location: "Abu Dhabi",
-          images: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-          installation_fee: 185
-        }
-      ];
-      
-      console.log("About to insert sample garages:", sampleGarages);
-      
-      const { data, error } = await supabase
-        .from('garages')
-        .insert(sampleGarages)
-        .select();
-        
-      if (error) {
-        console.error("Error inserting sample garages:", error);
-        throw error;
-      }
-      
-      console.log("Sample garages added successfully. Response data:", data);
-      toast.success("Sample garages added!");
-      
-      // Fetch garages again to update the list
-      console.log("Refreshing garages list after seeding...");
-      await fetchGarages(); 
-      
-      return data;
-    } catch (error: any) {
-      console.error("Full error object when seeding garages:", error);
-      toast.error(error.message || "Failed to add sample garages");
-      console.error("Seed sample garages error:", error);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
    * Clears all garages from the database (for testing purposes)
    */
   const clearAllGarages = async () => {
@@ -246,7 +176,6 @@ export const useGarageManagement = () => {
   return {
     fetchGarages,
     addGarage,
-    seedSampleGarages,
     clearAllGarages,
     garages,
     isLoading,

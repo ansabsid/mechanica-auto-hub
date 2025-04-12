@@ -23,7 +23,7 @@ const GarageTable = ({ garages, loading }: GarageTableProps) => {
         <Alert variant="default" className="bg-blue-50 border-blue-200">
           <Info className="h-4 w-4 text-blue-500" />
           <AlertDescription className="text-sm">
-            Click the "Add Sample Garages" button above to add some demo garages to get started.
+            No garages found in the database. Please check that garages exist in the database table.
           </AlertDescription>
         </Alert>
       </div>
