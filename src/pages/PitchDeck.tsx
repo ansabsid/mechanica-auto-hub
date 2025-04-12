@@ -33,7 +33,7 @@ const PitchDeck = () => {
     {
       title: "BookMyParts",
       content: (
-        <div className="flex flex-col items-center justify-center space-y-6">
+        <div className="flex flex-col items-center justify-center space-y-6 text-center w-full">
           <Rocket size={60} className="text-mechanica-500" />
           <h2 className="text-2xl font-bold">Revolutionizing Auto Parts Purchasing</h2>
           <p className="text-center text-muted-foreground">
