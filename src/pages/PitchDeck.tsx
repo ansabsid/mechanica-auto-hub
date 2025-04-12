@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw, Medal, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -803,8 +804,8 @@ const PitchDeck = () => {
         </div>
       </div>
       
-      {/* Navigation controls - Moved up to avoid overlapping with other elements */}
-      <div className={`fixed ${isMobile ? 'bottom-16' : 'bottom-12'} left-0 right-0 flex justify-between items-center ${isMobile ? 'px-3' : 'px-6'} z-30`}>
+      {/* Navigation controls - Moved higher up to avoid overlapping with floating buttons */}
+      <div className={`fixed ${isMobile ? 'bottom-28' : 'bottom-20'} left-0 right-0 flex justify-between items-center ${isMobile ? 'px-3' : 'px-6'} z-30`}>
         <Button
           variant="outline"
           size={isMobile ? "sm" : "icon"}
@@ -839,8 +840,8 @@ const PitchDeck = () => {
         </Button>
       </div>
       
-      {/* Slide counter - Moved below the navigation controls */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium z-20">
+      {/* Slide counter - Moved higher to avoid overlapping with camera button */}
+      <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium z-20">
         {currentSlide + 1} / {slides.length}
       </div>
       
