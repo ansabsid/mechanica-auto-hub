@@ -50,7 +50,7 @@ const GarageTable = ({ garages, loading }: GarageTableProps) => {
               <TableCell>{garage.location}</TableCell>
               <TableCell>{garage.area || '-'}</TableCell>
               <TableCell>
-                {garage.installation_fee ? `AED ${garage.installation_fee}` : '-'}
+                {garage.installationFee ? `AED ${garage.installationFee}` : '-'}
               </TableCell>
             </TableRow>
           ))}
