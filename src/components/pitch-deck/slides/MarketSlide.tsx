@@ -1,6 +1,5 @@
-
 import React from "react";
-import { CarFront, Car, TrendingUp, PieChart, ExternalLink } from "lucide-react";
+import { CarFront, Car, TrendingUp, PieChart, ExternalLink, BarChart2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -13,7 +12,8 @@ import {
   ResponsiveContainer, 
   Label, 
   LabelList,
-  Cell
+  Cell,
+  Tooltip as RechartsTooltip
 } from "recharts";
 
 const MarketSlide: React.FC = () => {
@@ -150,10 +150,10 @@ const MarketSlide: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100 hover:shadow-md transition-all transform hover:scale-[1.02]">
         <div className="flex items-center mb-3">
-          <div className="bg-green-100 p-3 rounded-full mr-3">
-            <PieChart className="h-5 w-5 text-green-600" />
+          <div className="bg-purple-100 p-3 rounded-full mr-3">
+            <BarChart2 className="h-5 w-5 text-purple-600" />
           </div>
-          <h3 className="text-lg font-medium text-green-700">UAE Automotive Parts Market</h3>
+          <h3 className="text-lg font-medium text-purple-700">UAE Automotive Parts Market – Revenue Growth</h3>
         </div>
         
         <div className="w-full h-[350px] mt-4">
@@ -182,14 +182,14 @@ const chartData = [
   },
 ];
 
-// Chart component for automotive parts market
+// Improved chart component for automotive parts market
 const AutoPartsMarketChart: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
-  // Color palette for the bars
+  // Enhanced color palette for the bars
   const colors = {
-    value2024: "#4ade80", // Green
-    value2033: "#bbf7d0", // Light Green
-    value2023: "#3b82f6", // Blue
-    value2030: "#93c5fd", // Light Blue
+    value2024: "#9b87f5", // Purple
+    value2033: "#d3e4fd", // Light Blue
+    value2023: "#7E69AB", // Secondary Purple
+    value2030: "#E5DEFF", // Soft Purple
   };
 
   // Format the value to display in USD billion with 2 decimal places
@@ -197,21 +197,28 @@ const AutoPartsMarketChart: React.FC<{ isMobile: boolean }> = ({ isMobile }) => 
     return `$${value.toFixed(2)}B`;
   };
 
+  // Custom tooltip formatter
+  const tooltipFormatter = (value: number) => {
+    return [`$${value.toFixed(2)} Billion`, 'Market Size'];
+  };
+
   // Transform data for the chart
   const transformedData = chartData.flatMap((item) => [
     {
-      name: `${item.name}\n(${item.year2024 || item.year2023})`,
+      name: item.name,
       segment: item.name,
       value: item.value2024 || item.value2023,
-      color: item.value2024 ? colors.value2024 : colors.value2023,
       year: item.year2024 || item.year2023,
+      fullLabel: `${item.name} (${item.year2024 || item.year2023})`,
+      color: item.value2024 ? colors.value2024 : colors.value2023,
     },
     {
-      name: `${item.name}\n(${item.year2033 || item.year2030})`,
+      name: item.name,
       segment: item.name,
       value: item.value2033 || item.value2030,
-      color: item.value2033 ? colors.value2033 : colors.value2030,
       year: item.year2033 || item.year2030,
+      fullLabel: `${item.name} (${item.year2033 || item.year2030})`,
+      color: item.value2033 ? colors.value2033 : colors.value2030,
     },
   ]);
 
@@ -220,50 +227,76 @@ const AutoPartsMarketChart: React.FC<{ isMobile: boolean }> = ({ isMobile }) => 
       <BarChart
         data={transformedData}
         margin={{
-          top: 20,
-          right: 20,
-          left: isMobile ? 0 : 20,
-          bottom: isMobile ? 100 : 60,
+          top: 25,
+          right: 30,
+          left: isMobile ? 10 : 25,
+          bottom: isMobile ? 80 : 60,
         }}
+        barGap={isMobile ? 3 : 8}
+        barCategoryGap={isMobile ? 15 : 30}
       >
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
         <XAxis 
-          dataKey="name" 
+          dataKey="fullLabel" 
           interval={0}
-          angle={isMobile ? -45 : 0} 
-          textAnchor={isMobile ? "end" : "middle"}
-          height={isMobile ? 100 : 60}
-          tickMargin={isMobile ? 5 : 15}
-          tick={{ fontSize: isMobile ? 10 : 12 }}
-        >
-          <Label
-            value="Market Segments"
-            position="insideBottom"
-            offset={-10}
-            style={{ textAnchor: "middle", fill: "#666", fontSize: 14 }}
-          />
-        </XAxis>
+          angle={isMobile ? -45 : -20} 
+          textAnchor="end"
+          height={isMobile ? 100 : 70}
+          tickMargin={isMobile ? 5 : 10}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: '#555' }}
+          axisLine={{ stroke: '#e0e0e0' }}
+          tickLine={{ stroke: '#e0e0e0' }}
+        />
         <YAxis 
           tickFormatter={(value) => `$${value}B`}
-          tick={{ fontSize: isMobile ? 10 : 12 }}
+          tick={{ fontSize: isMobile ? 10 : 12, fill: '#555' }}
+          axisLine={{ stroke: '#e0e0e0' }}
+          tickLine={{ stroke: '#e0e0e0' }}
         >
           <Label
             value="Market Size (USD Billion)"
             angle={-90}
             position="insideLeft"
-            style={{ textAnchor: "middle", fill: "#666", fontSize: 14 }}
-            offset={isMobile ? 0 : 10}
+            style={{ textAnchor: "middle", fill: "#666", fontSize: 13, fontWeight: 500 }}
+            offset={isMobile ? -5 : 0}
           />
         </YAxis>
-        <Bar dataKey="value" name="Market Size">
+        <RechartsTooltip 
+          formatter={tooltipFormatter}
+          labelFormatter={(label) => label}
+          contentStyle={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px', 
+            padding: '10px', 
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+          }}
+        />
+        <Bar 
+          dataKey="value" 
+          name="Market Size" 
+          radius={[4, 4, 0, 0]}
+          maxBarSize={isMobile ? 30 : 50}
+        >
           {transformedData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
+            <Cell 
+              key={`cell-${index}`} 
+              fill={entry.color} 
+              stroke="rgba(0, 0, 0, 0.05)"
+              strokeWidth={1}
+            />
           ))}
           <LabelList
             dataKey="value"
             position="top"
             formatter={formatValue}
-            style={{ fill: "#666", fontSize: isMobile ? 10 : 12, fontWeight: "bold" }}
+            style={{ 
+              fill: "#555", 
+              fontSize: isMobile ? 10 : 12, 
+              fontWeight: "600",
+              textShadow: "0 1px 2px rgba(255, 255, 255, 0.8)"
+            }}
+            offset={5}
           />
         </Bar>
       </BarChart>
