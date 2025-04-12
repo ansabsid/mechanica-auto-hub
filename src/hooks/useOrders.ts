@@ -241,6 +241,53 @@ export const useOrders = () => {
     }
   };
 
+  const updateInstallationSchedule = async (
+    orderItemId: string, 
+    scheduledDate: string, 
+    scheduledTime: string
+  ) => {
+    setIsLoading(true);
+    try {
+      // Update the order item with scheduled date and time
+      const { error: updateError } = await supabase
+        .from('order_items')
+        .update({ 
+          scheduled_date: scheduledDate,
+          scheduled_time: scheduledTime,
+          installation_status: 'scheduled'
+        })
+        .eq('id', orderItemId);
+        
+      if (updateError) {
+        console.error("Error updating installation schedule:", updateError);
+        toast({
+          title: "Error",
+          description: "Failed to schedule installation",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return false;
+      }
+      
+      toast({
+        title: "Installation scheduled",
+        description: `Installation scheduled for ${scheduledDate} at ${scheduledTime}`,
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error scheduling installation:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to schedule installation",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     orders,
     currentOrder,
@@ -250,5 +297,6 @@ export const useOrders = () => {
     fetchOrderDetails,
     createOrder: handleCreateOrder,
     cancelOrder: handleCancelOrder,
+    updateInstallationSchedule
   };
 };
