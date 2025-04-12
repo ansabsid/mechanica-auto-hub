@@ -14,6 +14,8 @@ interface Slide {
 
 const PitchDeck = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [isAnimating, setIsAnimating] = useState(false);
   const { isCapacitor } = useCapacitor();
   
   // Define slides
@@ -354,14 +356,39 @@ const PitchDeck = () => {
   ];
 
   const nextSlide = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+    if (currentSlide < slides.length - 1 && !isAnimating) {
+      setIsAnimating(true);
+      setDirection('next');
+      setTimeout(() => {
+        setCurrentSlide(currentSlide + 1);
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 300);
+      }, 150);
     }
   };
 
   const prevSlide = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1);
+    if (currentSlide > 0 && !isAnimating) {
+      setIsAnimating(true);
+      setDirection('prev');
+      setTimeout(() => {
+        setCurrentSlide(currentSlide - 1);
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 300);
+      }, 150);
+    }
+  };
+
+  // Get animation classes based on direction and animation state
+  const getSlideAnimationClass = () => {
+    if (!isAnimating) return "opacity-100 translate-x-0";
+    
+    if (direction === 'next') {
+      return "opacity-0 -translate-x-10";
+    } else {
+      return "opacity-0 translate-x-10";
     }
   };
 
@@ -370,22 +397,24 @@ const PitchDeck = () => {
       {/* Progress bar */}
       <div className="w-full h-1 bg-gray-200">
         <div 
-          className="h-full bg-mechanica-500 transition-all duration-300"
+          className="h-full bg-mechanica-500 transition-all duration-500"
           style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
         ></div>
       </div>
 
-      <div className={`flex-grow flex flex-col ${slides[currentSlide].bgColor}`}>
+      <div className={`flex-grow flex flex-col ${slides[currentSlide].bgColor} transition-colors duration-500`}>
         {/* Header */}
         <header className="p-4 sm:p-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-mechanica-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center text-mechanica-600 transition-all duration-300">
             {slides[currentSlide].title}
           </h1>
         </header>
 
         {/* Content */}
         <main className="flex-grow flex items-center justify-center p-6">
-          <div className="w-full max-w-md mx-auto">
+          <div 
+            className={`w-full max-w-md mx-auto transition-all duration-300 ${getSlideAnimationClass()}`}
+          >
             {slides[currentSlide].content}
           </div>
         </main>
@@ -396,7 +425,8 @@ const PitchDeck = () => {
             variant="outline"
             size="icon"
             onClick={prevSlide}
-            disabled={currentSlide === 0}
+            disabled={currentSlide === 0 || isAnimating}
+            className="transition-opacity duration-200 hover:bg-mechanica-50"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -409,7 +439,8 @@ const PitchDeck = () => {
             variant="outline"
             size="icon"
             onClick={nextSlide}
-            disabled={currentSlide === slides.length - 1}
+            disabled={currentSlide === slides.length - 1 || isAnimating}
+            className="transition-opacity duration-200 hover:bg-mechanica-50"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
