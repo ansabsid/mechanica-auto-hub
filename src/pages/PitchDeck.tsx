@@ -48,18 +48,18 @@ const PitchDeck = () => {
     {
       title: "BookMyParts",
       content: (
-        <div className="flex flex-col items-center justify-center space-y-6 text-center w-full">
-          <div className="relative">
-            <Rocket size={isMobile ? 60 : 80} className="text-mechanica-500 animate-bounce" />
+        <div className="flex flex-col items-center justify-center space-y-4 text-center w-full pb-10">
+          <div className="relative mt-0">
+            <Rocket size={isMobile ? 50 : 70} className="text-mechanica-500 animate-bounce" />
             <div className="absolute -bottom-2 -right-2">
               <Sparkles size={isMobile ? 18 : 24} className="text-yellow-400 animate-pulse" />
             </div>
           </div>
-          <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold animate-fade-in`}>Revolutionizing Auto Parts Purchasing</h2>
+          <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold animate-fade-in mt-0`}>Revolutionizing Auto Parts Purchasing</h2>
           <p className="text-center text-muted-foreground text-lg animate-fade-in" style={{animationDelay: "0.3s"}}>
             Connect customers with auto parts and trusted garages
           </p>
-          <div className="mt-6 animate-fade-in" style={{animationDelay: "0.6s"}}>
+          <div className="mt-4 animate-fade-in" style={{animationDelay: "0.6s"}}>
             <Button
               variant="default"
               className="bg-mechanica-500 hover:bg-mechanica-600 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
@@ -791,14 +791,14 @@ const PitchDeck = () => {
       
       {/* Slide container */}
       <div
-        className={`flex-grow flex items-center justify-center ${isMobile ? 'p-2' : 'p-6'} transition-all duration-300 ease-in-out ${slides[currentSlide].bgColor}`}
+        className={`flex-grow flex items-start justify-center ${isMobile ? 'pt-8 px-2 pb-2' : 'pt-12 px-6 pb-6'} transition-all duration-300 ease-in-out ${slides[currentSlide].bgColor}`}
       >
         <div className={`w-full ${isMobile ? 'max-w-full' : 'max-w-4xl'} mx-auto`}>
-          <div className="text-center mb-4">
-            <h1 className={`${isMobile ? 'text-2xl mb-2' : 'text-4xl mb-8'} font-bold text-black`}>{slides[currentSlide].title}</h1>
+          <div className="text-center mb-2">
+            <h1 className={`${isMobile ? 'text-2xl mb-1' : 'text-4xl mb-4'} font-bold text-black`}>{slides[currentSlide].title}</h1>
           </div>
           
-          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl ${isMobile ? 'p-3' : 'p-6'} transition-all duration-500 transform`}>
+          <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl ${isMobile ? 'p-3 mt-1' : 'p-6 mt-2'} transition-all duration-500 transform`}>
             {slides[currentSlide].content}
           </div>
         </div>
