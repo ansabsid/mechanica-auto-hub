@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,10 +48,12 @@ export const InstallationOptionsDialog = ({
   const { addToCart, refreshCart } = useCart();
   const { fetchGarages, garages } = useGarageManagement();
 
+  // Fetch garages on component mount
   useEffect(() => {
     fetchGarages();
   }, [fetchGarages]);
 
+  // Extract available areas from garages
   useEffect(() => {
     if (garages && garages.length > 0) {
       const areas = Array.from(new Set(
@@ -73,6 +75,7 @@ export const InstallationOptionsDialog = ({
     }
   }, [garages]);
 
+  // Filter garages by selected area
   useEffect(() => {
     if (selectedArea && garages && garages.length > 0) {
       const garagesInArea = garages.filter(
@@ -97,16 +100,23 @@ export const InstallationOptionsDialog = ({
     }
   }, [selectedArea, garages]);
   
-  // Separate effect to handle garage selection updates
-  useEffect(() => {
-    if (selectedGarageId && filteredGarages.length > 0) {
-      const garage = filteredGarages.find(g => g.id === selectedGarageId);
+  // Update selected garage when ID changes - use callback to prevent recreation
+  const updateSelectedGarage = useCallback((garageId: string) => {
+    if (garageId && filteredGarages.length > 0) {
+      const garage = filteredGarages.find(g => g.id === garageId);
       if (garage) {
         setSelectedGarage(garage);
         console.log("Selected garage updated:", garage);
       }
     }
-  }, [selectedGarageId, filteredGarages]);
+  }, [filteredGarages]);
+  
+  // Handle garage selection change
+  const handleGarageSelection = useCallback((value: string) => {
+    console.log("Garage selection changed to:", value);
+    setSelectedGarageId(value);
+    updateSelectedGarage(value);
+  }, [updateSelectedGarage]);
   
   const handleConfirmInstallation = async () => {
     if (!selectedGarage) {
@@ -226,10 +236,7 @@ export const InstallationOptionsDialog = ({
                 <Label htmlFor="garage">Garage</Label>
                 <Select 
                   value={selectedGarageId}
-                  onValueChange={(value) => {
-                    console.log("Garage selection changed to:", value);
-                    setSelectedGarageId(value);
-                  }}
+                  onValueChange={handleGarageSelection}
                 >
                   <SelectTrigger id="garage">
                     <SelectValue placeholder="Select a garage" />
@@ -261,7 +268,7 @@ export const InstallationOptionsDialog = ({
               <Button
                 type="button"
                 onClick={() => setStep(3)}
-                disabled={!selectedGarageId}
+                disabled={!selectedGarageId || !selectedGarage}
               >
                 Next
               </Button>
