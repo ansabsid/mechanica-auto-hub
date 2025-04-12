@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   MapPin, 
@@ -55,6 +56,7 @@ const GaragePage = () => {
       console.log("Garages fetched:", fetchedGarages);
     }).catch(err => {
       console.error("Error fetching garages:", err);
+      toast.error("Failed to load garages. Please try again.");
     });
   }, []);
 
