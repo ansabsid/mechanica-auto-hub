@@ -51,7 +51,7 @@ export const InstallationOptionsDialog = ({
     fetchGarages();
   }, [fetchGarages]);
 
-  // Extract unique areas from available garages when component mounts or part changes
+  // Extract unique areas from available garages when part changes
   useEffect(() => {
     console.log("Part in InstallationOptionsDialog:", part);
     
@@ -79,16 +79,13 @@ export const InstallationOptionsDialog = ({
 
   // Filter garages based on selected area
   useEffect(() => {
-    if (selectedArea) {
+    if (selectedArea && part.availableGarages) {
       // Find garages that match the selected area
-      let garagesInArea: Garage[] = [];
+      const garagesInArea = part.availableGarages.filter(
+        garage => garage.area === selectedArea
+      );
       
-      if (part.availableGarages) {
-        garagesInArea = part.availableGarages.filter(garage => 
-          garage.area === selectedArea
-        );
-        console.log("Filtered garages for area", selectedArea, ":", garagesInArea);
-      }
+      console.log("Filtered garages for area", selectedArea, ":", garagesInArea);
       
       // Clear selected garage when area changes
       setSelectedGarage(null);
