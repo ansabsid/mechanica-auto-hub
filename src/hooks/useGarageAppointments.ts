@@ -24,6 +24,13 @@ export interface Appointment {
   notes?: string;
   created_at: string;
   updated_at: string;
+  vehicle_id?: string;
+  vehicle?: {
+    make: string;
+    model: string;
+    year: number;
+    license_plate?: string;
+  };
   // Optional fields for UI display that might come from joins or be populated manually
   customer?: string;
   phone?: string;
@@ -51,11 +58,15 @@ export const useGarageAppointments = () => {
     try {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*')
+        .select(`
+          *,
+          vehicle:vehicles(make, model, year, license_plate)
+        `)
         .eq('garage_id', garageId);
         
       if (error) throw error;
       
+      console.log("Fetched appointments with vehicle data:", data);
       setAppointments(data || []);
       return data;
     } catch (error: any) {

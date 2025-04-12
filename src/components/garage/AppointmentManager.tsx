@@ -62,6 +62,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
       
       // Add a console log to help with debugging
       console.log(`Loaded ${data?.length || 0} appointments for garage ${garageId}`);
+      console.log("Appointment data:", data);
     } finally {
       setIsLoading(false);
     }

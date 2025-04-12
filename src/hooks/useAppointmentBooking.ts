@@ -145,6 +145,7 @@ export const useAppointmentBooking = () => {
         
       if (error) throw error;
       
+      console.log("Fetched garage appointments:", data);
       return data;
     } catch (error: any) {
       console.error("Error fetching garage appointments:", error.message);
