@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -12,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useOrders } from "@/hooks/useOrders";
-import { Package, Clock, Check, X, ChevronLeft, Loader2 } from "lucide-react";
+import { Package, Clock, Check, X, ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
@@ -25,6 +26,7 @@ const OrderDetailPage = () => {
   const { fetchOrderDetails, currentOrder, isLoading, cancelOrder } = useOrders();
   const { user } = useAuth();
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   
   useEffect(() => {
     const loadOrderDetails = async () => {
@@ -52,12 +54,20 @@ const OrderDetailPage = () => {
         
         if (!orderData) {
           console.error("Order data is null after fetch attempt");
+          setDebugInfo("Order data is null after fetch attempt. Check console for details.");
         } else {
           console.log("Order data loaded successfully:", orderData.id);
+          console.log("Order items count:", orderData.items?.length || 0);
+          if (orderData.items?.length === 0) {
+            setDebugInfo("Order found but it has no items. This might be a database permission issue.");
+          } else {
+            setDebugInfo(null);
+          }
         }
       } catch (error) {
         console.error("Error in loadOrderDetails:", error);
         setHasAttemptedFetch(true);
+        setDebugInfo(`Error loading order: ${error}`);
       }
     };
     
@@ -107,6 +117,18 @@ const OrderDetailPage = () => {
       </div>
 
       <div className="container-custom py-10">
+        {debugInfo && (
+          <Card className="mb-6 border-yellow-500">
+            <CardContent className="pt-4 flex items-start">
+              <AlertTriangle className="text-yellow-500 mr-2 mt-1" />
+              <div>
+                <p className="font-bold">Debug Information:</p>
+                <p className="text-sm text-muted-foreground">{debugInfo}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-mechanica-500" />
@@ -153,11 +175,23 @@ const OrderDetailPage = () => {
                               <p className="text-sm text-muted-foreground">
                                 Qty: {item.quantity} × {formatPrice(item.price)}
                               </p>
+                              {item.garage && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Installation at: {item.garage.name}
+                                </p>
+                              )}
                             </div>
                           </div>
-                          <p className="font-medium">
-                            {formatPrice(item.price * item.quantity)}
-                          </p>
+                          <div className="text-right">
+                            <p className="font-medium">
+                              {formatPrice(item.price * item.quantity)}
+                            </p>
+                            {item.installation_fee > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                + {formatPrice(item.installation_fee)} (installation)
+                              </p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

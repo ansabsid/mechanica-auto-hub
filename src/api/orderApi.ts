@@ -122,7 +122,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       throw itemsError;
     }
     
-    console.log("Order items found:", itemsData?.length || 0, "Raw data:", itemsData);
+    console.log("Order items found:", itemsData?.length || 0, "Raw data:", JSON.stringify(itemsData));
     
     // Format order with items
     const orderWithItems: Order = {
@@ -132,29 +132,33 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
       created_at: orderData.created_at,
       updated_at: orderData.updated_at,
-      items: itemsData?.map((item: any) => ({
-        id: item.id,
-        order_id: item.order_id,
-        part_id: item.part_id,
-        garage_id: item.garage_id,
-        quantity: item.quantity,
-        price: item.price,
-        created_at: item.created_at,
-        installation_fee: item.installation_fee,
-        installation_status: item.installation_status,
-        scheduled_date: item.scheduled_date,
-        scheduled_time: item.scheduled_time,
-        part: item.part ? {
-          name: item.part.name,
-          description: item.part.description
-        } : undefined,
-        garage: item.garage ? {
-          name: item.garage.name,
-          location: item.garage.location
-        } : undefined
-      })) || []
+      items: itemsData?.map((item: any) => {
+        console.log("Processing item:", item);
+        return {
+          id: item.id,
+          order_id: item.order_id,
+          part_id: item.part_id,
+          garage_id: item.garage_id,
+          quantity: item.quantity,
+          price: item.price,
+          created_at: item.created_at,
+          installation_fee: item.installation_fee,
+          installation_status: item.installation_status,
+          scheduled_date: item.scheduled_date,
+          scheduled_time: item.scheduled_time,
+          part: item.part ? {
+            name: item.part.name,
+            description: item.part.description
+          } : undefined,
+          garage: item.garage ? {
+            name: item.garage.name,
+            location: item.garage.location
+          } : undefined
+        };
+      }) || []
     };
     
+    console.log("Formatted order with items:", JSON.stringify(orderWithItems.items));
     return orderWithItems;
   } catch (error) {
     console.error("Error fetching order details:", error);
