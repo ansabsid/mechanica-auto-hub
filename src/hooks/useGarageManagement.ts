@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -50,6 +51,7 @@ export const useGarageManagement = () => {
       console.log("SQL Equivalent: SELECT id, name, location, area, images, installation_fee FROM garages ORDER BY location");
       
       // Select the fields we need including the installation_fee column
+      // Important: Use the PUBLIC select for garages (no auth required)
       const { data, error: fetchError } = await supabase
         .from('garages')
         .select('id, name, location, area, images, installation_fee')
