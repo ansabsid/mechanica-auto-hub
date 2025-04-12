@@ -21,7 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { format } from "date-fns";
 import { useGarageAppointments } from "@/hooks/useGarageAppointments";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   Dialog, 
   DialogContent, 
@@ -52,6 +51,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
   
   const { 
     fetchAppointments,
+    updateAppointmentStatus,
     appointments: hookAppointments,
     fetchLoading
   } = useGarageAppointments();
@@ -100,21 +100,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
     }
     
     try {
-      const { data: appointment, error } = await supabase
-        .from('appointments')
-        .update({ status })
-        .eq('id', appointmentId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Update the appointment in the local state
-      setAppointments(prevAppointments => 
-        prevAppointments.map(app => 
-          app.id === appointmentId ? { ...app, status } : app
-        )
-      );
+      await updateAppointmentStatus(appointmentId, status);
       
       // Update the selected appointment if it's the one being modified
       if (selectedAppointment?.id === appointmentId) {
@@ -136,6 +122,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
   const handleShowDetails = (appointment: any) => {
     setSelectedAppointment(appointment);
     setDetailsOpen(true);
+    console.log("Selected appointment details:", appointment);
   };
 
   const getFilteredAppointments = () => {
@@ -192,7 +179,10 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
   };
 
   const renderVehicleInfo = (vehicle: any) => {
-    if (!vehicle) return "Not specified";
+    if (!vehicle) {
+      console.log("No vehicle information available");
+      return "Not specified";
+    }
     
     // Log the vehicle information to help debug
     console.log("Rendering vehicle info:", vehicle);

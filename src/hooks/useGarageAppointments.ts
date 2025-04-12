@@ -27,6 +27,7 @@ export interface Appointment {
   vehicle_id?: string;
   confirmation_code?: string;
   vehicle?: {
+    id?: string;
     make: string;
     model: string;
     year: number;
@@ -57,6 +58,8 @@ export const useGarageAppointments = () => {
     
     setFetchLoading(true);
     try {
+      console.log("Fetching appointments for garage ID:", garageId);
+      
       // First, fetch appointments
       const { data, error } = await supabase
         .from('appointments')
@@ -78,6 +81,8 @@ export const useGarageAppointments = () => {
         .eq('garage_id', garageId);
         
       if (error) throw error;
+      
+      console.log("Raw appointment data:", data);
       
       // If we have appointments, fetch the vehicle information
       if (data && data.length > 0) {
@@ -120,7 +125,7 @@ export const useGarageAppointments = () => {
           
           return {
             ...appointment,
-            vehicle: vehicle || null
+            vehicle: vehicle || undefined
           };
         });
         
@@ -183,9 +188,42 @@ export const useGarageAppointments = () => {
     }
   };
 
+  /**
+   * Updates an appointment's status
+   * @param appointmentId The UUID of the appointment to update
+   * @param status The new status value
+   * @returns Promise resolving to the updated appointment
+   */
+  const updateAppointmentStatus = async (appointmentId: string, status: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ status })
+        .eq('id', appointmentId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Update the appointment in the local state
+      setAppointments(prevAppointments => 
+        prevAppointments.map(app => 
+          app.id === appointmentId ? { ...app, status } : app
+        )
+      );
+      
+      return data;
+    } catch (error: any) {
+      console.error("Error updating appointment status:", error.message);
+      toast.error("Failed to update appointment status");
+      throw error;
+    }
+  };
+
   return {
     fetchAppointments,
     createServiceSlots,
+    updateAppointmentStatus,
     appointments,
     isLoading,
     fetchLoading
