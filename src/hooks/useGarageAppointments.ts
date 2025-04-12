@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -60,7 +59,7 @@ export const useGarageAppointments = () => {
     try {
       console.log("Fetching appointments for garage ID:", garageId);
       
-      // First, fetch appointments
+      // First, fetch appointments with a join to vehicles table directly
       const { data, error } = await supabase
         .from('appointments')
         .select(`
@@ -76,66 +75,37 @@ export const useGarageAppointments = () => {
           updated_at,
           confirmation_code,
           vehicle_id,
-          service_slot_id
+          service_slot_id,
+          vehicles:vehicle_id (id, make, model, year, license_plate)
         `)
         .eq('garage_id', garageId);
         
       if (error) throw error;
       
-      console.log("Raw appointment data:", data);
+      console.log("Raw appointment data with vehicles join:", data);
       
-      // If we have appointments, fetch the vehicle information
-      if (data && data.length > 0) {
-        // Get all vehicle IDs to fetch in bulk (filter out null/undefined vehicle_ids)
-        const vehicleIds = data
-          .filter(appointment => appointment.vehicle_id)
-          .map(appointment => appointment.vehicle_id);
+      // Process the data to ensure consistent structure
+      const processedAppointments = data ? data.map(appointment => {
+        // Extract vehicle data from the join result
+        const vehicleData = appointment.vehicles;
         
-        console.log("Vehicle IDs to fetch:", vehicleIds);
-        
-        let vehicleLookup: Record<string, any> = {};
-        
-        // Only fetch vehicles if we have vehicle IDs
-        if (vehicleIds.length > 0) {
-          const { data: vehicles, error: vehicleError } = await supabase
-            .from('vehicles')
-            .select('id, make, model, year, license_plate')
-            .in('id', vehicleIds);
-            
-          if (vehicleError) {
-            console.error("Error fetching vehicle details:", vehicleError);
-          } else if (vehicles && vehicles.length > 0) {
-            console.log("Fetched vehicles:", vehicles);
-            // Create lookup object for faster access
-            vehicles.forEach(vehicle => {
-              if (vehicle && vehicle.id) {
-                vehicleLookup[vehicle.id] = vehicle;
-              }
-            });
-          } else {
-            console.log("No vehicles found for IDs:", vehicleIds);
-          }
-        }
-        
-        // Combine data to create complete appointment objects
-        const appointmentsWithVehicles = data.map(appointment => {
-          const vehicle = appointment.vehicle_id && vehicleLookup[appointment.vehicle_id] 
-            ? vehicleLookup[appointment.vehicle_id] 
-            : null;
-          
-          return {
-            ...appointment,
-            vehicle: vehicle || undefined
-          };
-        });
-        
-        console.log("Fetched garage appointments with vehicle data:", appointmentsWithVehicles);
-        setAppointments(appointmentsWithVehicles || []);
-        return appointmentsWithVehicles;
-      }
+        // Create the appointment object with proper structure
+        return {
+          ...appointment,
+          // Format vehicle data consistently - important for rendering
+          vehicle: vehicleData ? {
+            id: vehicleData.id,
+            make: vehicleData.make,
+            model: vehicleData.model,
+            year: vehicleData.year,
+            license_plate: vehicleData.license_plate
+          } : undefined
+        };
+      }) : [];
       
-      setAppointments(data || []);
-      return data;
+      console.log("Processed appointments with vehicle data:", processedAppointments);
+      setAppointments(processedAppointments);
+      return processedAppointments;
     } catch (error: any) {
       console.error("Error fetching garage appointments:", error.message);
       toast.error("Failed to load garage appointments");

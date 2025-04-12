@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Calendar, 
@@ -184,11 +183,14 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
       return "Not specified";
     }
     
-    // Log the vehicle information to help debug
-    console.log("Rendering vehicle info:", vehicle);
+    // Convert vehicle data to expected format if it's not already
+    const vehicleData = typeof vehicle === 'object' ? vehicle : JSON.parse(vehicle);
     
-    if (vehicle.make && vehicle.model) {
-      return `${vehicle.make} ${vehicle.model} (${vehicle.year})${vehicle.license_plate ? ` • ${vehicle.license_plate}` : ''}`;
+    // Log the vehicle information to help debug
+    console.log("Rendering vehicle info:", vehicleData);
+    
+    if (vehicleData && vehicleData.make && vehicleData.model) {
+      return `${vehicleData.make} ${vehicleData.model} (${vehicleData.year})${vehicleData.license_plate ? ` • ${vehicleData.license_plate}` : ''}`;
     }
     
     return "Not specified";
