@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,8 +20,7 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { AlertCircle } from "lucide-react";
+import { AlertTriangle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const Login = () => {
