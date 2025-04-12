@@ -60,12 +60,12 @@ export const useGarageAppointments = () => {
     try {
       console.log("Fetching appointments for garage ID:", garageId);
       
-      // Query appointments with nested vehicle data explicitly
+      // Using explicit join syntax to get vehicle information
       const { data, error } = await supabase
         .from('appointments')
         .select(`
           *,
-          vehicle:vehicles(*)
+          vehicle:vehicles(id, make, model, year, license_plate)
         `)
         .eq('garage_id', garageId);
         
@@ -82,16 +82,12 @@ export const useGarageAppointments = () => {
         return [];
       }
       
-      // Process the data to ensure consistent structure
+      // Process the data to format vehicle information consistently
       const processedAppointments = data.map(appointment => {
-        // Directly grab the vehicle object from the nested query result
-        // The vehicle property comes from the explicit alias in the query
-        let vehicleData = null;
+        // Extract vehicle data, which should now come through with our updated RLS policies
+        const vehicleData = appointment.vehicle;
         
-        if (appointment.vehicle && Array.isArray(appointment.vehicle) && appointment.vehicle.length > 0) {
-          vehicleData = appointment.vehicle[0];
-          console.log("Found vehicle data for appointment:", appointment.id, "Vehicle:", vehicleData);
-        }
+        console.log(`Processing appointment ${appointment.id}, vehicle data:`, vehicleData);
         
         return {
           ...appointment,

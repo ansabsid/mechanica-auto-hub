@@ -9,25 +9,22 @@ import { Appointment, AvailableSlot } from "@/types/appointment.types";
  */
 export const fetchUserAppointmentsFromApi = async (userId: string): Promise<Appointment[]> => {
   try {
-    // Using consistent naming for the vehicle join with the garage appointments
-    const { data, error } = await (supabase
-      .from('appointments') as any)
-      .select('*, garage:garage_id(name, location), vehicle:vehicle_id(*)')
+    // Using consistent vehicle join approach with the garage appointments
+    const { data, error } = await supabase
+      .from('appointments')
+      .select(`
+        *,
+        garage:garages(name, location),
+        vehicle:vehicles(id, make, model, year, license_plate)
+      `)
       .eq('user_id', userId)
       .order('appointment_date', { ascending: true });
     
     if (error) throw error;
     
-    // Handle the data with explicit type casting
+    // Process the data with explicit type casting
     if (data) {
       return data.map((item: any) => {
-        let vehicleData = null;
-        
-        // Handle the nested vehicle data consistently
-        if (item.vehicle && Array.isArray(item.vehicle) && item.vehicle.length > 0) {
-          vehicleData = item.vehicle[0];
-        }
-        
         return {
           id: item.id,
           user_id: item.user_id,
@@ -41,13 +38,7 @@ export const fetchUserAppointmentsFromApi = async (userId: string): Promise<Appo
           updated_at: item.updated_at,
           confirmation_code: item.confirmation_code,
           vehicle_id: item.vehicle_id,
-          vehicle: vehicleData ? {
-            id: vehicleData.id,
-            make: vehicleData.make,
-            model: vehicleData.model,
-            year: vehicleData.year,
-            license_plate: vehicleData.license_plate,
-          } : undefined,
+          vehicle: item.vehicle,
           garage: item.garage ? {
             name: item.garage.name || 'Unknown',
             location: item.garage.location || 'Unknown'
