@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -38,6 +39,7 @@ export const InstallationOptionsDialog = ({
 }: InstallationOptionsDialogProps) => {
   const [step, setStep] = useState(1);
   const [selectedArea, setSelectedArea] = useState("");
+  const [selectedGarageId, setSelectedGarageId] = useState<string>("");
   const [selectedGarage, setSelectedGarage] = useState<Garage | null>(null);
   const [loading, setLoading] = useState(false);
   const [availableAreas, setAvailableAreas] = useState<string[]>([]);
@@ -79,6 +81,8 @@ export const InstallationOptionsDialog = ({
       
       console.log("Filtered garages for area", selectedArea, ":", garagesInArea);
       
+      // Reset garage selection when area changes
+      setSelectedGarageId("");
       setSelectedGarage(null);
       
       const convertedGarages: Garage[] = garagesInArea.map(garage => ({
@@ -92,6 +96,17 @@ export const InstallationOptionsDialog = ({
       setFilteredGarages(convertedGarages);
     }
   }, [selectedArea, garages]);
+  
+  // Separate effect to handle garage selection updates
+  useEffect(() => {
+    if (selectedGarageId && filteredGarages.length > 0) {
+      const garage = filteredGarages.find(g => g.id === selectedGarageId);
+      if (garage) {
+        setSelectedGarage(garage);
+        console.log("Selected garage updated:", garage);
+      }
+    }
+  }, [selectedGarageId, filteredGarages]);
   
   const handleConfirmInstallation = async () => {
     if (!selectedGarage) {
@@ -127,6 +142,7 @@ export const InstallationOptionsDialog = ({
       
       setStep(1);
       setSelectedArea("");
+      setSelectedGarageId("");
       setSelectedGarage(null);
       
       onComplete();
@@ -209,15 +225,10 @@ export const InstallationOptionsDialog = ({
               <div className="space-y-2">
                 <Label htmlFor="garage">Garage</Label>
                 <Select 
-                  value={selectedGarage?.id || ""}
+                  value={selectedGarageId}
                   onValueChange={(value) => {
-                    if (value) {
-                      const garage = filteredGarages.find(g => g.id === value);
-                      setSelectedGarage(garage || null);
-                      console.log("Selected garage:", garage);
-                    } else {
-                      setSelectedGarage(null);
-                    }
+                    console.log("Garage selection changed to:", value);
+                    setSelectedGarageId(value);
                   }}
                 >
                   <SelectTrigger id="garage">
@@ -250,7 +261,7 @@ export const InstallationOptionsDialog = ({
               <Button
                 type="button"
                 onClick={() => setStep(3)}
-                disabled={!selectedGarage}
+                disabled={!selectedGarageId}
               >
                 Next
               </Button>
