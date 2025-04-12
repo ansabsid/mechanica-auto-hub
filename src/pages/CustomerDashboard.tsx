@@ -684,34 +684,34 @@ const CustomerDashboard = () => {
       
       <div className="md:hidden dashboard-tabs-container">
         <Tabs value={currentMobileTab} onValueChange={setCurrentMobileTab}>
-          <TabsList className="dashboard-tabs space-x-1">
+          <TabsList className="dashboard-tabs">
             <TabsTrigger 
               value="orders" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <ShoppingBag className="h-4 w-4" /> 
-              <span>Orders</span>
+              <ShoppingBag className="h-3.5 w-3.5" /> 
+              <span className="ml-0.5">Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="appointments" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <Calendar className="h-4 w-4" /> 
-              <span>Appointments</span>
+              <Calendar className="h-3.5 w-3.5" /> 
+              <span className="ml-0.5">Appts</span>
             </TabsTrigger>
             <TabsTrigger 
               value="installations" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <Wrench className="h-4 w-4" /> 
-              <span>Installations</span>
+              <Wrench className="h-3.5 w-3.5" /> 
+              <span className="ml-0.5">Install</span>
             </TabsTrigger>
             <TabsTrigger 
               value="vehicles" 
               className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
-              <Car className="h-4 w-4" /> 
-              <span>Vehicles</span>
+              <Car className="h-3.5 w-3.5" /> 
+              <span className="ml-0.5">Cars</span>
             </TabsTrigger>
           </TabsList>
           
