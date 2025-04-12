@@ -7,15 +7,16 @@ const ProblemSlide: React.FC = () => {
   
   return (
     <div className="space-y-4">
+      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">Market Problem</h2>
       <ul className="space-y-5">
         <li className="flex items-start transform hover:scale-105 transition-all cursor-pointer rounded-lg p-2 hover:bg-red-50">
           <div className="bg-red-100 rounded-full p-3 mr-4 mt-1 shadow-md">
             <span className="text-red-500 font-bold text-lg">1</span>
           </div>
           <div className="animate-fade-in" style={{animationDelay: "0.1s"}}>
-            <h3 className="font-medium mb-1">Parts Uncertainty</h3>
+            <h3 className="font-medium mb-1">Parts Availability Crisis</h3>
             <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
-              Car owners struggle to find genuine parts at fair prices
+              Car owners struggle to find genuine parts at fair prices quickly, facing unnecessary hassles and lengthy waiting times as parts are not readily available
             </p>
           </div>
         </li>
