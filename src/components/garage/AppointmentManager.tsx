@@ -181,8 +181,8 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
     
     console.log("Rendering vehicle info:", vehicle);
     
-    if (vehicle && typeof vehicle === 'object' && vehicle.make && vehicle.model) {
-      return `${vehicle.make} ${vehicle.model} (${vehicle.year})${vehicle.license_plate ? ` • ${vehicle.license_plate}` : ''}`;
+    if (vehicle.make && vehicle.model) {
+      return `${vehicle.make} ${vehicle.model} (${vehicle.year || 'N/A'})${vehicle.license_plate ? ` • ${vehicle.license_plate}` : ''}`;
     }
     
     return "Not specified";

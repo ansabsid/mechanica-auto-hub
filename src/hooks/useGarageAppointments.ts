@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -59,12 +60,12 @@ export const useGarageAppointments = () => {
     try {
       console.log("Fetching appointments for garage ID:", garageId);
       
-      // Use a direct query with explicit JOIN for clearer debugging
+      // Query appointments with nested vehicle data explicitly
       const { data, error } = await supabase
         .from('appointments')
         .select(`
           *,
-          vehicles:vehicle_id (*)
+          vehicle:vehicles(*)
         `)
         .eq('garage_id', garageId);
         
@@ -83,16 +84,22 @@ export const useGarageAppointments = () => {
       
       // Process the data to ensure consistent structure
       const processedAppointments = data.map(appointment => {
-        console.log("Processing appointment:", appointment.id, "Vehicle data:", appointment.vehicles);
+        // Directly grab the vehicle object from the nested query result
+        // The vehicle property comes from the explicit alias in the query
+        let vehicleData = null;
         
-        // Create a properly structured appointment object
+        if (appointment.vehicle && Array.isArray(appointment.vehicle) && appointment.vehicle.length > 0) {
+          vehicleData = appointment.vehicle[0];
+          console.log("Found vehicle data for appointment:", appointment.id, "Vehicle:", vehicleData);
+        }
+        
         return {
           ...appointment,
-          vehicle: appointment.vehicles || undefined
+          vehicle: vehicleData
         };
       });
       
-      console.log("Processed appointments:", processedAppointments);
+      console.log("Processed appointments with vehicle data:", processedAppointments);
       setAppointments(processedAppointments);
       return processedAppointments;
     } catch (error: any) {
