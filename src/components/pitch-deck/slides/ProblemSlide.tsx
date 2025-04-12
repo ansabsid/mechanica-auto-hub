@@ -15,7 +15,7 @@ const ProblemSlide: React.FC = () => {
           <div className="animate-fade-in" style={{animationDelay: "0.1s"}}>
             <h3 className="font-medium mb-1">Parts Availability Crisis</h3>
             <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
-              Car owners struggle to find genuine parts at fair prices quickly, facing unnecessary hassles and lengthy waiting times as parts are not readily available
+              Spare parts for OEM, aftermarket, or used inventory are often unavailable, causing service delays.
             </p>
           </div>
         </li>
