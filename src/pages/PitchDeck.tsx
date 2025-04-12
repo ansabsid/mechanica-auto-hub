@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCapacitor } from "@/hooks/useCapacitor";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 // Define slide interface
 interface Slide {
@@ -118,43 +118,53 @@ const PitchDeck = () => {
       title: "Our Solution",
       content: (
         <div className="space-y-6">
-          <Carousel className="w-full">
-            <CarouselContent>
-              <CarouselItem>
-                <div className="flex items-center space-x-4 bg-white p-6 rounded-xl shadow-md">
-                  <div className="bg-mechanica-100 p-5 rounded-full animate-pulse">
-                    <Lightbulb className="h-8 w-8 text-mechanica-500" />
+          <div className="relative rounded-xl overflow-hidden">
+            <Carousel className="w-full">
+              <CarouselContent>
+                <CarouselItem>
+                  <div className="flex items-center space-x-4 bg-white p-6 rounded-xl shadow-md">
+                    <div className="bg-mechanica-100 p-5 rounded-full animate-pulse">
+                      <Lightbulb className="h-8 w-8 text-mechanica-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">All-in-One Platform</h3>
+                      <p className="text-sm text-muted-foreground">Parts, service requests, and installations in one place</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg">All-in-One Platform</h3>
-                    <p className="text-sm text-muted-foreground">Parts, service requests, and installations in one place</p>
+                </CarouselItem>
+                <CarouselItem>
+                  <div className="flex items-center space-x-4 bg-white p-6 rounded-xl shadow-md">
+                    <div className="bg-mechanica-100 p-5 rounded-full animate-pulse">
+                      <Users className="h-8 w-8 text-mechanica-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Nearby Garages</h3>
+                      <p className="text-sm text-muted-foreground">Schedule appointments with local trusted mechanics</p>
+                    </div>
                   </div>
-                </div>
-              </CarouselItem>
-              <CarouselItem>
-                <div className="flex items-center space-x-4 bg-white p-6 rounded-xl shadow-md">
-                  <div className="bg-mechanica-100 p-5 rounded-full animate-pulse">
-                    <Users className="h-8 w-8 text-mechanica-500" />
+                </CarouselItem>
+                <CarouselItem>
+                  <div className="flex items-center space-x-4 bg-white p-6 rounded-xl shadow-md">
+                    <div className="bg-mechanica-100 p-5 rounded-full animate-pulse">
+                      <BarChart3 className="h-8 w-8 text-mechanica-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">Transparent Pricing</h3>
+                      <p className="text-sm text-muted-foreground">Compare prices and read reviews</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg">Nearby Garages</h3>
-                    <p className="text-sm text-muted-foreground">Schedule appointments with local trusted mechanics</p>
-                  </div>
-                </div>
-              </CarouselItem>
-              <CarouselItem>
-                <div className="flex items-center space-x-4 bg-white p-6 rounded-xl shadow-md">
-                  <div className="bg-mechanica-100 p-5 rounded-full animate-pulse">
-                    <BarChart3 className="h-8 w-8 text-mechanica-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">Transparent Pricing</h3>
-                    <p className="text-sm text-muted-foreground">Compare prices and read reviews</p>
-                  </div>
-                </div>
-              </CarouselItem>
-            </CarouselContent>
-          </Carousel>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
+            
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+              <div className="w-2 h-2 rounded-full bg-mechanica-500"></div>
+              <div className="w-2 h-2 rounded-full bg-mechanica-200"></div>
+              <div className="w-2 h-2 rounded-full bg-mechanica-200"></div>
+            </div>
+          </div>
           
           <div className="mt-8 p-4 bg-white rounded-lg shadow-md">
             <h3 className="font-medium mb-2 text-center text-mechanica-600">How It Works</h3>
@@ -830,6 +840,33 @@ const PitchDeck = () => {
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium">
         {currentSlide + 1} / {slides.length}
       </div>
+      
+      {/* Confetti effect */}
+      {isConfettiActive && (
+        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="animate-bounce text-6xl">🎉</div>
+            <div className="animate-bounce delay-100 text-6xl" style={{animationDelay: "0.2s"}}>🚀</div>
+            <div className="animate-bounce delay-200 text-6xl" style={{animationDelay: "0.4s"}}>🎊</div>
+          </div>
+          <div className="absolute top-0 left-0 right-0 h-20 overflow-hidden">
+            {[...Array(20)].map((_, i) => (
+              <div 
+                key={i}
+                className="absolute animate-confetti"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animation: `confetti ${2 + Math.random() * 3}s linear forwards`,
+                  backgroundColor: ['#FFC700', '#FF0066', '#00C2FF', '#4DE94C'][Math.floor(Math.random() * 4)],
+                  width: `${5 + Math.random() * 5}px`,
+                  height: `${10 + Math.random() * 10}px`,
+                  animationDelay: `${Math.random() * 2}s`
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
