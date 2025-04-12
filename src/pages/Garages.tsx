@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   MapPin, 
@@ -93,11 +92,6 @@ const GaragePage = () => {
         garageId 
       } 
     });
-  };
-
-  const handleSeedSampleGarages = async () => {
-    console.log("User clicked Add Sample Garages button");
-    await seedSampleGarages();
   };
 
   const toggleView = () => {
