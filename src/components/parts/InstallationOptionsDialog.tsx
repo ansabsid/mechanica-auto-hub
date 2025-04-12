@@ -228,7 +228,7 @@ export const InstallationOptionsDialog = ({
                     {filteredGarages.length > 0 ? (
                       filteredGarages.map((garage) => (
                         <SelectItem key={garage.id} value={garage.id}>
-                          {garage.name} - {garage.location} (+{garage.installationFee})
+                          {garage.name} - {garage.location} (+${garage.installationFee})
                         </SelectItem>
                       ))
                     ) : (
@@ -283,7 +283,7 @@ export const InstallationOptionsDialog = ({
                 </p>
                 <p>
                   <strong>Installation Fee:</strong>{" "}
-                  {selectedGarage?.installationFee}
+                  ${selectedGarage?.installationFee}
                 </p>
                 <p className="text-sm text-gray-500 mt-4">
                   The part will be shipped to the garage for installation.
