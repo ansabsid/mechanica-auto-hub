@@ -217,10 +217,14 @@ export const InstallationOptionsDialog = ({
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="garage">Garage</Label>
-                <Select onValueChange={(value) => {
-                  const garage = filteredGarages.find(g => g.id === value);
-                  setSelectedGarage(garage || null);
-                }}>
+                <Select 
+                  value={selectedGarage?.id}
+                  onValueChange={(value) => {
+                    const garage = filteredGarages.find(g => g.id === value);
+                    setSelectedGarage(garage || null);
+                    console.log("Selected garage:", garage);
+                  }}
+                >
                   <SelectTrigger id="garage">
                     <SelectValue placeholder="Select a garage" />
                   </SelectTrigger>
@@ -327,3 +331,4 @@ export const InstallationOptionsDialog = ({
     </Dialog>
   );
 };
+
