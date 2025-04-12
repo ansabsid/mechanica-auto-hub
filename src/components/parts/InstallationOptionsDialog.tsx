@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -19,16 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCart } from "@/hooks/useCart";
 import { InstallationOptions } from "@/types/cart.types";
-import { MapPin, ChevronDown } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { useGarageManagement } from "@/hooks/useGarageManagement";
 
 interface InstallationOptionsDialogProps {
@@ -169,39 +161,31 @@ export const InstallationOptionsDialog = ({
               <div className="space-y-2">
                 <Label htmlFor="area">Area</Label>
                 <div className="relative">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                        disabled={availableAreas.length === 0}
-                      >
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          {selectedArea || "Select an area"}
-                        </div>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-full min-w-[200px]">
-                      <DropdownMenuRadioGroup 
-                        value={selectedArea} 
-                        onValueChange={setSelectedArea}
-                      >
-                        {availableAreas.length > 0 ? (
-                          availableAreas.map((area) => (
-                            <DropdownMenuRadioItem key={area} value={area}>
-                              {area}
-                            </DropdownMenuRadioItem>
-                          ))
-                        ) : (
-                          <DropdownMenuRadioItem value="no-areas-available" disabled>
-                            No areas available
-                          </DropdownMenuRadioItem>
-                        )}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Select
+                    value={selectedArea}
+                    onValueChange={setSelectedArea}
+                    disabled={availableAreas.length === 0}
+                  >
+                    <SelectTrigger id="area" className="w-full">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <SelectValue placeholder="Select an area" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableAreas.length > 0 ? (
+                        availableAreas.map((area) => (
+                          <SelectItem key={area} value={area}>
+                            {area}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-areas-available" disabled>
+                          No areas available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
