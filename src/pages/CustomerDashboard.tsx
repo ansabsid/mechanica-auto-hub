@@ -552,7 +552,7 @@ const CustomerDashboard = () => {
                     <div>
                       <CardTitle className="text-sm md:text-base">{installation.part.name}</CardTitle>
                       <div className="text-xs md:text-sm text-gray-500 flex items-center mt-1">
-                        <MapPin className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1 text-mechanica-500" />
+                        <MapPin className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1 text-gray-500" />
                         {installation.garages?.name || "Unknown Garage"}
                       </div>
                     </div>
@@ -682,33 +682,33 @@ const CustomerDashboard = () => {
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-1 md:mb-2">My Dashboard</h1>
       <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">View and manage your orders, appointments, and vehicles</p>
       
-      <div className="md:hidden mb-6 overflow-x-auto pb-2">
+      <div className="md:hidden dashboard-tabs-container">
         <Tabs value={currentMobileTab} onValueChange={setCurrentMobileTab}>
-          <TabsList className="w-auto inline-flex space-x-2">
+          <TabsList className="dashboard-tabs space-x-1">
             <TabsTrigger 
               value="orders" 
-              className="flex items-center gap-1 py-2 px-3"
+              className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
               <ShoppingBag className="h-4 w-4" /> 
               <span>Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="appointments" 
-              className="flex items-center gap-1 py-2 px-3"
+              className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
               <Calendar className="h-4 w-4" /> 
               <span>Appointments</span>
             </TabsTrigger>
             <TabsTrigger 
               value="installations" 
-              className="flex items-center gap-1 py-2 px-3"
+              className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
               <Wrench className="h-4 w-4" /> 
               <span>Installations</span>
             </TabsTrigger>
             <TabsTrigger 
               value="vehicles" 
-              className="flex items-center gap-1 py-2 px-3"
+              className="dashboard-tab data-[state=active]:dashboard-tab-active"
             >
               <Car className="h-4 w-4" /> 
               <span>Vehicles</span>
@@ -734,17 +734,29 @@ const CustomerDashboard = () => {
       </div>
       
       <Tabs defaultValue="orders" value={activeTab} onValueChange={setActiveTab} className="hidden md:block">
-        <TabsList className="grid w-full grid-cols-4 max-w-md mx-auto mb-6">
-          <TabsTrigger value="orders" className="flex gap-2 items-center justify-center">
+        <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-6 bg-gray-50 p-1.5 rounded-lg">
+          <TabsTrigger 
+            value="orders" 
+            className="flex gap-2 items-center justify-center data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
             <ShoppingBag className="h-4 w-4" /> Orders
           </TabsTrigger>
-          <TabsTrigger value="appointments" className="flex gap-2 items-center justify-center">
+          <TabsTrigger 
+            value="appointments" 
+            className="flex gap-2 items-center justify-center data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
             <Calendar className="h-4 w-4" /> Appointments
           </TabsTrigger>
-          <TabsTrigger value="installations" className="flex gap-2 items-center justify-center">
+          <TabsTrigger 
+            value="installations" 
+            className="flex gap-2 items-center justify-center data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
             <Wrench className="h-4 w-4" /> Installations
           </TabsTrigger>
-          <TabsTrigger value="vehicles" className="flex gap-2 items-center justify-center">
+          <TabsTrigger 
+            value="vehicles" 
+            className="flex gap-2 items-center justify-center data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
             <Car className="h-4 w-4" /> Vehicles
           </TabsTrigger>
         </TabsList>

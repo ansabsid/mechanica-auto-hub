@@ -80,4 +80,47 @@
   .card-hover {
     @apply transition-all duration-200 hover:shadow-card hover:-translate-y-1;
   }
+  
+  /* Elegant tab styles */
+  .elegant-tabs {
+    @apply flex py-1 px-2 bg-white rounded-lg shadow-sm overflow-x-auto;
+  }
+  
+  .elegant-tab {
+    @apply flex items-center justify-center whitespace-nowrap px-3 py-2 rounded-md text-sm font-medium transition-all;
+    @apply text-gray-600 hover:text-primary min-w-max;
+  }
+  
+  .elegant-tab-active {
+    @apply bg-blue-50 text-primary;
+  }
+  
+  /* Dashboard tabs styling */
+  .dashboard-tabs-container {
+    @apply mb-6 -mx-3 px-3 pb-2 overflow-x-auto scrollbar-hide;
+  }
+  
+  .dashboard-tabs {
+    @apply inline-flex p-1 bg-gray-50 rounded-lg min-w-max;
+  }
+  
+  .dashboard-tab {
+    @apply flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors;
+    @apply text-gray-600 hover:text-gray-900 min-w-max;
+  }
+  
+  .dashboard-tab-active {
+    @apply bg-white text-primary shadow-sm;
+  }
+  
+  /* Hide scrollbar for WebKit browsers */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Hide scrollbar for IE, Edge, and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
 }
