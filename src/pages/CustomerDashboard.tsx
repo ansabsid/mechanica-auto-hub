@@ -39,7 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
-  const { orders, fetchUserOrders, isLoading: ordersLoading } = useOrders();
+  const { orders, fetchUserOrders, isLoading: ordersLoading, currentOrder, fetchOrderDetails } = useOrders();
   const { 
     fetchUserAppointments, 
     cancelAppointment 
@@ -74,6 +74,7 @@ const CustomerDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchUserOrders();
+      fetchUserVehicles();
       fetchAppointments();
       fetchInstallations();
     }
@@ -217,6 +218,38 @@ const CustomerDashboard = () => {
     }
   };
   
+  const getOrderStatusIcon = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'pending':
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      case 'completed':
+        return <ClipboardCheck className="h-5 w-5 text-blue-500" />;
+      case 'cancelled':
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getOrderStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return "bg-green-500";
+      case 'pending':
+        return "bg-yellow-500";
+      case 'processing':
+        return "bg-blue-500";
+      case 'completed':
+        return "bg-blue-500";
+      case 'cancelled':
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
   const getAppointmentStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -289,8 +322,8 @@ const CustomerDashboard = () => {
                   <p className="text-gray-500 text-center max-w-sm mb-6">
                     You don't have any orders. Place a new order to get started.
                   </p>
-                  <Link to="/orders">
-                    <Button>Place New Order</Button>
+                  <Link to="/shop">
+                    <Button>Shop Now</Button>
                   </Link>
                 </CardContent>
               </Card>
@@ -298,71 +331,46 @@ const CustomerDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {orders.map((order) => (
                   <Card key={order.id} className="overflow-hidden">
-                    <div className="h-2 bg-green-500"></div>
+                    <div className={`h-2 ${getOrderStatusColor(order.status)}`}></div>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-base">{(order as any).service_type || "Order"}</CardTitle>
-                          <div className="text-sm text-gray-500 flex items-center mt-1">
-                            <MapPin className="h-3.5 w-3.5 mr-1 text-mechanica-500" />
-                            {(order as any).garage?.name || "N/A"}
+                          <CardTitle className="text-base">Order #{order.id.substring(0, 8)}</CardTitle>
+                          <div className="text-sm text-gray-500 mt-1">
+                            Placed on {formatDate(order.created_at)}
                           </div>
                         </div>
-                        {getAppointmentStatusIcon(order.status)}
+                        {getOrderStatusIcon(order.status)}
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm">
-                          <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                          <span>{formatDate((order as any).appointment_date || order.created_at)}</span>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Items:</span>
+                          <span>{order.items?.length || 0} items</span>
                         </div>
-                        <div className="flex items-center text-sm">
-                          <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                          <span>{formatTime((order as any).appointment_time || "")}</span>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Total:</span>
+                          <span className="font-medium">${order.total_amount}</span>
                         </div>
-                        <div className="flex items-center text-sm">
-                          <Car className="h-4 w-4 mr-2 text-gray-500" />
-                          <span>
-                            {(order as any).vehicle ? 
-                              `${(order as any).vehicle?.make} ${(order as any).vehicle?.model} (${(order as any).vehicle?.year})` : 
-                              "Vehicle information not available"}
-                          </span>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Status:</span>
+                          <Badge className={getOrderStatusColor(order.status)}>
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </Badge>
                         </div>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <Badge className={getAppointmentStatusColor(order.status)}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </Badge>
-                        
-                        <div className="flex gap-2">
+                      <div className="flex justify-end">
+                        <Link to={`/orders/${order.id}`}>
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             className="flex items-center"
-                            onClick={() => {
-                              setSelectedAppointment(order);
-                              setAppointmentDetailsOpen(true);
-                            }}
                           >
-                            Details <ChevronRight className="h-4 w-4 ml-1" />
+                            View Details <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
-                          
-                          {(order.status === 'pending' || order.status === 'processing') && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="text-red-600"
-                              onClick={() => {
-                                setSelectedAppointment(order);
-                                setCancelDialogOpen(true);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          )}
-                        </div>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
