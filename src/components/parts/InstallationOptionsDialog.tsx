@@ -67,26 +67,26 @@ export const InstallationOptionsDialog = ({
       if (areas.length === 1) {
         setSelectedArea(areas[0]);
       }
-      
-      console.log("Available areas extracted from all garages:", areas);
     } else {
-      console.log("No garages available or garages don't have areas");
       setAvailableAreas([]);
     }
   }, [garages]);
 
-  // Filter garages by selected area
+  // Filter garages by selected area - only run this when selectedArea or garages change
   useEffect(() => {
     if (selectedArea && garages && garages.length > 0) {
       const garagesInArea = garages.filter(
         garage => garage.area === selectedArea
       );
       
-      console.log("Filtered garages for area", selectedArea, ":", garagesInArea);
-      
-      // Reset garage selection when area changes
-      setSelectedGarageId("");
-      setSelectedGarage(null);
+      // Only reset garage selection when area changes
+      if (selectedGarageId) {
+        const currentGarageStillValid = garagesInArea.some(g => g.id === selectedGarageId);
+        if (!currentGarageStillValid) {
+          setSelectedGarageId("");
+          setSelectedGarage(null);
+        }
+      }
       
       const convertedGarages: Garage[] = garagesInArea.map(garage => ({
         id: garage.id,
@@ -100,41 +100,31 @@ export const InstallationOptionsDialog = ({
     }
   }, [selectedArea, garages]);
   
-  // A more robust way to handle garage selection
-  const handleGarageSelection = useCallback((value: string) => {
-    console.log("Garage selection triggered with value:", value);
-    
-    if (!value) {
-      console.log("Empty garage value, clearing selection");
+  // A stable handler for garage selection that won't recreate on every render
+  const handleGarageSelection = useCallback((garageId: string) => {
+    if (!garageId) {
       setSelectedGarageId("");
       setSelectedGarage(null);
       return;
     }
     
     // Find the garage in our filtered list
-    const selectedGarageObj = filteredGarages.find(g => g.id === value);
+    const foundGarage = filteredGarages.find(g => g.id === garageId);
     
-    if (selectedGarageObj) {
-      console.log("Found matching garage:", selectedGarageObj);
-      
-      // Update both states synchronously
-      setSelectedGarageId(value);
-      setSelectedGarage(selectedGarageObj);
-    } else {
-      console.log("No matching garage found for ID:", value);
-      setSelectedGarageId("");
-      setSelectedGarage(null);
+    if (foundGarage) {
+      // Update both states together
+      setSelectedGarageId(garageId);
+      setSelectedGarage(foundGarage);
     }
   }, [filteredGarages]);
   
-  // Go to next step function
+  // Stable navigation functions
   const goToNextStep = useCallback(() => {
-    setStep(currentStep => currentStep + 1);
+    setStep(prevStep => prevStep + 1);
   }, []);
   
-  // Go to previous step function
   const goToPreviousStep = useCallback(() => {
-    setStep(currentStep => Math.max(1, currentStep - 1));
+    setStep(prevStep => Math.max(1, prevStep - 1));
   }, []);
   
   const handleConfirmInstallation = async () => {
@@ -156,11 +146,6 @@ export const InstallationOptionsDialog = ({
         garageName: selectedGarage.name,
         installationFee: selectedGarage.installationFee
       };
-      
-      console.log("Adding to cart with installation:", {
-        partId: part.id,
-        installationOptions
-      });
       
       await addToCart(part.id, 1, installationOptions);
       
@@ -192,6 +177,19 @@ export const InstallationOptionsDialog = ({
     }
   };
   
+  // Reset states when dialog opens or closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Don't reset during steps, only when dialog fully closes
+      setTimeout(() => {
+        setStep(1);
+        setSelectedArea("");
+        setSelectedGarageId("");
+        setSelectedGarage(null);
+      }, 300); // Wait for dialog close animation
+    }
+  }, [isOpen]);
+
   const renderStepContent = () => {
     switch (step) {
       case 1:
@@ -275,11 +273,6 @@ export const InstallationOptionsDialog = ({
                     )}
                   </SelectContent>
                 </Select>
-                
-                {/* Debug info */}
-                <div className="text-xs text-gray-400 mt-1">
-                  Selected garage ID: {selectedGarageId || 'none'}
-                </div>
               </div>
             </div>
             <DialogFooter>
@@ -359,7 +352,9 @@ export const InstallationOptionsDialog = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Installation Options</DialogTitle>
