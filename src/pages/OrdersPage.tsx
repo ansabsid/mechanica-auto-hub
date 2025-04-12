@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -11,17 +11,49 @@ import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 const OrderPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const { fetchOrderDetails, currentOrder, isLoading } = useOrders();
   const navigate = useNavigate();
+  const [retryCount, setRetryCount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (orderId) {
-      fetchOrderDetails(orderId);
-    }
-  }, [orderId]);
+    const loadOrderDetails = async () => {
+      if (!orderId) return;
+      
+      console.log(`Attempting to load order details for ID: ${orderId} (attempt ${retryCount + 1})`);
+      
+      try {
+        const session = await supabase.auth.getSession();
+        if (!session.data.session) {
+          setErrorMessage("Authentication required to view order details");
+          return;
+        }
+        
+        const result = await fetchOrderDetails(orderId);
+        if (!result) {
+          console.error(`Failed to load order: ${orderId}`);
+          if (retryCount < 2) {
+            // Wait and retry if we haven't reached max retries
+            setTimeout(() => {
+              setRetryCount(prev => prev + 1);
+            }, 1500); // Wait 1.5 seconds before retrying
+          }
+        } else {
+          console.log("Order details loaded successfully:", result.id);
+          setErrorMessage(null);
+        }
+      } catch (error: any) {
+        console.error("Error loading order:", error.message);
+        setErrorMessage(`Error loading order: ${error.message}`);
+      }
+    };
+
+    loadOrderDetails();
+  }, [orderId, retryCount]);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -113,7 +145,13 @@ const OrderPage = () => {
   if (!currentOrder) {
     return (
       <div className="text-center py-12">
-        <p className="text-lg text-gray-600">Order not found</p>
+        <p className="text-lg text-gray-600">
+          {errorMessage || "Order not found"}
+          {retryCount > 0 && !errorMessage && ` (Tried ${retryCount} times)`}
+        </p>
+        {retryCount < 2 && !errorMessage && (
+          <p className="mt-2 text-gray-500">Attempting to reload... Please wait.</p>
+        )}
         <Button 
           variant="outline" 
           className="mt-4"
@@ -121,6 +159,19 @@ const OrderPage = () => {
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Orders
         </Button>
+        {orderId && (
+          <div className="mt-4 p-4 bg-gray-100 rounded-md mx-auto max-w-md">
+            <p className="text-sm text-gray-600 mb-2">Order ID: {orderId}</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setRetryCount(prev => prev + 1)}
+              className="mr-2"
+            >
+              Try Again
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
