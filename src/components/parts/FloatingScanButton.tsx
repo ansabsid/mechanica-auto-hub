@@ -4,11 +4,16 @@ import { Link } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLocation } from "react-router-dom";
 
 const FloatingScanButton = () => {
   const isMobile = useIsMobile();
+  const location = useLocation();
   
-  if (!isMobile) return null;
+  // Don't show on scanner page or home page (Index) where ScannerButton already appears
+  if (!isMobile || location.pathname === "/scanner" || location.pathname === "/" || location.pathname === "/scan") {
+    return null;
+  }
   
   return (
     <Link to="/scanner" className="fixed bottom-24 right-4 z-50">

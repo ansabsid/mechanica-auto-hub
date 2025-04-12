@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
-import FloatingScanButton from "@/components/parts/FloatingScanButton";
 import ComingSoonDialog from "@/components/ui/coming-soon-dialog";
 
 // Trusted garage logos
@@ -400,9 +399,6 @@ const Index = () => {
         open={isComingSoonOpen}
         onOpenChange={setIsComingSoonOpen}
       />
-      
-      {/* Floating scan button for mobile */}
-      <FloatingScanButton />
     </>
   );
 };
