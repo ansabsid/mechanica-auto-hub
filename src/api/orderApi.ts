@@ -97,7 +97,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       return null;
     }
     
-    // Get order items with installation details - FIXED QUERY by properly nesting the select
+    // Get order items with installation details - Simplify the query first for debugging
     const { data: itemsData, error: itemsError } = await supabase
       .from('order_items')
       .select(`
@@ -111,9 +111,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
         scheduled_date,
         scheduled_time,
         installation_fee,
-        installation_status,
-        part:parts(name, description),
-        garage:garages(name, location)
+        installation_status
       `)
       .eq('order_id', orderId);
       
@@ -122,7 +120,48 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       throw itemsError;
     }
     
-    console.log("Order items found:", itemsData?.length || 0, "Raw data:", JSON.stringify(itemsData));
+    console.log("Order items basic data:", itemsData);
+    
+    // Now get the part and garage details separately to avoid nesting issues
+    const partIds = itemsData?.map(item => item.part_id) || [];
+    const garageIds = itemsData?.filter(item => item.garage_id).map(item => item.garage_id) || [];
+    
+    console.log("Fetching details for parts:", partIds, "and garages:", garageIds);
+    
+    // Fetch parts
+    const { data: partsData, error: partsError } = await supabase
+      .from('parts')
+      .select('id, name, description')
+      .in('id', partIds.length > 0 ? partIds : [0]);  // Use [0] as fallback if empty
+      
+    if (partsError) {
+      console.error("Error fetching parts data:", partsError.message);
+    } else {
+      console.log("Parts data:", partsData);
+    }
+    
+    // Fetch garages
+    const { data: garagesData, error: garagesError } = await supabase
+      .from('garages')
+      .select('id, name, location')
+      .in('id', garageIds.length > 0 ? garageIds : ['00000000-0000-0000-0000-000000000000']);  // Use dummy UUID as fallback
+      
+    if (garagesError) {
+      console.error("Error fetching garages data:", garagesError.message);
+    } else {
+      console.log("Garages data:", garagesData);
+    }
+    
+    // Map parts and garages to a lookup object for easy access
+    const partsLookup = (partsData || []).reduce((acc, part) => {
+      acc[part.id] = part;
+      return acc;
+    }, {} as Record<string, any>);
+    
+    const garagesLookup = (garagesData || []).reduce((acc, garage) => {
+      acc[garage.id] = garage;
+      return acc;
+    }, {} as Record<string, any>);
     
     // Format order with items
     const orderWithItems: Order = {
@@ -134,6 +173,9 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       updated_at: orderData.updated_at,
       items: itemsData?.map((item: any) => {
         console.log("Processing item:", item);
+        const part = partsLookup[item.part_id];
+        const garage = item.garage_id ? garagesLookup[item.garage_id] : undefined;
+        
         return {
           id: item.id,
           order_id: item.order_id,
@@ -146,19 +188,19 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
           installation_status: item.installation_status,
           scheduled_date: item.scheduled_date,
           scheduled_time: item.scheduled_time,
-          part: item.part ? {
-            name: item.part.name,
-            description: item.part.description
+          part: part ? {
+            name: part.name,
+            description: part.description
           } : undefined,
-          garage: item.garage ? {
-            name: item.garage.name,
-            location: item.garage.location
+          garage: garage ? {
+            name: garage.name,
+            location: garage.location
           } : undefined
         };
       }) || []
     };
     
-    console.log("Formatted order with items:", JSON.stringify(orderWithItems.items));
+    console.log("Formatted order with items:", orderWithItems.items);
     return orderWithItems;
   } catch (error) {
     console.error("Error fetching order details:", error);

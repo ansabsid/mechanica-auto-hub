@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useOrders } from "@/hooks/useOrders";
-import { Package, Clock, Check, X, ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
+import { Package, Clock, Check, X, ChevronLeft, Loader2, AlertTriangle, Bug } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
@@ -27,11 +27,14 @@ const OrderDetailPage = () => {
   const { user } = useAuth();
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [debugDetails, setDebugDetails] = useState<Record<string, any>>({});
   
   useEffect(() => {
     const loadOrderDetails = async () => {
       if (!orderId) {
         console.error("No order ID provided in URL parameters");
+        setDebugInfo("Missing order ID in URL");
         return;
       }
       
@@ -42,8 +45,15 @@ const OrderDetailPage = () => {
       console.log("Current user ID:", data.session?.user?.id);
       console.log("Loading order details for:", orderId);
       
+      setDebugDetails({
+        orderIdRequested: orderId,
+        authenticated: isAuthenticated,
+        currentUserId: data.session?.user?.id || 'not-authenticated'
+      });
+      
       if (!isAuthenticated) {
         console.log("No authenticated user found, redirecting to login");
+        setDebugInfo("Authentication required. Redirecting to login.");
         navigate('/login', { state: { from: `/orders/${orderId}` } });
         return;
       }
@@ -54,10 +64,33 @@ const OrderDetailPage = () => {
         
         if (!orderData) {
           console.error("Order data is null after fetch attempt");
-          setDebugInfo("Order data is null after fetch attempt. Check console for details.");
+          setDebugDetails(prev => ({
+            ...prev,
+            orderFound: false,
+            fetchAttempted: true,
+            timestamp: new Date().toISOString(),
+          }));
+          setDebugInfo("Order data not found or you don't have permission to view it.");
         } else {
           console.log("Order data loaded successfully:", orderData.id);
           console.log("Order items count:", orderData.items?.length || 0);
+          setDebugDetails(prev => ({
+            ...prev,
+            orderFound: true,
+            orderStatus: orderData.status,
+            totalAmount: orderData.total_amount,
+            itemsCount: orderData.items?.length || 0,
+            items: orderData.items?.map(i => ({
+              id: i.id,
+              partId: i.part_id,
+              partName: i.part?.name,
+              garageId: i.garage_id,
+              garageName: i.garage?.name
+            })) || [],
+            fetchAttempted: true,
+            timestamp: new Date().toISOString(),
+          }));
+          
           if (orderData.items?.length === 0) {
             setDebugInfo("Order found but it has no items. This might be a database permission issue.");
           } else {
@@ -68,6 +101,12 @@ const OrderDetailPage = () => {
         console.error("Error in loadOrderDetails:", error);
         setHasAttemptedFetch(true);
         setDebugInfo(`Error loading order: ${error}`);
+        setDebugDetails(prev => ({
+          ...prev,
+          error: JSON.stringify(error),
+          fetchAttempted: true,
+          timestamp: new Date().toISOString(),
+        }));
       }
     };
     
@@ -85,6 +124,10 @@ const OrderDetailPage = () => {
       default:
         return <Badge className="bg-yellow-500"><Clock className="mr-1 h-3 w-3" /> Pending</Badge>;
     }
+  };
+  
+  const toggleDebugPanel = () => {
+    setShowDebugPanel(!showDebugPanel);
   };
   
   const handleCancel = async () => {
@@ -113,6 +156,14 @@ const OrderDetailPage = () => {
           <p className="text-muted-foreground">
             {orderId ? `Order ID: ${orderId}` : 'View your order information'}
           </p>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mt-2" 
+            onClick={toggleDebugPanel}
+          >
+            <Bug className="mr-1 h-4 w-4" /> {showDebugPanel ? 'Hide Debug' : 'Show Debug'}
+          </Button>
         </div>
       </div>
 
@@ -125,6 +176,21 @@ const OrderDetailPage = () => {
                 <p className="font-bold">Debug Information:</p>
                 <p className="text-sm text-muted-foreground">{debugInfo}</p>
               </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {showDebugPanel && (
+          <Card className="mb-6 border-blue-500">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bug className="mr-2 text-blue-500" /> Debug Panel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-80">
+                {JSON.stringify(debugDetails, null, 2)}
+              </pre>
             </CardContent>
           </Card>
         )}
