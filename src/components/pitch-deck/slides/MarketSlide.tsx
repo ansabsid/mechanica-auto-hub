@@ -1,3 +1,4 @@
+
 import React from "react";
 import { CarFront, Car, TrendingUp, PieChart, ExternalLink, BarChart2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -159,6 +160,19 @@ const MarketSlide: React.FC = () => {
         <div className="w-full h-[350px] mt-4">
           <AutoPartsMarketChart isMobile={isMobile} />
         </div>
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 text-xs text-gray-500">
+          <div className="flex items-center mb-2 md:mb-0">
+            <span className="font-medium mr-1">Aftermarket Parts:</span>
+            <span>IMARC Group, UAE Automotive Aftermarket Market</span>
+            <SourceLink source="IMARC Group (CAGR: 3.8%)" />
+          </div>
+          <div className="flex items-center">
+            <span className="font-medium mr-1">E-Commerce Aftermarket:</span>
+            <span>P&S Intelligence, UAE E-Commerce Automotive Aftermarket Analysis</span>
+            <SourceLink source="P&S Intelligence (CAGR: 16.3%)" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -172,6 +186,8 @@ const chartData = [
     value2033: 10.5,
     year2024: "2024",
     year2033: "2033",
+    source: "IMARC Group",
+    cagr: "3.8%"
   },
   {
     name: "E-Commerce Aftermarket",
@@ -179,6 +195,8 @@ const chartData = [
     value2030: 1.44,
     year2023: "2023",
     year2030: "2030",
+    source: "P&S Intelligence",
+    cagr: "16.3%"
   },
 ];
 
