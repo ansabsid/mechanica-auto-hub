@@ -52,10 +52,10 @@ export const usePartsSearch = (
         }
         
         garagesMap[item.part_id].push({
-          id: item.id,
+          id: item.id, // This is a UUID string, no conversion needed
           name: item.name,
           location: item.location,
-          installationFee: parseFloat(item.installation_fee || 0)
+          installationFee: parseFloat(item.installation_fee || '0')
         });
       });
     }
@@ -119,7 +119,7 @@ export const usePartsSearch = (
             location: 'Dubai, UAE'
           },
           availableGarages: garagesMap[part.id] || []
-        }));
+        })) as Part[];
         
         console.log("Parts with garages:", partsWithGarages);
         setParts(partsWithGarages);
@@ -166,7 +166,7 @@ export const usePartsSearch = (
             location: 'Dubai, UAE'
           },
           availableGarages: garagesMap[part.id] || []
-        }));
+        })) as Part[];
         
         setAllParts(partsWithGarages);
         return partsWithGarages;
