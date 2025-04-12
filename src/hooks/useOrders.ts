@@ -49,8 +49,22 @@ export const useOrders = () => {
     console.log("Fetching details for order:", orderId);
     setIsLoading(true);
     try {
+      // Clear current order before fetching to avoid stale data
+      setCurrentOrder(null);
+      
       const orderData = await getOrderDetails(orderId);
       console.log("Order data received:", orderData);
+      
+      if (!orderData) {
+        console.error("No order data returned for ID:", orderId);
+        toast({
+          title: "Error",
+          description: "Order not found",
+          variant: "destructive",
+        });
+        return null;
+      }
+      
       setCurrentOrder(orderData);
       return orderData;
     } catch (error: any) {

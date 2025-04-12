@@ -12,14 +12,14 @@ import { CartItem } from "@/types/cart.types";
 export async function getUserOrders(userId: string): Promise<Order[]> {
   try {
     // Try to use the RPC function first
-    const { data, error } = await (supabase as any).rpc('get_user_orders', {
+    const { data, error } = await supabase.rpc('get_user_orders', {
       p_user_id: userId
     });
     
     if (error) {
       // Fallback to direct query
-      const { data: ordersData, error: directError } = await (supabase
-        .from('orders') as any)
+      const { data: ordersData, error: directError } = await supabase
+        .from('orders')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -72,122 +72,74 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
     console.log("Fetching order details for ID:", orderId);
     
-    // Try to get order details from RPC function
-    const { data: orderData, error: orderError } = await (supabase as any).rpc('get_order', {
-      p_order_id: orderId
-    });
-    
-    if (orderError) {
-      console.log("RPC error, falling back to direct queries:", orderError.message);
+    // Test direct query approach first (bypassing RPC)
+    const { data: directOrderData, error: directOrderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .maybeSingle();
       
-      // Fallback to direct queries
-      const { data: directOrderData, error: directOrderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-        
-      if (directOrderError) {
-        console.error("Error fetching order:", directOrderError.message);
-        throw directOrderError;
-      }
-      
-      if (!directOrderData) {
-        console.error("No order found with ID:", orderId);
-        return null;
-      }
-      
-      console.log("Order found:", directOrderData);
-      
-      // Get order items with installation details
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select(`
-          *,
-          part:part_id (name, description),
-          garage:garage_id (name, location)
-        `)
-        .eq('order_id', orderId);
-        
-      if (itemsError) {
-        console.error("Error fetching order items:", itemsError.message);
-        throw itemsError;
-      }
-      
-      console.log("Order items found:", itemsData?.length || 0);
-      
-      // Format order with items
-      const orderWithItems: Order = {
-        id: directOrderData.id,
-        user_id: directOrderData.user_id,
-        total_amount: directOrderData.total_amount,
-        status: directOrderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
-        created_at: directOrderData.created_at,
-        updated_at: directOrderData.updated_at,
-        items: itemsData?.map((item: any) => ({
-          id: item.id,
-          order_id: item.order_id,
-          part_id: item.part_id,
-          garage_id: item.garage_id,
-          quantity: item.quantity,
-          price: item.price,
-          created_at: item.created_at,
-          installation_fee: item.installation_fee,
-          installation_status: item.installation_status,
-          scheduled_date: item.scheduled_date,
-          scheduled_time: item.scheduled_time,
-          part: item.part ? {
-            name: item.part.name,
-            description: item.part.description
-          } : undefined,
-          garage: item.garage ? {
-            name: item.garage.name,
-            location: item.garage.location
-          } : undefined
-        })) || []
-      };
-      
-      return orderWithItems;
+    if (directOrderError) {
+      console.error("Error fetching order:", directOrderError.message);
+      throw directOrderError;
     }
     
-    // Process RPC results if successful
-    if (orderData) {
-      console.log("Order retrieved via RPC function");
-      const orderWithItems: Order = {
-        id: orderData.id,
-        user_id: orderData.user_id,
-        total_amount: orderData.total_amount,
-        status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
-        created_at: orderData.created_at,
-        updated_at: orderData.updated_at,
-        items: orderData.items?.map((item: any) => ({
-          id: item.id,
-          order_id: item.order_id,
-          part_id: item.part_id,
-          garage_id: item.garage_id,
-          quantity: item.quantity,
-          price: item.price,
-          created_at: item.created_at,
-          installation_fee: item.installation_fee,
-          installation_status: item.installation_status,
-          scheduled_date: item.scheduled_date,
-          scheduled_time: item.scheduled_time,
-          part: item.part ? {
-            name: item.part.name,
-            description: item.part.description
-          } : undefined,
-          garage: item.garage ? {
-            name: item.garage.name,
-            location: item.garage.location
-          } : undefined
-        })) || []
-      };
-      
-      return orderWithItems;
+    if (!directOrderData) {
+      console.error("No order found with ID:", orderId);
+      return null;
     }
     
-    console.log("No order data returned from any method");
-    return null;
+    console.log("Order found:", directOrderData);
+    
+    // Get order items with installation details
+    const { data: itemsData, error: itemsError } = await supabase
+      .from('order_items')
+      .select(`
+        *,
+        part:part_id (name, description),
+        garage:garage_id (name, location)
+      `)
+      .eq('order_id', orderId);
+      
+    if (itemsError) {
+      console.error("Error fetching order items:", itemsError.message);
+      throw itemsError;
+    }
+    
+    console.log("Order items found:", itemsData?.length || 0);
+    
+    // Format order with items
+    const orderWithItems: Order = {
+      id: directOrderData.id,
+      user_id: directOrderData.user_id,
+      total_amount: directOrderData.total_amount,
+      status: directOrderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+      created_at: directOrderData.created_at,
+      updated_at: directOrderData.updated_at,
+      items: itemsData?.map((item: any) => ({
+        id: item.id,
+        order_id: item.order_id,
+        part_id: item.part_id,
+        garage_id: item.garage_id,
+        quantity: item.quantity,
+        price: item.price,
+        created_at: item.created_at,
+        installation_fee: item.installation_fee,
+        installation_status: item.installation_status,
+        scheduled_date: item.scheduled_date,
+        scheduled_time: item.scheduled_time,
+        part: item.part ? {
+          name: item.part.name,
+          description: item.part.description
+        } : undefined,
+        garage: item.garage ? {
+          name: item.garage.name,
+          location: item.garage.location
+        } : undefined
+      })) || []
+    };
+    
+    return orderWithItems;
   } catch (error) {
     console.error("Error fetching order details:", error);
     throw error;
@@ -217,55 +169,42 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       installation_fee: item.installation_data?.installationFee || null
     }));
     
-    // Try to create order using RPC
-    const { data, error } = await (supabase as any).rpc('create_order_with_items', {
-      p_user_id: userId,
-      p_total_amount: totalAmount,
-      p_items: JSON.stringify(orderItems)
-    });
+    // Create order manually (skip RPC for reliability)
+    // 1. Create the order
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        total_amount: totalAmount,
+        status: 'pending',
+      })
+      .select()
+      .single();
     
-    if (error) {
-      console.log("RPC error, falling back to manual transaction:", error.message);
-      
-      // Fallback to manual transaction
-      // 1. Create the order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: userId,
-          total_amount: totalAmount,
-          status: 'pending',
-        })
-        .select()
-        .single();
-      
-      if (orderError) throw orderError;
-      
-      console.log("Order created:", order.id);
-      
-      // 2. Create order items with installation data if available
-      const formattedItems = cartItems.map(item => ({
-        order_id: order.id,
-        part_id: item.part_id,
-        garage_id: item.installation_data?.garageId || null,
-        quantity: item.quantity,
-        price: item.part.price,
-        installation_fee: item.installation_data?.installationFee || null,
-        installation_status: item.installation_data?.garageId ? 'new' : null
-      }));
-      
-      console.log("Creating order items:", formattedItems);
-      
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(formattedItems);
-      
-      if (itemsError) throw itemsError;
-      
-      return order;
-    }
+    if (orderError) throw orderError;
     
-    return data;
+    console.log("Order created:", order.id);
+    
+    // 2. Create order items with installation data if available
+    const formattedItems = cartItems.map(item => ({
+      order_id: order.id,
+      part_id: item.part_id,
+      garage_id: item.installation_data?.garageId || null,
+      quantity: item.quantity,
+      price: item.part.price,
+      installation_fee: item.installation_data?.installationFee || null,
+      installation_status: item.installation_data?.garageId ? 'new' : null
+    }));
+    
+    console.log("Creating order items:", formattedItems);
+    
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(formattedItems);
+    
+    if (itemsError) throw itemsError;
+    
+    return order;
   } catch (error) {
     console.error("Error creating order:", error);
     throw error;
@@ -280,20 +219,13 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
  */
 export async function cancelOrder(orderId: string): Promise<void> {
   try {
-    // Try to use RPC to cancel order
-    const { error } = await (supabase as any).rpc('cancel_order', {
-      p_order_id: orderId
-    });
+    // Do direct update instead of RPC for reliability
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled' })
+      .eq('id', orderId);
     
-    if (error) {
-      // Fallback to direct update
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId);
-      
-      if (updateError) throw updateError;
-    }
+    if (updateError) throw updateError;
   } catch (error) {
     console.error("Error cancelling order:", error);
     throw error;
