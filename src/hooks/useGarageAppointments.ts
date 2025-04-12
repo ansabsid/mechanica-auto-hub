@@ -56,22 +56,74 @@ export const useGarageAppointments = () => {
     
     setFetchLoading(true);
     try {
+      // First, fetch appointments
       const { data, error } = await supabase
         .from('appointments')
         .select(`
-          *,
-          vehicle:vehicles(make, model, year, license_plate)
+          id,
+          user_id,
+          garage_id,
+          service_type,
+          appointment_date,
+          appointment_time,
+          status,
+          notes,
+          created_at,
+          updated_at,
+          confirmation_code,
+          vehicle_id,
+          service_slot_id
         `)
         .eq('garage_id', garageId);
         
       if (error) throw error;
       
-      console.log("Fetched appointments with vehicle data:", data);
+      // If we have appointments, fetch the vehicle information
+      if (data && data.length > 0) {
+        // Get all vehicle IDs to fetch in bulk
+        const vehicleIds = data
+          .filter(appointment => appointment.vehicle_id)
+          .map(appointment => appointment.vehicle_id);
+        
+        let vehicleLookup: Record<string, any> = {};
+        
+        // Only fetch vehicles if we have vehicle IDs
+        if (vehicleIds.length > 0) {
+          const { data: vehicles, error: vehicleError } = await supabase
+            .from('vehicles')
+            .select('id, make, model, year, license_plate')
+            .in('id', vehicleIds);
+            
+          if (vehicleError) {
+            console.error("Error fetching vehicle details:", vehicleError);
+          } else if (vehicles) {
+            // Create lookup object for faster access
+            vehicles.forEach(vehicle => {
+              vehicleLookup[vehicle.id] = vehicle;
+            });
+          }
+        }
+        
+        // Combine data to create complete appointment objects
+        const appointmentsWithVehicles = data.map(appointment => {
+          const vehicle = appointment.vehicle_id ? vehicleLookup[appointment.vehicle_id] : null;
+          
+          return {
+            ...appointment,
+            vehicle: vehicle || null
+          };
+        });
+        
+        console.log("Fetched garage appointments with vehicle data:", appointmentsWithVehicles);
+        setAppointments(appointmentsWithVehicles || []);
+        return appointmentsWithVehicles;
+      }
+      
       setAppointments(data || []);
       return data;
     } catch (error: any) {
-      console.error("Error fetching appointments:", error.message);
-      toast.error("Failed to load appointments");
+      console.error("Error fetching garage appointments:", error.message);
+      toast.error("Failed to load garage appointments");
       return [];
     } finally {
       setFetchLoading(false);
