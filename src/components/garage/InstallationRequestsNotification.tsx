@@ -133,7 +133,7 @@ export const InstallationRequestsNotification = () => {
           part:part_id (name)
         `)
         .eq('garage_id', garageId)
-        .not.is('installation_status', null);  // Only get items with installation status
+        .not('installation_status', 'is', null);  // Fix: replaced 'is' with proper syntax
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -162,7 +162,7 @@ export const InstallationRequestsNotification = () => {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, user_id, created_at, status')
-        .in('id', orderIds);
+        .in('id', orderIds as string[]);  // Fix: Type assertion to string[]
         
       if (ordersError) {
         console.error("Error fetching orders:", ordersError);
@@ -193,7 +193,7 @@ export const InstallationRequestsNotification = () => {
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('id, email, phone')
-        .in('id', userIds);
+        .in('id', userIds as string[]);  // Fix: Type assertion to string[]
         
       if (usersError) {
         console.error("Error fetching customer information:", usersError);
