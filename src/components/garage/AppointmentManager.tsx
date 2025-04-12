@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Calendar, 
@@ -53,8 +52,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
   const { 
     fetchAppointments,
     appointments: hookAppointments,
-    fetchLoading,
-    updateAppointmentStatus 
+    fetchLoading
   } = useGarageAppointments();
 
   const loadAppointments = async () => {
