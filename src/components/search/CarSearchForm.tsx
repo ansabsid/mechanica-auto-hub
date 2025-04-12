@@ -71,7 +71,11 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
       resetSearch();
       
       // Search for parts - this will update the parts state in useCarParts
-      const partsCount = await searchParts(manufacturer, model, year);
+      const partsCount = await searchParts(
+        parseInt(manufacturer, 10),
+        parseInt(model, 10),
+        parseInt(year, 10)
+      );
       console.log("Search initiated, parts count:", partsCount);
     } catch (error: any) {
       console.error("Search failed:", error);

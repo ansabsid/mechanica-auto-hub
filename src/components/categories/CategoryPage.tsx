@@ -82,9 +82,9 @@ const CategoryPage = () => {
     // Search for parts with the complete selection
     if (selectedManufacturer && selectedModel) {
       searchParts(
-        selectedManufacturer.id.toString(),
-        selectedModel.id.toString(),
-        year.toString()
+        parseInt(selectedManufacturer.id.toString(), 10),
+        parseInt(selectedModel.id.toString(), 10),
+        year
       );
     }
   };

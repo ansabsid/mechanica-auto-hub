@@ -18,7 +18,7 @@ export const usePartsSearch = (
   // Function to fetch garages for a specific part
   const fetchGaragesForPart = async (partId: number) => {
     const { data, error } = await supabase.rpc('get_garages_for_part', {
-      part_id: partId
+      part_id_param: partId
     });
 
     if (error) {
@@ -52,7 +52,7 @@ export const usePartsSearch = (
         }
         
         garagesMap[item.part_id].push({
-          id: item.garage_id,
+          id: item.id,
           name: item.name,
           location: item.location,
           installationFee: parseFloat(item.installation_fee || 0)
@@ -114,6 +114,10 @@ export const usePartsSearch = (
         // Map garages to each part
         const partsWithGarages = data.map(part => ({
           ...part,
+          garages: { 
+            name: 'Mechanica Service Center',
+            location: 'Dubai, UAE'
+          },
           availableGarages: garagesMap[part.id] || []
         }));
         
@@ -157,6 +161,10 @@ export const usePartsSearch = (
         // Map garages to each part
         const partsWithGarages = data.map(part => ({
           ...part,
+          garages: { 
+            name: 'Mechanica Service Center',
+            location: 'Dubai, UAE'
+          },
           availableGarages: garagesMap[part.id] || []
         }));
         
