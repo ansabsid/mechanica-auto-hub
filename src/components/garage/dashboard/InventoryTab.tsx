@@ -151,7 +151,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                     <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">
                       <div className="flex items-center">
                         <Wrench className="h-4 w-4 mr-1 text-mechanica-500" />
-                        <span>AED {product.installation_fee || 0}</span>
+                        <span>AED {product.installation_fee !== undefined ? product.installation_fee : 0}</span>
                       </div>
                     </td>
                     <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">{product.stock}</td>

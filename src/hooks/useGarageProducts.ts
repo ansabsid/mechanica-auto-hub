@@ -275,13 +275,18 @@ export const useGarageProducts = (garageId?: string) => {
 
       if (directError) throw directError;
       
-      // Then fetch from parts_garages association table
+      // Then fetch from parts_garages association table with explicit installation_fee selection
       const { data: associatedParts, error: associationError } = await supabase
         .from('parts_garages')
         .select('part_id, installation_fee, parts(*)')
         .eq('garage_id', garageId);
         
-      if (associationError) throw associationError;
+      if (associationError) {
+        console.error("Error fetching associated parts:", associationError);
+        throw associationError;
+      }
+      
+      console.log("Associated parts with installation fees:", associatedParts);
       
       // Combine results, giving priority to direct parts
       const combinedProducts = [
@@ -289,10 +294,13 @@ export const useGarageProducts = (garageId?: string) => {
           ...part,
           installation_fee: 0 // Default installation fee for direct parts
         })), 
-        ...(associatedParts?.map(item => ({
-          ...item.parts,
-          installation_fee: item.installation_fee
-        })) || [])
+        ...(associatedParts?.map(item => {
+          console.log(`Part ${item.part_id} installation fee:`, item.installation_fee);
+          return {
+            ...item.parts,
+            installation_fee: item.installation_fee
+          };
+        }) || [])
       ];
       
       // Remove duplicates based on id
@@ -300,7 +308,7 @@ export const useGarageProducts = (garageId?: string) => {
         index === self.findIndex((p) => p.id === product.id)
       );
       
-      console.log("Fetched products:", uniqueProducts);
+      console.log("Fetched products with installation fees:", uniqueProducts);
       setProducts(uniqueProducts);
       return uniqueProducts;
     } catch (error: any) {
@@ -469,15 +477,17 @@ export const useGarageProducts = (garageId?: string) => {
     try {
       console.log("Updating product with data:", product);
       
-      // Convert quantity to a number - IMPORTANT: ensure this is a valid number before passing to the database
+      // Convert quantity to a number
       const quantity = typeof product.quantity === 'string' 
         ? parseInt(product.quantity, 10) 
         : product.quantity;
       
-      // Extract installation fee if provided
+      // Extract installation fee if provided and ensure it's a number
       const installationFee = product.installation_fee 
         ? parseFloat(product.installation_fee.toString()) 
         : 0;
+      
+      console.log(`Installation fee for part ${product.id}: ${installationFee} (${typeof installationFee})`);
       
       // Prepare the data for the database update with proper type conversion
       const updateData = {
@@ -505,15 +515,36 @@ export const useGarageProducts = (garageId?: string) => {
         return false;
       }
       
-      // Update installation fee in parts_garages
+      // Update installation fee in parts_garages if garage_id is provided
       if (product.garage_id) {
+        console.log(`Updating installation fee for part ${product.id} in garage ${product.garage_id} to ${installationFee}`);
+        
+        // First check if the association exists
+        const { data: existingAssoc, error: checkError } = await supabase
+          .from('parts_garages')
+          .select('*')
+          .eq('part_id', product.id)
+          .eq('garage_id', product.garage_id)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.error("Error checking for existing association:", checkError);
+        }
+        
+        // Use upsert to either update or insert
         const { error: installationError } = await supabase
           .from('parts_garages')
-          .upsert({
-            part_id: product.id,
-            garage_id: product.garage_id,
-            installation_fee: installationFee
-          });
+          .upsert(
+            {
+              part_id: product.id,
+              garage_id: product.garage_id,
+              installation_fee: installationFee
+            },
+            { 
+              onConflict: 'part_id,garage_id',
+              ignoreDuplicates: false 
+            }
+          );
           
         if (installationError) {
           console.error("Error updating installation fee:", installationError);
@@ -522,9 +553,6 @@ export const useGarageProducts = (garageId?: string) => {
           console.log("Installation fee updated successfully to:", installationFee);
         }
       }
-      
-      // Important: Wait for the database update to complete before refreshing
-      console.log("Database update successful, now refreshing UI data");
       
       // Refresh products after update to ensure UI is updated
       if (product.garage_id) {
