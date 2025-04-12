@@ -1,49 +1,33 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
 
 /**
  * Fetches all orders for a specific user
- * Tries to use an RPC function first, falls back to direct query if unavailable
+ * Uses a direct query to get orders from the database
  * @param userId The UUID of the user to fetch orders for
  * @returns Promise resolving to an array of Order objects
  */
 export async function getUserOrders(userId: string): Promise<Order[]> {
   try {
-    // Try to use the RPC function first
-    const { data, error } = await supabase.rpc('get_user_orders', {
-      p_user_id: userId
-    });
+    console.log("Fetching orders for user:", userId);
     
-    if (error) {
-      // Fallback to direct query
-      const { data: ordersData, error: directError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (directError) throw directError;
+    // Use direct query instead of RPC
+    const { data: ordersData, error: directError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
       
-      if (ordersData) {
-        const typedOrders: Order[] = ordersData.map((order: any) => ({
-          id: order.id,
-          user_id: order.user_id,
-          total_amount: order.total_amount,
-          status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
-          created_at: order.created_at,
-          updated_at: order.updated_at
-        }));
-        
-        return typedOrders;
-      }
-      return [];
+    if (directError) {
+      console.error("Error fetching orders:", directError.message);
+      throw directError;
     }
     
-    if (data && Array.isArray(data)) {
-      // Process RPC results
-      const typedOrders: Order[] = data.map((order: any) => ({
+    if (ordersData) {
+      console.log("Orders found:", ordersData.length);
+      
+      const typedOrders: Order[] = ordersData.map((order: any) => ({
         id: order.id,
         user_id: order.user_id,
         total_amount: order.total_amount,
@@ -64,7 +48,6 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
 
 /**
  * Fetches details for a single order including all its items
- * Tries to use an RPC function first, falls back to direct queries if unavailable
  * @param orderId The UUID of the order to fetch
  * @returns Promise resolving to a complete Order object with items, or null if not found
  */
@@ -72,7 +55,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
     console.log("Fetching order details for ID:", orderId);
     
-    // Test direct query approach first (bypassing RPC)
+    // Get order data
     const { data: directOrderData, error: directOrderError } = await supabase
       .from('orders')
       .select('*')
