@@ -58,7 +58,10 @@ export const useOrders = () => {
     setIsLoading(true);
     
     try {
-      setCurrentOrder(null);
+      // Only clear current order if we're fetching a different order
+      if (currentOrder?.id !== orderId) {
+        setCurrentOrder(null);
+      }
       
       const { data: { session } } = await supabase.auth.getSession();
       

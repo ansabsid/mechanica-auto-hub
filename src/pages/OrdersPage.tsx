@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
@@ -22,6 +21,8 @@ const OrderPage = () => {
   const [isRefetching, setIsRefetching] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadOrderDetails = async () => {
       if (!orderId) {
         console.error("Order ID is missing from URL params:", orderId);
@@ -40,31 +41,41 @@ const OrderPage = () => {
         
         setIsRefetching(true);
         const result = await fetchOrderDetails(orderId);
-        setIsRefetching(false);
         
-        if (!result) {
-          console.error(`Failed to load order: ${orderId}`);
-          if (retryCount < 3) {
-            // Wait and retry if we haven't reached max retries
-            setTimeout(() => {
-              setRetryCount(prev => prev + 1);
-            }, 2000); // Wait 2 seconds before retrying
+        if (isMounted) {
+          setIsRefetching(false);
+          
+          if (!result) {
+            console.error(`Failed to load order: ${orderId}`);
+            if (retryCount < 2) {
+              setTimeout(() => {
+                if (isMounted) {
+                  setRetryCount(prev => prev + 1);
+                }
+              }, 2000); // Wait 2 seconds before retrying
+            } else {
+              setErrorMessage(`Order could not be loaded after multiple attempts. Order ID: ${orderId}`);
+            }
           } else {
-            setErrorMessage(`Order could not be loaded after multiple attempts. Order ID: ${orderId}`);
+            console.log("Order details loaded successfully:", result);
+            setErrorMessage(null);
           }
-        } else {
-          console.log("Order details loaded successfully:", result);
-          setErrorMessage(null);
         }
       } catch (error: any) {
-        setIsRefetching(false);
-        console.error("Error loading order:", error.message);
-        setErrorMessage(`Error loading order: ${error.message}`);
+        if (isMounted) {
+          setIsRefetching(false);
+          console.error("Error loading order:", error.message);
+          setErrorMessage(`Error loading order: ${error.message}`);
+        }
       }
     };
 
     loadOrderDetails();
-  }, [orderId, fetchOrderDetails, retryCount]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [orderId, retryCount]);
 
   const handleManualRetry = () => {
     toast("Retrying to load order details...");
@@ -149,6 +160,15 @@ const OrderPage = () => {
       </Alert>
     );
   };
+
+  console.log("Current Component State:", {
+    orderId,
+    currentOrder: currentOrder ? "Present" : "Not loaded",
+    isLoading,
+    isRefetching,
+    retryCount,
+    errorMessage
+  });
 
   if (isLoading || isRefetching) {
     return (
