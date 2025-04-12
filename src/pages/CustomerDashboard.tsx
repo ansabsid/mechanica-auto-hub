@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -102,6 +103,9 @@ const CustomerDashboard = () => {
         return;
       }
       
+      console.log("Fetching scheduled installations for user:", session.user.id);
+      
+      // Modified query to directly get scheduled installations
       const { data: orderItems, error } = await supabase
         .from('order_items')
         .select(`
@@ -115,16 +119,26 @@ const CustomerDashboard = () => {
           order_id,
           part_id,
           garage_id,
-          orders!inner(id, status),
+          orders!inner(id, user_id, status),
           garages(id, name, location)
         `)
         .eq('orders.user_id', session.user.id)
         .eq('installation_status', 'scheduled')
-        .not('garage_id', 'is', null);
+        .not('garage_id', 'is', null)
+        .not('scheduled_date', 'is', null)
+        .not('scheduled_time', 'is', null);
       
       if (error) {
         console.error("Error fetching installations:", error);
         toast.error("Failed to load your scheduled installations");
+        return;
+      }
+      
+      console.log("Found scheduled installations:", orderItems?.length || 0);
+      
+      if (!orderItems || orderItems.length === 0) {
+        setInstallations([]);
+        setInstallationsLoading(false);
         return;
       }
       
@@ -147,6 +161,7 @@ const CustomerDashboard = () => {
         };
       });
       
+      console.log("Processed installations with details:", installationsWithDetails);
       setInstallations(installationsWithDetails);
     } catch (error) {
       console.error("Error in fetchInstallations:", error);
