@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Part, Manufacturer, Model } from "./types";
@@ -55,7 +54,7 @@ export const usePartsSearch = (
           id: item.id, // This is a UUID string, no conversion needed
           name: item.name,
           location: item.location,
-          installationFee: parseFloat(item.installation_fee || '0')
+          installationFee: parseFloat(String(item.installation_fee || '0'))
         });
       });
     }
