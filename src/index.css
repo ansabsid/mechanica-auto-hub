@@ -100,8 +100,32 @@
     @apply mb-6 px-1;
   }
   
+  /* Fancy mobile dashboard tabs */
+  .fancy-tabs {
+    @apply flex flex-col bg-gray-50 rounded-xl p-2 shadow-sm;
+  }
+  
+  .fancy-tab {
+    @apply flex items-center gap-2.5 p-3 mb-1 rounded-lg text-sm font-medium transition-all;
+    @apply text-gray-600 hover:bg-gray-100;
+  }
+  
+  .fancy-tab-active {
+    @apply bg-white text-primary shadow-sm;
+  }
+  
+  .fancy-tab-icon {
+    @apply flex items-center justify-center p-1.5 rounded-md bg-gray-100 text-gray-500;
+    @apply w-8 h-8;
+  }
+  
+  .fancy-tab-active .fancy-tab-icon {
+    @apply bg-blue-50 text-primary;
+  }
+  
+  /* Dashboard desktop tabs */
   .dashboard-tabs {
-    @apply grid grid-cols-2 gap-1 p-1 bg-gray-50 rounded-lg w-full;
+    @apply grid grid-cols-4 gap-1 p-1 bg-gray-50 rounded-lg w-full;
   }
   
   .dashboard-tab {

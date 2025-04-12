@@ -684,34 +684,42 @@ const CustomerDashboard = () => {
       
       <div className="md:hidden dashboard-tabs-container">
         <Tabs value={currentMobileTab} onValueChange={setCurrentMobileTab}>
-          <TabsList className="dashboard-tabs">
+          <TabsList className="fancy-tabs">
             <TabsTrigger 
               value="orders" 
-              className="dashboard-tab data-[state=active]:dashboard-tab-active"
+              className="fancy-tab data-[state=active]:fancy-tab-active"
             >
-              <ShoppingBag className="h-3.5 w-3.5 mr-1.5" /> 
-              <span>Orders</span>
+              <div className="fancy-tab-icon">
+                <ShoppingBag className="h-4 w-4" />
+              </div>
+              <span className="flex-1 text-left">Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="appointments" 
-              className="dashboard-tab data-[state=active]:dashboard-tab-active"
+              className="fancy-tab data-[state=active]:fancy-tab-active"
             >
-              <Calendar className="h-3.5 w-3.5 mr-1.5" /> 
-              <span>Appointments</span>
+              <div className="fancy-tab-icon">
+                <Calendar className="h-4 w-4" />
+              </div>
+              <span className="flex-1 text-left">Appointments</span>
             </TabsTrigger>
             <TabsTrigger 
               value="installations" 
-              className="dashboard-tab data-[state=active]:dashboard-tab-active"
+              className="fancy-tab data-[state=active]:fancy-tab-active"
             >
-              <Wrench className="h-3.5 w-3.5 mr-1.5" /> 
-              <span>Installations</span>
+              <div className="fancy-tab-icon">
+                <Wrench className="h-4 w-4" />
+              </div>
+              <span className="flex-1 text-left">Installations</span>
             </TabsTrigger>
             <TabsTrigger 
               value="vehicles" 
-              className="dashboard-tab data-[state=active]:dashboard-tab-active"
+              className="fancy-tab data-[state=active]:fancy-tab-active"
             >
-              <Car className="h-3.5 w-3.5 mr-1.5" /> 
-              <span>Vehicles</span>
+              <div className="fancy-tab-icon">
+                <Car className="h-4 w-4" />
+              </div>
+              <span className="flex-1 text-left">Vehicles</span>
             </TabsTrigger>
           </TabsList>
           
