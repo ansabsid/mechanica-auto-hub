@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { GarageInfo } from "@/hooks/useGarageManagement";
+import { Garage } from "@/hooks/useGarageManagement";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 
 interface GarageTableProps {
-  garages: GarageInfo[];
+  garages: Garage[];
   loading: boolean;
 }
 

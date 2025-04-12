@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -5,9 +6,14 @@ import { toast } from "sonner";
 export interface Garage {
   id: string;
   name: string;
-  area?: string;
+  area: string | null;
   location: string;
+  images?: string | null;
+  installationFee?: number | null;
 }
+
+// Add alias to maintain compatibility with GarageTable component
+export type GarageInfo = Garage;
 
 export interface NewGarage {
   name: string;

@@ -1,19 +1,10 @@
-
 import React from "react";
 import { Building2, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import GarageCard from "./GarageCard";
 import GarageTable from "./GarageTable";
-
-interface Garage {
-  id: string;
-  name: string;
-  area: string | null;
-  location: string;
-  images?: string | null;
-  installationFee?: number | null;
-}
+import { Garage } from "@/hooks/useGarageManagement";
 
 interface GarageListProps {
   filteredGarages: Garage[];

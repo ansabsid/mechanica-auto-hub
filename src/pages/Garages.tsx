@@ -1,20 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useGarageManagement } from "@/hooks/useGarageManagement";
+import { useGarageManagement, Garage } from "@/hooks/useGarageManagement";
 
 import GarageHero from "@/components/garage/GarageHero";
 import GarageList from "@/components/garage/GarageList";
 import GarageJoinBanner from "@/components/garage/GarageJoinBanner";
-
-interface Garage {
-  id: string;
-  name: string;
-  area: string | null;
-  location: string;
-  images?: string | null;
-  installationFee?: number | null;
-}
 
 const GaragePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
