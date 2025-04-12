@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
@@ -96,13 +97,23 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       return null;
     }
     
-    // Get order items with installation details
+    // Get order items with installation details - FIXED QUERY by properly nesting the select
     const { data: itemsData, error: itemsError } = await supabase
       .from('order_items')
       .select(`
-        *,
-        part:part_id (name, description),
-        garage:garage_id (name, location)
+        id,
+        order_id,
+        part_id,
+        garage_id,
+        quantity,
+        price,
+        created_at,
+        scheduled_date,
+        scheduled_time,
+        installation_fee,
+        installation_status,
+        part:parts(name, description),
+        garage:garages(name, location)
       `)
       .eq('order_id', orderId);
       
@@ -111,7 +122,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       throw itemsError;
     }
     
-    console.log("Order items found:", itemsData?.length || 0);
+    console.log("Order items found:", itemsData?.length || 0, "Raw data:", itemsData);
     
     // Format order with items
     const orderWithItems: Order = {
