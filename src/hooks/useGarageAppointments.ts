@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -85,6 +84,8 @@ export const useGarageAppointments = () => {
           .filter(appointment => appointment.vehicle_id)
           .map(appointment => appointment.vehicle_id);
         
+        console.log("Vehicle IDs to fetch:", vehicleIds);
+        
         let vehicleLookup: Record<string, any> = {};
         
         // Only fetch vehicles if we have vehicle IDs
@@ -97,6 +98,7 @@ export const useGarageAppointments = () => {
           if (vehicleError) {
             console.error("Error fetching vehicle details:", vehicleError);
           } else if (vehicles) {
+            console.log("Fetched vehicles:", vehicles);
             // Create lookup object for faster access
             vehicles.forEach(vehicle => {
               vehicleLookup[vehicle.id] = vehicle;

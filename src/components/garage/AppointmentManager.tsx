@@ -20,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { format } from "date-fns";
-import { useAppointmentBooking } from "@/hooks/useAppointmentBooking";
+import { useGarageAppointments } from "@/hooks/useGarageAppointments";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Dialog, 
   DialogContent, 
@@ -50,14 +51,16 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
   const [detailsOpen, setDetailsOpen] = useState(false);
   
   const { 
-    fetchGarageAppointments, 
+    fetchAppointments,
+    appointments: hookAppointments,
+    fetchLoading,
     updateAppointmentStatus 
-  } = useAppointmentBooking();
+  } = useGarageAppointments();
 
   const loadAppointments = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchGarageAppointments(garageId);
+      const data = await fetchAppointments(garageId);
       setAppointments(data || []);
       
       // Add a console log to help with debugging
@@ -81,23 +84,53 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
     }
   }, [garageId]);
 
+  useEffect(() => {
+    if (hookAppointments.length > 0) {
+      setAppointments(hookAppointments);
+    }
+  }, [hookAppointments]);
+
   const handleRefresh = () => {
     loadAppointments();
   };
 
   const handleUpdateStatus = async (appointmentId: string, status: string) => {
-    const success = await updateAppointmentStatus(appointmentId, status);
-    if (success) {
-      await loadAppointments();
+    if (!appointmentId) {
+      toast.error("Invalid appointment ID");
+      return;
+    }
+    
+    try {
+      const { data: appointment, error } = await supabase
+        .from('appointments')
+        .update({ status })
+        .eq('id', appointmentId)
+        .select()
+        .single();
       
+      if (error) throw error;
+      
+      // Update the appointment in the local state
+      setAppointments(prevAppointments => 
+        prevAppointments.map(app => 
+          app.id === appointmentId ? { ...app, status } : app
+        )
+      );
+      
+      // Update the selected appointment if it's the one being modified
       if (selectedAppointment?.id === appointmentId) {
-        const updatedAppointment = appointments.find(a => a.id === appointmentId);
-        if (updatedAppointment) {
-          setSelectedAppointment({...updatedAppointment, status});
-        }
+        setSelectedAppointment({...selectedAppointment, status});
       }
       
+      toast.success(`Appointment status updated to ${status}`);
       setDetailsOpen(false);
+      
+      // Refresh appointments to get the latest data
+      loadAppointments();
+      
+    } catch (error: any) {
+      console.error("Error updating appointment status:", error.message);
+      toast.error("Failed to update appointment status");
     }
   };
 
@@ -196,7 +229,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
         </div>
       </div>
       
-      {isLoading ? (
+      {isLoading || fetchLoading ? (
         <div className="flex justify-center py-8">
           <LoadingSpinner size="md" />
         </div>
@@ -246,7 +279,9 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
                     </div>
                   </td>
                   <td className="p-3">{appointment.service_type}</td>
-                  <td className="p-3">{renderVehicleInfo(appointment.vehicle)}</td>
+                  <td className="p-3">
+                    {renderVehicleInfo(appointment.vehicle)}
+                  </td>
                   <td className="p-3">
                     <Badge className={getStatusColor(appointment.status)}>
                       {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
