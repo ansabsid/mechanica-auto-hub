@@ -26,7 +26,7 @@ const TeamSlide: React.FC = () => {
       name: "Asad Sayed",
       role: "COO",
       initials: "AS",
-      fact: "Can solve a Rubik's cube in under 2 minutes",
+      fact: "He treats the desert like his personal stunt arena — if there's a dune, he's probably launched his car off it! 🏜️🚗💥",
       description: "Operations expert with a background in supply chain management",
       color: "from-emerald-400 to-green-500",
       icon: Code
