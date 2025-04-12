@@ -10,7 +10,7 @@ export const slideData: Slide[] = [
     bgColor: "bg-gradient-to-br from-blue-50 to-indigo-100"
   },
   {
-    title: "The Problem",
+    title: "Market Problem",
     bgColor: "bg-gradient-to-br from-red-50 to-orange-100"
   },
   {
