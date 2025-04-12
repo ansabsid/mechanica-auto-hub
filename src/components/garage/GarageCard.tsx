@@ -10,6 +10,8 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 interface GarageCardProps {
   garage: {
@@ -24,9 +26,24 @@ interface GarageCardProps {
 
 const GarageCard = ({ garage }: GarageCardProps) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const handleBookAppointment = (garageId: string, garageName: string) => {
     console.log(`Booking appointment for garage: ${garageId}`);
+    
+    if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to login");
+      toast.info("Please login to book a service");
+      navigate("/login", { 
+        state: { 
+          from: `/book-appointment/${garageId}`,
+          garageName,
+          garageId 
+        } 
+      });
+      return;
+    }
+    
     navigate(`/book-appointment/${garageId}`, { 
       state: { 
         garageName,

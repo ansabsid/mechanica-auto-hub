@@ -1,316 +1,214 @@
-
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Wrench, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { isDemoAccount } from "@/hooks/auth/authUtils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState("customer");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPassword, setCustomerPassword] = useState("");
-  const [garageEmail, setGarageEmail] = useState("");
-  const [garagePassword, setGaragePassword] = useState("");
-  const [error, setError] = useState("");
-  
-  const location = useLocation();
-  const { signIn, isLoading, isAuthenticated, user, userRole } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"customer" | "garage">("customer");
+  const [error, setError] = useState<string | null>(null);
+  const { signIn, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const location = useLocation();
+  
+  // Get the redirect path and parameters from location state
+  const from = location.state?.from || "/";
+  const garageName = location.state?.garageName;
+  const garageId = location.state?.garageId;
 
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const type = queryParams.get("type");
-    const email = queryParams.get("email");
-    const password = queryParams.get("password");
+    // If user is already authenticated, redirect them
+    if (isAuthenticated) {
+      if (from.startsWith('/book-appointment/')) {
+        // If they were trying to book an appointment, redirect there with the garage info
+        navigate(from, { 
+          state: { 
+            garageName,
+            garageId 
+          },
+          replace: true 
+        });
+      } else {
+        // Otherwise redirect to home or previous location
+        navigate(from, { replace: true });
+      }
+    }
+  }, [isAuthenticated, navigate, from, garageName, garageId]);
 
-    if (type === "garage" && email && password) {
-      setActiveTab("garage");
-      setGarageEmail(email);
-      setGaragePassword(password);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
     }
     
-    if (isAuthenticated && user) {
-      console.log("Login page - User is authenticated with role:", userRole);
-      
-      if (userRole === 'garage') {
-        console.log("Redirecting to garage dashboard");
-        navigate("/garage-dashboard");
-      } else {
-        console.log("Redirecting to customer dashboard");
-        navigate("/customer-dashboard");
-      }
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
     }
-  }, [location, isAuthenticated, user, userRole, navigate]);
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    
+    try {
+      await signIn(email, password, role);
+      // Redirect happens in the useEffect when isAuthenticated changes
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError(error.message || "Failed to login. Please check your credentials.");
+    }
   };
 
-  const handleCustomerLogin = async (e: React.FormEvent) => {
+  const handleDemoLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
-    setError("");
-    try {
-      if (!customerEmail || !customerPassword) {
-        setError("Please enter both email and password");
-        return;
-      }
-      console.log("Attempting customer login with:", customerEmail);
-      await signIn(customerEmail, customerPassword, "customer");
-    } catch (err: any) {
-      console.error("Login failed:", err);
-      setError(err.message || "Login failed. Please try again.");
+    
+    if (role === "customer") {
+      setEmail("demo@customer.com");
+      setPassword("demo123");
+    } else {
+      setEmail("demo@garage.com");
+      setPassword("demo123");
     }
-  };
-
-  const handleGarageLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+    
     try {
-      if (!garageEmail || !garagePassword) {
-        setError("Please enter both email and password");
-        return;
-      }
-      console.log("Attempting garage login with:", garageEmail);
-      await signIn(garageEmail, garagePassword, "garage");
-    } catch (err: any) {
-      console.error("Login failed:", err);
-      setError(err.message || "Login failed. Please try again.");
-    }
-  };
-
-  const handleDemoGarageLogin = async () => {
-    setError("");
-    try {
-      navigate("/garage-dashboard?demo=true");
-      
-      toast({
-        title: "Demo mode activated",
-        description: "Welcome to the Bookmyparts garage demo!",
-      });
-    } catch (err: any) {
-      console.error("Demo login failed:", err);
-      setError(err.message || "Demo login failed. Please try again.");
+      toast.info(`Logging in as demo ${role}`);
+      await signIn(
+        role === "customer" ? "demo@customer.com" : "demo@garage.com", 
+        "demo123", 
+        role
+      );
+      // Redirect happens in useEffect
+    } catch (error: any) {
+      console.error("Demo login error:", error);
+      setError(error.message || "Failed to login with demo account");
     }
   };
 
   return (
-    <section className="py-12 md:py-20 w-full max-w-full overflow-x-hidden">
-      <div className="container px-4 sm:px-6 md:max-w-md mx-auto">
-        <Tabs
-          defaultValue="customer"
-          value={activeTab}
-          className="w-full"
-          onValueChange={(value) => {
-            setActiveTab(value);
-            setError("");
-          }}
-        >
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="customer" className="flex items-center justify-center gap-2 px-2 py-2">
-              <User size={isMobile ? 16 : 18} /> Customer
+    <div className="flex justify-center items-center p-4 md:p-8 min-h-[calc(100vh-150px)]">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Login to BookMyParts</CardTitle>
+          <CardDescription>
+            Enter your email and password to access your account
+            {from !== "/" && (
+              <div className="mt-2 text-mechanica-600 font-semibold">
+                Login required to continue
+              </div>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <Tabs defaultValue="customer" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger 
+              value="customer" 
+              onClick={() => setRole("customer")}
+            >
+              Customer
             </TabsTrigger>
             <TabsTrigger 
-              value="garage" 
-              className="flex items-center justify-center gap-2 px-2 py-2"
+              value="garage"
+              onClick={() => setRole("garage")}
             >
-              <Wrench size={isMobile ? 16 : 18} /> Garage
+              Garage
             </TabsTrigger>
           </TabsList>
-
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <TabsContent value="customer">
-            <Card className="border shadow-sm">
-              <CardHeader className="px-5 pt-5 pb-3">
-                <CardTitle className="text-xl md:text-2xl">Customer Login</CardTitle>
-                <CardDescription>
-                  Log in to search for parts and book services for your vehicle
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleCustomerLogin}>
-                <CardContent className="space-y-4 px-5 pt-0">
-                  <div className="space-y-2">
-                    <label htmlFor="customer-email" className="text-sm font-medium">
-                      Email
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail size={16} className="text-gray-400" />
-                      </div>
-                      <Input
-                        id="customer-email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="pl-10"
-                        required
-                        value={customerEmail}
-                        onChange={(e) => setCustomerEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="customer-password" className="text-sm font-medium">
-                        Password
-                      </label>
-                      <Link to="/forgot-password" className="text-sm text-mechanica-600 hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock size={16} className="text-gray-400" />
-                      </div>
-                      <Input
-                        id="customer-password"
-                        type={showPassword ? "text" : "password"}
-                        className="pl-10 pr-10"
-                        required
-                        value={customerPassword}
-                        onChange={(e) => setCustomerPassword(e.target.value)}
-                      />
-                      <div 
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                        onClick={togglePasswordVisibility}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={16} className="text-gray-400" />
-                        ) : (
-                          <Eye size={16} className="text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col px-5 pb-5 pt-2">
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-mechanica-500 hover:bg-mechanica-600"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Logging in..." : "Login"}
-                  </Button>
-                  <p className="mt-4 text-center text-sm text-gray-600">
-                    Don't have an account?{" "}
-                    <Link to="/register" className="text-mechanica-600 hover:underline font-medium">
-                      Sign up
+          
+          <CardContent className="pt-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4 flex items-start">
+                <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link to="#" className="text-sm text-mechanica-600 hover:underline">
+                      Forgot password?
                     </Link>
-                  </p>
-                </CardFooter>
-              </form>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="garage">
-            <Card className="border shadow-sm">
-              <CardHeader className="px-5 pt-5 pb-3">
-                <CardTitle className="text-xl md:text-2xl">Garage Login</CardTitle>
-                <CardDescription>
-                  Log in to manage your parts inventory and service appointments
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleGarageLogin}>
-                <CardContent className="space-y-4 px-5 pt-0">
-                  <div className="space-y-2">
-                    <label htmlFor="garage-email" className="text-sm font-medium">
-                      Email
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail size={16} className="text-gray-400" />
-                      </div>
-                      <Input
-                        id="garage-email"
-                        type="email"
-                        placeholder="garage@example.com"
-                        className="pl-10"
-                        required
-                        value={garageEmail}
-                        onChange={(e) => setGarageEmail(e.target.value)}
-                      />
-                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="garage-password" className="text-sm font-medium">
-                        Password
-                      </label>
-                      <Link to="/forgot-password" className="text-sm text-mechanica-600 hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock size={16} className="text-gray-400" />
-                      </div>
-                      <Input
-                        id="garage-password"
-                        type={showPassword ? "text" : "password"}
-                        className="pl-10 pr-10"
-                        required
-                        value={garagePassword}
-                        onChange={(e) => setGaragePassword(e.target.value)}
-                      />
-                      <div 
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                        onClick={togglePasswordVisibility}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={16} className="text-gray-400" />
-                        ) : (
-                          <Eye size={16} className="text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col gap-3 px-5 pb-5 pt-2">
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-mechanica-500 hover:bg-mechanica-600"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Logging in..." : "Login"}
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleDemoGarageLogin}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Processing..." : "Try Demo Garage Account"}
-                  </Button>
-                  
-                  <p className="mt-2 text-center text-sm text-gray-600">
-                    Not registered yet?{" "}
-                    <Link to="/garages" className="text-mechanica-600 hover:underline font-medium">
-                      Join as a garage
-                    </Link>
-                  </p>
-                </CardFooter>
-              </form>
-            </Card>
-          </TabsContent>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-mechanica-600" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={handleDemoLogin}
+                  disabled={isLoading}
+                >
+                  Try Demo Account
+                </Button>
+              </div>
+            </form>
+          </CardContent>
         </Tabs>
-      </div>
-    </section>
+        
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-sm text-center w-full">
+            Don't have an account?{" "}
+            <Link to="/register" className="text-mechanica-600 hover:underline">
+              Sign up
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 
