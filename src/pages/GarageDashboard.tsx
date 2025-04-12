@@ -22,7 +22,7 @@ import {
   Edit,
   Trash2,
   Clock,
-  Tool
+  Wrench
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -575,7 +575,7 @@ const GarageDashboard = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="product-installation-fee" className="flex items-center gap-1">
-                          <Tool className="h-4 w-4 text-mechanica-500" />
+                          <Wrench className="h-4 w-4 text-mechanica-500" />
                           Installation Fee (AED)
                         </Label>
                         <Input 
@@ -727,7 +727,7 @@ const GarageDashboard = () => {
                               <td className="p-2 md:p-4 text-xs md:text-sm">AED {product.price}</td>
                               <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">
                                 <div className="flex items-center">
-                                  <Tool className="h-4 w-4 mr-1 text-mechanica-500" />
+                                  <Wrench className="h-4 w-4 mr-1 text-mechanica-500" />
                                   <span>AED {product.installation_fee || 0}</span>
                                 </div>
                               </td>
@@ -956,7 +956,8 @@ const GarageDashboard = () => {
       />
       
       <ConfirmDialog
-        open={deleteDialogOpen}
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
         onOpenChange={setDeleteDialogOpen}
         title="Delete Product"
         description="Are you sure you want to delete this product? This action cannot be undone."
@@ -964,7 +965,8 @@ const GarageDashboard = () => {
       />
       
       <ConfirmDialog
-        open={statusUpdateDialogOpen}
+        isOpen={statusUpdateDialogOpen}
+        onClose={() => setStatusUpdateDialogOpen(false)}
         onOpenChange={setStatusUpdateDialogOpen}
         title="Update Product Status"
         description={`Are you sure you want to update the product status to "${statusProduct?.status}"?`}

@@ -15,7 +15,9 @@ import { Loader2 } from "lucide-react";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
+  open?: boolean; // Added for backward compatibility
   onClose: () => void;
+  onOpenChange?: (open: boolean) => void; // Added for backward compatibility
   onConfirm: () => Promise<void | boolean> | void;
   title: string;
   description: string;
@@ -27,7 +29,9 @@ interface ConfirmDialogProps {
 
 const ConfirmDialog = ({
   isOpen,
+  open,
   onClose,
+  onOpenChange,
   onConfirm,
   title,
   description,
@@ -36,6 +40,16 @@ const ConfirmDialog = ({
   variant = "default",
   isLoading = false
 }: ConfirmDialogProps) => {
+  // Use either isOpen or open prop for backward compatibility
+  const isDialogOpen = isOpen || open || false;
+  
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+      if (onOpenChange) onOpenChange(open);
+    }
+  };
+
   const handleConfirm = async () => {
     try {
       // Call the onConfirm function and await its result
@@ -44,6 +58,7 @@ const ConfirmDialog = ({
       // Only close if the result is true or undefined (not false)
       if (result !== false) {
         onClose();
+        if (onOpenChange) onOpenChange(false);
       }
     } catch (error) {
       console.error("Error during confirmation:", error);
@@ -52,7 +67,7 @@ const ConfirmDialog = ({
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <AlertDialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car, MapPin, Tools } from "lucide-react";
+import { Package2, SearchX, Car, MapPin, Wrench } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -174,7 +174,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({
                     <CollapsibleContent>
                       <div className="px-4 py-3 border-t">
                         <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                          <Tools className="h-4 w-4 text-mechanica-600" />
+                          <Wrench className="h-4 w-4 text-mechanica-600" />
                           Available at these garages for installation:
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
