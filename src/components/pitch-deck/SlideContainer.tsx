@@ -22,9 +22,9 @@ const SlideContainer: React.FC<SlideContainerProps> = ({
     
     let animationClass = "";
     if (isAnimating) {
-      animationClass = direction === 'next' ? "animate-slide-out-left" : "animate-slide-out-right";
+      animationClass = "animate-fade-out";
     } else if (isActive) {
-      animationClass = direction === 'next' ? "animate-slide-in-right" : "animate-slide-in-left";
+      animationClass = "animate-scale-fade-in";
     }
     
     return cn(

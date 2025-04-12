@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { slideData } from "@/components/pitch-deck/SlideData";
 import SlideContainer from "@/components/pitch-deck/SlideContainer";
@@ -28,7 +27,6 @@ const PitchDeck = () => {
   const [isConfettiActive, setIsConfettiActive] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
   
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -42,7 +40,6 @@ const PitchDeck = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentSlide, isAnimating]);
   
-  // Auto-hide scroll hint after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowScrollHint(false);
@@ -77,7 +74,7 @@ const PitchDeck = () => {
       slideTimerRef.current = window.setTimeout(() => {
         setCurrentSlide(prev => prev - 1);
         setIsAnimating(false);
-      }, 300);
+      }, 450);
     }
   };
   
@@ -89,7 +86,7 @@ const PitchDeck = () => {
       slideTimerRef.current = window.setTimeout(() => {
         setCurrentSlide(prev => prev + 1);
         setIsAnimating(false);
-      }, 300);
+      }, 450);
     }
   };
   
@@ -137,16 +134,12 @@ const PitchDeck = () => {
             bgColor={slide.bgColor}
             isActive={currentSlide === index}
             direction={direction}
-            isAnimating={isAnimating && (
-              (direction === 'next' && currentSlide === index - 1) ||
-              (direction === 'prev' && currentSlide === index + 1)
-            )}
+            isAnimating={isAnimating && currentSlide === index}
           >
             {renderSlideContent(index)}
           </SlideContainer>
         ))}
         
-        {/* Touch swipe hint */}
         {showScrollHint && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce opacity-70">
             <p className="text-xs text-gray-500 mb-1">Swipe or use arrow keys</p>
