@@ -152,7 +152,7 @@ export const useOrders = () => {
               installation_fee: item.installation_data.installationFee
             });
             
-            // Always explicitly set installation_status to 'new' for garage notifications
+            // IMPORTANT: Explicitly set installation_status to 'new' for garage notifications
             const { data, error } = await supabase
               .from('order_items')
               .update({ 

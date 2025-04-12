@@ -260,11 +260,14 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     
     console.log("Creating order items:", formattedItems);
     
-    const { error: itemsError } = await supabase
+    const { data: createdItems, error: itemsError } = await supabase
       .from('order_items')
-      .insert(formattedItems);
+      .insert(formattedItems)
+      .select();
     
     if (itemsError) throw itemsError;
+    
+    console.log("Order items created:", createdItems);
     
     return order;
   } catch (error) {

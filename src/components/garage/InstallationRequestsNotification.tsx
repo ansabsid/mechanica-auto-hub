@@ -33,12 +33,6 @@ interface InstallationRequest {
   orderItemId: string;
 }
 
-interface GarageUser {
-  id: string;
-  email?: string;
-  garage_id?: string;
-}
-
 export const InstallationRequestsNotification = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<InstallationRequest | null>(null);
@@ -55,9 +49,6 @@ export const InstallationRequestsNotification = () => {
   const fetchInstallationRequests = async () => {
     if (isRefreshing) return; // Prevent multiple simultaneous fetches
     
-    const startTime = Date.now();
-    const timeLog: Record<string, number> = {};
-    
     setIsLoading(true);
     setIsRefreshing(true);
     
@@ -69,9 +60,36 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      timeLog.start = Date.now() - startTime;
+      // First, directly check the database for any order_items with installation data
+      console.log("Checking database for ANY order_items for this garage");
+      const { data: allItems, error: allItemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('garage_id', garageId)
+        .limit(10);
+        
+      console.log("All order items for this garage:", allItems || "None");
+      setDebug(prev => ({ ...prev, allItems, allItemsCount: allItems?.length || 0 }));
       
-      // First, fetch order items with installation data for this garage with more specific criteria
+      if (allItemsError) {
+        console.error("Error fetching all items:", allItemsError);
+      }
+      
+      // Check ALL order_items regardless of installation_status to see if data exists
+      console.log("Checking ALL order_items in the database (limit 10):");
+      const { data: sampleItems, error: sampleError } = await supabase
+        .from('order_items')
+        .select('*')
+        .limit(10);
+        
+      console.log("Sample items from order_items table:", sampleItems || "None");
+      setDebug(prev => ({ ...prev, sampleItems, sampleCount: sampleItems?.length || 0 }));
+      
+      if (sampleError) {
+        console.error("Error fetching sample items:", sampleError);
+      }
+      
+      // Now do the actual query for installation requests
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -89,8 +107,6 @@ export const InstallationRequestsNotification = () => {
         .eq('garage_id', garageId)
         .not('installation_status', 'is', null); // Make sure we only get items with installation status
         
-      timeLog.orderItemsQuery = Date.now() - startTime;
-        
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
         toast({
@@ -100,7 +116,7 @@ export const InstallationRequestsNotification = () => {
         });
         setIsLoading(false);
         setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, orderItemsError, timeLog }));
+        setDebug(prev => ({ ...prev, orderItemsError }));
         return;
       }
       
@@ -123,7 +139,6 @@ export const InstallationRequestsNotification = () => {
       
       // Get all order IDs to fetch the order details
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
-      timeLog.orderIdsExtracted = Date.now() - startTime;
       
       // Fetch order details for these order items
       const { data: ordersData, error: ordersError } = await supabase
@@ -131,13 +146,11 @@ export const InstallationRequestsNotification = () => {
         .select('id, user_id, created_at, status')
         .in('id', orderIds);
         
-      timeLog.ordersQuery = Date.now() - startTime;
-        
       if (ordersError) {
         console.error("Error fetching orders:", ordersError);
         setIsLoading(false);
         setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, ordersError, timeLog }));
+        setDebug(prev => ({ ...prev, ordersError }));
         return;
       }
       
@@ -155,14 +168,12 @@ export const InstallationRequestsNotification = () => {
         .filter(order => order.user_id)
         .map(order => order.user_id);
         
-      timeLog.userIdsExtracted = Date.now() - startTime;
-        
       if (userIds.length === 0) {
         console.error("No valid user IDs found in orders");
         setInstallationRequests([]);
         setIsLoading(false);
         setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, error: "No valid user IDs", timeLog }));
+        setDebug(prev => ({ ...prev, error: "No valid user IDs" }));
         return;
       }
       
@@ -171,13 +182,11 @@ export const InstallationRequestsNotification = () => {
         .select('id, email, phone')
         .in('id', userIds);
         
-      timeLog.usersQuery = Date.now() - startTime;
-        
       if (usersError) {
         console.error("Error fetching customer information:", usersError);
         setIsLoading(false);
         setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, usersError, timeLog }));
+        setDebug(prev => ({ ...prev, usersError }));
         return;
       }
       
@@ -197,11 +206,9 @@ export const InstallationRequestsNotification = () => {
         .select('id, name')
         .in('id', partIds);
         
-      timeLog.partsQuery = Date.now() - startTime;
-        
       if (partsError) {
         console.error("Error fetching parts:", partsError);
-        setDebug(prev => ({ ...prev, partsError, timeLog }));
+        setDebug(prev => ({ ...prev, partsError }));
       }
       
       console.log("Fetched parts:", partsData);
@@ -240,16 +247,8 @@ export const InstallationRequestsNotification = () => {
           };
         });
       
-      timeLog.mappingComplete = Date.now() - startTime;
-      
       console.log("Processed installation requests:", requests);
-      setDebug(prev => ({ 
-        ...prev, 
-        mappedRequests: requests, 
-        requestsCount: requests.length,
-        timeTaken: `${Date.now() - startTime}ms`,
-        timeLog
-      }));
+      setDebug(prev => ({ ...prev, mappedRequests: requests, requestsCount: requests.length }));
       
       setInstallationRequests(requests);
       
@@ -262,7 +261,7 @@ export const InstallationRequestsNotification = () => {
       }
     } catch (error) {
       console.error("Error in fetchRequestsForGarage:", error);
-      setDebug(prev => ({ ...prev, error, timeLog }));
+      setDebug(prev => ({ ...prev, error }));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
