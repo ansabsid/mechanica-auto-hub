@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
@@ -262,7 +261,7 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     }));
     
     // Create order manually (skip RPC for reliability)
-    // 1. Create the order
+    // 1. Create the order with initial status 'pending'
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({

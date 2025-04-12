@@ -118,6 +118,51 @@ export const useOrders = () => {
     }
   };
 
+  // Check if order has items with installation and update status accordingly
+  const updateOrderStatusBasedOnInstallation = async (orderId: string) => {
+    try {
+      console.log("Checking if order needs to be auto-confirmed:", orderId);
+      
+      // First, fetch order items to check if any have installation
+      const { data: items, error: itemsError } = await supabase
+        .from('order_items')
+        .select('installation_status, garage_id')
+        .eq('order_id', orderId);
+        
+      if (itemsError) {
+        console.error("Error fetching order items for status check:", itemsError);
+        return;
+      }
+      
+      // If no items have installation (no garage_id), auto-confirm the order
+      const hasInstallationItems = items.some(item => item.garage_id !== null);
+      
+      if (!hasInstallationItems) {
+        console.log("Order has no installation items, auto-confirming:", orderId);
+        
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({ status: 'confirmed' })
+          .eq('id', orderId);
+          
+        if (updateError) {
+          console.error("Error auto-confirming order:", updateError);
+        } else {
+          console.log("Order auto-confirmed successfully:", orderId);
+          
+          // Refresh current order if it's the one being viewed
+          if (currentOrder && currentOrder.id === orderId) {
+            fetchOrderDetails(orderId);
+          }
+        }
+      } else {
+        console.log("Order has installation items, will wait for scheduling:", orderId);
+      }
+    } catch (error: any) {
+      console.error("Error in updateOrderStatusBasedOnInstallation:", error);
+    }
+  };
+
   const handleCreateOrder = async (cartItems: CartItem[], totalAmount: number) => {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -217,6 +262,11 @@ export const useOrders = () => {
         description: "Your order has been placed successfully!",
       });
       
+      // Auto-confirm order if no installation is needed
+      if (orderData && orderData.id) {
+        updateOrderStatusBasedOnInstallation(orderData.id);
+      }
+      
       await fetchUserOrders();
       return orderData;
     } catch (error: any) {
@@ -258,7 +308,8 @@ export const useOrders = () => {
   const updateInstallationSchedule = async (
     orderItemId: string, 
     scheduledDate: string, 
-    scheduledTime: string
+    scheduledTime: string,
+    orderId: string
   ) => {
     setIsLoading(true);
     try {
@@ -280,6 +331,28 @@ export const useOrders = () => {
         });
         setIsLoading(false);
         return false;
+      }
+      
+      // Update the order status to confirmed when installation is scheduled
+      const { error: orderUpdateError } = await supabase
+        .from('orders')
+        .update({ status: 'confirmed' })
+        .eq('id', orderId);
+        
+      if (orderUpdateError) {
+        console.error("Error updating order status:", orderUpdateError);
+        toast({
+          title: "Warning",
+          description: "Installation scheduled, but failed to update order status",
+          variant: "destructive",
+        });
+      } else {
+        console.log("Order status updated to confirmed:", orderId);
+        
+        // Refresh current order if it's the one being viewed
+        if (currentOrder && currentOrder.id === orderId) {
+          fetchOrderDetails(orderId);
+        }
       }
       
       toast({
@@ -310,6 +383,7 @@ export const useOrders = () => {
     fetchOrderDetails,
     createOrder: handleCreateOrder,
     cancelOrder: handleCancelOrder,
-    updateInstallationSchedule
+    updateInstallationSchedule,
+    updateOrderStatusBasedOnInstallation
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
@@ -14,7 +15,7 @@ import { toast } from "sonner";
 
 const OrderPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const { fetchOrderDetails, currentOrder, isLoading } = useOrders();
+  const { fetchOrderDetails, currentOrder, isLoading, updateOrderStatusBasedOnInstallation } = useOrders();
   const navigate = useNavigate();
   const [retryCount, setRetryCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -59,6 +60,11 @@ const OrderPage = () => {
           } else {
             console.log("Order details loaded successfully:", result);
             setErrorMessage(null);
+            
+            // Check if the order should be auto-confirmed
+            if (result.status === 'pending') {
+              updateOrderStatusBasedOnInstallation(result.id);
+            }
           }
         }
       } catch (error: any) {
