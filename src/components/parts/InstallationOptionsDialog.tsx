@@ -66,18 +66,14 @@ export const InstallationOptionsDialog = ({
       console.log("Available areas extracted:", areas);
     } else {
       console.log("No available garages in part data or garages don't have areas");
-      
-      // Set mock areas if none are available from the part
-      const mockAreas = ["Dubai Marina", "Downtown Dubai", "Jumeirah", "Deira"];
-      setAvailableAreas(mockAreas);
-      console.log("Set mock areas:", mockAreas);
+      setAvailableAreas([]);
     }
   }, [part]);
 
   // Filter garages based on selected area
   useEffect(() => {
     if (selectedArea) {
-      // First check if part has availableGarages
+      // Find garages that match the selected area
       let garagesInArea: Garage[] = [];
       
       if (part.availableGarages) {
@@ -89,145 +85,7 @@ export const InstallationOptionsDialog = ({
       
       // Clear selected garage when area changes
       setSelectedGarage(null);
-      
-      // If no garages found in this area or part has no availableGarages, generate mock garages
-      if (garagesInArea.length === 0) {
-        let mockGarages: Garage[] = [];
-        
-        if (selectedArea === "Deira") {
-          mockGarages = [
-            {
-              id: `mock-deira-1`,
-              name: `Mechanica Service Center - Deira`,
-              location: `Deira, Dubai, UAE`,
-              installationFee: 25.99,
-              area: "Deira"
-            },
-            {
-              id: `mock-deira-2`,
-              name: `AutoFix Express - Deira`,
-              location: `Al Rigga, Deira, Dubai, UAE`,
-              installationFee: 24.99,
-              area: "Deira"
-            },
-            {
-              id: `mock-deira-3`,
-              name: `QuickFix Auto Workshop - Deira`,
-              location: `Al Muteena, Deira, Dubai, UAE`,
-              installationFee: 22.99,
-              area: "Deira"
-            },
-            {
-              id: `mock-deira-4`,
-              name: `Dubai Auto Care - Deira`,
-              location: `Naif Road, Deira, Dubai, UAE`,
-              installationFee: 26.50,
-              area: "Deira"
-            },
-            {
-              id: `mock-deira-5`,
-              name: `Speedy Auto Repair - Deira`,
-              location: `Port Saeed, Deira, Dubai, UAE`,
-              installationFee: 28.99,
-              area: "Deira"
-            },
-            {
-              id: `mock-deira-6`,
-              name: `Al Muraqqabat Auto Center - Deira`,
-              location: `Al Muraqqabat, Deira, Dubai, UAE`,
-              installationFee: 23.50,
-              area: "Deira"
-            }
-          ];
-        } else if (selectedArea === "Dubai Marina") {
-          mockGarages = [
-            {
-              id: `mock-marina-1`,
-              name: `Mechanica Service Center - Dubai Marina`,
-              location: `Dubai Marina, Dubai, UAE`,
-              installationFee: 35.99,
-              area: "Dubai Marina"
-            },
-            {
-              id: `mock-marina-2`,
-              name: `Marina Auto Workshop`,
-              location: `Marina Walk, Dubai Marina, Dubai, UAE`,
-              installationFee: 39.99,
-              area: "Dubai Marina"
-            },
-            {
-              id: `mock-marina-3`,
-              name: `Premium Auto Fix - Marina`,
-              location: `JBR, Dubai Marina, Dubai, UAE`,
-              installationFee: 42.99,
-              area: "Dubai Marina"
-            }
-          ];
-        } else if (selectedArea === "Downtown Dubai") {
-          mockGarages = [
-            {
-              id: `mock-downtown-1`,
-              name: `Mechanica Service Center - Downtown`,
-              location: `Downtown Dubai, UAE`,
-              installationFee: 38.99,
-              area: "Downtown Dubai"
-            },
-            {
-              id: `mock-downtown-2`,
-              name: `Burj Auto Workshop`,
-              location: `Sheikh Mohammed Bin Rashid Blvd, Downtown Dubai, UAE`,
-              installationFee: 41.99,
-              area: "Downtown Dubai"
-            }
-          ];
-        } else if (selectedArea === "Jumeirah") {
-          mockGarages = [
-            {
-              id: `mock-jumeirah-1`,
-              name: `Mechanica Service Center - Jumeirah`,
-              location: `Jumeirah, Dubai, UAE`,
-              installationFee: 36.99,
-              area: "Jumeirah"
-            },
-            {
-              id: `mock-jumeirah-2`,
-              name: `Beach Road Auto Service`,
-              location: `Jumeirah Beach Road, Dubai, UAE`,
-              installationFee: 40.99,
-              area: "Jumeirah"
-            },
-            {
-              id: `mock-jumeirah-3`,
-              name: `Jumeirah Auto Specialists`,
-              location: `Jumeirah 1, Dubai, UAE`,
-              installationFee: 38.50,
-              area: "Jumeirah"
-            }
-          ];
-        } else {
-          mockGarages = [
-            {
-              id: `mock-${selectedArea}-1`,
-              name: `Mechanica Service Center - ${selectedArea}`,
-              location: `${selectedArea}, Dubai, UAE`,
-              installationFee: 29.99,
-              area: selectedArea
-            },
-            {
-              id: `mock-${selectedArea}-2`,
-              name: `AutoFix Workshop - ${selectedArea}`,
-              location: `${selectedArea}, Dubai, UAE`,
-              installationFee: 32.99,
-              area: selectedArea
-            }
-          ];
-        }
-        
-        setFilteredGarages(mockGarages);
-        console.log("Added mock garages for area:", selectedArea, mockGarages);
-      } else {
-        setFilteredGarages(garagesInArea);
-      }
+      setFilteredGarages(garagesInArea);
     }
   }, [selectedArea, part.availableGarages]);
   
@@ -322,7 +180,7 @@ export const InstallationOptionsDialog = ({
               <Button
                 type="button"
                 onClick={() => setStep(2)}
-                disabled={!selectedArea}
+                disabled={!selectedArea || availableAreas.length === 0}
               >
                 Next
               </Button>
