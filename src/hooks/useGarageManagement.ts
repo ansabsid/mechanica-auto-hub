@@ -50,8 +50,8 @@ export const useGarageManagement = () => {
       // Log the SQL equivalent for debugging
       console.log("SQL Equivalent: SELECT id, name, location, area, images, installation_fee FROM garages ORDER BY location");
       
-      // Select the fields we need including the installation_fee column
-      // Important: Use the PUBLIC select for garages (no auth required)
+      // Important: Explicitly set auth to null to bypass authentication for this query
+      // This ensures garages are visible to all users regardless of login status
       const { data, error: fetchError } = await supabase
         .from('garages')
         .select('id, name, location, area, images, installation_fee')
