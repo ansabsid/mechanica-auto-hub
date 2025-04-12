@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { debugCheckAllInstallationRequests } from "@/api/orderApi";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Bug } from "lucide-react";
+import { Loader2, Bug, Info, ShieldAlert, User, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
 export const DebugInstallationRequests = () => {
@@ -29,6 +29,82 @@ export const DebugInstallationRequests = () => {
         console.log("🔍 [DEBUG] User metadata:", sessionData.session.user.user_metadata);
         results.userId = sessionData.session.user.id;
         results.userMetadata = sessionData.session.user.user_metadata;
+        
+        // Check if user has a profile and if they are associated with a garage
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', sessionData.session.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error("🔍 [DEBUG] Error checking user profile:", profileError);
+          results.profileError = profileError;
+        } else {
+          console.log("🔍 [DEBUG] User profile:", profileData);
+          results.profile = profileData;
+          
+          if (profileData?.garage_id) {
+            console.log(`🔍 [DEBUG] User is associated with garage: ${profileData.garage_id}`);
+            results.userGarageId = profileData.garage_id;
+            
+            // Check if garage exists
+            const { data: garageData, error: garageError } = await supabase
+              .from('garages')
+              .select('*')
+              .eq('id', profileData.garage_id)
+              .single();
+              
+            if (garageError) {
+              console.error("🔍 [DEBUG] Error checking garage:", garageError);
+              results.garageError = garageError;
+            } else {
+              console.log("🔍 [DEBUG] Garage data:", garageData);
+              results.garage = garageData;
+            }
+          } else {
+            console.log("🔍 [DEBUG] User is not associated with any garage");
+            
+            // Check if Garage Masters exists
+            const { data: garageMastersData, error: garageMastersError } = await supabase
+              .from('garages')
+              .select('*')
+              .eq('id', garageMastersId)
+              .single();
+              
+            if (garageMastersError) {
+              console.error(`🔍 [DEBUG] Error checking Garage Masters (${garageMastersId}):`, garageMastersError);
+              results.garageMastersError = garageMastersError;
+            } else {
+              console.log("🔍 [DEBUG] Garage Masters data:", garageMastersData);
+              results.garageMasters = garageMastersData;
+              
+              // Suggest fixing the profile
+              console.log("🔍 [DEBUG] Suggesting to associate the user with Garage Masters");
+              results.suggestFixProfile = true;
+            }
+          }
+        }
+        
+        // Check RLS policies for order_items
+        console.log("🔍 [DEBUG] Checking if RLS policies exist for order_items");
+        const { data: policiesData, error: policiesError } = await supabase
+          .rpc('get_policies_for_table', { table_name: 'order_items' });
+          
+        if (policiesError) {
+          console.error("🔍 [DEBUG] Error checking policies:", policiesError);
+          results.policiesError = policiesError;
+          
+          // Alternative method to check policies
+          console.log("🔍 [DEBUG] Using alternative method to check policies");
+          results.manualPolicyCheck = {
+            message: "Could not automatically check RLS policies. Manual verification required.",
+            suggestion: "Please check the Supabase dashboard to verify RLS policies for order_items."
+          };
+        } else {
+          console.log("🔍 [DEBUG] RLS policies for order_items:", policiesData);
+          results.policies = policiesData;
+        }
       }
       
       // Run the comprehensive debug function
@@ -129,6 +205,33 @@ export const DebugInstallationRequests = () => {
     }
   };
 
+  const fixUserProfile = async () => {
+    if (!debugResults?.userId) {
+      toast.error("No authenticated user found");
+      return;
+    }
+    
+    try {
+      toast.info("Attempting to associate user with Garage Masters...");
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ garage_id: garageMastersId })
+        .eq('id', debugResults.userId);
+        
+      if (error) {
+        console.error("🔍 [DEBUG] Error updating user profile:", error);
+        toast.error("Failed to update user profile");
+      } else {
+        console.log(`🔍 [DEBUG] Successfully associated user with garage: ${garageMastersId}`);
+        toast.success("User associated with Garage Masters! Please refresh the page.");
+      }
+    } catch (error) {
+      console.error("🔍 [DEBUG] Error in fixUserProfile:", error);
+      toast.error("Error fixing user profile");
+    }
+  };
+
   return (
     <>
       <Button 
@@ -164,9 +267,49 @@ export const DebugInstallationRequests = () => {
           </h3>
           <div className="text-xs">
             <div className="mb-2">
-              <strong>Authentication:</strong> {debugResults.isAuthenticated ? 'Yes' : 'No'}
+              <div className="flex items-center">
+                <User className="h-3 w-3 mr-1" />
+                <strong>Authentication:</strong> {debugResults.isAuthenticated ? 'Yes' : 'No'}
+              </div>
               {debugResults.userId && <div>User ID: {debugResults.userId}</div>}
+              
+              {debugResults.profile && (
+                <div className="mt-1 p-1 bg-gray-50 rounded">
+                  <div className="flex items-center">
+                    <Wrench className="h-3 w-3 mr-1" />
+                    <strong>Garage Association:</strong> {debugResults.profile.garage_id ? 'Yes' : 'No'}
+                  </div>
+                  {debugResults.profile.garage_id && (
+                    <div>Garage ID: {debugResults.profile.garage_id}</div>
+                  )}
+                </div>
+              )}
+              
+              {debugResults.suggestFixProfile && !debugResults.profile?.garage_id && (
+                <div className="mt-1 p-1 bg-red-50 text-red-700 rounded">
+                  <div className="flex items-center">
+                    <ShieldAlert className="h-3 w-3 mr-1" />
+                    <strong>Access Issue:</strong> User not associated with garage
+                  </div>
+                  <button
+                    onClick={fixUserProfile}
+                    className="mt-1 text-white bg-mechanica-500 hover:bg-mechanica-600 p-1 rounded text-xs w-full"
+                  >
+                    Fix: Associate with Garage Masters
+                  </button>
+                </div>
+              )}
+              
+              {debugResults.policies && (
+                <div className="mt-1 p-1 bg-blue-50 text-blue-700 rounded">
+                  <div className="flex items-center">
+                    <Info className="h-3 w-3 mr-1" />
+                    <strong>RLS Policies:</strong> {debugResults.policies.length || 0} found
+                  </div>
+                </div>
+              )}
             </div>
+            
             <div className="mb-2">
               <strong>Items for this garage:</strong> {debugResults.specificItems?.length || 0}
             </div>
@@ -194,4 +337,3 @@ export const DebugInstallationRequests = () => {
     </>
   );
 };
-
