@@ -8,7 +8,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-// Define slide interface
 interface Slide {
   title: string;
   content: React.ReactNode;
@@ -24,7 +23,6 @@ const PitchDeck = () => {
   const [isConfettiActive, setIsConfettiActive] = useState(false);
   const isMobile = useIsMobile();
   
-  // Clear any pending timers on unmount
   useEffect(() => {
     return () => {
       if (slideTimerRef.current !== null) {
@@ -33,9 +31,8 @@ const PitchDeck = () => {
     };
   }, []);
 
-  // Show confetti animation when reaching the thank you slide
   useEffect(() => {
-    if (currentSlide === 9) { // Thank You slide index
+    if (currentSlide === 9) {
       setIsConfettiActive(true);
       const timer = setTimeout(() => {
         setIsConfettiActive(false);
@@ -44,7 +41,6 @@ const PitchDeck = () => {
     }
   }, [currentSlide]);
   
-  // Define slides
   const slides: Slide[] = [
     {
       title: "BookMyParts",
@@ -617,7 +613,7 @@ const PitchDeck = () => {
           <Card className="shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1">
             <CardContent className="pt-6">
               <h3 className="font-bold text-center text-xl text-mechanica-600 mb-3">
-                <span className="animate-pulse inline-block">💰</span> Seeking $1.2M in Seed Funding
+                <span className="animate-pulse inline-block">💰</span> Seeking AED 4.4M in Seed Funding
               </h3>
               
               <div className="mt-6 space-y-6">
@@ -818,7 +814,6 @@ const PitchDeck = () => {
     }
   ];
 
-  // Define navigation functionality
   const handleNext = () => {
     if (currentSlide < slides.length - 1 && !isAnimating) {
       setDirection('next');
@@ -841,7 +836,6 @@ const PitchDeck = () => {
     }
   };
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') {
@@ -859,7 +853,6 @@ const PitchDeck = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Confetti styles */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes confetti {
           0% { transform: translateY(-10px) rotateZ(0); opacity: 1; }
@@ -871,7 +864,6 @@ const PitchDeck = () => {
         }
       `}} />
       
-      {/* Progress bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
         <div 
           className="h-full bg-mechanica-500 transition-all duration-300 ease-in-out"
@@ -879,7 +871,6 @@ const PitchDeck = () => {
         />
       </div>
       
-      {/* Slide container */}
       <div
         className={`flex-grow flex items-start justify-center ${isMobile ? 'pt-8 px-2 pb-2' : 'pt-12 px-6 pb-6'} transition-all duration-300 ease-in-out ${slides[currentSlide].bgColor}`}
       >
@@ -894,7 +885,6 @@ const PitchDeck = () => {
         </div>
       </div>
       
-      {/* Navigation controls - Better positioned to avoid camera button overlap */}
       <div className={`fixed ${isMobile ? 'bottom-[140px]' : 'bottom-[100px]'} left-0 right-0 flex justify-between items-center ${isMobile ? 'px-3' : 'px-6'} z-30`}>
         <Button
           variant="outline"
@@ -930,12 +920,10 @@ const PitchDeck = () => {
         </Button>
       </div>
       
-      {/* Slide counter - Positioned to avoid camera button overlap */}
       <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium z-20">
         {currentSlide + 1} / {slides.length}
       </div>
       
-      {/* Confetti effect */}
       {isConfettiActive && (
         <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center">
