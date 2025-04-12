@@ -4,6 +4,17 @@ import { CarFront, Car, TrendingUp, PieChart, ExternalLink } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  ResponsiveContainer, 
+  Label, 
+  LabelList,
+  Cell
+} from "recharts";
 
 const MarketSlide: React.FC = () => {
   const isMobile = useIsMobile();
@@ -136,7 +147,127 @@ const MarketSlide: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100 hover:shadow-md transition-all transform hover:scale-[1.02]">
+        <div className="flex items-center mb-3">
+          <div className="bg-green-100 p-3 rounded-full mr-3">
+            <PieChart className="h-5 w-5 text-green-600" />
+          </div>
+          <h3 className="text-lg font-medium text-green-700">UAE Automotive Parts Market</h3>
+        </div>
+        
+        <div className="w-full h-[350px] mt-4">
+          <AutoPartsMarketChart isMobile={isMobile} />
+        </div>
+      </div>
     </div>
+  );
+};
+
+// Data for the automotive parts market chart
+const chartData = [
+  {
+    name: "Aftermarket Parts",
+    value2024: 7.3,
+    value2033: 10.5,
+    year2024: "2024",
+    year2033: "2033",
+  },
+  {
+    name: "E-Commerce Aftermarket",
+    value2023: 0.5031,
+    value2030: 1.44,
+    year2023: "2023",
+    year2030: "2030",
+  },
+];
+
+// Chart component for automotive parts market
+const AutoPartsMarketChart: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
+  // Color palette for the bars
+  const colors = {
+    value2024: "#4ade80", // Green
+    value2033: "#bbf7d0", // Light Green
+    value2023: "#3b82f6", // Blue
+    value2030: "#93c5fd", // Light Blue
+  };
+
+  // Format the value to display in USD billion with 2 decimal places
+  const formatValue = (value: number) => {
+    return `$${value.toFixed(2)}B`;
+  };
+
+  // Transform data for the chart
+  const transformedData = chartData.flatMap((item) => [
+    {
+      name: `${item.name}\n(${item.year2024 || item.year2023})`,
+      segment: item.name,
+      value: item.value2024 || item.value2023,
+      color: item.value2024 ? colors.value2024 : colors.value2023,
+      year: item.year2024 || item.year2023,
+    },
+    {
+      name: `${item.name}\n(${item.year2033 || item.year2030})`,
+      segment: item.name,
+      value: item.value2033 || item.value2030,
+      color: item.value2033 ? colors.value2033 : colors.value2030,
+      year: item.year2033 || item.year2030,
+    },
+  ]);
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        data={transformedData}
+        margin={{
+          top: 20,
+          right: 20,
+          left: isMobile ? 0 : 20,
+          bottom: isMobile ? 100 : 60,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <XAxis 
+          dataKey="name" 
+          interval={0}
+          angle={isMobile ? -45 : 0} 
+          textAnchor={isMobile ? "end" : "middle"}
+          height={isMobile ? 100 : 60}
+          tickMargin={isMobile ? 5 : 15}
+          tick={{ fontSize: isMobile ? 10 : 12 }}
+        >
+          <Label
+            value="Market Segments"
+            position="insideBottom"
+            offset={-10}
+            style={{ textAnchor: "middle", fill: "#666", fontSize: 14 }}
+          />
+        </XAxis>
+        <YAxis 
+          tickFormatter={(value) => `$${value}B`}
+          tick={{ fontSize: isMobile ? 10 : 12 }}
+        >
+          <Label
+            value="Market Size (USD Billion)"
+            angle={-90}
+            position="insideLeft"
+            style={{ textAnchor: "middle", fill: "#666", fontSize: 14 }}
+            offset={isMobile ? 0 : 10}
+          />
+        </YAxis>
+        <Bar dataKey="value" name="Market Size">
+          {transformedData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+          <LabelList
+            dataKey="value"
+            position="top"
+            formatter={formatValue}
+            style={{ fill: "#666", fontSize: isMobile ? 10 : 12, fontWeight: "bold" }}
+          />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
   );
 };
 
