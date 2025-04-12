@@ -1,7 +1,8 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car } from "lucide-react";
+import { Package2, SearchX, Car, MapPin, Tools } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -11,6 +12,8 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { formatPrice } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface PartsResultsProps {
   parts: Part[];
@@ -49,6 +52,15 @@ const PartsResults: React.FC<PartsResultsProps> = ({
   isLoading, 
   searchCompleted 
 }) => {
+  const [expandedParts, setExpandedParts] = useState<Record<string, boolean>>({});
+  
+  const togglePartExpanded = (partId: string | number) => {
+    setExpandedParts(prev => ({
+      ...prev,
+      [partId]: !prev[partId]
+    }));
+  };
+  
   console.log("PartsResults rendering with:", { 
     partsCount: parts?.length || 0, 
     isLoading, 
@@ -107,38 +119,86 @@ const PartsResults: React.FC<PartsResultsProps> = ({
               <TableHead className="font-bold text-mechanica-800">Part Name</TableHead>
               <TableHead className="font-bold text-mechanica-800">Vehicle Details</TableHead>
               <TableHead className="font-bold text-mechanica-800 text-right">Price</TableHead>
+              <TableHead className="font-bold text-mechanica-800 text-center">Garages</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {parts.map((part) => (
-              <TableRow key={part.id} className="hover:bg-mechanica-50">
-                <TableCell className="font-medium">
-                  <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-md overflow-hidden mr-3">
-                      <img 
-                        src={getPartImageUrl(part)} 
-                        alt={part.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    {part.name}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-start space-x-2">
-                    <Car className="h-5 w-5 text-mechanica-500 mt-0.5" />
-                    <div>
-                      <div className="text-sm font-medium text-gray-700">
-                        {part.manufacturer_id} - {part.model_id} - {part.year}
+              <React.Fragment key={part.id}>
+                <TableRow className="hover:bg-mechanica-50">
+                  <TableCell className="font-medium">
+                    <div className="flex items-center">
+                      <div className="h-12 w-12 rounded-md overflow-hidden mr-3">
+                        <img 
+                          src={getPartImageUrl(part)} 
+                          alt={part.name}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {part.description || "Compatible with vehicles matching these exact specifications"}
+                      {part.name}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-start space-x-2">
+                      <Car className="h-5 w-5 text-mechanica-500 mt-0.5" />
+                      <div>
+                        <div className="text-sm font-medium text-gray-700">
+                          {part.manufacturer_id} - {part.model_id} - {part.year}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {part.description || "Compatible with vehicles matching these exact specifications"}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right font-bold">{formatPrice(part.price)}</TableCell>
-              </TableRow>
+                  </TableCell>
+                  <TableCell className="text-right font-bold">{formatPrice(part.price)}</TableCell>
+                  <TableCell className="text-center">
+                    <Collapsible 
+                      open={expandedParts[part.id] || false}
+                      onOpenChange={() => togglePartExpanded(part.id)}
+                      className="w-full"
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4 text-mechanica-500" />
+                          {part.availableGarages?.length || 0} Garages
+                        </Button>
+                      </CollapsibleTrigger>
+                    </Collapsible>
+                  </TableCell>
+                </TableRow>
+                <TableRow 
+                  className={expandedParts[part.id] ? "bg-mechanica-50/50" : "hidden"}
+                >
+                  <TableCell colSpan={4} className="p-0">
+                    <CollapsibleContent>
+                      <div className="px-4 py-3 border-t">
+                        <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <Tools className="h-4 w-4 text-mechanica-600" />
+                          Available at these garages for installation:
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {part.availableGarages && part.availableGarages.length > 0 ? (
+                            part.availableGarages.map((garage, idx) => (
+                              <div key={idx} className="text-sm bg-white rounded p-2 border">
+                                <div className="font-medium text-mechanica-700">{garage.name}</div>
+                                <div className="text-gray-600 text-xs flex justify-between items-center mt-1">
+                                  <span>{garage.location}</span>
+                                  <span className="font-semibold text-mechanica-600">
+                                    Installation: {formatPrice(garage.installationFee)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-sm text-gray-500">No garages available for installation</div>
+                          )}
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>

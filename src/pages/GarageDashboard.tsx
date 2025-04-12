@@ -21,7 +21,8 @@ import {
   Factory,
   Edit,
   Trash2,
-  Clock
+  Clock,
+  Tool
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -105,6 +106,7 @@ const GarageDashboard = () => {
     model_id: 1,
     year: new Date().getFullYear(),
     description: "",
+    installation_fee: 0,
   });
 
   const [newGarage, setNewGarage] = useState({
@@ -291,6 +293,7 @@ const GarageDashboard = () => {
           model_id: 1,
           year: new Date().getFullYear(),
           description: "",
+          installation_fee: 0,
         });
         setProductImage(null);
         setUploadProgress(0);
@@ -335,7 +338,8 @@ const GarageDashboard = () => {
       manufacturer_id: product.manufacturer_id,
       model_id: product.model_id,
       year: product.year,
-      description: product.description
+      description: product.description,
+      installation_fee: product.installation_fee || 0
     };
     
     setSelectedProduct(formattedProduct);
@@ -570,6 +574,19 @@ const GarageDashboard = () => {
                         />
                       </div>
                       <div className="space-y-2">
+                        <Label htmlFor="product-installation-fee" className="flex items-center gap-1">
+                          <Tool className="h-4 w-4 text-mechanica-500" />
+                          Installation Fee (AED)
+                        </Label>
+                        <Input 
+                          id="product-installation-fee"
+                          type="number"
+                          value={newProduct.installation_fee}
+                          onChange={(e) => setNewProduct({...newProduct, installation_fee: e.target.value})}
+                          placeholder="e.g. 50.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="product-status">Availability Status</Label>
                         <Select 
                           value={newProduct.status}
@@ -661,6 +678,7 @@ const GarageDashboard = () => {
                           <th className="text-left p-2 md:p-4 text-xs md:text-sm">Category</th>
                           <th className="text-left p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">Vehicle</th>
                           <th className="text-left p-2 md:p-4 text-xs md:text-sm">Price</th>
+                          <th className="text-left p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">Install Fee</th>
                           <th className="text-left p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">Quantity</th>
                           <th className="text-left p-2 md:p-4 text-xs md:text-sm">Status</th>
                           <th className="text-left p-2 md:p-4 text-xs md:text-sm">Actions</th>
@@ -669,7 +687,7 @@ const GarageDashboard = () => {
                       <tbody>
                         {productsLoading ? (
                           <tr>
-                            <td colSpan={7} className="text-center p-4">
+                            <td colSpan={8} className="text-center p-4">
                               <div className="flex justify-center items-center py-4">
                                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
                                 Loading products...
@@ -707,6 +725,12 @@ const GarageDashboard = () => {
                                 </div>
                               </td>
                               <td className="p-2 md:p-4 text-xs md:text-sm">AED {product.price}</td>
+                              <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">
+                                <div className="flex items-center">
+                                  <Tool className="h-4 w-4 mr-1 text-mechanica-500" />
+                                  <span>AED {product.installation_fee || 0}</span>
+                                </div>
+                              </td>
                               <td className="p-2 md:p-4 text-xs md:text-sm hidden md:table-cell">{product.stock}</td>
                               <td className="p-2 md:p-4">
                                 <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-xs ${
@@ -785,7 +809,12 @@ const GarageDashboard = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={7} className="text-center p-4 text-sm">No products found. Add your first product!</td>
+                            <td colSpan={8} className="text-center p-4">
+                              <div className="py-8">
+                                <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                                <p className="text-gray-500">No products available. Add your first product above.</p>
+                              </div>
+                            </td>
                           </tr>
                         )}
                       </tbody>
@@ -916,37 +945,30 @@ const GarageDashboard = () => {
         </section>
       </div>
       
-      {editModalOpen && selectedProduct && (
-        <EditProductModal
-          isOpen={editModalOpen}
-          onClose={() => setEditModalOpen(false)}
-          product={selectedProduct}
-          onSave={handleUpdateProduct}
-          manufacturers={manufacturers}
-          models={filteredModels}
-          years={years}
-        />
-      )}
-      
-      <ConfirmDialog 
-        isOpen={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={handleDeleteProduct}
-        title="Delete Product"
-        description="Are you sure you want to delete this product? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="destructive"
+      <EditProductModal 
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        product={selectedProduct}
+        onSave={handleUpdateProduct}
+        manufacturers={manufacturers}
+        models={models}
+        years={years}
       />
       
       <ConfirmDialog
-        isOpen={statusUpdateDialogOpen}
-        onClose={() => setStatusUpdateDialogOpen(false)}
-        onConfirm={handleStatusUpdate}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+        onConfirm={handleDeleteProduct}
+      />
+      
+      <ConfirmDialog
+        open={statusUpdateDialogOpen}
+        onOpenChange={setStatusUpdateDialogOpen}
         title="Update Product Status"
-        description={`Are you sure you want to change the product status to "${statusProduct?.status}"?`}
-        confirmText="Update"
-        cancelText="Cancel"
+        description={`Are you sure you want to update the product status to "${statusProduct?.status}"?`}
+        onConfirm={handleStatusUpdate}
       />
       
       <DebugInstallationRequests />

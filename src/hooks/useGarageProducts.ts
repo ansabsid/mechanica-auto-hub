@@ -20,6 +20,7 @@ export interface GarageProduct {
   model_id?: number;
   year?: number;
   description?: string;
+  installation_fee?: number | string;
 }
 
 // Define the expected response type from the insert_part RPC function
@@ -284,7 +285,10 @@ export const useGarageProducts = (garageId?: string) => {
       
       // Combine results, giving priority to direct parts
       const combinedProducts = [
-        ...(directParts || []), 
+        ...(directParts || []).map(part => ({
+          ...part,
+          installation_fee: 0 // Default installation fee for direct parts
+        })), 
         ...(associatedParts?.map(item => ({
           ...item.parts,
           installation_fee: item.installation_fee
@@ -352,6 +356,11 @@ export const useGarageProducts = (garageId?: string) => {
         }
       }
       
+      // Extract installation fee if provided
+      const installationFee = product.installation_fee 
+        ? parseFloat(product.installation_fee.toString()) 
+        : 0;
+      
       // Now use the category field directly and store description separately
       const productData = {
         name: product.name,
@@ -410,7 +419,7 @@ export const useGarageProducts = (garageId?: string) => {
           .insert({
             part_id: partId,
             garage_id: validGarageId,
-            installation_fee: 0 // Default installation fee
+            installation_fee: installationFee // Use the installation fee from the product
           });
 
         if (associationError) {
@@ -418,9 +427,21 @@ export const useGarageProducts = (garageId?: string) => {
           throw new Error(`Failed to associate part with garage: ${associationError.message}`);
         }
 
-        console.log("Parts_garages association created successfully");
+        console.log("Parts_garages association created successfully with installation fee:", installationFee);
       } else {
-        console.log("Association already exists, skipping creation");
+        // Update installation fee if the association already exists
+        const { error: updateError } = await supabase
+          .from('parts_garages')
+          .update({ installation_fee: installationFee })
+          .eq('part_id', partId)
+          .eq('garage_id', validGarageId);
+          
+        if (updateError) {
+          console.error("Error updating installation fee:", updateError);
+          // Continue without failing the entire operation
+        }
+        
+        console.log("Association already exists, updated installation fee to:", installationFee);
       }
       
       toast.success("Product added successfully!");
@@ -453,6 +474,11 @@ export const useGarageProducts = (garageId?: string) => {
         ? parseInt(product.quantity, 10) 
         : product.quantity;
       
+      // Extract installation fee if provided
+      const installationFee = product.installation_fee 
+        ? parseFloat(product.installation_fee.toString()) 
+        : 0;
+      
       // Prepare the data for the database update with proper type conversion
       const updateData = {
         name: product.name,
@@ -477,6 +503,24 @@ export const useGarageProducts = (garageId?: string) => {
         console.error("Update error:", error);
         toast.error(`Failed to update product: ${error.message}`);
         return false;
+      }
+      
+      // Update installation fee in parts_garages
+      if (product.garage_id) {
+        const { error: installationError } = await supabase
+          .from('parts_garages')
+          .upsert({
+            part_id: product.id,
+            garage_id: product.garage_id,
+            installation_fee: installationFee
+          });
+          
+        if (installationError) {
+          console.error("Error updating installation fee:", installationError);
+          toast.warning("Product updated but installation fee may not have been updated");
+        } else {
+          console.log("Installation fee updated successfully to:", installationFee);
+        }
       }
       
       // Important: Wait for the database update to complete before refreshing

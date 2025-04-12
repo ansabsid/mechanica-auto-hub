@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Part, Manufacturer, Model } from "../types";
 import { fetchWithTimeout } from "../utils/network";
@@ -22,6 +23,31 @@ export const fetchAllPartsFromDB = async () => {
     
     console.log("All parts fetched from database:", response.data?.length || 0);
     
+    // Get available garages for all parts
+    const partIds = response.data?.map(part => part.id) || [];
+    let availableGarages: Record<number, any[]> = {};
+    
+    if (partIds.length > 0) {
+      const { data: garagesData, error: garagesError } = await supabase
+        .rpc('get_garages_for_part_bulk', { part_ids: partIds });
+      
+      if (!garagesError && garagesData) {
+        // Group garages by part_id
+        garagesData.forEach(item => {
+          if (!availableGarages[item.part_id]) {
+            availableGarages[item.part_id] = [];
+          }
+          availableGarages[item.part_id].push({
+            id: item.id,
+            name: item.name,
+            location: item.location,
+            installationFee: item.installation_fee,
+            area: item.location.split(',')[0].trim() // Extract area from location
+          });
+        });
+      }
+    }
+    
     // Process the parts data with garage information
     const processedParts: Part[] = (response.data || []).map(part => {
       return {
@@ -33,7 +59,7 @@ export const fetchAllPartsFromDB = async () => {
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
         },
-        availableGarages: [
+        availableGarages: availableGarages[part.id] || [
           {
             id: "g1",
             name: "Mechanica Service Center - Dubai Marina",
@@ -164,7 +190,32 @@ export const fetchPartsForVehicle = async (
     
     console.log("Supabase query result:", response.data);
     
-    // Process and enhance the database results with default garage information
+    // Get available garages for all matched parts
+    const partIds = response.data?.map(part => part.id) || [];
+    let availableGarages: Record<number, any[]> = {};
+    
+    if (partIds.length > 0) {
+      const { data: garagesData, error: garagesError } = await supabase
+        .rpc('get_garages_for_part_bulk', { part_ids: partIds });
+      
+      if (!garagesError && garagesData) {
+        // Group garages by part_id
+        garagesData.forEach(item => {
+          if (!availableGarages[item.part_id]) {
+            availableGarages[item.part_id] = [];
+          }
+          availableGarages[item.part_id].push({
+            id: item.id,
+            name: item.name,
+            location: item.location,
+            installationFee: item.installation_fee,
+            area: item.location.split(',')[0].trim() // Extract area from location
+          });
+        });
+      }
+    }
+    
+    // Process and enhance the database results with garage information
     const validParts: Part[] = (response.data || []).map(part => {
       return {
         ...part,
@@ -175,6 +226,8 @@ export const fetchPartsForVehicle = async (
           name: 'Mechanica Service Center',
           location: 'Dubai, UAE'
         },
+        // Use real garages data from database if available
+        availableGarages: availableGarages[part.id] || [],
         image_url: part.image_url || getDefaultImageUrlForPart(part.name)
       } as Part;
     });

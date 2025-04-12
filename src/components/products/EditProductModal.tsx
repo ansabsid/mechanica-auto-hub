@@ -1,124 +1,100 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
 import { GarageProduct } from "@/hooks/useGarageProducts";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface EditProductModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   product: GarageProduct | null;
-  onSave: (updatedProduct: GarageProduct) => Promise<boolean>;
+  onSave: (product: GarageProduct) => Promise<boolean>;
   manufacturers: any[];
   models: any[];
   years: number[];
 }
 
-const EditProductModal = ({
-  isOpen,
-  onClose,
+const EditProductModal: React.FC<EditProductModalProps> = ({
+  open,
+  onOpenChange,
   product,
   onSave,
   manufacturers,
   models,
   years
-}: EditProductModalProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+}) => {
   const [editedProduct, setEditedProduct] = useState<GarageProduct | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [filteredModels, setFilteredModels] = useState<any[]>([]);
-
-  // Initialize form when product changes
+  
   useEffect(() => {
     if (product) {
-      // Create a deep copy to prevent any reference issues
-      setEditedProduct(JSON.parse(JSON.stringify(product)));
+      setEditedProduct({...product});
+    } else {
+      setEditedProduct(null);
     }
   }, [product]);
-
-  // Filter models based on selected manufacturer
+  
   useEffect(() => {
-    if (editedProduct?.manufacturer_id && models.length > 0) {
+    if (editedProduct?.manufacturer_id) {
       const filtered = models.filter(model => model.manufacturer_id === editedProduct.manufacturer_id);
       setFilteredModels(filtered);
-      
-      // If current model is not in filtered list, select the first one
-      if (filtered.length > 0 && 
-          !filtered.some(model => model.id === editedProduct.model_id)) {
-        setEditedProduct(prev => prev ? {
-          ...prev,
-          model_id: filtered[0].id
-        } : null);
-      }
     } else {
       setFilteredModels([]);
     }
   }, [editedProduct?.manufacturer_id, models]);
-
+  
   const handleSave = async () => {
     if (!editedProduct) return;
     
-    setIsLoading(true);
+    setIsSaving(true);
     try {
-      // Explicitly convert quantity to number for consistent handling
-      const productToSave = {
-        ...editedProduct,
-        quantity: Number(editedProduct.quantity) // Ensure it's a number
-      };
-      
-      console.log("Saving product with data:", productToSave);
-      const success = await onSave(productToSave);
-      
+      const success = await onSave(editedProduct);
       if (success) {
-        toast.success("Product updated successfully!");
-        onClose();
-      } else {
-        toast.error("Failed to update product");
+        onOpenChange(false);
       }
-    } catch (error) {
-      console.error("Error saving product:", error);
-      toast.error("Failed to update product");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
-
+  
   if (!editedProduct) return null;
-
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md md:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-          {/* Product Name Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-name">Product Name*</Label>
+            <Label htmlFor="edit-name">Product Name</Label>
             <Input 
-              id="edit-product-name"
+              id="edit-name"
               value={editedProduct.name}
               onChange={(e) => setEditedProduct({...editedProduct, name: e.target.value})}
-              required
-              placeholder="e.g. Premium Brake Pads"
             />
           </div>
           
-          {/* Category Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-category">Category*</Label>
+            <Label htmlFor="edit-category">Category</Label>
             <Select 
               value={editedProduct.category}
               onValueChange={(value) => setEditedProduct({...editedProduct, category: value})}
-              required
             >
-              <SelectTrigger id="edit-product-category">
+              <SelectTrigger id="edit-category">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -135,27 +111,27 @@ const EditProductModal = ({
             </Select>
           </div>
           
-          {/* Description Field */}
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="edit-product-description">Description</Label>
+          <div className="space-y-2 col-span-full">
+            <Label htmlFor="edit-description">Description</Label>
             <Textarea 
-              id="edit-product-description"
+              id="edit-description"
               value={editedProduct.description || ''}
               onChange={(e) => setEditedProduct({...editedProduct, description: e.target.value})}
-              placeholder="Enter product description"
               className="resize-none h-20"
             />
           </div>
           
-          {/* Manufacturer Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-manufacturer">Manufacturer*</Label>
+            <Label htmlFor="edit-manufacturer">Manufacturer</Label>
             <Select 
               value={editedProduct.manufacturer_id?.toString()}
-              onValueChange={(value) => setEditedProduct({...editedProduct, manufacturer_id: parseInt(value)})}
-              required
+              onValueChange={(value) => setEditedProduct({
+                ...editedProduct, 
+                manufacturer_id: parseInt(value),
+                model_id: undefined // Reset model when manufacturer changes
+              })}
             >
-              <SelectTrigger id="edit-product-manufacturer">
+              <SelectTrigger id="edit-manufacturer">
                 <SelectValue placeholder="Select manufacturer" />
               </SelectTrigger>
               <SelectContent>
@@ -168,17 +144,19 @@ const EditProductModal = ({
             </Select>
           </div>
           
-          {/* Model Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-model">Model*</Label>
+            <Label htmlFor="edit-model">Model</Label>
             <Select 
               value={editedProduct.model_id?.toString()}
               onValueChange={(value) => setEditedProduct({...editedProduct, model_id: parseInt(value)})}
               disabled={filteredModels.length === 0}
-              required
             >
-              <SelectTrigger id="edit-product-model">
-                <SelectValue placeholder={filteredModels.length === 0 ? "Select a manufacturer first" : "Select model"} />
+              <SelectTrigger id="edit-model">
+                <SelectValue placeholder={
+                  filteredModels.length === 0 
+                    ? "Select a manufacturer first" 
+                    : "Select model"
+                } />
               </SelectTrigger>
               <SelectContent>
                 {filteredModels.map(model => (
@@ -190,15 +168,13 @@ const EditProductModal = ({
             </Select>
           </div>
           
-          {/* Year Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-year">Year*</Label>
+            <Label htmlFor="edit-year">Year</Label>
             <Select 
               value={editedProduct.year?.toString()}
               onValueChange={(value) => setEditedProduct({...editedProduct, year: parseInt(value)})}
-              required
             >
-              <SelectTrigger id="edit-product-year">
+              <SelectTrigger id="edit-year">
                 <SelectValue placeholder="Select year" />
               </SelectTrigger>
               <SelectContent className="max-h-[200px] overflow-y-auto">
@@ -211,42 +187,44 @@ const EditProductModal = ({
             </Select>
           </div>
           
-          {/* Price Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-price">Price (AED)*</Label>
+            <Label htmlFor="edit-price">Price (AED)</Label>
             <Input 
-              id="edit-product-price"
+              id="edit-price"
               type="number"
-              value={editedProduct.price.toString()}
-              onChange={(e) => setEditedProduct({...editedProduct, price: parseFloat(e.target.value)})}
-              placeholder="e.g. 299.99"
-              required
+              value={editedProduct.price}
+              onChange={(e) => setEditedProduct({...editedProduct, price: e.target.value})}
             />
           </div>
           
-          {/* Quantity Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-quantity">Stock Quantity*</Label>
+            <Label htmlFor="edit-quantity">Stock Quantity</Label>
             <Input 
-              id="edit-product-quantity"
+              id="edit-quantity"
               type="number"
-              value={typeof editedProduct.quantity === 'number' 
-                ? editedProduct.quantity.toString() 
-                : editedProduct.quantity}
+              value={editedProduct.quantity}
               onChange={(e) => setEditedProduct({...editedProduct, quantity: e.target.value})}
-              placeholder="e.g. 10"
-              required
             />
           </div>
           
-          {/* Status Field */}
           <div className="space-y-2">
-            <Label htmlFor="edit-product-status">Availability Status</Label>
+            <Label htmlFor="edit-installation-fee">Installation Fee (AED)</Label>
+            <Input 
+              id="edit-installation-fee"
+              type="number"
+              value={editedProduct.installation_fee || 0}
+              onChange={(e) => setEditedProduct({...editedProduct, installation_fee: e.target.value})}
+              placeholder="0.00"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="edit-status">Availability Status</Label>
             <Select 
               value={editedProduct.status}
               onValueChange={(value) => setEditedProduct({...editedProduct, status: value})}
             >
-              <SelectTrigger id="edit-product-status">
+              <SelectTrigger id="edit-status">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -262,22 +240,24 @@ const EditProductModal = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={onClose}
-            disabled={isLoading}
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
           >
             Cancel
           </Button>
           <Button 
-            variant="default" 
+            variant="mechanica" 
             onClick={handleSave}
-            disabled={isLoading}
+            disabled={isSaving}
           >
-            {isLoading ? (
+            {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
-            ) : "Save Changes"}
+            ) : (
+              'Save Changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
