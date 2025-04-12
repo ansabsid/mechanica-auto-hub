@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,7 +152,7 @@ export const useOrders = () => {
               installation_fee: item.installation_data.installationFee
             });
             
-            // Explicitly set installation_status to 'new' to ensure it appears in the garage notifications
+            // Always explicitly set installation_status to 'new' for garage notifications
             const { data, error } = await supabase
               .from('order_items')
               .update({ 
@@ -165,7 +166,7 @@ export const useOrders = () => {
             if (error) {
               console.error("Error updating order item with installation data:", error);
             } else {
-              console.log("Successfully updated order item with installation data");
+              console.log("Successfully updated order item with installation data:", data);
             }
           }
         }

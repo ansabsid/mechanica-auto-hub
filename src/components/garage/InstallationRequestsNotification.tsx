@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Calendar, User, Phone, Car, Wrench } from "lucide-react";
+import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
+import { toast } from "sonner";
 
 interface InstallationRequest {
   id: string;
@@ -44,6 +45,7 @@ export const InstallationRequestsNotification = () => {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [installationRequests, setInstallationRequests] = useState<InstallationRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -51,16 +53,25 @@ export const InstallationRequestsNotification = () => {
   const [debug, setDebug] = useState<any>({});
   
   const fetchInstallationRequests = async () => {
+    if (isRefreshing) return; // Prevent multiple simultaneous fetches
+    
+    const startTime = Date.now();
+    const timeLog: Record<string, number> = {};
+    
     setIsLoading(true);
+    setIsRefreshing(true);
+    
     try {
       // For Garage Masters demo, we'll hardcode the garage ID
       // This ensures the functionality works for the demo account
       let garageId = "c64a9350-d34a-4903-b34c-16c0e4699a44"; // Garage Masters ID from console logs
       
       console.log("Fetching installation requests for garage:", garageId);
-      setDebug(prev => ({ ...prev, garageId }));
+      setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      // First, fetch order items with installation data for this garage
+      timeLog.start = Date.now() - startTime;
+      
+      // First, fetch order items with installation data for this garage with more specific criteria
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -75,7 +86,10 @@ export const InstallationRequestsNotification = () => {
           installation_fee,
           part_id
         `)
-        .eq('garage_id', garageId);
+        .eq('garage_id', garageId)
+        .not('installation_status', 'is', null); // Make sure we only get items with installation status
+        
+      timeLog.orderItemsQuery = Date.now() - startTime;
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -85,22 +99,31 @@ export const InstallationRequestsNotification = () => {
           variant: "destructive",
         });
         setIsLoading(false);
-        setDebug(prev => ({ ...prev, orderItemsError }));
+        setIsRefreshing(false);
+        setDebug(prev => ({ ...prev, orderItemsError, timeLog }));
         return;
       }
       
       console.log("Fetched order items with installation:", orderItemsData);
-      setDebug(prev => ({ ...prev, orderItemsData }));
+      setDebug(prev => ({ ...prev, orderItemsData, itemsCount: orderItemsData?.length || 0 }));
       
       if (!orderItemsData || orderItemsData.length === 0) {
         console.log("No installation requests found for garage:", garageId);
         setInstallationRequests([]);
         setIsLoading(false);
+        setIsRefreshing(false);
+        
+        // Add notification to make it clear for users
+        toast({
+          title: "No Installation Requests",
+          description: "There are currently no installation requests for this garage."
+        });
         return;
       }
       
       // Get all order IDs to fetch the order details
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
+      timeLog.orderIdsExtracted = Date.now() - startTime;
       
       // Fetch order details for these order items
       const { data: ordersData, error: ordersError } = await supabase
@@ -108,15 +131,18 @@ export const InstallationRequestsNotification = () => {
         .select('id, user_id, created_at, status')
         .in('id', orderIds);
         
+      timeLog.ordersQuery = Date.now() - startTime;
+        
       if (ordersError) {
         console.error("Error fetching orders:", ordersError);
         setIsLoading(false);
-        setDebug(prev => ({ ...prev, ordersError }));
+        setIsRefreshing(false);
+        setDebug(prev => ({ ...prev, ordersError, timeLog }));
         return;
       }
       
       console.log("Fetched orders:", ordersData);
-      setDebug(prev => ({ ...prev, ordersData }));
+      setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
       // Create a map of orders by ID for quick lookup
       const orderMap = new Map();
@@ -129,10 +155,14 @@ export const InstallationRequestsNotification = () => {
         .filter(order => order.user_id)
         .map(order => order.user_id);
         
+      timeLog.userIdsExtracted = Date.now() - startTime;
+        
       if (userIds.length === 0) {
         console.error("No valid user IDs found in orders");
         setInstallationRequests([]);
         setIsLoading(false);
+        setIsRefreshing(false);
+        setDebug(prev => ({ ...prev, error: "No valid user IDs", timeLog }));
         return;
       }
       
@@ -141,15 +171,18 @@ export const InstallationRequestsNotification = () => {
         .select('id, email, phone')
         .in('id', userIds);
         
+      timeLog.usersQuery = Date.now() - startTime;
+        
       if (usersError) {
         console.error("Error fetching customer information:", usersError);
         setIsLoading(false);
-        setDebug(prev => ({ ...prev, usersError }));
+        setIsRefreshing(false);
+        setDebug(prev => ({ ...prev, usersError, timeLog }));
         return;
       }
       
       console.log("Fetched users:", usersData);
-      setDebug(prev => ({ ...prev, usersData }));
+      setDebug(prev => ({ ...prev, usersData, usersCount: usersData?.length || 0 }));
       
       // Create a map of users by ID for quick lookup
       const userMap = new Map();
@@ -164,13 +197,15 @@ export const InstallationRequestsNotification = () => {
         .select('id, name')
         .in('id', partIds);
         
+      timeLog.partsQuery = Date.now() - startTime;
+        
       if (partsError) {
         console.error("Error fetching parts:", partsError);
-        setDebug(prev => ({ ...prev, partsError }));
+        setDebug(prev => ({ ...prev, partsError, timeLog }));
       }
       
       console.log("Fetched parts:", partsData);
-      setDebug(prev => ({ ...prev, partsData }));
+      setDebug(prev => ({ ...prev, partsData, partsCount: partsData?.length || 0 }));
       
       // Create a map of parts by ID for quick lookup
       const partMap = new Map();
@@ -205,13 +240,32 @@ export const InstallationRequestsNotification = () => {
           };
         });
       
+      timeLog.mappingComplete = Date.now() - startTime;
+      
       console.log("Processed installation requests:", requests);
+      setDebug(prev => ({ 
+        ...prev, 
+        mappedRequests: requests, 
+        requestsCount: requests.length,
+        timeTaken: `${Date.now() - startTime}ms`,
+        timeLog
+      }));
+      
       setInstallationRequests(requests);
+      
+      // Only notify if we found some requests while refreshing (not on initial load)
+      if (requests.length > 0 && isRefreshing && !isLoading) {
+        toast({
+          title: `${requests.length} Installation Requests Found`,
+          description: "Installation requests have been loaded successfully."
+        });
+      }
     } catch (error) {
       console.error("Error in fetchRequestsForGarage:", error);
-      setDebug(prev => ({ ...prev, error }));
+      setDebug(prev => ({ ...prev, error, timeLog }));
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
   
@@ -273,6 +327,14 @@ export const InstallationRequestsNotification = () => {
     }
   };
   
+  const handleManualRefresh = () => {
+    toast({
+      title: "Refreshing...",
+      description: "Checking for new installation requests"
+    });
+    fetchInstallationRequests();
+  };
+  
   const unreadRequests = installationRequests.filter(req => req.status === "new").length;
   
   return (
@@ -310,9 +372,15 @@ export const InstallationRequestsNotification = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={fetchInstallationRequests}
-                    className="w-full text-xs"
+                    onClick={handleManualRefresh}
+                    className="w-full text-xs flex items-center justify-center"
+                    disabled={isRefreshing}
                   >
+                    {isRefreshing ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-mechanica-600 mr-2" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
                     Refresh
                   </Button>
                 </div>
@@ -324,51 +392,70 @@ export const InstallationRequestsNotification = () => {
                 </details>
               </div>
             ) : (
-              installationRequests.map(request => (
-                <div 
-                  key={request.id}
-                  className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 ${
-                    request.status === 'new' ? 'border-mechanica-500 bg-mechanica-50' : ''
-                  }`}
-                  onClick={() => handleRequestClick(request)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center">
-                        <h3 className="font-medium">{request.customerName}</h3>
-                        {request.status === 'new' && (
-                          <Badge className="ml-2 bg-mechanica-500">New</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">{request.part}</p>
-                      <div className="flex items-center text-xs text-gray-500 mt-2">
-                        <Calendar className="h-3 w-3 mr-1" /> 
-                        Order date: {new Date(request.orderDate).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${request.price + request.installationFee}</p>
-                      <p className="text-xs text-gray-500">
-                        (Part: ${request.price}, Install: ${request.installationFee})
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {request.status === 'scheduled' && request.appointmentDate && request.appointmentTime && (
-                    <div className="mt-2 text-xs bg-green-50 text-green-700 px-2 py-1 rounded flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" /> 
-                      Scheduled: {new Date(request.appointmentDate).toLocaleDateString()} at {request.appointmentTime}
-                    </div>
-                  )}
-                  
-                  {request.status === 'contacted' && (
-                    <div className="mt-2 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded flex items-center">
-                      <Phone className="h-3 w-3 mr-1" /> 
-                      Customer contacted
-                    </div>
-                  )}
+              <>
+                <div className="flex justify-end mb-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleManualRefresh}
+                    className="text-xs flex items-center"
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-mechanica-600 mr-2" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Refresh
+                  </Button>
                 </div>
-              ))
+                
+                {installationRequests.map(request => (
+                  <div 
+                    key={request.id}
+                    className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 ${
+                      request.status === 'new' ? 'border-mechanica-500 bg-mechanica-50' : ''
+                    }`}
+                    onClick={() => handleRequestClick(request)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center">
+                          <h3 className="font-medium">{request.customerName}</h3>
+                          {request.status === 'new' && (
+                            <Badge className="ml-2 bg-mechanica-500">New</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{request.part}</p>
+                        <div className="flex items-center text-xs text-gray-500 mt-2">
+                          <Calendar className="h-3 w-3 mr-1" /> 
+                          Order date: {new Date(request.orderDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">${request.price + request.installationFee}</p>
+                        <p className="text-xs text-gray-500">
+                          (Part: ${request.price}, Install: ${request.installationFee})
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {request.status === 'scheduled' && request.appointmentDate && request.appointmentTime && (
+                      <div className="mt-2 text-xs bg-green-50 text-green-700 px-2 py-1 rounded flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" /> 
+                        Scheduled: {new Date(request.appointmentDate).toLocaleDateString()} at {request.appointmentTime}
+                      </div>
+                    )}
+                    
+                    {request.status === 'contacted' && (
+                      <div className="mt-2 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded flex items-center">
+                        <Phone className="h-3 w-3 mr-1" /> 
+                        Customer contacted
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </>
             )}
           </div>
         </DialogContent>
