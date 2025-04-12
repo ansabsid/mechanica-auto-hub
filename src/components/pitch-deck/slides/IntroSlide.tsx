@@ -3,9 +3,15 @@ import React from "react";
 import { Rocket, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 
 const IntroSlide: React.FC = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  
+  const handleExploreClick = () => {
+    navigate("/about");
+  };
   
   return (
     <div className="flex flex-col items-center justify-center space-y-4 text-center w-full pb-10">
@@ -25,6 +31,7 @@ const IntroSlide: React.FC = () => {
         <Button
           variant="default"
           className="bg-mechanica-500 hover:bg-mechanica-600 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+          onClick={handleExploreClick}
         >
           Explore Our Vision
         </Button>
