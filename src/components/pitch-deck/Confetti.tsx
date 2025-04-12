@@ -19,60 +19,146 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    const pieces: {
+    // Modern confetti with various shapes and better movement
+    const confettiCount = 150;
+    const gravity = 0.35;
+    const terminalVelocity = 5;
+    const drag = 0.075;
+    
+    const particles: {
       x: number;
       y: number;
-      size: number;
-      speed: number;
+      width: number;
+      height: number;
       color: string;
-      rotation: number;
-      rotationSpeed: number;
+      tilt: number;
+      tiltAngleIncrement: number;
+      tiltAngle: number;
+      velocity: {x: number, y: number};
+      shape: 'circle' | 'square' | 'triangle' | 'line';
+      opacity: number;
+      opacityDecrement: number;
     }[] = [];
     
     const colors = [
-      '#f44336', '#e91e63', '#9c27b0', '#673ab7', 
-      '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4',
-      '#009688', '#4CAF50', '#8BC34A', '#CDDC39', 
-      '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'
+      '#3498db', '#9b59b6', '#e74c3c', '#2ecc71', 
+      '#f39c12', '#1abc9c', '#d35400', '#c0392b',
+      '#16a085', '#8e44ad', '#2980b9', '#f1c40f',
+      '#27ae60', '#e67e22', '#ecf0f1', '#95a5a6'
     ];
     
-    // Create confetti pieces
-    for (let i = 0; i < 150; i++) {
-      pieces.push({
+    const shapes = ['circle', 'square', 'triangle', 'line'] as const;
+    
+    // Create confetti particles
+    for (let i = 0; i < confettiCount; i++) {
+      particles.push({
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
-        size: Math.random() * 10 + 5,
-        speed: Math.random() * 5 + 2,
+        y: Math.random() * canvas.height * 0.5 - canvas.height * 0.25,
+        width: Math.random() * 8 + 6,
+        height: Math.random() * 4 + 3,
         color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() * 2) - 1
+        tilt: Math.random() * 10 - 5,
+        tiltAngleIncrement: Math.random() * 0.1 + 0.05,
+        tiltAngle: 0,
+        velocity: {
+          x: Math.random() * 4 - 2,
+          y: Math.random() * 2 + 0.1
+        },
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
+        opacity: 1,
+        opacityDecrement: Math.random() * 0.01 + 0.01
       });
     }
+    
+    const drawParticle = (particle: typeof particles[0]) => {
+      ctx.beginPath();
+      ctx.setTransform(
+        1,
+        particle.tilt,
+        0,
+        1,
+        particle.x,
+        particle.y
+      );
+      
+      ctx.globalAlpha = particle.opacity;
+      
+      switch (particle.shape) {
+        case 'circle':
+          ctx.beginPath();
+          ctx.arc(0, 0, particle.width / 2, 0, Math.PI * 2, false);
+          ctx.fill();
+          break;
+        case 'square':
+          ctx.fillRect(-particle.width / 2, -particle.height / 2, particle.width, particle.height);
+          break;
+        case 'triangle':
+          ctx.beginPath();
+          ctx.moveTo(-particle.width / 2, particle.height / 2);
+          ctx.lineTo(particle.width / 2, particle.height / 2);
+          ctx.lineTo(0, -particle.height / 2);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case 'line':
+          ctx.beginPath();
+          ctx.moveTo(-particle.width / 2, 0);
+          ctx.lineTo(particle.width / 2, 0);
+          ctx.lineWidth = particle.height;
+          ctx.stroke();
+          break;
+      }
+      
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    };
+    
+    const updateParticles = () => {
+      particles.forEach((particle, index) => {
+        // Apply gravity and drag
+        particle.velocity.y = Math.min(particle.velocity.y + gravity, terminalVelocity);
+        particle.velocity.x *= (1 - drag);
+        
+        // Update position
+        particle.x += particle.velocity.x;
+        particle.y += particle.velocity.y;
+        
+        // Update tilt
+        particle.tiltAngle += particle.tiltAngleIncrement;
+        particle.tilt = Math.sin(particle.tiltAngle) * 10;
+        
+        // Reduce opacity gradually
+        particle.opacity = Math.max(0, particle.opacity - particle.opacityDecrement);
+        
+        // Reset particles that fall off the screen or become invisible
+        if (particle.y > canvas.height || particle.opacity <= 0) {
+          if (Math.random() > 0.9 || particle.y > canvas.height) {
+            particles[index] = {
+              ...particle,
+              x: Math.random() * canvas.width,
+              y: -20,
+              tiltAngle: 0,
+              opacity: 1
+            };
+          }
+        }
+      });
+    };
     
     const animate = () => {
       if (!ctx) return;
       
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      pieces.forEach(piece => {
-        ctx.save();
-        ctx.translate(piece.x, piece.y);
-        ctx.rotate((piece.rotation * Math.PI) / 180);
-        
-        ctx.fillStyle = piece.color;
-        ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size);
-        
-        ctx.restore();
-        
-        // Update position and rotation
-        piece.y += piece.speed;
-        piece.rotation += piece.rotationSpeed;
-        
-        // Reset pieces that fall off the screen
-        if (piece.y > canvas.height) {
-          piece.y = -piece.size;
-          piece.x = Math.random() * canvas.width;
-        }
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      
+      updateParticles();
+      
+      // Draw all particles
+      particles.forEach(particle => {
+        ctx.fillStyle = particle.color;
+        ctx.strokeStyle = particle.color;
+        drawParticle(particle);
       });
       
       animationFrameId.current = requestAnimationFrame(animate);
@@ -80,11 +166,22 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     
     animate();
     
+    // Handle window resize
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     // Clean up
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
+      window.removeEventListener('resize', handleResize);
     };
   }, [isActive]);
   
