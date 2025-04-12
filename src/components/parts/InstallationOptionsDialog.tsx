@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -21,7 +22,7 @@ import {
 import { useCart } from "@/hooks/useCart";
 import { InstallationOptions } from "@/types/cart.types";
 import { MapPin } from "lucide-react";
-import { useGarageManagement } from "@/hooks/useGarageManagement";
+import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
 
 interface InstallationOptionsDialogProps {
   isOpen: boolean;
@@ -87,7 +88,17 @@ export const InstallationOptionsDialog = ({
       
       // Clear selected garage when area changes
       setSelectedGarage(null);
-      setFilteredGarages(garagesInArea);
+      
+      // Convert GarageInfo to Garage type - ensuring installationFee is set properly
+      const convertedGarages: Garage[] = garagesInArea.map(garage => ({
+        id: garage.id,
+        name: garage.name,
+        location: garage.location,
+        area: garage.area || "",
+        installationFee: garage.installationFee || 0
+      }));
+      
+      setFilteredGarages(convertedGarages);
     }
   }, [selectedArea, garages]);
   
