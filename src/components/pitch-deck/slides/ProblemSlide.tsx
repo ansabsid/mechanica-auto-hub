@@ -108,8 +108,8 @@ const ProblemSlide: React.FC = () => {
             />
             <ProblemItem
               number="2"
-              title="Limited Marketing Exposure"
-              description="Lack of proper platform to showcase expertise and attract new customers in a competitive market"
+              title="Digital Presence & Technology Gaps"
+              description="Lack of user-friendly interfaces and proper platform to showcase expertise and attract new customers in a competitive market"
               color="green"
               delay="0.2s"
               viewMode={viewMode}
@@ -124,18 +124,10 @@ const ProblemSlide: React.FC = () => {
             />
             <ProblemItem
               number="4"
-              title="Technological Gaps"
-              description="Absence of user-friendly interfaces that effectively connect them to customers and streamline operations"
-              color="green"
-              delay="0.4s"
-              viewMode={viewMode}
-            />
-            <ProblemItem
-              number="5"
               title="B2B Connectivity Limitations"
               description="Insurance companies, leasing firms, and corporate fleets rely on single garage partnerships, limiting access to broader networks of niche automotive expertise"
               color="green"
-              delay="0.5s"
+              delay="0.4s"
               viewMode={viewMode}
             />
           </ul>
