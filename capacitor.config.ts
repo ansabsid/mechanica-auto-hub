@@ -7,7 +7,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     url: 'https://2d72b7aa-a39a-447a-ba13-099dec9a2f3c.lovableproject.com?forceHideBadge=true',
-    cleartext: true
+    cleartext: true,
+    androidScheme: 'https'
   },
   // Add iOS specific configurations
   ios: {
@@ -17,7 +18,8 @@ const config: CapacitorConfig = {
   },
   // Add Android specific configurations  
   android: {
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
+    allowMixedContent: true
   }
 };
 
