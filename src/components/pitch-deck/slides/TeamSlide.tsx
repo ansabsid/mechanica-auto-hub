@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Medal, Workflow, Zap, Lightbulb, Rocket, Coffee, Brain, Code, Flame } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ const TeamSlide: React.FC = () => {
       name: "Mohammad Ansab Siddiqui",
       role: "Founder & CEO",
       initials: "MS",
+      photo: "/lovable-uploads/3cba6a96-fa1a-4ab2-b825-24bdd2c67cd0.png",
       fact: "Rebuilds vintage motorcycles in his spare time",
       description: "Visionary entrepreneur with a passion for automotive innovation",
       color: "from-blue-400 to-indigo-500",
@@ -71,9 +72,13 @@ const TeamSlide: React.FC = () => {
             <div className="p-5 text-center">
               <div className="relative mx-auto w-24 h-24 mb-4">
                 <Avatar className="h-24 w-24 mx-auto border-2 border-mechanica-200">
-                  <AvatarFallback className={`bg-gradient-to-br ${member.color} text-white text-xl font-bold`}>
-                    {member.initials}
-                  </AvatarFallback>
+                  {member.photo ? (
+                    <AvatarImage src={member.photo} alt={member.name} className="object-cover" />
+                  ) : (
+                    <AvatarFallback className={`bg-gradient-to-br ${member.color} text-white text-xl font-bold`}>
+                      {member.initials}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-md">
                   <member.icon className="h-6 w-6 text-mechanica-500" />
@@ -192,4 +197,3 @@ const TeamSlide: React.FC = () => {
 };
 
 export default TeamSlide;
-
