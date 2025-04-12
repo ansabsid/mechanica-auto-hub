@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw, Medal, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCapacitor } from "@/hooks/useCapacitor";
@@ -580,4 +580,4 @@ const PitchDeck = () => {
           <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
             <CardContent className="pt-6 flex flex-col items-center">
               <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
-                <div className="absolute inset
+                <
