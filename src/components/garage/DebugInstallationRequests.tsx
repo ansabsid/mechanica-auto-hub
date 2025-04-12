@@ -61,7 +61,7 @@ export const DebugInstallationRequests = () => {
       const { data: installationItems, error: installationError } = await supabase
         .from('order_items')
         .select('*')
-        .is('installation_status', 'not.null')
+        .not('installation_status', 'is', null)
         .limit(20);
         
       if (installationError) {

@@ -299,7 +299,7 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
         .from('order_items')
         .select('*')
         .eq('order_id', order.id)
-        .is('garage_id', 'not.null');
+        .not('garage_id', 'is', null);
 
       if (verifyError) {
         console.error("🔍 [API] Error verifying installation items:", verifyError);
@@ -377,7 +377,7 @@ export async function debugCheckAllInstallationRequests() {
     const { data: garageItems, error: garageError } = await supabase
       .from('order_items')
       .select('*')
-      .is('garage_id', 'not.null')
+      .not('garage_id', 'is', null)
       .limit(50);
       
     if (garageError) {
@@ -394,7 +394,7 @@ export async function debugCheckAllInstallationRequests() {
     const { data: installationItems, error: installationError } = await supabase
       .from('order_items')
       .select('*')
-      .is('installation_status', 'not.null')
+      .not('installation_status', 'is', null)
       .limit(50);
       
     if (installationError) {
