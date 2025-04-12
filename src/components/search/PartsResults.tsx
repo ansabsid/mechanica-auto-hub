@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
-import { Package2, SearchX, Car, MapPin, Wrench } from "lucide-react";
+import { Package2, SearchX, Car, MapPin, Wrench, ChevronDown, ChevronUp } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -119,7 +119,12 @@ const PartsResults: React.FC<PartsResultsProps> = ({
               <TableHead className="font-bold text-mechanica-800">Part Name</TableHead>
               <TableHead className="font-bold text-mechanica-800">Vehicle Details</TableHead>
               <TableHead className="font-bold text-mechanica-800 text-right">Price</TableHead>
-              <TableHead className="font-bold text-mechanica-800 text-center">Garages</TableHead>
+              <TableHead className="font-bold text-mechanica-800 text-center">
+                <div className="flex items-center justify-center">
+                  <MapPin className="h-4 w-4 mr-1 text-mechanica-500" />
+                  Garages
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,9 +164,12 @@ const PartsResults: React.FC<PartsResultsProps> = ({
                       className="w-full"
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <Button variant="outline" size="sm" className="flex items-center gap-1 w-full justify-center">
                           <MapPin className="h-4 w-4 text-mechanica-500" />
                           {part.availableGarages?.length || 0} Garages
+                          {expandedParts[part.id] 
+                            ? <ChevronUp className="h-3 w-3 ml-1" /> 
+                            : <ChevronDown className="h-3 w-3 ml-1" />}
                         </Button>
                       </CollapsibleTrigger>
                     </Collapsible>
