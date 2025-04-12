@@ -82,21 +82,24 @@ const Login = () => {
   const handleDemoLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
     
+    // Use the correct demo credentials based on selected role
+    let demoEmail, demoPassword;
+    
     if (role === "customer") {
-      setEmail("demo@customer.com");
-      setPassword("demo123");
+      demoEmail = "demo@customer.com";
+      demoPassword = "demo123";
     } else {
-      setEmail("demo@garage.com");
-      setPassword("demo123");
+      // For garage role
+      demoEmail = "demo-garage@bookmyparts.com";
+      demoPassword = "demo-garage";
     }
+    
+    setEmail(demoEmail);
+    setPassword(demoPassword);
     
     try {
       toast.info(`Logging in as demo ${role}`);
-      await signIn(
-        role === "customer" ? "demo@customer.com" : "demo@garage.com", 
-        "demo123", 
-        role
-      );
+      await signIn(demoEmail, demoPassword, role);
       // Redirect happens in useEffect
     } catch (error: any) {
       console.error("Demo login error:", error);
