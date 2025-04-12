@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -12,11 +12,10 @@ import { Separator } from '@/components/ui/separator';
 import { formatPrice } from '@/lib/utils';
 
 const OrdersListPage = () => {
-  const { orders, fetchUserOrders, isLoading, clearCurrentOrder } = useOrders();
+  const { orders, fetchUserOrders, isLoading } = useOrders();
   
   useEffect(() => {
     fetchUserOrders();
-    clearCurrentOrder();
   }, []);
 
   const formatDate = (dateStr: string) => {
