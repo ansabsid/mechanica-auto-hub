@@ -436,10 +436,10 @@ const PitchDeck = () => {
           </h1>
         </header>
 
-        {/* Content */}
+        {/* Content - Added flex container with centering */}
         <main className="flex-grow flex items-center justify-center p-6">
           <div 
-            className={`w-full max-w-md mx-auto transition-all duration-200 transform ${getSlideAnimationClass()}`}
+            className={`w-full max-w-md mx-auto transition-all duration-200 transform ${getSlideAnimationClass()} flex flex-col items-center justify-center`}
           >
             {slides[currentSlide].content}
           </div>
