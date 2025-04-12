@@ -205,7 +205,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       id: orderData.id,
       user_id: orderData.user_id,
       total_amount: orderData.total_amount,
-      status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+      status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed',
       created_at: orderData.created_at,
       updated_at: orderData.updated_at,
       items: formattedItems

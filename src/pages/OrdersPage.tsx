@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
@@ -106,6 +107,7 @@ const OrderPage = () => {
       case 'processing': return 'bg-blue-500';
       case 'completed': return 'bg-green-500';
       case 'cancelled': return 'bg-red-500';
+      case 'confirmed': return 'bg-green-500'; // Add confirmed status color
       default: return 'bg-gray-500';
     }
   };

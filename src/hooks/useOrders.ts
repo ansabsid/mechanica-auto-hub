@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +57,6 @@ export const useOrders = () => {
     setIsLoading(true);
     
     try {
-      // Only clear current order if we're fetching a different order
       if (currentOrder?.id !== orderId) {
         setCurrentOrder(null);
       }
@@ -105,7 +103,6 @@ export const useOrders = () => {
       
       setCurrentOrder(orderData);
       
-      // Check if order should be confirmed based on installation status
       if (orderData.status === 'pending') {
         const hasScheduledInstallation = orderData.items?.some(item => 
           item.installation_status === 'scheduled' && item.scheduled_date && item.scheduled_time
@@ -115,13 +112,11 @@ export const useOrders = () => {
           console.log("Order has scheduled installation, updating status to confirmed:", orderId);
           await confirmOrderWithScheduledInstallation(orderId);
           
-          // Update the current order status in memory
           setCurrentOrder({
             ...orderData,
-            status: 'confirmed'
+            status: 'confirmed' as const
           });
         } else {
-          // Continue with the usual auto-confirmation check
           updateOrderStatusBasedOnInstallation(orderData.id);
         }
       }
@@ -140,7 +135,6 @@ export const useOrders = () => {
     }
   };
 
-  // New function to confirm orders with scheduled installations
   const confirmOrderWithScheduledInstallation = async (orderId: string) => {
     try {
       const { error: updateError } = await supabase
@@ -167,12 +161,10 @@ export const useOrders = () => {
     }
   };
 
-  // Check if order has items with installation and update status accordingly
   const updateOrderStatusBasedOnInstallation = async (orderId: string) => {
     try {
       console.log("Checking if order needs to be auto-confirmed:", orderId);
       
-      // First, fetch order items to check if any have installation
       const { data: items, error: itemsError } = await supabase
         .from('order_items')
         .select('installation_status, garage_id')
@@ -183,7 +175,6 @@ export const useOrders = () => {
         return;
       }
       
-      // If no items have installation (no garage_id), auto-confirm the order
       const hasInstallationItems = items.some(item => item.garage_id !== null);
       
       if (!hasInstallationItems) {
@@ -199,7 +190,6 @@ export const useOrders = () => {
         } else {
           console.log("Order auto-confirmed successfully:", orderId);
           
-          // Refresh current order if it's the one being viewed
           if (currentOrder && currentOrder.id === orderId) {
             fetchOrderDetails(orderId);
           }
@@ -311,7 +301,6 @@ export const useOrders = () => {
         description: "Your order has been placed successfully!",
       });
       
-      // Auto-confirm order if no installation is needed
       if (orderData && orderData.id) {
         updateOrderStatusBasedOnInstallation(orderData.id);
       }
@@ -382,7 +371,6 @@ export const useOrders = () => {
         return false;
       }
       
-      // Update the order status to confirmed when installation is scheduled
       const { error: orderUpdateError } = await supabase
         .from('orders')
         .update({ status: 'confirmed' })
@@ -398,7 +386,6 @@ export const useOrders = () => {
       } else {
         console.log("Order status updated to confirmed:", orderId);
         
-        // Refresh current order if it's the one being viewed
         if (currentOrder && currentOrder.id === orderId) {
           fetchOrderDetails(orderId);
         }
@@ -434,6 +421,6 @@ export const useOrders = () => {
     cancelOrder: handleCancelOrder,
     updateInstallationSchedule,
     updateOrderStatusBasedOnInstallation,
-    confirmOrderWithScheduledInstallation  // Export the new function
+    confirmOrderWithScheduledInstallation
   };
 };
