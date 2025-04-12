@@ -46,6 +46,22 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Extra small screens */
+  @media (max-width: 475px) {
+    .xs\:hidden {
+      display: none;
+    }
+    .xs\:inline {
+      display: inline;
+    }
+  }
+  
+  /* Size for tiny text */
+  .text-2xs {
+    font-size: 0.65rem;
+    line-height: 1rem;
+  }
 }
 
 @layer components {
