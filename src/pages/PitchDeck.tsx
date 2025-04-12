@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -135,7 +134,6 @@ const PitchDeck = () => {
                       <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                       <span className="text-xs text-green-600">+15.7% YoY</span>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-2">Arabian Business</span>
                   </div>
                 </CardContent>
               </Card>
@@ -148,7 +146,6 @@ const PitchDeck = () => {
                     <div className="flex items-center mt-1">
                       <span className="text-xs">2023: 27.2% (330,532 units)</span>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-2">YallaMotor.com</span>
                   </div>
                 </CardContent>
               </Card>
@@ -162,7 +159,6 @@ const PitchDeck = () => {
                       <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                       <span className="text-xs text-green-600">CAGR: 15.29%</span>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-2">GlobeNewswire</span>
                   </div>
                 </CardContent>
               </Card>
@@ -185,7 +181,6 @@ const PitchDeck = () => {
                     <span className="text-sm text-amber-600 font-medium">2022 Market Value</span>
                     <span className="text-xl font-bold mt-1">$20.15B</span>
                     <PieChart className="h-4 w-4 text-amber-500 mt-2" />
-                    <span className="text-xs text-muted-foreground mt-2">JobXDubai & Arabian Business</span>
                   </div>
                 </CardContent>
               </Card>
@@ -199,7 +194,6 @@ const PitchDeck = () => {
                       <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                       <span className="text-xs text-green-600">CAGR: 11.5%</span>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-2">JobXDubai & Arabian Business</span>
                   </div>
                 </CardContent>
               </Card>
