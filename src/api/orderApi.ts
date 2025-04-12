@@ -70,24 +70,38 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
  */
 export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
+    console.log("Fetching order details for ID:", orderId);
+    
     // Try to get order details from RPC function
     const { data: orderData, error: orderError } = await (supabase as any).rpc('get_order', {
       p_order_id: orderId
     });
     
     if (orderError) {
+      console.log("RPC error, falling back to direct queries:", orderError.message);
+      
       // Fallback to direct queries
-      const { data: directOrderData, error: directOrderError } = await (supabase
-        .from('orders') as any)
+      const { data: directOrderData, error: directOrderError } = await supabase
+        .from('orders')
         .select('*')
         .eq('id', orderId)
         .single();
         
-      if (directOrderError) throw directOrderError;
+      if (directOrderError) {
+        console.error("Error fetching order:", directOrderError.message);
+        throw directOrderError;
+      }
+      
+      if (!directOrderData) {
+        console.error("No order found with ID:", orderId);
+        return null;
+      }
+      
+      console.log("Order found:", directOrderData);
       
       // Get order items with installation details
-      const { data: itemsData, error: itemsError } = await (supabase
-        .from('order_items') as any)
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('order_items')
         .select(`
           *,
           part:part_id (name, description),
@@ -95,7 +109,12 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
         `)
         .eq('order_id', orderId);
         
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error("Error fetching order items:", itemsError.message);
+        throw itemsError;
+      }
+      
+      console.log("Order items found:", itemsData?.length || 0);
       
       // Format order with items
       const orderWithItems: Order = {
@@ -133,6 +152,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     
     // Process RPC results if successful
     if (orderData) {
+      console.log("Order retrieved via RPC function");
       const orderWithItems: Order = {
         id: orderData.id,
         user_id: orderData.user_id,
@@ -166,6 +186,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       return orderWithItems;
     }
     
+    console.log("No order data returned from any method");
     return null;
   } catch (error) {
     console.error("Error fetching order details:", error);
@@ -204,10 +225,12 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     });
     
     if (error) {
+      console.log("RPC error, falling back to manual transaction:", error.message);
+      
       // Fallback to manual transaction
       // 1. Create the order
-      const { data: order, error: orderError } = await (supabase
-        .from('orders') as any)
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
         .insert({
           user_id: userId,
           total_amount: totalAmount,
@@ -217,6 +240,8 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
         .single();
       
       if (orderError) throw orderError;
+      
+      console.log("Order created:", order.id);
       
       // 2. Create order items with installation data if available
       const formattedItems = cartItems.map(item => ({
@@ -229,8 +254,10 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
         installation_status: item.installation_data?.garageId ? 'new' : null
       }));
       
-      const { error: itemsError } = await (supabase
-        .from('order_items') as any)
+      console.log("Creating order items:", formattedItems);
+      
+      const { error: itemsError } = await supabase
+        .from('order_items')
         .insert(formattedItems);
       
       if (itemsError) throw itemsError;
@@ -260,8 +287,8 @@ export async function cancelOrder(orderId: string): Promise<void> {
     
     if (error) {
       // Fallback to direct update
-      const { error: updateError } = await (supabase
-        .from('orders') as any)
+      const { error: updateError } = await supabase
+        .from('orders')
         .update({ status: 'cancelled' })
         .eq('id', orderId);
       

@@ -46,9 +46,11 @@ export const useOrders = () => {
 
   // Fetch a single order with its items
   const fetchOrderDetails = async (orderId: string) => {
+    console.log("Fetching details for order:", orderId);
     setIsLoading(true);
     try {
       const orderData = await getOrderDetails(orderId);
+      console.log("Order data received:", orderData);
       setCurrentOrder(orderData);
       return orderData;
     } catch (error: any) {
