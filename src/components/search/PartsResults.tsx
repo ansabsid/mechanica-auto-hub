@@ -193,7 +193,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({
                                 <div className="text-gray-600 text-xs flex justify-between items-center mt-1">
                                   <span>{garage.location}</span>
                                   <span className="font-semibold text-mechanica-600">
-                                    Installation: {formatPrice(garage.installationFee)}
+                                    Installation: {formatPrice(garage.installationFee || 0)}
                                   </span>
                                 </div>
                               </div>

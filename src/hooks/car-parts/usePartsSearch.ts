@@ -1,227 +1,191 @@
 
-import { useCallback, useMemo } from "react";
-import { Manufacturer, Model, Part } from "./types";
-import { useToast } from "@/hooks/use-toast";
-import { usePartsSearchState } from "./usePartsSearchState";
-import { 
-  fetchAllPartsFromDB, 
-  fetchPartsForVehicle, 
-  createMockPartsForVehicle 
-} from "./services/partsService";
-import { fetchWithCache } from "./utils/network";
+import { useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Part, Manufacturer, Model } from "./types";
+import { toast } from "sonner";
 
-export const usePartsSearch = (manufacturers: Manufacturer[], models: Model[]) => {
-  const { 
-    parts, setParts,
-    allParts, setAllParts,
-    isLoading, setIsLoading,
-    isSearching, setIsSearching,
-    searchCompleted, setSearchCompleted,
-    queryTime, setQueryTime
-  } = usePartsSearchState();
-  
-  const { toast } = useToast();
+export const usePartsSearch = (
+  manufacturers: Manufacturer[],
+  models: Model[]
+) => {
+  const [allParts, setAllParts] = useState<Part[]>([]);
+  const [parts, setParts] = useState<Part[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
+  const [queryTime, setQueryTime] = useState<number | null>(null);
 
-  /**
-   * Fetches all available parts from the database
-   * @param showToast Whether to show a toast notification
-   */
-  const fetchAllParts = useCallback(async (showToast = false) => {
-    console.log("Fetching all available parts, showToast:", showToast);
-    
-    if (isLoading) {
-      console.log("Already loading parts, skipping duplicate fetch");
-      return;
+  // Function to fetch garages for a specific part
+  const fetchGaragesForPart = async (partId: number) => {
+    const { data, error } = await supabase.rpc('get_garages_for_part', {
+      part_id: partId
+    });
+
+    if (error) {
+      console.error("Error fetching garages for part", error);
+      return [];
     }
+
+    return data || [];
+  };
+
+  // Function to fetch garages for multiple parts
+  const fetchGaragesForParts = async (partIds: number[]) => {
+    if (!partIds || partIds.length === 0) return {};
+
+    const { data, error } = await supabase.rpc('get_garages_for_part_bulk', {
+      part_ids: partIds
+    });
+
+    if (error) {
+      console.error("Error fetching garages for parts", error);
+      return {};
+    }
+
+    // Create a map of part_id to garages
+    const garagesMap: Record<number, any[]> = {};
     
-    setIsLoading(true);
-    
-    try {
-      // Use cache to avoid redundant fetches
-      const processedParts = await fetchWithCache(
-        'all-parts',
-        fetchAllPartsFromDB,
-        300000 // 5 minutes cache for all parts
-      );
-      
-      console.log("fetchAllPartsFromDB returned:", processedParts.length, "parts");
-      
-      if (processedParts.length > 0) {
-        setAllParts(processedParts);
-        // Don't set filtered parts when fetching all parts
-        // We only want to set filtered parts after a search
-        setSearchCompleted(false);
-        
-        // Only show toast notification if explicitly requested
-        if (showToast) {
-          toast({
-            title: "Parts Loaded Successfully",
-            description: `Loaded ${processedParts.length} parts from database`,
-            duration: 3000,
-          });
+    if (data && Array.isArray(data)) {
+      data.forEach(item => {
+        if (!garagesMap[item.part_id]) {
+          garagesMap[item.part_id] = [];
         }
-      } else {
-        console.log("No parts found in database, ready for search");
-        setAllParts([]);
-        setSearchCompleted(false);
-      }
-    } catch (error: any) {
-      console.error("Error fetching all parts:", error.message);
-      
-      if (showToast) {
-        toast({
-          title: "Error Loading Parts",
-          description: `Could not load parts: ${error.message}. Please try again.`,
-          variant: "destructive",
-          duration: 5000,
+        
+        garagesMap[item.part_id].push({
+          id: item.garage_id,
+          name: item.name,
+          location: item.location,
+          installationFee: parseFloat(item.installation_fee || 0)
         });
-      }
-      
-      setAllParts([]);
-      setParts([]);
-      setSearchCompleted(false);
-    } finally {
-      setIsLoading(false);
+      });
     }
-  }, [isLoading, toast, setAllParts, setParts, setSearchCompleted, setIsLoading]);
 
-  /**
-   * Reset search state
-   */
+    console.log("Fetched garages map:", garagesMap);
+    return garagesMap;
+  };
+
+  // Function to reset search results
   const resetSearch = useCallback(() => {
-    console.log("Resetting search state");
+    setParts([]);
+    setSearchCompleted(false);
+    setQueryTime(null);
+  }, []);
+
+  // Function to search for parts based on manufacturer, model, and year
+  const searchParts = useCallback(async (
+    manufacturerId: number,
+    modelId: number,
+    year: number
+  ) => {
+    setIsSearching(true);
+    setIsLoading(true);
     setSearchCompleted(false);
     setParts([]);
-    setQueryTime(0);
-    setIsSearching(false);
-  }, [setParts, setSearchCompleted, setQueryTime, setIsSearching]);
 
-  /**
-   * Search for parts based on vehicle criteria
-   * @param manufacturerId The manufacturer ID 
-   * @param modelId The model ID
-   * @param year The year
-   * @returns Number of parts found
-   */
-  const searchParts = useCallback(async (manufacturerId: string, modelId: string, year: string) => {
-    console.log("🔍 SEARCHING FOR PARTS:", { manufacturerId, modelId, year });
-    setIsSearching(true);
-    setSearchCompleted(false);
-    setParts([]); // Clear any existing parts before searching
-    
     try {
-      // Start timing the query
+      console.log("Searching parts with:", { manufacturerId, modelId, year });
+      
       const startTime = performance.now();
       
-      // Convert id strings to numbers
-      const mfrId = parseInt(manufacturerId);
-      const mdlId = parseInt(modelId);
-      const yearNum = parseInt(year);
-      
-      console.log(`Using numeric values for search: mfrId=${mfrId}, mdlId=${mdlId}, yearNum=${yearNum}`);
-      
-      // Create a unique cache key for this search
-      const cacheKey = `parts-${mfrId}-${mdlId}-${yearNum}`;
-      
-      // Fetch parts from database using cache
-      let validParts = await fetchWithCache(
-        cacheKey,
-        () => fetchPartsForVehicle(mfrId, mdlId, yearNum),
-        120000 // 2 minutes cache for specific vehicle parts
-      );
-      
-      // End timing the query
+      // Query parts table for matching parts
+      const { data, error } = await supabase
+        .from('parts')
+        .select('*')
+        .eq('manufacturer_id', manufacturerId)
+        .eq('model_id', modelId)
+        .eq('year', year);
+
+      if (error) {
+        throw error;
+      }
+
       const endTime = performance.now();
       const queryDuration = endTime - startTime;
       setQueryTime(queryDuration);
-      
-      console.log(`Database query completed in ${queryDuration.toFixed(2)}ms, found ${validParts.length} parts`);
-      
-      // If no parts found, use mock data
-      let mockPartsData: Part[] = [];
-      if (validParts.length === 0) {
-        console.log("No parts found in database, generating mock parts for the specific vehicle...");
+      console.log(`Query completed in ${queryDuration.toFixed(2)}ms, found ${data?.length || 0} parts`);
+
+      if (data && data.length > 0) {
+        // Get all part IDs to fetch garages in bulk
+        const partIds = data.map(part => part.id);
         
-        // Generate mock parts for the vehicle
-        mockPartsData = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
+        // Fetch garages for all parts in one call
+        const garagesMap = await fetchGaragesForParts(partIds);
         
-        console.log("Generated mock parts:", mockPartsData.length);
+        // Map garages to each part
+        const partsWithGarages = data.map(part => ({
+          ...part,
+          availableGarages: garagesMap[part.id] || []
+        }));
         
-        if (mockPartsData.length > 0) {
-          toast({
-            title: "Using Sample Data",
-            description: `No exact matches found in ${queryDuration.toFixed(0)}ms. Showing ${mockPartsData.length} sample parts.`,
-            variant: "default",
-            duration: 5000,
-          });
-          
-          setParts(mockPartsData);
-        } else {
-          toast({
-            title: "No Parts Found",
-            description: "No parts match your search criteria.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          
-          setParts([]);
-        }
+        console.log("Parts with garages:", partsWithGarages);
+        setParts(partsWithGarages);
       } else {
-        console.log("Using database parts:", validParts.length);
+        setParts([]);
+      }
+    } catch (error: any) {
+      console.error("Error searching parts:", error.message);
+      toast.error("Failed to search for parts. Please try again.");
+      setParts([]);
+    } finally {
+      setIsLoading(false);
+      setIsSearching(false);
+      setSearchCompleted(true);
+    }
+  }, []);
+
+  // Function to fetch all parts (used for admin or diagnostic purposes)
+  const fetchAllParts = useCallback(async () => {
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('parts')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        // Get all part IDs to fetch garages in bulk
+        const partIds = data.map(part => part.id);
         
-        toast({
-          title: "Parts Found",
-          description: `Found ${validParts.length} parts matching your vehicle in ${queryDuration.toFixed(0)}ms`,
-          duration: 5000,
-        });
+        // Fetch garages for all parts in one call
+        const garagesMap = await fetchGaragesForParts(partIds);
         
-        setParts(validParts);
+        // Map garages to each part
+        const partsWithGarages = data.map(part => ({
+          ...part,
+          availableGarages: garagesMap[part.id] || []
+        }));
+        
+        setAllParts(partsWithGarages);
+        return partsWithGarages;
       }
       
-      // Important: Update state in the correct order - set search completed after setting parts
-      setIsSearching(false);
-      setSearchCompleted(true);
-      
-      return validParts.length > 0 ? validParts.length : (mockPartsData.length || 0);
+      return [];
     } catch (error: any) {
-      console.error("Error searching for parts:", error);
-      
-      setQueryTime(0);
-      
-      toast({
-        title: "Search Error",
-        description: `Error searching for parts: ${error.message}. Showing sample data instead.`,
-        variant: "destructive",
-        duration: 5000,
-      });
-      
-      // Create properly filtered mock data on error
-      const mfrId = parseInt(manufacturerId);
-      const mdlId = parseInt(modelId);
-      const yearNum = parseInt(year);
-      
-      const mock_parts = createMockPartsForVehicle(mfrId, mdlId, yearNum, manufacturers, models);
-      
-      console.log("Using filtered mock parts due to error:", mock_parts.length);
-      
-      // Update state in the correct order
-      setParts(mock_parts);
-      setIsSearching(false);
-      setSearchCompleted(true);
-      
-      return mock_parts.length;
+      console.error("Error fetching all parts:", error.message);
+      toast.error("Failed to fetch parts.");
+      return [];
+    } finally {
+      setIsLoading(false);
     }
-  }, [manufacturers, models, toast, setParts, setIsSearching, setSearchCompleted, setQueryTime]);
+  }, []);
 
   return {
-    parts,
     allParts,
+    parts,
     isLoading,
     isSearching,
     searchCompleted,
     queryTime,
     searchParts,
     resetSearch,
-    fetchAllParts
+    fetchAllParts,
+    fetchGaragesForPart
   };
 };
+
+export default usePartsSearch;
