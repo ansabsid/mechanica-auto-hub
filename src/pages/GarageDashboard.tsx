@@ -41,6 +41,7 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 import ServiceSlotManager from "@/components/garage/ServiceSlotManager";
 import AppointmentManager from "@/components/garage/AppointmentManager";
 import { InstallationRequestsNotification } from "@/components/garage/InstallationRequestsNotification";
+import { DebugInstallationRequests } from "@/components/garage/DebugInstallationRequests";
 
 const appointments = [
   {
@@ -947,6 +948,8 @@ const GarageDashboard = () => {
         confirmText="Update"
         cancelText="Cancel"
       />
+      
+      <DebugInstallationRequests />
     </div>
   );
 };

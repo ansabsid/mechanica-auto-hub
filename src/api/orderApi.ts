@@ -222,6 +222,24 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       throw new Error("Cart is empty");
     }
 
+    console.log("🔍 [API] Creating order for user:", userId);
+    console.log("🔍 [API] Order total amount:", totalAmount);
+    console.log("🔍 [API] Cart items count:", cartItems.length);
+
+    // Debug: Check for installation data
+    const installationItems = cartItems.filter(item => item.installation_data);
+    console.log("🔍 [API] Items with installation:", installationItems.length);
+    
+    if (installationItems.length > 0) {
+      installationItems.forEach(item => {
+        console.log("🔍 [API] Installation details for part:", item.part_id, {
+          garage: item.installation_data?.garageId,
+          garageName: item.installation_data?.garageName,
+          installationFee: item.installation_data?.installationFee
+        });
+      });
+    }
+
     // Format order items
     const orderItems: CreateOrderItem[] = cartItems.map(item => ({
       part_id: item.part_id,
@@ -243,9 +261,12 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       .select()
       .single();
     
-    if (orderError) throw orderError;
+    if (orderError) {
+      console.error("🔍 [API] Error creating order:", orderError);
+      throw orderError;
+    }
     
-    console.log("Order created:", order.id);
+    console.log("🔍 [API] Order created:", order.id);
     
     // 2. Create order items with installation data if available
     const formattedItems = cartItems.map(item => ({
@@ -258,16 +279,54 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       installation_status: item.installation_data?.garageId ? 'new' : null
     }));
     
-    console.log("Creating order items:", formattedItems);
+    console.log("🔍 [API] Creating order items:", formattedItems);
     
     const { data: createdItems, error: itemsError } = await supabase
       .from('order_items')
       .insert(formattedItems)
       .select();
     
-    if (itemsError) throw itemsError;
+    if (itemsError) {
+      console.error("🔍 [API] Error creating order items:", itemsError);
+      throw itemsError;
+    }
     
-    console.log("Order items created:", createdItems);
+    console.log("🔍 [API] Order items created:", createdItems);
+
+    // 3. Verify the installation data was properly saved
+    if (installationItems.length > 0) {
+      const { data: verifyItems, error: verifyError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id)
+        .is('garage_id', 'not.null');
+
+      if (verifyError) {
+        console.error("🔍 [API] Error verifying installation items:", verifyError);
+      } else {
+        console.log("🔍 [API] Verified installation items:", verifyItems);
+        
+        // Check for any discrepancies
+        if (verifyItems.length !== installationItems.length) {
+          console.error(`🔍 [API] Warning: Expected ${installationItems.length} installation items, but found ${verifyItems.length}`);
+        }
+
+        // Check each item individually
+        verifyItems.forEach(item => {
+          if (item.installation_status !== 'new') {
+            console.error(`🔍 [API] Warning: Item ${item.id} has incorrect installation_status: ${item.installation_status}`);
+          }
+          
+          console.log(`🔍 [API] Installation item in DB:`, {
+            id: item.id,
+            part_id: item.part_id,
+            garage_id: item.garage_id,
+            installation_status: item.installation_status,
+            installation_fee: item.installation_fee
+          });
+        });
+      }
+    }
     
     return order;
   } catch (error) {
@@ -294,5 +353,108 @@ export async function cancelOrder(orderId: string): Promise<void> {
   } catch (error) {
     console.error("Error cancelling order:", error);
     throw error;
+  }
+}
+
+// Function to check all orders with installation requests - Debug helper
+export async function debugCheckAllInstallationRequests() {
+  console.log("🔍 [DEBUG] Checking all installation requests in the database");
+  
+  try {
+    // First, check if the order_items table exists
+    const { data: tableInfo, error: tableError } = await supabase
+      .from('order_items')
+      .select('count(*)', { count: 'exact', head: true });
+      
+    if (tableError) {
+      console.error("🔍 [DEBUG] Error checking order_items table:", tableError);
+      return;
+    }
+    
+    console.log("🔍 [DEBUG] order_items table exists:", tableInfo !== null);
+    
+    // Check all order items with garage_id (potential installations)
+    const { data: garageItems, error: garageError } = await supabase
+      .from('order_items')
+      .select('*')
+      .is('garage_id', 'not.null')
+      .limit(50);
+      
+    if (garageError) {
+      console.error("🔍 [DEBUG] Error checking items with garage_id:", garageError);
+    } else {
+      console.log(`🔍 [DEBUG] Found ${garageItems?.length || 0} order items with garage_id`);
+      
+      if (garageItems && garageItems.length > 0) {
+        console.log("🔍 [DEBUG] Sample items with garage_id:", garageItems);
+      }
+    }
+    
+    // Check all items with installation_status
+    const { data: installationItems, error: installationError } = await supabase
+      .from('order_items')
+      .select('*')
+      .is('installation_status', 'not.null')
+      .limit(50);
+      
+    if (installationError) {
+      console.error("🔍 [DEBUG] Error checking items with installation_status:", installationError);
+    } else {
+      console.log(`🔍 [DEBUG] Found ${installationItems?.length || 0} order items with installation_status`);
+      
+      if (installationItems && installationItems.length > 0) {
+        console.log("🔍 [DEBUG] Sample items with installation_status:", installationItems);
+      }
+    }
+    
+    // Check all garages (for reference)
+    const { data: allGarages, error: garagesError } = await supabase
+      .from('garages')
+      .select('id, name, location')
+      .limit(20);
+      
+    if (garagesError) {
+      console.error("🔍 [DEBUG] Error checking garages:", garagesError);
+    } else {
+      console.log(`🔍 [DEBUG] Found ${allGarages?.length || 0} garages`);
+      
+      if (allGarages && allGarages.length > 0) {
+        console.log("🔍 [DEBUG] Available garages:", allGarages);
+      }
+    }
+    
+    // Special check for Garage Masters
+    const garageMastersId = "c64a9350-d34a-4903-b34c-16c0e4699a44";
+    const { data: garageMasters, error: gmError } = await supabase
+      .from('garages')
+      .select('id, name, location')
+      .eq('id', garageMastersId)
+      .single();
+      
+    if (gmError) {
+      console.error(`🔍 [DEBUG] Error checking for Garage Masters with ID ${garageMastersId}:`, gmError);
+    } else {
+      console.log("🔍 [DEBUG] Garage Masters info:", garageMasters);
+      
+      // Check if any items are assigned to this garage
+      const { data: gmItems, error: gmItemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('garage_id', garageMastersId)
+        .limit(20);
+        
+      if (gmItemsError) {
+        console.error("🔍 [DEBUG] Error checking items for Garage Masters:", gmItemsError);
+      } else {
+        console.log(`🔍 [DEBUG] Found ${gmItems?.length || 0} items for Garage Masters`);
+        
+        if (gmItems && gmItems.length > 0) {
+          console.log("🔍 [DEBUG] Items for Garage Masters:", gmItems);
+        }
+      }
+    }
+    
+  } catch (error) {
+    console.error("🔍 [DEBUG] General error checking installation requests:", error);
   }
 }

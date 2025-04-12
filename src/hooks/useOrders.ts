@@ -132,6 +132,21 @@ export const useOrders = () => {
       return null;
     }
 
+    // DEBUG: Log the items with installation
+    console.log("🔍 [Order Creation] Cart items being ordered:", cartItems);
+    const installationItems = cartItems.filter(item => item.installation_data);
+    console.log("🔍 [Order Creation] Items with installation:", installationItems);
+    
+    if (installationItems.length > 0) {
+      console.log("🔍 [Order Creation] Installation garages:", 
+        installationItems.map(item => ({
+          garageId: item.installation_data?.garageId,
+          garageName: item.installation_data?.garageName,
+          fee: item.installation_data?.installationFee
+        }))
+      );
+    }
+
     setIsProcessing(true);
     try {
       const orderData = await createOrder(session.user.id, cartItems, totalAmount);
@@ -142,14 +157,15 @@ export const useOrders = () => {
       console.log("Items with installation:", itemsWithInstallation);
       
       if (itemsWithInstallation.length > 0 && orderData && orderData.id) {
-        console.log("Processing installation items for order:", orderData.id);
+        console.log("🔍 [Order Creation] Processing installation items for order:", orderData.id);
         
         // Process each item with installation data
         for (const item of itemsWithInstallation) {
           if (item.installation_data && item.installation_data.garageId) {
-            console.log(`Setting installation data for part ${item.part_id}:`, {
+            console.log(`🔍 [Order Creation] Setting installation data for part ${item.part_id}:`, {
               garage_id: item.installation_data.garageId,
-              installation_fee: item.installation_data.installationFee
+              installation_fee: item.installation_data.installationFee,
+              part_name: item.part.name
             });
             
             // IMPORTANT: Explicitly set installation_status to 'new' for garage notifications
@@ -164,9 +180,33 @@ export const useOrders = () => {
               .eq('part_id', item.part_id);
               
             if (error) {
-              console.error("Error updating order item with installation data:", error);
+              console.error("🔍 [Order Creation] Error updating order item with installation data:", error);
             } else {
-              console.log("Successfully updated order item with installation data:", data);
+              console.log("🔍 [Order Creation] Successfully updated order item with installation data:", data);
+              
+              // Verify the order_items record was updated correctly
+              const { data: verifyData, error: verifyError } = await supabase
+                .from('order_items')
+                .select('*')
+                .eq('order_id', orderData.id)
+                .eq('part_id', item.part_id)
+                .single();
+              
+              if (verifyError) {
+                console.error("🔍 [Order Creation] Error verifying order item update:", verifyError);
+              } else {
+                console.log("🔍 [Order Creation] Verified order item data:", verifyData);
+                
+                // Check if the garage_id matches what we expect
+                if (verifyData.garage_id !== item.installation_data.garageId) {
+                  console.error("🔍 [Order Creation] Warning: Garage ID mismatch! Expected:", item.installation_data.garageId, "Got:", verifyData.garage_id);
+                }
+                
+                // Check if installation_status is set correctly
+                if (verifyData.installation_status !== 'new') {
+                  console.error("🔍 [Order Creation] Warning: Installation status not set to 'new'! Current value:", verifyData.installation_status);
+                }
+              }
             }
           }
         }
