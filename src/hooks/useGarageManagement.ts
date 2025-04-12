@@ -1,24 +1,18 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export interface GarageInfo {
-  id: string; // Required field
+export interface Garage {
+  id: string;
   name: string;
-  area: string | null;
+  area?: string;
   location: string;
-  images?: string | null;
-  installationFee?: number | null; // Added the installationFee property
 }
 
-// New interface for adding a new garage (without id)
-export interface NewGarageInfo {
+export interface NewGarage {
   name: string;
-  area: string | null;
+  area: string;
   location: string;
-  images?: string | null;
-  installationFee?: string | null; // Added the installationFee property
 }
 
 /**
@@ -27,7 +21,7 @@ export interface NewGarageInfo {
  */
 export const useGarageManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [garages, setGarages] = useState<GarageInfo[]>([]);
+  const [garages, setGarages] = useState<Garage[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +30,6 @@ export const useGarageManagement = () => {
    * @returns Promise resolving to an array of formatted garage info
    */
   const fetchGarages = async () => {
-    // If already loading, prevent duplicate fetches
     if (fetchLoading) {
       console.log("Already fetching garages, request ignored");
       return garages;
@@ -47,10 +40,8 @@ export const useGarageManagement = () => {
     try {
       console.log("Fetching garages from the database...");
       
-      // Use a direct fetch with the anon key to bypass authentication completely
-      // This is a more reliable approach than setting auth to null
       const response = await fetch(
-        'https://gwjvqtusnhahjlzafixp.supabase.co/rest/v1/garages?select=id,name,location,area,images,installation_fee&order=location',
+        'https://gwjvqtusnhahjlzafixp.supabase.co/rest/v1/garages?select=id,name,location,area,images&order=location',
         {
           method: 'GET',
           headers: {
@@ -78,14 +69,12 @@ export const useGarageManagement = () => {
       console.log("Garages fetched successfully:", data);
       console.log("Sample first garage data:", data[0]);
       
-      // Map the data to our expected format (converting installation_fee to installationFee)
       const formattedGarages = data.map(garage => ({
         id: garage.id,
         name: garage.name,
         location: garage.location,
         area: garage.area,
-        images: garage.images,
-        installationFee: garage.installation_fee
+        images: garage.images
       }));
       
       console.log("Formatted garages:", formattedGarages);
@@ -107,25 +96,19 @@ export const useGarageManagement = () => {
    * @param garage The garage information to add (without id)
    * @returns Promise resolving to the created garage data or null on error
    */
-  const addGarage = async (garage: NewGarageInfo) => {
+  const addGarage = async (garageData: NewGarage) => {
     setIsLoading(true);
+    
     try {
-      console.log("Adding new garage:", garage);
+      const newGarage = {
+        name: garageData.name,
+        area: garageData.area || null,
+        location: garageData.location,
+      };
       
-      // Convert installationFee string to number or null before insertion
-      const installation_fee = garage.installationFee 
-        ? parseFloat(garage.installationFee) 
-        : null;
-        
       const { data, error } = await supabase
         .from('garages')
-        .insert({
-          name: garage.name,
-          area: garage.area,
-          location: garage.location,
-          images: garage.images,
-          installation_fee: installation_fee
-        })
+        .insert(newGarage)
         .select()
         .single();
         
@@ -133,11 +116,13 @@ export const useGarageManagement = () => {
       
       console.log("Garage added successfully:", data);
       toast.success("Garage added successfully!");
-      await fetchGarages(); // Refresh the garages list
+      
+      await fetchGarages();
       return data;
     } catch (error: any) {
+      console.error("Error adding garage:", error);
       toast.error(error.message || "Failed to add garage");
-      console.error("Add garage error:", error);
+      
       return null;
     } finally {
       setIsLoading(false);
@@ -155,7 +140,7 @@ export const useGarageManagement = () => {
       const { error } = await supabase
         .from('garages')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all except this impossible ID (safety measure)
+        .neq('id', '00000000-0000-0000-0000-000000000000');
         
       if (error) throw error;
       
@@ -164,8 +149,8 @@ export const useGarageManagement = () => {
       setGarages([]);
       return true;
     } catch (error: any) {
-      toast.error(error.message || "Failed to clear garages");
       console.error("Clear garages error:", error);
+      toast.error(error.message || "Failed to clear garages");
       return false;
     } finally {
       setIsLoading(false);

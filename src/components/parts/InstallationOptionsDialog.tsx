@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
@@ -88,17 +87,25 @@ export const InstallationOptionsDialog = ({
         }
       }
       
-      const convertedGarages: Garage[] = garagesInArea.map(garage => ({
-        id: garage.id,
-        name: garage.name,
-        location: garage.location,
-        area: garage.area || "",
-        installationFee: garage.installationFee || 0
-      }));
+      // Find matching part-garage combinations to get installation fees
+      // Installation fees come from part.availableGarages which contains data from parts_garages table
+      const filteredGaragesWithFees: Garage[] = garagesInArea.map(garage => {
+        // Try to find the installation fee for this garage and part from availableGarages
+        const partGarageInfo = part.availableGarages?.find(g => g.id === garage.id);
+        
+        return {
+          id: garage.id,
+          name: garage.name,
+          location: garage.location,
+          area: garage.area || "",
+          // Use the installation fee from parts_garages if available, otherwise default to 0
+          installationFee: partGarageInfo?.installationFee || 0
+        };
+      });
       
-      setFilteredGarages(convertedGarages);
+      setFilteredGarages(filteredGaragesWithFees);
     }
-  }, [selectedArea, garages]);
+  }, [selectedArea, garages, part.availableGarages]);
   
   // A stable handler for garage selection that won't recreate on every render
   const handleGarageSelection = useCallback((garageId: string) => {

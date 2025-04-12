@@ -144,7 +144,6 @@ export type Database = {
           created_at: string
           id: string
           images: string | null
-          installation_fee: number | null
           location: string
           name: string
           updated_at: string
@@ -154,7 +153,6 @@ export type Database = {
           created_at?: string
           id?: string
           images?: string | null
-          installation_fee?: number | null
           location: string
           name: string
           updated_at?: string
@@ -164,7 +162,6 @@ export type Database = {
           created_at?: string
           id?: string
           images?: string | null
-          installation_fee?: number | null
           location?: string
           name?: string
           updated_at?: string

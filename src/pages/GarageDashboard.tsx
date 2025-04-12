@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
@@ -54,7 +53,6 @@ const GarageDashboard = () => {
     name: "",
     area: "",
     location: "",
-    installationFee: ""
   });
 
   const [currentGarageId, setCurrentGarageId] = useState<string>("");
@@ -256,7 +254,6 @@ const GarageDashboard = () => {
       name: "",
       area: "",
       location: "",
-      installationFee: "",
     });
   };
 
