@@ -40,7 +40,8 @@ const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch }) => {
   useEffect(() => {
     if (manufacturer) {
       console.log("Manufacturer selected:", manufacturer);
-      fetchModels(parseInt(manufacturer, 10));
+      // Convert manufacturer to string when passing to fetchModels
+      fetchModels(manufacturer);
       // Reset model when manufacturer changes
       setModel("");
     }
