@@ -30,7 +30,7 @@ export const useCarParts = () => {
   // Wrap fetchModels to handle string to number conversion
   const fetchModels = useCallback((manufacturerId: string) => {
     console.log("Converting manufacturer ID from string to number:", manufacturerId);
-    return originalFetchModels(parseInt(manufacturerId, 10));
+    return originalFetchModels(manufacturerId);
   }, [originalFetchModels]);
   
   // Generate years range
