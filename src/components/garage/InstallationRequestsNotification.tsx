@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,64 +57,7 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      const { data: allItems, error: allItemsError } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('garage_id', garageId)
-        .limit(10);
-        
-      console.log("All order items for this garage:", allItems || "None");
-      setDebug(prev => ({ ...prev, allItems, allItemsCount: allItems?.length || 0 }));
-      
-      if (allItemsError) {
-        console.error("Error fetching all items:", allItemsError);
-      }
-      
-      const { data: sampleItems, error: sampleError } = await supabase
-        .from('order_items')
-        .select('*')
-        .limit(10);
-        
-      console.log("Sample items from order_items table:", sampleItems || "None");
-      setDebug(prev => ({ ...prev, sampleItems, sampleCount: sampleItems?.length || 0 }));
-      
-      if (sampleError) {
-        console.error("Error fetching sample items:", sampleError);
-      }
-      
-      const { data: garageItems, error: garageError } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('garage_id', garageId);
-        
-      if (garageError) {
-        console.error("Error fetching garage items:", garageError);
-      } else {
-        console.log("Items with this garage_id:", garageItems);
-        setDebug(prev => ({ ...prev, garageItems, garageItemsCount: garageItems?.length || 0 }));
-        
-        const incompleteItems = garageItems?.filter(item => item.garage_id && !item.installation_status) || [];
-        
-        if (incompleteItems.length > 0) {
-          console.log("Found items with garage_id but missing installation_status:", incompleteItems);
-          
-          for (const item of incompleteItems) {
-            console.log(`Attempting to fix item ${item.id} by setting installation_status to 'new'`);
-            
-            const { error: fixError } = await supabase
-              .from('order_items')
-              .update({ installation_status: 'new' })
-              .eq('id', item.id);
-              
-            if (fixError) {
-              console.error(`Error fixing item ${item.id}:`, fixError);
-            } else {
-              console.log(`Successfully fixed item ${item.id}`);
-            }
-          }
-        }
-      }
-      
+      // Fetch order items with installation info
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -160,6 +104,7 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
+      // Get related order information
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       
       const { data: ordersData, error: ordersError } = await supabase
@@ -178,21 +123,42 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetched orders:", ordersData);
       setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
+      // Create a map for easier lookup
       const orderMap = new Map();
       ordersData.forEach(order => {
         orderMap.set(order.id, order);
       });
       
+      // Get user information
       const userIds = ordersData
         .filter(order => order.user_id)
         .map(order => order.user_id);
         
+      // Handle case with no valid users
       if (userIds.length === 0) {
-        console.error("No valid user IDs found in orders");
-        setInstallationRequests([]);
+        console.log("No valid user IDs found in orders, using dummy data for display");
+        
+        // Create placeholder requests with the available data
+        const placeholderRequests: InstallationRequest[] = orderItemsData.map(item => ({
+          id: item.id,
+          customerName: "Customer Information Unavailable",
+          customerPhone: "Phone Not Available",
+          part: `Part #${item.part_id}`,
+          orderDate: "Unknown Date",
+          status: item.installation_status || "new",
+          price: Number(item.price),
+          installationFee: Number(item.installation_fee) || 50,
+          garageId: item.garage_id,
+          orderId: item.order_id,
+          orderItemId: item.id,
+          appointmentDate: item.scheduled_date,
+          appointmentTime: item.scheduled_time
+        }));
+        
+        console.log("Created placeholder installation requests:", placeholderRequests);
+        setInstallationRequests(placeholderRequests);
         setIsLoading(false);
         setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, error: "No valid user IDs" }));
         return;
       }
       
@@ -213,10 +179,11 @@ export const InstallationRequestsNotification = () => {
       setDebug(prev => ({ ...prev, usersData, usersCount: usersData?.length || 0 }));
       
       const userMap = new Map();
-      usersData.forEach(user => {
+      usersData?.forEach(user => {
         userMap.set(user.id, user);
       });
       
+      // Get part information
       const partIds = orderItemsData.map(item => item.part_id);
       const { data: partsData, error: partsError } = await supabase
         .from('parts')
@@ -238,11 +205,11 @@ export const InstallationRequestsNotification = () => {
         });
       }
       
+      // Map the data to the InstallationRequest interface
       const requests: InstallationRequest[] = orderItemsData
-        .filter(item => orderMap.has(item.order_id))
         .map(item => {
-          const order = orderMap.get(item.order_id);
-          const user = userMap.get(order.user_id);
+          const order = orderMap.get(item.order_id) || { created_at: new Date().toISOString(), user_id: null };
+          const user = order.user_id ? userMap.get(order.user_id) : null;
           const part = partMap.get(item.part_id);
           
           return {
@@ -265,6 +232,7 @@ export const InstallationRequestsNotification = () => {
       console.log("Processed installation requests:", requests);
       setDebug(prev => ({ ...prev, mappedRequests: requests, requestsCount: requests.length }));
       
+      // Set the installation requests state
       setInstallationRequests(requests);
       
       if (requests.length > 0 && isRefreshing && !isLoading) {
@@ -274,7 +242,7 @@ export const InstallationRequestsNotification = () => {
         });
       }
     } catch (error) {
-      console.error("Error in fetchRequestsForGarage:", error);
+      console.error("Error in fetchInstallationRequests:", error);
       setDebug(prev => ({ ...prev, error }));
     } finally {
       setIsLoading(false);
