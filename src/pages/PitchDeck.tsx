@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw, Medal, UserRound, Search, CheckSquare, Wrench, ShoppingBag, HeartHandshake } from "lucide-react";
+import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart, Star, Sparkles, Gauge, RotateCw, Medal, UserRound, Search, CheckSquare, Wrench, ShoppingBag, HeartHandshake, Coffee, Cpu, Tool, Laugh, Workflow, Zap, Brain, Code, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCapacitor } from "@/hooks/useCapacitor";
@@ -7,6 +7,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Slide {
   title: string;
@@ -22,6 +23,8 @@ const PitchDeck = () => {
   const slideTimerRef = useRef<number | null>(null);
   const [isConfettiActive, setIsConfettiActive] = useState(false);
   const isMobile = useIsMobile();
+  const [hoveredTeamMember, setHoveredTeamMember] = useState<number | null>(null);
+  const [showTeamFunFact, setShowTeamFunFact] = useState<number | null>(null);
   
   useEffect(() => {
     return () => {
@@ -674,75 +677,257 @@ const PitchDeck = () => {
     {
       title: "Our Team",
       content: (
-        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
-            <CardContent className="pt-6 flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
-                <UserRound className="h-10 w-10 text-mechanica-500" />
-              </div>
-              <h3 className="font-bold">Ahmed Al-Mansouri</h3>
-              <p className="text-mechanica-600 font-medium text-sm mb-1">CEO & Founder</p>
-              <p className="text-xs text-muted-foreground text-center px-2">15+ years in automotive industry</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-6">
+          <h3 className="text-center font-bold text-xl text-mechanica-700 mb-8 animate-bounce">Meet The Dream Team</h3>
           
-          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
-            <CardContent className="pt-6 flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
-                <UserRound className="h-10 w-10 text-mechanica-500" />
-              </div>
-              <h3 className="font-bold">Samira Khan</h3>
-              <p className="text-mechanica-600 font-medium text-sm mb-1">CTO</p>
-              <p className="text-xs text-muted-foreground text-center px-2">Former tech lead at Dubai Auto Group</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
-            <CardContent className="pt-6 flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
-                <UserRound className="h-10 w-10 text-mechanica-500" />
-              </div>
-              <h3 className="font-bold">Khalid Rahman</h3>
-              <p className="text-mechanica-600 font-medium text-sm mb-1">COO</p>
-              <p className="text-xs text-muted-foreground text-center px-2">Operations expert with 10+ years experience</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-all transform hover:-translate-y-1 cursor-pointer">
-            <CardContent className="pt-6 flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-mechanica-200 mb-4 flex items-center justify-center text-mechanica-600 font-bold text-lg relative overflow-hidden hover:scale-110 transition-transform">
-                <Medal className="h-10 w-10 text-mechanica-500" />
-              </div>
-              <h3 className="font-bold">Layla Al-Farsi</h3>
-              <p className="text-mechanica-600 font-medium text-sm mb-1">Partnerships Lead</p>
-              <p className="text-xs text-muted-foreground text-center px-2">Connected to 50+ regional garages</p>
-            </CardContent>
-          </Card>
-          
-          <div className={`${isMobile ? '' : 'col-span-2'} bg-white rounded-lg p-4 shadow-sm border border-gray-100 mt-2`}>
-            <div className="text-center">
-              <h3 className="font-bold text-mechanica-600 mb-2">Advisory Board</h3>
-              <div className="flex justify-center space-x-6">
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-1">
-                    <UserRound className="h-6 w-6 text-gray-600" />
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-8' : 'grid-cols-2 gap-10'}`}>
+            {/* Founder */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => setHoveredTeamMember(1)}
+              onMouseLeave={() => setHoveredTeamMember(null)}
+              onClick={() => setShowTeamFunFact(showTeamFunFact === 1 ? null : 1)}
+            >
+              <div className={`bg-gradient-to-br from-blue-50 to-mechanica-100 rounded-xl p-5 shadow-lg transition-all duration-300 transform 
+                ${hoveredTeamMember === 1 ? 'scale-105 rotate-1 shadow-xl' : ''} 
+                ${showTeamFunFact === 1 ? 'scale-105 shadow-xl border-2 border-mechanica-400' : ''}`}
+              >
+                <div className="flex items-center mb-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 border-2 border-mechanica-300 shadow-md group-hover:shadow-xl transition-all">
+                      <AvatarFallback className="bg-mechanica-100 text-mechanica-700 text-xl font-bold">MS</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-2 -right-2 bg-mechanica-500 text-white p-1.5 rounded-full shadow-md">
+                      <Rocket className="h-4 w-4" />
+                    </div>
+                    <div className={`absolute -top-1 -right-1 transition-opacity duration-300 ${hoveredTeamMember === 1 ? 'opacity-100' : 'opacity-0'}`}>
+                      <Flame className="h-5 w-5 text-amber-500 animate-pulse" />
+                    </div>
                   </div>
-                  <span className="text-xs font-medium">Dr. Omar Saeed</span>
-                  <span className="text-xs text-muted-foreground">Automotive Expert</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-1">
-                    <UserRound className="h-6 w-6 text-gray-600" />
+                  
+                  <div className="ml-5">
+                    <h3 className="font-bold text-lg text-mechanica-700">Mohammad Ansab Siddiqui</h3>
+                    <div className="flex items-center">
+                      <p className="text-mechanica-600 font-medium">Founder & CEO</p>
+                      <div className="ml-2 animate-pulse">
+                        <Brain className="h-4 w-4 text-mechanica-500" />
+                      </div>
+                    </div>
+                    <div className="mt-1 flex space-x-1">
+                      {["Visionary", "Innovator"].map((tag, i) => (
+                        <span key={i} className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <span className="text-xs font-medium">Fatima Al-Zaabi</span>
-                  <span className="text-xs text-muted-foreground">Investor Relations</span>
                 </div>
+                
+                <div className={`overflow-hidden transition-all duration-300 ${showTeamFunFact === 1 ? 'max-h-48' : 'max-h-0'}`}>
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 mt-1 border border-mechanica-200">
+                    <div className="flex items-start">
+                      <Coffee className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm italic">Fuels innovation with 5 cups of coffee daily</p>
+                    </div>
+                    <div className="flex items-start mt-2">
+                      <Zap className="h-5 w-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm italic">Wakes up at 5 AM to plan world domination</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-2 text-mechanica-600 hover:text-mechanica-800 hover:bg-mechanica-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTeamFunFact(showTeamFunFact === 1 ? null : 1);
+                  }}
+                >
+                  {showTeamFunFact === 1 ? "Hide Fun Facts" : "Show Fun Facts"}
+                </Button>
               </div>
+              
+              <div className={`absolute -bottom-3 right-0 left-0 mx-auto w-32 h-3 bg-black/10 rounded-full filter blur-md transition-all duration-300 ${hoveredTeamMember === 1 ? 'opacity-80 scale-110' : 'opacity-40'}`}></div>
+            </div>
+            
+            {/* COO */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => setHoveredTeamMember(2)}
+              onMouseLeave={() => setHoveredTeamMember(null)}
+              onClick={() => setShowTeamFunFact(showTeamFunFact === 2 ? null : 2)}
+            >
+              <div className={`bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-5 shadow-lg transition-all duration-300 transform 
+                ${hoveredTeamMember === 2 ? 'scale-105 -rotate-1 shadow-xl' : ''} 
+                ${showTeamFunFact === 2 ? 'scale-105 shadow-xl border-2 border-emerald-400' : ''}`}
+              >
+                <div className="flex items-center mb-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 border-2 border-emerald-300 shadow-md group-hover:shadow-xl transition-all">
+                      <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xl font-bold">AS</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-full shadow-md">
+                      <Workflow className="h-4 w-4" />
+                    </div>
+                    <div className={`absolute -top-1 -right-1 transition-opacity duration-300 ${hoveredTeamMember === 2 ? 'opacity-100' : 'opacity-0'}`}>
+                      <Laugh className="h-5 w-5 text-yellow-500 animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <div className="ml-5">
+                    <h3 className="font-bold text-lg text-emerald-700">Asad Sayed</h3>
+                    <div className="flex items-center">
+                      <p className="text-emerald-600 font-medium">COO</p>
+                      <div className="ml-2 animate-pulse">
+                        <Tool className="h-4 w-4 text-emerald-500" />
+                      </div>
+                    </div>
+                    <div className="mt-1 flex space-x-1">
+                      {["Operations", "Efficiency"].map((tag, i) => (
+                        <span key={i} className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className={`overflow-hidden transition-all duration-300 ${showTeamFunFact === 2 ? 'max-h-48' : 'max-h-0'}`}>
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 mt-1 border border-emerald-200">
+                    <div className="flex items-start">
+                      <Tool className="h-5 w-5 text-emerald-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm italic">Can optimize any process in his sleep</p>
+                    </div>
+                    <div className="flex items-start mt-2">
+                      <Cpu className="h-5 w-5 text-emerald-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm italic">Weekend gamer who uses strategy games to improve business tactics</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTeamFunFact(showTeamFunFact === 2 ? null : 2);
+                  }}
+                >
+                  {showTeamFunFact === 2 ? "Hide Fun Facts" : "Show Fun Facts"}
+                </Button>
+              </div>
+              
+              <div className={`absolute -bottom-3 right-0 left-0 mx-auto w-32 h-3 bg-black/10 rounded-full filter blur-md transition-all duration-300 ${hoveredTeamMember === 2 ? 'opacity-80 scale-110' : 'opacity-40'}`}></div>
+            </div>
+          </div>
+          
+          {/* Advisor */}
+          <div className="mt-8">
+            <h3 className="text-center font-medium text-gray-700 mb-4">Advisory Board</h3>
+            
+            <div 
+              className="relative max-w-md mx-auto group"
+              onMouseEnter={() => setHoveredTeamMember(3)}
+              onMouseLeave={() => setHoveredTeamMember(null)}
+              onClick={() => setShowTeamFunFact(showTeamFunFact === 3 ? null : 3)}
+            >
+              <div className={`bg-gradient-to-br from-amber-50 to-yellow-100 rounded-xl p-5 shadow-lg transition-all duration-300 transform 
+                ${hoveredTeamMember === 3 ? 'scale-105 rotate-1 shadow-xl' : ''} 
+                ${showTeamFunFact === 3 ? 'scale-105 shadow-xl border-2 border-amber-400' : ''}`}
+              >
+                <div className="flex items-center">
+                  <div className="relative">
+                    <Avatar className="h-16 w-16 border-2 border-amber-300 shadow-md group-hover:shadow-xl transition-all">
+                      <AvatarFallback className="bg-amber-100 text-amber-700 text-lg font-bold">MH</AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-1.5 rounded-full shadow-md">
+                      <Medal className="h-4 w-4" />
+                    </div>
+                    <div className={`absolute -top-1 -right-1 transition-opacity duration-300 ${hoveredTeamMember === 3 ? 'opacity-100' : 'opacity-0'}`}>
+                      <Star className="h-5 w-5 text-yellow-500 animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <div className="ml-5">
+                    <h3 className="font-bold text-lg text-amber-700">Mohammad Hafeez Siddique</h3>
+                    <div className="flex items-center">
+                      <p className="text-amber-600 font-medium">Strategic Advisor</p>
+                      <div className="ml-2 animate-pulse">
+                        <Code className="h-4 w-4 text-amber-500" />
+                      </div>
+                    </div>
+                    <div className="mt-1 flex space-x-1 flex-wrap">
+                      {["Industry Expert", "Mentor"].map((tag, i) => (
+                        <span key={i} className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 mb-1">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className={`overflow-hidden transition-all duration-300 ${showTeamFunFact === 3 ? 'max-h-48' : 'max-h-0'}`}>
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 mt-3 border border-amber-200">
+                    <div className="flex items-start">
+                      <Lightbulb className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm italic">Has advised 5+ successful startups in the automotive sector</p>
+                    </div>
+                    <div className="flex items-start mt-2">
+                      <Star className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm italic">Masterful at connecting the right people to solve complex problems</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full mt-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTeamFunFact(showTeamFunFact === 3 ? null : 3);
+                  }}
+                >
+                  {showTeamFunFact === 3 ? "Hide Fun Facts" : "Show Fun Facts"}
+                </Button>
+              </div>
+              
+              <div className={`absolute -bottom-3 right-0 left-0 mx-auto w-32 h-3 bg-black/10 rounded-full filter blur-md transition-all duration-300 ${hoveredTeamMember === 3 ? 'opacity-80 scale-110' : 'opacity-40'}`}></div>
+            </div>
+          </div>
+          
+          <div className="flex justify-center items-center space-x-4 mt-8">
+            <div className="text-center animate-bounce" style={{ animationDelay: "0.1s" }}>
+              <div className="bg-blue-100 rounded-full p-2">
+                <Zap className="h-5 w-5 text-blue-500" />
+              </div>
+              <p className="text-xs mt-1">Passionate</p>
+            </div>
+            <div className="text-center animate-bounce" style={{ animationDelay: "0.2s" }}>
+              <div className="bg-green-100 rounded-full p-2">
+                <Target className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-xs mt-1">Driven</p>
+            </div>
+            <div className="text-center animate-bounce" style={{ animationDelay: "0.3s" }}>
+              <div className="bg-purple-100 rounded-full p-2">
+                <Brain className="h-5 w-5 text-purple-500" />
+              </div>
+              <p className="text-xs mt-1">Innovative</p>
+            </div>
+            <div className="text-center animate-bounce" style={{ animationDelay: "0.4s" }}>
+              <div className="bg-amber-100 rounded-full p-2">
+                <Award className="h-5 w-5 text-amber-500" />
+              </div>
+              <p className="text-xs mt-1">Committed</p>
             </div>
           </div>
         </div>
       ),
-      bgColor: "bg-gradient-to-br from-purple-50 to-indigo-100"
+      bgColor: "bg-gradient-to-br from-gray-50 to-blue-50"
     },
     {
       title: "Thank You",
