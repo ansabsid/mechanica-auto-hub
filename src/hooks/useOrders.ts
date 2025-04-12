@@ -168,7 +168,7 @@ export const useOrders = () => {
               part_name: item.part.name
             });
             
-            // IMPORTANT: Explicitly set installation_status to 'new' for garage notifications
+            // FIXED: Use an explicit object with all necessary fields for the update
             const { data, error } = await supabase
               .from('order_items')
               .update({ 

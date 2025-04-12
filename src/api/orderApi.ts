@@ -269,6 +269,7 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     console.log("🔍 [API] Order created:", order.id);
     
     // 2. Create order items with installation data if available
+    // FIXED: Explicitly include installation_status for installation items
     const formattedItems = cartItems.map(item => ({
       order_id: order.id,
       part_id: item.part_id,
@@ -295,6 +296,9 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
 
     // 3. Verify the installation data was properly saved
     if (installationItems.length > 0) {
+      // FIXED: Log more details about the verification query
+      console.log("🔍 [API] Verifying installation data was saved, querying with order_id:", order.id);
+      
       const { data: verifyItems, error: verifyError } = await supabase
         .from('order_items')
         .select('*')

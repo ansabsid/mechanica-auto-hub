@@ -32,6 +32,9 @@ export const DebugInstallationRequests = () => {
       // Check specifically for Garage Masters ID installations
       console.log(`🔍 [DEBUG] Checking installation requests for garage: ${garageMastersId}`);
       
+      // FIXED: Add more detailed logging for the garage-specific query
+      console.log(`🔍 [DEBUG] Running query: .eq('garage_id', ${garageMastersId})`);
+      
       const { data: specificItems, error: specificError } = await supabase
         .from('order_items')
         .select('*')
@@ -58,6 +61,9 @@ export const DebugInstallationRequests = () => {
       }
       
       // Check for order_items with installation_status
+      // FIXED: Add more detailed logging about the query being performed
+      console.log("🔍 [DEBUG] Checking for order_items with installation_status set");
+      
       const { data: installationItems, error: installationError } = await supabase
         .from('order_items')
         .select('*')
@@ -67,7 +73,7 @@ export const DebugInstallationRequests = () => {
       if (installationError) {
         console.error("🔍 [DEBUG] Error checking items with installation_status:", installationError);
       } else {
-        console.log(`🔍 [DEBUG] Fetched order items with installation: ${installationItems}`);
+        console.log(`🔍 [DEBUG] Fetched order items with installation: ${JSON.stringify(installationItems)}`);
         
         if (installationItems && installationItems.length > 0) {
           console.log("🔍 [DEBUG] Found installation requests:", installationItems);
