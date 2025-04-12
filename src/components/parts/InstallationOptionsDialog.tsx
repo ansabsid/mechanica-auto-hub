@@ -22,7 +22,7 @@ import {
 import { useCart } from "@/hooks/useCart";
 import { InstallationOptions } from "@/types/cart.types";
 import { MapPin } from "lucide-react";
-import { useGarageManagement, GarageInfo } from "@/hooks/useGarageManagement";
+import { useGarageManagement } from "@/hooks/useGarageManagement";
 
 interface InstallationOptionsDialogProps {
   isOpen: boolean;
@@ -100,23 +100,23 @@ export const InstallationOptionsDialog = ({
     }
   }, [selectedArea, garages]);
   
-  // Update selected garage when ID changes - use callback to prevent recreation
-  const updateSelectedGarage = useCallback((garageId: string) => {
-    if (garageId && filteredGarages.length > 0) {
-      const garage = filteredGarages.find(g => g.id === garageId);
+  // Handle garage selection directly
+  const handleGarageSelection = useCallback((value: string) => {
+    console.log("Garage selection changed to:", value);
+    
+    if (value && filteredGarages.length > 0) {
+      const garage = filteredGarages.find(g => g.id === value);
       if (garage) {
+        // Set both states at once to prevent race conditions
+        setSelectedGarageId(value);
         setSelectedGarage(garage);
         console.log("Selected garage updated:", garage);
       }
+    } else {
+      setSelectedGarageId("");
+      setSelectedGarage(null);
     }
   }, [filteredGarages]);
-  
-  // Handle garage selection change
-  const handleGarageSelection = useCallback((value: string) => {
-    console.log("Garage selection changed to:", value);
-    setSelectedGarageId(value);
-    updateSelectedGarage(value);
-  }, [updateSelectedGarage]);
   
   const handleConfirmInstallation = async () => {
     if (!selectedGarage) {
