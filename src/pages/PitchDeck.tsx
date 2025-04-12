@@ -552,4 +552,282 @@ const PitchDeck = () => {
             </div>
           </div>
           
-          <div className="relative border-l-2 border-mechanica-200 pl-8 pb-
+          <div className="relative border-l-2 border-mechanica-200 pl-8 pb-8 ml-4">
+            <div className="absolute -left-[18px] w-9 h-9 rounded-full bg-mechanica-400 flex items-center justify-center text-white font-bold hover:scale-110 transition-transform cursor-pointer shadow-md">
+              2
+            </div>
+            <div className="animate-fade-in">
+              <h3 className="font-medium text-lg">Q4 2025: Regional Expansion</h3>
+              <p className="text-sm text-muted-foreground">Saudi Arabia and Qatar markets</p>
+              <div className="mt-2 flex space-x-2">
+                <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                  Multiple Languages
+                </span>
+                <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                  Local Partnerships
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="relative border-l-2 border-mechanica-200 pl-8 pb-8 ml-4">
+            <div className="absolute -left-[18px] w-9 h-9 rounded-full bg-mechanica-300 flex items-center justify-center text-white font-bold hover:scale-110 transition-transform cursor-pointer shadow-md">
+              3
+            </div>
+            <div className="animate-fade-in">
+              <h3 className="font-medium text-lg">Q2 2026: Enhanced Features</h3>
+              <p className="text-sm text-muted-foreground">AI diagnostics and subscription tiers</p>
+              <div className="mt-2 flex space-x-2">
+                <span className="inline-flex items-center rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-medium text-cyan-800">
+                  Premium Plans
+                </span>
+                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                  Advanced AI
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      bgColor: "bg-gradient-to-br from-indigo-50 to-purple-100"
+    },
+    {
+      title: "Our Team",
+      content: (
+        <div className="space-y-6">
+          <h3 className="text-center font-semibold text-lg text-mechanica-600 mb-4">Meet the Founders</h3>
+          
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-3 gap-8'}`}>
+            <div 
+              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer"
+              onMouseEnter={() => setHoveredTeamMember(0)}
+              onMouseLeave={() => setHoveredTeamMember(null)}
+              onClick={() => setShowTeamFunFact(showTeamFunFact === 0 ? null : 0)}
+            >
+              <div className="p-4 text-center">
+                <Avatar className="h-20 w-20 mx-auto mb-3 border-2 border-mechanica-200">
+                  <AvatarFallback className="bg-mechanica-100 text-mechanica-700 text-xl font-bold">
+                    AK
+                  </AvatarFallback>
+                </Avatar>
+                <h4 className="font-bold text-lg">Ahmed Khan</h4>
+                <p className="text-sm text-muted-foreground">CEO & Co-founder</p>
+                <div className="mt-2 text-xs text-mechanica-500">
+                  {hoveredTeamMember === 0 && (
+                    <p className="animate-fade-in">15+ years in automotive industry</p>
+                  )}
+                </div>
+                
+                {showTeamFunFact === 0 && (
+                  <div className="mt-3 bg-mechanica-50 p-2 rounded text-xs animate-fade-in">
+                    <p className="font-medium text-mechanica-700">Fun Fact</p>
+                    <p>Restored over 20 classic cars as a hobby</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer"
+              onMouseEnter={() => setHoveredTeamMember(1)}
+              onMouseLeave={() => setHoveredTeamMember(null)}
+              onClick={() => setShowTeamFunFact(showTeamFunFact === 1 ? null : 1)}
+            >
+              <div className="p-4 text-center">
+                <Avatar className="h-20 w-20 mx-auto mb-3 border-2 border-mechanica-200">
+                  <AvatarFallback className="bg-mechanica-100 text-mechanica-700 text-xl font-bold">
+                    SP
+                  </AvatarFallback>
+                </Avatar>
+                <h4 className="font-bold text-lg">Sarah Patel</h4>
+                <p className="text-sm text-muted-foreground">CTO & Co-founder</p>
+                <div className="mt-2 text-xs text-mechanica-500">
+                  {hoveredTeamMember === 1 && (
+                    <p className="animate-fade-in">Ex-Google, AI specialist</p>
+                  )}
+                </div>
+                
+                {showTeamFunFact === 1 && (
+                  <div className="mt-3 bg-mechanica-50 p-2 rounded text-xs animate-fade-in">
+                    <p className="font-medium text-mechanica-700">Fun Fact</p>
+                    <p>Competed in international robotics competitions</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div 
+              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer"
+              onMouseEnter={() => setHoveredTeamMember(2)}
+              onMouseLeave={() => setHoveredTeamMember(null)}
+              onClick={() => setShowTeamFunFact(showTeamFunFact === 2 ? null : 2)}
+            >
+              <div className="p-4 text-center">
+                <Avatar className="h-20 w-20 mx-auto mb-3 border-2 border-mechanica-200">
+                  <AvatarFallback className="bg-mechanica-100 text-mechanica-700 text-xl font-bold">
+                    MR
+                  </AvatarFallback>
+                </Avatar>
+                <h4 className="font-bold text-lg">Mahmoud Rahman</h4>
+                <p className="text-sm text-muted-foreground">COO & Co-founder</p>
+                <div className="mt-2 text-xs text-mechanica-500">
+                  {hoveredTeamMember === 2 && (
+                    <p className="animate-fade-in">Former operations exec at AutoTrader UAE</p>
+                  )}
+                </div>
+                
+                {showTeamFunFact === 2 && (
+                  <div className="mt-3 bg-mechanica-50 p-2 rounded text-xs animate-fade-in">
+                    <p className="font-medium text-mechanica-700">Fun Fact</p>
+                    <p>Speaks 5 languages fluently</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 shadow-sm mt-6">
+            <h4 className="font-medium text-center mb-3">Backed by Industry Leaders</h4>
+            <div className="flex justify-around items-center">
+              <div className="text-center">
+                <Medal className="h-8 w-8 text-amber-500 mx-auto" />
+                <p className="text-xs font-medium mt-1">Auto Tech Ventures</p>
+              </div>
+              <div className="text-center">
+                <Workflow className="h-8 w-8 text-blue-500 mx-auto" />
+                <p className="text-xs font-medium mt-1">Mobility Partners</p>
+              </div>
+              <div className="text-center">
+                <Zap className="h-8 w-8 text-purple-500 mx-auto" />
+                <p className="text-xs font-medium mt-1">Innovation Fund</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      bgColor: "bg-gradient-to-br from-teal-50 to-cyan-100"
+    },
+    {
+      title: "Investment Opportunity",
+      content: (
+        <div className="space-y-4">
+          <div className="bg-white rounded-lg p-5 shadow-md">
+            <h3 className="text-center font-semibold text-lg text-mechanica-600 mb-4">Seed Round - $1.5M</h3>
+            
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+              <div className="flex items-start space-x-3">
+                <div className="bg-mechanica-100 p-3 rounded-full">
+                  <Brain className="h-5 w-5 text-mechanica-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Product Development</h4>
+                  <p className="text-sm text-muted-foreground">40% - App refinement and new features</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="bg-mechanica-100 p-3 rounded-full">
+                  <Code className="h-5 w-5 text-mechanica-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Engineering Team</h4>
+                  <p className="text-sm text-muted-foreground">25% - Expanding developer resources</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="bg-mechanica-100 p-3 rounded-full">
+                  <Flame className="h-5 w-5 text-mechanica-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Marketing</h4>
+                  <p className="text-sm text-muted-foreground">20% - User and garage acquisition</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="bg-mechanica-100 p-3 rounded-full">
+                  <Cpu className="h-5 w-5 text-mechanica-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Operations</h4>
+                  <p className="text-sm text-muted-foreground">15% - Infrastructure and scaling</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-mechanica-50 rounded-lg p-4 border border-mechanica-100">
+            <h4 className="font-medium text-center mb-3">Financial Projections</h4>
+            <div className="flex justify-between">
+              <div className="text-center">
+                <p className="text-xs font-medium text-gray-500">Year 1</p>
+                <p className="text-xl font-bold text-mechanica-700 mt-1">$850K</p>
+                <p className="text-xs text-muted-foreground">Revenue</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-medium text-gray-500">Year 2</p>
+                <p className="text-xl font-bold text-mechanica-700 mt-1">$2.4M</p>
+                <p className="text-xs text-muted-foreground">Revenue</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-medium text-gray-500">Year 3</p>
+                <p className="text-xl font-bold text-mechanica-700 mt-1">$5.7M</p>
+                <p className="text-xs text-muted-foreground">Revenue</p>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <p className="text-xs font-medium">Projected Break-Even: Q2 2026</p>
+            </div>
+          </div>
+        </div>
+      ),
+      bgColor: "bg-gradient-to-br from-purple-50 to-pink-100"
+    },
+    {
+      title: "Contact Us",
+      content: (
+        <div className="flex flex-col items-center justify-center text-center space-y-6">
+          <div className="relative animate-bounce">
+            <Settings className="h-12 w-12 text-mechanica-500" />
+            <div className="absolute -right-1 -bottom-1">
+              <Coffee className="h-6 w-6 text-amber-500" />
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="text-2xl font-bold text-mechanica-600">Let's Build The Future Together</h3>
+            <p className="text-muted-foreground mt-2">Ready to transform the auto parts and service industry?</p>
+          </div>
+          
+          <div className="flex space-x-4">
+            <Button variant="mechanica" className="rounded-full shadow-md hover:shadow-lg transition-all">
+              Contact Us
+            </Button>
+            <Button variant="outline" className="rounded-full border-mechanica-300 shadow-sm hover:bg-mechanica-50">
+              Download Pitch Deck
+            </Button>
+          </div>
+          
+          <div className="pt-6 border-t border-gray-200 w-full max-w-xs mx-auto mt-4">
+            <p className="text-sm font-medium text-mechanica-700">Team@BookMyParts.com</p>
+            <p className="text-sm text-muted-foreground">Dubai, UAE</p>
+          </div>
+        </div>
+      ),
+      bgColor: "bg-gradient-to-br from-blue-50 to-indigo-100"
+    }
+  ];
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Render appropriate slide based on currentSlide state */}
+      <div className="flex-1">
+        {/* Content goes here */}
+      </div>
+    </div>
+  );
+};
+
+export default PitchDeck;
