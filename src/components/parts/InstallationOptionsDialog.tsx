@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -47,15 +46,12 @@ export const InstallationOptionsDialog = ({
   const { addToCart, refreshCart } = useCart();
   const { fetchGarages, garages } = useGarageManagement();
 
-  // Fetch garages when component mounts
   useEffect(() => {
     fetchGarages();
   }, [fetchGarages]);
 
-  // Extract unique areas from all garages
   useEffect(() => {
     if (garages && garages.length > 0) {
-      // Extract unique areas from garages table
       const areas = Array.from(new Set(
         garages
           .map(garage => garage.area)
@@ -64,7 +60,6 @@ export const InstallationOptionsDialog = ({
       
       setAvailableAreas(areas);
       
-      // If there's only one area, auto-select it
       if (areas.length === 1) {
         setSelectedArea(areas[0]);
       }
@@ -76,20 +71,16 @@ export const InstallationOptionsDialog = ({
     }
   }, [garages]);
 
-  // Filter garages based on selected area
   useEffect(() => {
     if (selectedArea && garages && garages.length > 0) {
-      // Find garages that match the selected area from all garages
       const garagesInArea = garages.filter(
         garage => garage.area === selectedArea
       );
       
       console.log("Filtered garages for area", selectedArea, ":", garagesInArea);
       
-      // Clear selected garage when area changes
       setSelectedGarage(null);
       
-      // Convert GarageInfo to Garage type - ensuring installationFee is set properly
       const convertedGarages: Garage[] = garagesInArea.map(garage => ({
         id: garage.id,
         name: garage.name,
@@ -218,11 +209,15 @@ export const InstallationOptionsDialog = ({
               <div className="space-y-2">
                 <Label htmlFor="garage">Garage</Label>
                 <Select 
-                  value={selectedGarage?.id}
+                  value={selectedGarage?.id || ""}
                   onValueChange={(value) => {
-                    const garage = filteredGarages.find(g => g.id === value);
-                    setSelectedGarage(garage || null);
-                    console.log("Selected garage:", garage);
+                    if (value) {
+                      const garage = filteredGarages.find(g => g.id === value);
+                      setSelectedGarage(garage || null);
+                      console.log("Selected garage:", garage);
+                    } else {
+                      setSelectedGarage(null);
+                    }
                   }}
                 >
                   <SelectTrigger id="garage">
@@ -331,4 +326,3 @@ export const InstallationOptionsDialog = ({
     </Dialog>
   );
 };
-
