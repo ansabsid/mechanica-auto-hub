@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +17,16 @@ const PitchDeck = () => {
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [isAnimating, setIsAnimating] = useState(false);
   const { isCapacitor } = useCapacitor();
+  const slideTimerRef = useRef<number | null>(null);
+  
+  // Clear any pending timers on unmount
+  useEffect(() => {
+    return () => {
+      if (slideTimerRef.current !== null) {
+        window.clearTimeout(slideTimerRef.current);
+      }
+    };
+  }, []);
   
   // Define slides
   const slides: Slide[] = [
@@ -359,12 +369,20 @@ const PitchDeck = () => {
     if (currentSlide < slides.length - 1 && !isAnimating) {
       setIsAnimating(true);
       setDirection('next');
-      setTimeout(() => {
-        setCurrentSlide(currentSlide + 1);
-        setTimeout(() => {
-          setIsAnimating(false);
-        }, 300);
-      }, 150);
+      
+      // Use requestAnimationFrame for smoother animations
+      requestAnimationFrame(() => {
+        slideTimerRef.current = window.setTimeout(() => {
+          setCurrentSlide(currentSlide + 1);
+          
+          // Use requestAnimationFrame for the animation end
+          requestAnimationFrame(() => {
+            slideTimerRef.current = window.setTimeout(() => {
+              setIsAnimating(false);
+            }, 250); // Slightly reduced duration
+          });
+        }, 100); // Slightly reduced delay
+      });
     }
   };
 
@@ -372,23 +390,31 @@ const PitchDeck = () => {
     if (currentSlide > 0 && !isAnimating) {
       setIsAnimating(true);
       setDirection('prev');
-      setTimeout(() => {
-        setCurrentSlide(currentSlide - 1);
-        setTimeout(() => {
-          setIsAnimating(false);
-        }, 300);
-      }, 150);
+      
+      // Use requestAnimationFrame for smoother animations
+      requestAnimationFrame(() => {
+        slideTimerRef.current = window.setTimeout(() => {
+          setCurrentSlide(currentSlide - 1);
+          
+          // Use requestAnimationFrame for the animation end
+          requestAnimationFrame(() => {
+            slideTimerRef.current = window.setTimeout(() => {
+              setIsAnimating(false);
+            }, 250); // Slightly reduced duration
+          });
+        }, 100); // Slightly reduced delay
+      });
     }
   };
 
-  // Get animation classes based on direction and animation state
+  // Optimized animation classes using hardware acceleration
   const getSlideAnimationClass = () => {
-    if (!isAnimating) return "opacity-100 translate-x-0";
+    if (!isAnimating) return "opacity-100 translate-x-0 will-change-transform";
     
     if (direction === 'next') {
-      return "opacity-0 -translate-x-10";
+      return "opacity-0 -translate-x-8 will-change-transform";
     } else {
-      return "opacity-0 translate-x-10";
+      return "opacity-0 translate-x-8 will-change-transform";
     }
   };
 
@@ -397,15 +423,15 @@ const PitchDeck = () => {
       {/* Progress bar */}
       <div className="w-full h-1 bg-gray-200">
         <div 
-          className="h-full bg-mechanica-500 transition-all duration-500"
+          className="h-full bg-mechanica-500 transition-all duration-300 will-change-contents"
           style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
         ></div>
       </div>
 
-      <div className={`flex-grow flex flex-col ${slides[currentSlide].bgColor} transition-colors duration-500`}>
+      <div className={`flex-grow flex flex-col ${slides[currentSlide].bgColor} transition-colors duration-300`}>
         {/* Header */}
         <header className="p-4 sm:p-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-center text-mechanica-600 transition-all duration-300">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center text-mechanica-600 transition-all duration-200">
             {slides[currentSlide].title}
           </h1>
         </header>
@@ -413,7 +439,7 @@ const PitchDeck = () => {
         {/* Content */}
         <main className="flex-grow flex items-center justify-center p-6">
           <div 
-            className={`w-full max-w-md mx-auto transition-all duration-300 ${getSlideAnimationClass()}`}
+            className={`w-full max-w-md mx-auto transition-all duration-200 transform ${getSlideAnimationClass()}`}
           >
             {slides[currentSlide].content}
           </div>
