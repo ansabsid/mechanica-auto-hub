@@ -36,6 +36,7 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPrice } from "@/lib/utils";
 
 const CustomerDashboard = () => {
   const { user } = useAuth();
@@ -400,7 +401,7 @@ const CustomerDashboard = () => {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500">Total:</span>
-                          <span className="font-medium">${order.total_amount}</span>
+                          <span className="font-medium">{formatPrice(order.total_amount)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500">Status:</span>
@@ -596,12 +597,12 @@ const CustomerDashboard = () => {
                         <div>
                           <div className="font-medium">Order #{installation.order_id.substring(0, 6)}</div>
                           <div className="text-muted-foreground mt-1">
-                            Qty: {installation.quantity} x ${installation.price}
+                            Qty: {installation.quantity} x {formatPrice(installation.price)}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-medium text-green-600">
-                            ${installation.installation_fee} 
+                            {formatPrice(installation.installation_fee)} 
                           </div>
                           <div className="text-xs text-muted-foreground">installation fee</div>
                         </div>
@@ -858,85 +859,3 @@ const CustomerDashboard = () => {
             <DialogTitle>Cancel Appointment</DialogTitle>
             <DialogDescription>
               Are you sure you want to cancel this appointment? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            {selectedAppointment && (
-              <div className="bg-gray-50 p-3 rounded-md space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Service:</span>
-                  <span className="font-medium">{selectedAppointment.service_type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Date:</span>
-                  <span className="font-medium">{formatDate(selectedAppointment.appointment_date)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Time:</span>
-                  <span className="font-medium">{formatTime(selectedAppointment.appointment_time)}</span>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setCancelDialogOpen(false)}
-            >
-              Keep Appointment
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={handleCancelAppointment}
-              disabled={cancelLoading}
-            >
-              {cancelLoading ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Cancelling...
-                </>
-              ) : (
-                "Cancel Appointment"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={cancelVehicleDialogOpen} onOpenChange={setCancelVehicleDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove Vehicle</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove this vehicle? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setCancelVehicleDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={handleDeleteVehicle}
-              disabled={cancelLoading}
-            >
-              {cancelLoading ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Removing...
-                </>
-              ) : (
-                "Remove Vehicle"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default CustomerDashboard;
