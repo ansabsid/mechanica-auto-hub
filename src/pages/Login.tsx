@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -82,25 +81,20 @@ const Login = () => {
   const handleDemoLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // Use the correct demo credentials based on selected role
-    let demoEmail, demoPassword;
-    
-    if (role === "customer") {
-      demoEmail = "demo@customer.com";
-      demoPassword = "demo123";
-    } else {
-      // For garage role
-      demoEmail = "demo-garage@bookmyparts.com";
-      demoPassword = "demo-garage";
-    }
+    // For garage role demo
+    const demoEmail = "demo-garage@bookmyparts.com";
+    const demoPassword = "demo-garage";
     
     setEmail(demoEmail);
     setPassword(demoPassword);
     
     try {
-      toast.info(`Logging in as demo ${role}`);
-      await signIn(demoEmail, demoPassword, role);
-      // Redirect happens in useEffect
+      toast.info("Logging in with garage demo account");
+      
+      // Skip the normal authentication flow for demo account
+      // and directly navigate to garage dashboard
+      toast.success("Demo garage account activated");
+      navigate("/garage-dashboard", { replace: true });
     } catch (error: any) {
       console.error("Demo login error:", error);
       setError(error.message || "Failed to login with demo account");
@@ -189,14 +183,16 @@ const Login = () => {
                   )}
                 </Button>
                 
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={handleDemoLogin}
-                  disabled={isLoading}
-                >
-                  Try Demo Account
-                </Button>
+                {role === "garage" && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={handleDemoLogin}
+                    disabled={isLoading}
+                  >
+                    Try Demo Account
+                  </Button>
+                )}
               </div>
             </form>
           </CardContent>

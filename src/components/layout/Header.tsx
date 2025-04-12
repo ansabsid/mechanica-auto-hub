@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, User, ShoppingCart, LogOut, Home, Settings } from "lucide-react";
@@ -18,6 +19,9 @@ const Header = () => {
   const { isAuthenticated, user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Check if the current path is the garage dashboard (demo mode)
+  const isDemoMode = location.pathname === "/garage-dashboard" && !isAuthenticated;
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -35,12 +39,22 @@ const Header = () => {
   };
 
   const handleDashboardClick = () => {
-    if (userRole === "garage") {
+    if (userRole === "garage" || isDemoMode) {
       navigate("/garage-dashboard");
     } else {
       navigate("/customer-dashboard");
     }
   };
+
+  // Determine the display name for the user menu
+  const displayName = isDemoMode 
+    ? "demo-garage@bookmyparts.com"
+    : user?.email;
+
+  // Determine the role display for the user menu
+  const roleDisplay = isDemoMode 
+    ? "garage (demo)"
+    : userRole || "User";
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm">
@@ -55,7 +69,7 @@ const Header = () => {
               Home
             </Link>
             
-            {userRole !== "garage" && (
+            {userRole !== "garage" && !isDemoMode && (
               <>
                 <Link to="/categories" className="text-gray-700 hover:text-mechanica-500 transition-colors">
                   Parts
@@ -75,11 +89,11 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
+            {isAuthenticated || isDemoMode ? (
               <>
-                {userRole !== "garage" && <CartDrawer />}
+                {userRole !== "garage" && !isDemoMode && <CartDrawer />}
 
-                {userRole === "garage" && <InstallationRequestsNotification />}
+                {(userRole === "garage" || isDemoMode) && <InstallationRequestsNotification />}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -89,16 +103,16 @@ const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="p-2">
-                      <p className="font-medium truncate">{user?.email}</p>
-                      <p className="text-sm text-gray-500 capitalize">{userRole || "User"}</p>
+                      <p className="font-medium truncate">{displayName}</p>
+                      <p className="text-sm text-gray-500 capitalize">{roleDisplay}</p>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleDashboardClick}>
                       <Home className="mr-2 h-4 w-4" />
-                      <span>{(userRole === "garage") ? "Garage Dashboard" : "My Dashboard"}</span>
+                      <span>{(userRole === "garage" || isDemoMode) ? "Garage Dashboard" : "My Dashboard"}</span>
                     </DropdownMenuItem>
                     
-                    {userRole !== "garage" && (
+                    {userRole !== "garage" && !isDemoMode && (
                       <DropdownMenuItem onClick={() => navigate("/orders")}>
                         <ShoppingCart className="mr-2 h-4 w-4" />
                         <span>My Orders</span>
@@ -110,10 +124,18 @@ const Header = () => {
                       <span>Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
+                    
+                    {isDemoMode ? (
+                      <DropdownMenuItem onClick={() => navigate("/login")}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Exit Demo Mode</span>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
@@ -149,7 +171,7 @@ const Header = () => {
                 Home
               </Link>
               
-              {userRole !== "garage" && (
+              {userRole !== "garage" && !isDemoMode && (
                 <>
                   <Link
                     to="/categories"
@@ -183,7 +205,7 @@ const Header = () => {
                 Contact
               </Link>
               
-              {isAuthenticated && userRole === "garage" && (
+              {(isAuthenticated && userRole === "garage") || isDemoMode ? (
                 <Link 
                   to="/garage-dashboard"
                   className="text-mechanica-600 font-medium hover:text-mechanica-700 transition-colors"
@@ -191,9 +213,9 @@ const Header = () => {
                 >
                   Garage Dashboard
                 </Link>
-              )}
+              ) : null}
               
-              {isAuthenticated && (
+              {isAuthenticated ? (
                 <button
                   onClick={() => {
                     handleLogout();
@@ -204,7 +226,16 @@ const Header = () => {
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </button>
-              )}
+              ) : isDemoMode ? (
+                <Link
+                  to="/login"
+                  className="flex items-center text-red-600 hover:text-red-800 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Exit Demo Mode</span>
+                </Link>
+              ) : null}
             </div>
           </div>
         )}
