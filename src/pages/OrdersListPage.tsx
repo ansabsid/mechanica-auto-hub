@@ -39,6 +39,12 @@ const OrdersListPage = () => {
   };
   
   const viewOrderDetails = (orderId: string) => {
+    // Ensure we're actually getting an order ID and log it for debugging
+    console.log("Navigating to order details with ID:", orderId);
+    if (!orderId) {
+      console.error("Order ID is undefined or empty");
+      return;
+    }
     navigate(`/orders/${orderId}`);
   };
   

@@ -24,7 +24,7 @@ const OrderPage = () => {
   useEffect(() => {
     const loadOrderDetails = async () => {
       if (!orderId) {
-        console.error("Order ID is missing from URL params");
+        console.error("Order ID is missing from URL params:", orderId);
         setErrorMessage("Order ID is missing from URL parameters");
         return;
       }
