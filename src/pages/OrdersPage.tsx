@@ -17,27 +17,48 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { useAuth } from "@/hooks/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const OrderDetailPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { fetchOrderDetails, currentOrder, isLoading, cancelOrder } = useOrders();
   const { user } = useAuth();
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
   
   useEffect(() => {
     const loadOrderDetails = async () => {
       if (!orderId) {
+        console.error("No order ID provided in URL parameters");
         return;
       }
       
-      if (!user) {
+      const { data } = await supabase.auth.getSession();
+      const isAuthenticated = !!data.session;
+      
+      console.log("Authentication status:", isAuthenticated ? "Logged in" : "Not logged in");
+      console.log("Current user ID:", data.session?.user?.id);
+      console.log("Loading order details for:", orderId);
+      
+      if (!isAuthenticated) {
         console.log("No authenticated user found, redirecting to login");
         navigate('/login', { state: { from: `/orders/${orderId}` } });
         return;
       }
       
-      console.log("Loading order details for:", orderId);
-      await fetchOrderDetails(orderId);
+      try {
+        const orderData = await fetchOrderDetails(orderId);
+        setHasAttemptedFetch(true);
+        
+        if (!orderData) {
+          console.error("Order data is null after fetch attempt");
+        } else {
+          console.log("Order data loaded successfully:", orderData.id);
+        }
+      } catch (error) {
+        console.error("Error in loadOrderDetails:", error);
+        setHasAttemptedFetch(true);
+      }
     };
     
     loadOrderDetails();
@@ -91,7 +112,7 @@ const OrderDetailPage = () => {
             <Loader2 className="h-8 w-8 animate-spin text-mechanica-500" />
             <p className="mt-4 text-muted-foreground">Loading order details...</p>
           </div>
-        ) : !currentOrder ? (
+        ) : !currentOrder && hasAttemptedFetch ? (
           <div className="text-center py-12">
             <p className="text-xl font-medium mb-2">Order not found</p>
             <p className="text-muted-foreground mb-6">
@@ -110,14 +131,16 @@ const OrderDetailPage = () => {
                     <div>
                       <CardTitle>Order Items</CardTitle>
                       <CardDescription>
-                        Ordered on {format(new Date(currentOrder.created_at), 'MMMM d, yyyy')}
+                        {currentOrder && currentOrder.created_at ? 
+                          `Ordered on ${format(new Date(currentOrder.created_at), 'MMMM d, yyyy')}` : 
+                          'Order date not available'}
                       </CardDescription>
                     </div>
-                    {getStatusBadge(currentOrder.status)}
+                    {currentOrder && getStatusBadge(currentOrder.status)}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {currentOrder.items && currentOrder.items.length > 0 ? (
+                  {currentOrder && currentOrder.items && currentOrder.items.length > 0 ? (
                     <div className="space-y-4">
                       {currentOrder.items.map((item) => (
                         <div key={item.id} className="flex justify-between items-center py-2">
@@ -144,7 +167,7 @@ const OrderDetailPage = () => {
                     </p>
                   )}
                 </CardContent>
-                {currentOrder.status === 'pending' && (
+                {currentOrder && currentOrder.status === 'pending' && (
                   <CardFooter>
                     <Button 
                       variant="outline" 
@@ -159,51 +182,53 @@ const OrderDetailPage = () => {
             </div>
 
             <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <p className="font-medium">Order Status</p>
-                      <div>{getStatusBadge(currentOrder.status)}</div>
+              {currentOrder && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Order Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <p className="font-medium">Order Status</p>
+                        <div>{getStatusBadge(currentOrder.status)}</div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex justify-between">
+                        <p className="font-medium">Subtotal</p>
+                        <p className="font-medium">{formatPrice(currentOrder.total_amount)}</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Shipping</p>
+                        <p className="font-medium">{formatPrice(0)}</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Tax</p>
+                        <p className="font-medium">{formatPrice(0)}</p>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex justify-between">
+                        <p className="font-bold text-lg">Total</p>
+                        <p className="font-bold text-lg">
+                          {formatPrice(currentOrder.total_amount)}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex justify-between">
-                      <p className="font-medium">Subtotal</p>
-                      <p className="font-medium">{formatPrice(currentOrder.total_amount)}</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Shipping</p>
-                      <p className="font-medium">{formatPrice(0)}</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Tax</p>
-                      <p className="font-medium">{formatPrice(0)}</p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex justify-between">
-                      <p className="font-bold text-lg">Total</p>
-                      <p className="font-bold text-lg">
-                        {formatPrice(currentOrder.total_amount)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className="w-full bg-mechanica-500 hover:bg-mechanica-600"
-                    onClick={() => navigate('/customer-dashboard')}
-                  >
-                    Continue Shopping
-                  </Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full bg-mechanica-500 hover:bg-mechanica-600"
+                      onClick={() => navigate('/customer-dashboard')}
+                    >
+                      Continue Shopping
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
             </div>
           </div>
         )}

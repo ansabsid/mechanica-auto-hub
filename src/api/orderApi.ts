@@ -55,6 +55,15 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
     console.log("Fetching order details for ID:", orderId);
     
+    // Get session to check authentication
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log("Current auth session:", sessionData.session ? "Authenticated" : "Not authenticated");
+    
+    if (!sessionData.session) {
+      console.error("No authenticated session when fetching order details");
+      return null;
+    }
+    
     // Get order data with explicit logging
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
@@ -80,6 +89,12 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     }
     
     console.log("Order found:", orderData);
+    
+    // Verify the order belongs to the current user
+    if (orderData.user_id !== sessionData.session.user.id) {
+      console.error("Order user_id doesn't match current user. Order user:", orderData.user_id, "Current user:", sessionData.session.user.id);
+      return null;
+    }
     
     // Get order items with installation details
     const { data: itemsData, error: itemsError } = await supabase
