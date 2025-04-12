@@ -87,7 +87,7 @@ const PitchDeck = () => {
             </div>
             <div>
               <h3 className="font-medium">All-in-One Platform</h3>
-              <p className="text-sm text-muted-foreground">Parts, garages and installations in one place</p>
+              <p className="text-sm text-muted-foreground">Parts, service requests, and installations in one place</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -95,8 +95,8 @@ const PitchDeck = () => {
               <Users className="h-6 w-6 text-mechanica-500" />
             </div>
             <div>
-              <h3 className="font-medium">Vetted Network</h3>
-              <p className="text-sm text-muted-foreground">Trusted suppliers and garages</p>
+              <h3 className="font-medium">Book Services at Nearby Garages</h3>
+              <p className="text-sm text-muted-foreground">Schedule appointments with local trusted mechanics</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
