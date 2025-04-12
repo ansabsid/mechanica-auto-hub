@@ -86,24 +86,30 @@ export const DebugInstallationRequests = () => {
           }
         }
         
-        // Check RLS policies for order_items
+        // Check RLS policies for order_items using a manual approach instead of RPC
         console.log("🔍 [DEBUG] Checking if RLS policies exist for order_items");
-        const { data: policiesData, error: policiesError } = await supabase
-          .rpc('get_policies_for_table', { table_name: 'order_items' });
+        
+        // Instead of using RPC, let's check if we can access the data as a way to test if policies exist
+        const { data: policiesTestData, error: policiesTestError } = await supabase
+          .from('order_items')
+          .select('count(*)', { count: 'exact', head: true });
           
-        if (policiesError) {
-          console.error("🔍 [DEBUG] Error checking policies:", policiesError);
-          results.policiesError = policiesError;
+        if (policiesTestError) {
+          console.error("🔍 [DEBUG] Error checking policies access:", policiesTestError);
+          results.policiesError = policiesTestError;
           
-          // Alternative method to check policies
+          // Provide more information about potential RLS issues
           console.log("🔍 [DEBUG] Using alternative method to check policies");
           results.manualPolicyCheck = {
-            message: "Could not automatically check RLS policies. Manual verification required.",
+            message: "Could not access order_items table. This may indicate RLS policy issues.",
             suggestion: "Please check the Supabase dashboard to verify RLS policies for order_items."
           };
         } else {
-          console.log("🔍 [DEBUG] RLS policies for order_items:", policiesData);
-          results.policies = policiesData;
+          console.log("🔍 [DEBUG] Successfully accessed order_items with current user");
+          results.policies = {
+            message: "User has access to order_items table through RLS policies",
+            success: true
+          };
         }
       }
       
@@ -304,8 +310,9 @@ export const DebugInstallationRequests = () => {
                 <div className="mt-1 p-1 bg-blue-50 text-blue-700 rounded">
                   <div className="flex items-center">
                     <Info className="h-3 w-3 mr-1" />
-                    <strong>RLS Policies:</strong> {debugResults.policies.length || 0} found
+                    <strong>RLS Policies:</strong> {debugResults.policies.success ? 'Access confirmed' : 'Access issue detected'}
                   </div>
+                  <div>{debugResults.policies.message}</div>
                 </div>
               )}
             </div>
