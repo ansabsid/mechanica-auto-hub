@@ -21,13 +21,24 @@ const ContactSlide: React.FC = () => {
       // Simulate downloading process
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Create a link element to download the PDF
+      // Create a new blob with PDF content type
+      const response = await fetch('/lovable-uploads/bc5d716e-e89a-48a9-b038-082d8861b31d.png');
+      const blob = await response.blob();
+      
+      // Create a new blob with the correct PDF MIME type
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      
+      // Create a download link for the PDF
+      const blobUrl = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
-      link.href = '/lovable-uploads/bc5d716e-e89a-48a9-b038-082d8861b31d.png'; // Replace with actual PDF URL
+      link.href = blobUrl;
       link.download = 'BookMyParts_PitchDeck_2025.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
       
       toast({
         title: "Download started",
