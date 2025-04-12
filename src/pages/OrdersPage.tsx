@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
@@ -12,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import { formatPrice } from '@/lib/utils';
 
 const OrderPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -61,7 +61,6 @@ const OrderPage = () => {
             console.log("Order details loaded successfully:", result);
             setErrorMessage(null);
             
-            // Check if any installation is already scheduled but order is still pending
             const hasScheduledInstallation = result.items?.some(item => 
               item.installation_status === 'scheduled' && item.scheduled_date && item.scheduled_time
             );
@@ -107,7 +106,7 @@ const OrderPage = () => {
       case 'processing': return 'bg-blue-500';
       case 'completed': return 'bg-green-500';
       case 'cancelled': return 'bg-red-500';
-      case 'confirmed': return 'bg-green-500'; // Add confirmed status color
+      case 'confirmed': return 'bg-green-500';
       default: return 'bg-gray-500';
     }
   };
@@ -261,7 +260,7 @@ const OrderPage = () => {
         <CardContent>
           <div className="flex justify-between py-2">
             <span className="text-gray-600">Total</span>
-            <span className="font-semibold">${currentOrder.total_amount.toFixed(2)}</span>
+            <span className="font-semibold">{formatPrice(currentOrder.total_amount)}</span>
           </div>
         </CardContent>
       </Card>
@@ -280,9 +279,9 @@ const OrderPage = () => {
                     )}
                   </div>
                   <div className="text-right mt-2 md:mt-0">
-                    <p className="font-medium">${item.price.toFixed(2)} × {item.quantity}</p>
+                    <p className="font-medium">{formatPrice(item.price)} × {item.quantity}</p>
                     {item.installation_fee > 0 && (
-                      <p className="text-sm text-gray-600">+ ${item.installation_fee.toFixed(2)} installation</p>
+                      <p className="text-sm text-gray-600">+ {formatPrice(item.installation_fee)} installation</p>
                     )}
                   </div>
                 </div>

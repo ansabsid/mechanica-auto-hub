@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { GarageInfo } from "@/hooks/useGarageManagement";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface GarageTableProps {
   garages: GarageInfo[];
@@ -49,7 +50,7 @@ const GarageTable = ({ garages, loading }: GarageTableProps) => {
               <TableCell>{garage.name}</TableCell>
               <TableCell>{garage.location}</TableCell>
               <TableCell>{garage.area || '-'}</TableCell>
-              <TableCell>{garage.installationFee ? `$${garage.installationFee.toFixed(2)}` : '-'}</TableCell>
+              <TableCell>{garage.installationFee ? formatPrice(garage.installationFee) : '-'}</TableCell>
             </TableRow>
           ))}
         </TableBody>

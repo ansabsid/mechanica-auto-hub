@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/useCarParts";
@@ -11,6 +10,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { formatPrice } from "@/lib/utils";
 
 interface PartsResultsProps {
   parts: Part[];
@@ -18,14 +18,11 @@ interface PartsResultsProps {
   searchCompleted: boolean;
 }
 
-// Function to get an appropriate image URL based on part name
 const getPartImageUrl = (part: Part): string => {
-  // If the part has an image_url, use it
   if (part.image_url) {
     return part.image_url;
   }
   
-  // Otherwise, use the fallback logic based on part name
   const name = part.name.toLowerCase();
   
   if (name.includes('oil')) {
@@ -43,7 +40,6 @@ const getPartImageUrl = (part: Part): string => {
   } else if (name.includes('belt')) {
     return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
   } else {
-    // Default auto parts image for other categories
     return "https://images.unsplash.com/photo-1647427060118-4911c9821b82?w=800&h=600&auto=format";
   }
 };
@@ -60,12 +56,10 @@ const PartsResults: React.FC<PartsResultsProps> = ({
     parts // Log actual parts array for debugging
   });
   
-  // Don't render anything if search is not completed
   if (!searchCompleted) {
     return null;
   }
   
-  // Loading state (should be handled by parent component)
   if (isLoading) {
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
@@ -78,7 +72,6 @@ const PartsResults: React.FC<PartsResultsProps> = ({
     );
   }
 
-  // Check if parts array is empty
   if (!parts || parts.length === 0) {
     return (
       <div className="text-center p-8 bg-blue-50 border-4 border-blue-200 rounded-xl shadow-lg">
@@ -144,7 +137,7 @@ const PartsResults: React.FC<PartsResultsProps> = ({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-bold">AED {part.price.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-bold">{formatPrice(part.price)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

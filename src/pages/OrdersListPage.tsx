@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/utils";
 
 const OrdersListPage = () => {
   const { orders, fetchUserOrders, isLoading } = useOrders();
@@ -42,7 +42,6 @@ const OrdersListPage = () => {
   };
   
   const viewOrderDetails = (orderId: string) => {
-    // Ensure we're actually getting an order ID and log it for debugging
     console.log("Navigating to order details with ID:", orderId);
     if (!orderId) {
       console.error("Order ID is undefined or empty");
@@ -111,7 +110,7 @@ const OrdersListPage = () => {
                       </div>
                       <div className="flex items-center">
                         <span className="font-semibold mr-1">
-                          AED {order.total_amount.toFixed(2)}
+                          {formatPrice(order.total_amount)}
                         </span>
                         <ChevronRight className="h-5 w-5 text-gray-400" />
                       </div>
