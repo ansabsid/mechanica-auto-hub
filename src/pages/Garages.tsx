@@ -31,9 +31,11 @@ const GaragePage = () => {
 
   useEffect(() => {
     console.log("GaragePage component mounted, fetching garages...");
-    // Force refresh the garages data
     fetchGarages().then(fetchedGarages => {
       console.log("Garages fetched:", fetchedGarages);
+      if (fetchedGarages.length === 0) {
+        console.log("No garages found, showing empty state");
+      }
     }).catch(err => {
       console.error("Error fetching garages:", err);
       toast.error("Failed to load garages. Please try again.");
@@ -62,7 +64,7 @@ const GaragePage = () => {
   }, [searchQuery, garages]);
 
   const handleRetry = () => {
-    toast.info("Retrying...");
+    toast.info("Retrying garage fetch...");
     fetchGarages();
   };
 

@@ -47,31 +47,28 @@ export const useGarageManagement = () => {
     try {
       console.log("Fetching garages from the database...");
       
-      // Log the SQL equivalent for debugging
-      console.log("SQL Equivalent: SELECT id, name, location, area, images, installation_fee FROM garages ORDER BY location");
+      // Use a direct fetch with the anon key to bypass authentication completely
+      // This is a more reliable approach than setting auth to null
+      const response = await fetch(
+        'https://gwjvqtusnhahjlzafixp.supabase.co/rest/v1/garages?select=id,name,location,area,images,installation_fee&order=location',
+        {
+          method: 'GET',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3anZxdHVzbmhhaGpsemFmaXhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzMTUzMjcsImV4cCI6MjA1OTg5MTMyN30.LTh4vNu2-Ck0Chg8cSeSF01Dl_Tb4q6DByACQLwTV1M',
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          }
+        }
+      );
       
-      // Important: Explicitly set auth to null to bypass authentication for this query
-      // This ensures garages are visible to all users regardless of login status
-      const { data, error: fetchError } = await supabase
-        .from('garages')
-        .select('id, name, location, area, images, installation_fee')
-        .order('location');
-        
-      if (fetchError) {
-        console.error("Supabase error:", fetchError);
-        throw fetchError;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
+      const data = await response.json();
       console.log("Raw garage data response:", data);
       
-      if (!data) {
-        console.log("No data returned from garage query");
-        setGarages([]);
-        setFetchLoading(false);
-        return [];
-      }
-      
-      if (data.length === 0) {
+      if (!data || data.length === 0) {
         console.log("No garages found in the database");
         setGarages([]);
         setFetchLoading(false);
