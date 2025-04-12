@@ -107,17 +107,95 @@ export const useAppointmentBooking = () => {
     }
     
     try {
+      // Fix: Use explicit select with separate joins instead of nested relations
+      // This avoids the "Could not find a relationship between 'appointments' and 'garages'" error
       const { data, error } = await supabase
         .from('appointments')
         .select(`
-          *,
-          garage:garages(name, location, area),
-          vehicle:vehicles(make, model, year, license_plate)
+          id, 
+          user_id, 
+          garage_id, 
+          service_type, 
+          appointment_date, 
+          appointment_time, 
+          status, 
+          notes, 
+          created_at, 
+          updated_at,
+          vehicle_id,
+          confirmation_code
         `)
         .eq('user_id', session.user.id)
         .order('appointment_date', { ascending: true });
         
       if (error) throw error;
+      
+      // If we have data, fetch the related garage and vehicle information
+      if (data && data.length > 0) {
+        // Get all garage IDs and vehicle IDs to fetch in bulk
+        const garageIds = data.map(appointment => appointment.garage_id);
+        const vehicleIds = data.filter(appointment => appointment.vehicle_id)
+                                .map(appointment => appointment.vehicle_id);
+        
+        // Fetch garage information
+        const { data: garages, error: garageError } = await supabase
+          .from('garages')
+          .select('id, name, location')
+          .in('id', garageIds);
+          
+        if (garageError) {
+          console.error("Error fetching garage details:", garageError);
+        }
+        
+        // Fetch vehicle information
+        const { data: vehicles, error: vehicleError } = await supabase
+          .from('vehicles')
+          .select('id, make, model, year, license_plate')
+          .in('id', vehicleIds);
+          
+        if (vehicleError) {
+          console.error("Error fetching vehicle details:", vehicleError);
+        }
+        
+        // Create lookup objects for faster access
+        const garageLookup: Record<string, any> = {};
+        const vehicleLookup: Record<string, any> = {};
+        
+        if (garages) {
+          garages.forEach(garage => {
+            garageLookup[garage.id] = garage;
+          });
+        }
+        
+        if (vehicles) {
+          vehicles.forEach(vehicle => {
+            vehicleLookup[vehicle.id] = vehicle;
+          });
+        }
+        
+        // Combine data to create complete appointment objects
+        const appointmentsWithDetails = data.map(appointment => {
+          const garage = garageLookup[appointment.garage_id];
+          const vehicle = appointment.vehicle_id ? vehicleLookup[appointment.vehicle_id] : null;
+          
+          return {
+            ...appointment,
+            garage: garage ? { 
+              name: garage.name, 
+              location: garage.location 
+            } : undefined,
+            vehicle: vehicle ? {
+              make: vehicle.make,
+              model: vehicle.model,
+              year: vehicle.year,
+              license_plate: vehicle.license_plate
+            } : undefined
+          };
+        });
+        
+        console.log("Fetched appointments with details:", appointmentsWithDetails);
+        return appointmentsWithDetails;
+      }
       
       return data;
     } catch (error: any) {

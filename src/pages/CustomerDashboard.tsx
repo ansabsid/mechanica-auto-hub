@@ -87,7 +87,11 @@ const CustomerDashboard = () => {
     setAppointmentsLoading(true);
     try {
       const data = await fetchUserAppointments();
+      console.log("Customer dashboard fetched appointments:", data);
       setAppointments(data || []);
+    } catch (error) {
+      console.error("Error in fetchAppointments:", error);
+      toast.error("Failed to load appointments");
     } finally {
       setAppointmentsLoading(false);
     }
