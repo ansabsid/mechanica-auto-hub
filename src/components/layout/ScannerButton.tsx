@@ -8,7 +8,7 @@ import { useCapacitor } from "@/hooks/useCapacitor";
 const ScannerButton = () => {
   const { isCapacitor } = useCapacitor();
   
-  // Adjust positioning for mobile apps
+  // Refined positioning to work well with other UI elements
   const positionClasses = isCapacitor 
     ? "fixed bottom-20 right-4 z-50" 
     : "fixed bottom-16 right-4 z-50 md:bottom-8";

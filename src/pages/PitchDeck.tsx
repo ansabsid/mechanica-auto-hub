@@ -804,8 +804,8 @@ const PitchDeck = () => {
         </div>
       </div>
       
-      {/* Navigation controls - Moved higher up to avoid overlapping with floating buttons */}
-      <div className={`fixed ${isMobile ? 'bottom-28' : 'bottom-20'} left-0 right-0 flex justify-between items-center ${isMobile ? 'px-3' : 'px-6'} z-30`}>
+      {/* Navigation controls - Better positioned to avoid camera button overlap */}
+      <div className={`fixed ${isMobile ? 'bottom-[140px]' : 'bottom-[100px]'} left-0 right-0 flex justify-between items-center ${isMobile ? 'px-3' : 'px-6'} z-30`}>
         <Button
           variant="outline"
           size={isMobile ? "sm" : "icon"}
@@ -840,8 +840,8 @@ const PitchDeck = () => {
         </Button>
       </div>
       
-      {/* Slide counter - Moved higher to avoid overlapping with camera button */}
-      <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium z-20">
+      {/* Slide counter - Positioned to avoid camera button overlap */}
+      <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 bg-black/10 backdrop-blur-sm text-black px-3 py-1 rounded-full text-xs font-medium z-20">
         {currentSlide + 1} / {slides.length}
       </div>
       

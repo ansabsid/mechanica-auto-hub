@@ -10,8 +10,12 @@ const FloatingScanButton = () => {
   const isMobile = useIsMobile();
   const location = useLocation();
   
-  // Don't show on scanner page or home page (Index) where ScannerButton already appears
-  if (!isMobile || location.pathname === "/scanner" || location.pathname === "/" || location.pathname === "/scan") {
+  // Don't show on scanner page, home page, or pitch deck page
+  if (!isMobile || 
+      location.pathname === "/scanner" || 
+      location.pathname === "/" || 
+      location.pathname === "/scan" || 
+      location.pathname === "/pitch-deck") {
     return null;
   }
   
