@@ -79,6 +79,7 @@ export const InstallationRequestsNotification = () => {
           const { data: garagesData, error: garagesError } = await supabase
             .from('garages')
             .select('id')
+            .eq('name', 'Garage Masters')  // Default to Garage Masters for demo
             .limit(1)
             .single();
             
@@ -116,9 +117,7 @@ export const InstallationRequestsNotification = () => {
     try {
       console.log("Fetching installation requests for garage ID:", garageId);
       
-      // Fetch installation requests for this garage from order items with installation data
-      // Critical fix: Changed from `is('installation_status', null)` to `not.is('installation_status', null)`
-      // This was filtering out all items that had installation status set
+      // First, fetch order items with installation data for this garage
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -131,15 +130,10 @@ export const InstallationRequestsNotification = () => {
           scheduled_date,
           scheduled_time,
           installation_fee,
-          part:part_id (name),
-          orders:order_id (
-            id,
-            user_id,
-            created_at,
-            status
-          )
+          part:part_id (name)
         `)
-        .eq('garage_id', garageId);
+        .eq('garage_id', garageId)
+        .not.is('installation_status', null);  // Only get items with installation status
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -161,10 +155,33 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
+      // Get all order IDs to fetch the order details
+      const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
+      
+      // Fetch order details for these order items
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, user_id, created_at, status')
+        .in('id', orderIds);
+        
+      if (ordersError) {
+        console.error("Error fetching orders:", ordersError);
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log("Fetched orders:", ordersData);
+      
+      // Create a map of orders by ID for quick lookup
+      const orderMap = new Map();
+      ordersData.forEach(order => {
+        orderMap.set(order.id, order);
+      });
+      
       // Fetch customer information for these orders
-      const userIds = orderItemsData
-        .filter(item => item.orders && item.orders.user_id)
-        .map(item => item.orders.user_id);
+      const userIds = ordersData
+        .filter(order => order.user_id)
+        .map(order => order.user_id);
         
       if (userIds.length === 0) {
         console.error("No valid user IDs found in orders");
@@ -184,18 +201,27 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
+      console.log("Fetched users:", usersData);
+      
+      // Create a map of users by ID for quick lookup
+      const userMap = new Map();
+      usersData.forEach(user => {
+        userMap.set(user.id, user);
+      });
+      
       // Map the data to our interface
       const requests: InstallationRequest[] = orderItemsData
-        .filter(item => item.orders) // Filter out items without orders data
+        .filter(item => orderMap.has(item.order_id)) // Filter out items without orders data
         .map(item => {
-          const user = usersData?.find(u => u.id === item.orders.user_id);
+          const order = orderMap.get(item.order_id);
+          const user = userMap.get(order.user_id);
           
           return {
             id: item.id,
             customerName: user?.email || "Unknown",
             customerPhone: user?.phone || "Not provided",
             part: item.part?.name || "Unknown part",
-            orderDate: new Date(item.orders.created_at).toISOString().split('T')[0],
+            orderDate: order.created_at ? new Date(order.created_at).toISOString().split('T')[0] : "Unknown",
             status: item.installation_status || "new",
             price: Number(item.price),
             installationFee: Number(item.installation_fee) || 50,
@@ -257,9 +283,9 @@ export const InstallationRequestsNotification = () => {
     } catch (error: any) {
       console.error("Error updating status:", error);
       toast({
+        variant: "destructive",
         title: "Error",
         description: "Failed to update installation status",
-        variant: "destructive",
       });
     } finally {
       setContactDialogOpen(false);

@@ -107,12 +107,13 @@ export const useOrders = () => {
             });
             
             // Update the order_items to include garage_id for installation
+            // Explicitly set installation_status to 'new' to ensure it appears in the garage notifications
             const { data, error } = await supabase
               .from('order_items')
               .update({ 
                 garage_id: item.installation_data.garageId,
                 installation_fee: item.installation_data.installationFee,
-                installation_status: 'new'  // Set initial status explicitly
+                installation_status: 'new'  // EXPLICITLY set to 'new'
               })
               .eq('order_id', orderData.id)
               .eq('part_id', item.part_id);
