@@ -1,11 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar, Clock, MapPin, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,8 @@ const OrderPage = () => {
   useEffect(() => {
     const loadOrderDetails = async () => {
       if (!orderId) {
-        setErrorMessage("Order ID is missing");
+        console.error("Order ID is missing from URL params");
+        setErrorMessage("Order ID is missing from URL parameters");
         return;
       }
       
@@ -50,7 +50,7 @@ const OrderPage = () => {
               setRetryCount(prev => prev + 1);
             }, 2000); // Wait 2 seconds before retrying
           } else {
-            setErrorMessage("Order could not be loaded after multiple attempts");
+            setErrorMessage(`Order could not be loaded after multiple attempts. Order ID: ${orderId}`);
           }
         } else {
           console.log("Order details loaded successfully:", result);

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +44,16 @@ export const useOrders = () => {
   };
 
   const fetchOrderDetails = async (orderId: string) => {
+    if (!orderId) {
+      console.error("fetchOrderDetails called with empty orderId");
+      toast({
+        title: "Error",
+        description: "Missing order ID",
+        variant: "destructive",
+      });
+      return null;
+    }
+    
     console.log("fetchOrderDetails called for order:", orderId);
     setIsLoading(true);
     
@@ -62,7 +73,7 @@ export const useOrders = () => {
         return null;
       }
       
-      console.log("Fetching order with auth user:", session.user.id);
+      console.log("Fetching order with auth user:", session.user.id, "for order ID:", orderId);
       
       const orderData = await getOrderDetails(orderId);
       console.log("Order data received:", orderData);
@@ -71,7 +82,7 @@ export const useOrders = () => {
         console.error("No order data returned for ID:", orderId);
         toast({
           title: "Order not found",
-          description: "The requested order could not be found",
+          description: `The requested order (${orderId}) could not be found`,
           variant: "destructive",
         });
         setIsLoading(false);

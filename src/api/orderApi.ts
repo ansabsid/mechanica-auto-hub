@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
@@ -53,6 +54,11 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
  */
 export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
+    if (!orderId) {
+      console.error("getOrderDetails called with empty orderId");
+      return null;
+    }
+    
     console.log("Fetching order details for ID:", orderId);
     
     // Get session to check authentication
