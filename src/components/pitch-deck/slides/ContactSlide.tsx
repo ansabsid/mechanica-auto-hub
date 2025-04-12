@@ -2,8 +2,15 @@
 import React from "react";
 import { Settings, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const ContactSlide: React.FC = () => {
+  const navigate = useNavigate();
+  
+  const handleContactClick = () => {
+    navigate("/contact");
+  };
+  
   return (
     <div className="flex flex-col items-center justify-center text-center space-y-6">
       <div className="relative animate-bounce">
@@ -19,7 +26,11 @@ const ContactSlide: React.FC = () => {
       </div>
       
       <div className="flex space-x-4">
-        <Button variant="mechanica" className="rounded-full shadow-md hover:shadow-lg transition-all">
+        <Button 
+          variant="mechanica" 
+          className="rounded-full shadow-md hover:shadow-lg transition-all"
+          onClick={handleContactClick}
+        >
           Contact Us
         </Button>
         <Button variant="outline" className="rounded-full border-mechanica-300 shadow-sm hover:bg-mechanica-50">
