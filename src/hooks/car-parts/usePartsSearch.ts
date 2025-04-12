@@ -60,8 +60,12 @@ export const usePartsSearch = (
         }
         
         // Ensure all values are properly converted to the right types
-        const installationFee = parseFloat(String(item.installation_fee || '0'));
-        console.log(`For part ${item.part_id}, garage ${item.id}: installation fee raw=${item.installation_fee}, converted=${installationFee}`);
+        // The installation_fee can come as a string or number from the database
+        // Force conversion to a number to ensure consistency
+        const rawFee = item.installation_fee !== null ? item.installation_fee : 0;
+        const installationFee = typeof rawFee === 'string' ? parseFloat(rawFee) : Number(rawFee);
+        
+        console.log(`For part ${item.part_id}, garage ${item.id}: installation fee raw=${rawFee}, type=${typeof rawFee}, converted=${installationFee}`);
         
         garagesMap[item.part_id].push({
           id: item.id, // This is a UUID string, no conversion needed
