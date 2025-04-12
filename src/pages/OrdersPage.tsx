@@ -21,7 +21,8 @@ import { useAuth } from "@/hooks/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 const OrderDetailPage = () => {
-  const { orderId } = useParams<{ orderId: string }>();
+  // Change from orderId to id to match the route parameter name in App.tsx
+  const { id: orderId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { fetchOrderDetails, currentOrder, isLoading, cancelOrder } = useOrders();
   const { user } = useAuth();
@@ -37,6 +38,8 @@ const OrderDetailPage = () => {
         setDebugInfo("Missing order ID in URL");
         return;
       }
+      
+      console.log("Order ID from URL parameters:", orderId);
       
       const { data } = await supabase.auth.getSession();
       const isAuthenticated = !!data.session;
