@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase } from "lucide-react";
+import { ChevronLeft, ChevronRight, Rocket, Users, DollarSign, BarChart3, Target, Award, Lightbulb, Briefcase, CarFront, Car, TrendingUp, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCapacitor } from "@/hooks/useCapacitor";
@@ -116,47 +116,123 @@ const PitchDeck = () => {
       title: "Market Opportunity",
       content: (
         <div className="space-y-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">UAE Auto Parts Market</h3>
-                <span className="text-green-500 font-bold">$4.3B</span>
+          {/* New Car Market Section */}
+          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center mb-3">
+              <div className="bg-blue-100 p-3 rounded-full mr-3">
+                <CarFront className="h-5 w-5 text-blue-600" />
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className="bg-green-500 h-2.5 rounded-full" style={{ width: "70%" }}></div>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">Growing at 5.8% annually</p>
-            </CardContent>
-          </Card>
+              <h3 className="text-lg font-medium text-blue-700">New Car Market</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Card className="bg-blue-50 border-blue-100">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-blue-600 font-medium">2024 Sales</span>
+                    <span className="text-xl font-bold mt-1">318,981</span>
+                    <div className="flex items-center mt-1">
+                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                      <span className="text-xs text-green-600">+15.7% YoY</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-2">Arabian Business</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-blue-50 border-blue-100">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-blue-600 font-medium">Growth Rate</span>
+                    <span className="text-xl font-bold mt-1">19.1%</span>
+                    <div className="flex items-center mt-1">
+                      <span className="text-xs">2023: 27.2% (330,532 units)</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-2">YallaMotor.com</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-blue-50 border-blue-100">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-blue-600 font-medium">2032 Forecast</span>
+                    <span className="text-xl font-bold mt-1">$25.16B</span>
+                    <div className="flex items-center mt-1">
+                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                      <span className="text-xs text-green-600">CAGR: 15.29%</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-2">GlobeNewswire</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
           
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">Online Parts Sales</h3>
-                <span className="text-blue-500 font-bold">$1.2B</span>
+          {/* Used Car Market Section */}
+          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+            <div className="flex items-center mb-3">
+              <div className="bg-amber-100 p-3 rounded-full mr-3">
+                <Car className="h-5 w-5 text-amber-600" />
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: "40%" }}></div>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">23% YoY growth</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">Vehicle Service Market</h3>
-                <span className="text-mechanica-500 font-bold">$2.8B</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className="bg-mechanica-500 h-2.5 rounded-full" style={{ width: "60%" }}></div>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">Expected to reach $3.5B by 2026</p>
-            </CardContent>
-          </Card>
+              <h3 className="text-lg font-medium text-amber-700">Used Car Market</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Card className="bg-amber-50 border-amber-100">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-amber-600 font-medium">2022 Market Value</span>
+                    <span className="text-xl font-bold mt-1">$20.15B</span>
+                    <PieChart className="h-4 w-4 text-amber-500 mt-2" />
+                    <span className="text-xs text-muted-foreground mt-2">JobXDubai & Arabian Business</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-amber-50 border-amber-100">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-amber-600 font-medium">2030 Projection</span>
+                    <span className="text-xl font-bold mt-1">$48.15B</span>
+                    <div className="flex items-center mt-1">
+                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                      <span className="text-xs text-green-600">CAGR: 11.5%</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground mt-2">JobXDubai & Arabian Business</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-amber-50 border-amber-100">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-amber-600 font-medium">Consumer Trends</span>
+                    <div className="mt-2">
+                      <div className="flex justify-between text-xs">
+                        <span>AED 20K-30K</span>
+                        <span className="font-medium">High Demand</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 my-1">
+                        <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: "80%" }}></div>
+                      </div>
+                      
+                      <div className="flex justify-between text-xs mt-2">
+                        <span>AED 50K-80K</span>
+                        <span className="font-medium">High Demand</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 my-1">
+                        <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: "75%" }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       ),
-      bgColor: "bg-gradient-to-br from-purple-50 to-indigo-100"
+      bgColor: "bg-gradient-to-br from-gray-50 to-slate-100"
     },
     {
       title: "Competitive Advantage",
