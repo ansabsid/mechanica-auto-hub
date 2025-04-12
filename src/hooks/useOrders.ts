@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,6 @@ export const useOrders = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  // Fetch user's orders
   const fetchUserOrders = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -44,16 +42,13 @@ export const useOrders = () => {
     }
   };
 
-  // Fetch a single order with its items
   const fetchOrderDetails = async (orderId: string) => {
     console.log("fetchOrderDetails called for order:", orderId);
     setIsLoading(true);
     
     try {
-      // Clear current order before fetching to avoid stale data
       setCurrentOrder(null);
       
-      // Check if user is authenticated before fetching
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
@@ -83,7 +78,6 @@ export const useOrders = () => {
         return null;
       }
       
-      // Verify that the order belongs to the current user
       if (orderData.user_id !== session.user.id) {
         console.error("Order user_id doesn't match current user");
         toast({
@@ -110,7 +104,6 @@ export const useOrders = () => {
     }
   };
 
-  // Create a new order from cart items
   const handleCreateOrder = async (cartItems: CartItem[], totalAmount: number) => {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -132,7 +125,6 @@ export const useOrders = () => {
       return null;
     }
 
-    // DEBUG: Log the items with installation
     console.log("🔍 [Order Creation] Cart items being ordered:", cartItems);
     const installationItems = cartItems.filter(item => item.installation_data);
     console.log("🔍 [Order Creation] Items with installation:", installationItems);
@@ -151,7 +143,6 @@ export const useOrders = () => {
     try {
       const orderData = await createOrder(session.user.id, cartItems, totalAmount);
       
-      // Handle installation requests if any cart items have installation_data
       const itemsWithInstallation = cartItems.filter(item => item.installation_data);
       
       console.log("Items with installation:", itemsWithInstallation);
@@ -159,7 +150,6 @@ export const useOrders = () => {
       if (itemsWithInstallation.length > 0 && orderData && orderData.id) {
         console.log("🔍 [Order Creation] Processing installation items for order:", orderData.id);
         
-        // Process each item with installation data
         for (const item of itemsWithInstallation) {
           if (item.installation_data && item.installation_data.garageId) {
             console.log(`🔍 [Order Creation] Setting installation data for part ${item.part_id}:`, {
@@ -168,13 +158,12 @@ export const useOrders = () => {
               part_name: item.part.name
             });
             
-            // FIXED: Use an explicit object with all necessary fields for the update
             const { data, error } = await supabase
               .from('order_items')
               .update({ 
                 garage_id: item.installation_data.garageId,
                 installation_fee: item.installation_data.installationFee,
-                installation_status: 'new'  // EXPLICITLY set to 'new'
+                installation_status: 'new'
               })
               .eq('order_id', orderData.id)
               .eq('part_id', item.part_id);
@@ -184,7 +173,6 @@ export const useOrders = () => {
             } else {
               console.log("🔍 [Order Creation] Successfully updated order item with installation data:", data);
               
-              // Verify the order_items record was updated correctly
               const { data: verifyData, error: verifyError } = await supabase
                 .from('order_items')
                 .select('*')
@@ -197,12 +185,10 @@ export const useOrders = () => {
               } else {
                 console.log("🔍 [Order Creation] Verified order item data:", verifyData);
                 
-                // Check if the garage_id matches what we expect
                 if (verifyData.garage_id !== item.installation_data.garageId) {
                   console.error("🔍 [Order Creation] Warning: Garage ID mismatch! Expected:", item.installation_data.garageId, "Got:", verifyData.garage_id);
                 }
                 
-                // Check if installation_status is set correctly
                 if (verifyData.installation_status !== 'new') {
                   console.error("🔍 [Order Creation] Warning: Installation status not set to 'new'! Current value:", verifyData.installation_status);
                 }
@@ -217,7 +203,6 @@ export const useOrders = () => {
         description: "Your order has been placed successfully!",
       });
       
-      // Refresh orders list
       await fetchUserOrders();
       return orderData;
     } catch (error: any) {
@@ -233,7 +218,6 @@ export const useOrders = () => {
     }
   };
 
-  // Cancel an order
   const handleCancelOrder = async (orderId: string) => {
     setIsLoading(true);
     try {
@@ -244,7 +228,6 @@ export const useOrders = () => {
         description: "Your order has been cancelled",
       });
       
-      // Refresh orders list
       await fetchUserOrders();
     } catch (error: any) {
       console.error("Error cancelling order:", error.message);

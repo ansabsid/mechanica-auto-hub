@@ -299,6 +299,20 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       // FIXED: Log more details about the verification query
       console.log("🔍 [API] Verifying installation data was saved, querying with order_id:", order.id);
       
+      // FIXED: Run multiple verification queries to isolate issues
+      console.log("🔍 [API] Verification query 1: All items for this order");
+      const { data: allOrderItems, error: allOrderItemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+        
+      if (allOrderItemsError) {
+        console.error("🔍 [API] Error verifying all order items:", allOrderItemsError);
+      } else {
+        console.log("🔍 [API] All items for this order:", allOrderItems);
+      }
+      
+      console.log("🔍 [API] Verification query 2: Items with garage_id for this order");
       const { data: verifyItems, error: verifyError } = await supabase
         .from('order_items')
         .select('*')
@@ -329,6 +343,39 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
             installation_fee: item.installation_fee
           });
         });
+      }
+      
+      // Extra check: Items with missing installation_status
+      console.log("🔍 [API] Verification query 3: Items with garage_id but no installation_status");
+      const { data: incompleteItems, error: incompleteError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id)
+        .not('garage_id', 'is', null)
+        .is('installation_status', null);
+        
+      if (incompleteError) {
+        console.error("🔍 [API] Error checking for incomplete installation items:", incompleteError);
+      } else if (incompleteItems && incompleteItems.length > 0) {
+        console.error("🔍 [API] Found incomplete installation items:", incompleteItems);
+        
+        // Try to fix these items
+        for (const item of incompleteItems) {
+          console.log(`🔍 [API] Attempting to fix incomplete installation item: ${item.id}`);
+          
+          const { error: fixError } = await supabase
+            .from('order_items')
+            .update({ installation_status: 'new' })
+            .eq('id', item.id);
+            
+          if (fixError) {
+            console.error(`🔍 [API] Error fixing item ${item.id}:`, fixError);
+          } else {
+            console.log(`🔍 [API] Successfully fixed item ${item.id}`);
+          }
+        }
+      } else {
+        console.log("🔍 [API] No incomplete installation items found");
       }
     }
     

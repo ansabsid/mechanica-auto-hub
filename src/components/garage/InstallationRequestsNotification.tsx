@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,25 +42,20 @@ export const InstallationRequestsNotification = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Add debug state to track fetching process
   const [debug, setDebug] = useState<any>({});
   
   const fetchInstallationRequests = async () => {
-    if (isRefreshing) return; // Prevent multiple simultaneous fetches
+    if (isRefreshing) return;
     
     setIsLoading(true);
     setIsRefreshing(true);
     
     try {
-      // For Garage Masters demo, we'll hardcode the garage ID
-      // This ensures the functionality works for the demo account
-      let garageId = "c64a9350-d34a-4903-b34c-16c0e4699a44"; // Garage Masters ID from console logs
+      let garageId = "c64a9350-d34a-4903-b34c-16c0e4699a44";
       
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      // First, directly check the database for any order_items with installation data
-      console.log("Checking database for ANY order_items for this garage");
       const { data: allItems, error: allItemsError } = await supabase
         .from('order_items')
         .select('*')
@@ -75,8 +69,6 @@ export const InstallationRequestsNotification = () => {
         console.error("Error fetching all items:", allItemsError);
       }
       
-      // Check ALL order_items regardless of installation_status to see if data exists
-      console.log("Checking ALL order_items in the database (limit 10):");
       const { data: sampleItems, error: sampleError } = await supabase
         .from('order_items')
         .select('*')
@@ -89,7 +81,39 @@ export const InstallationRequestsNotification = () => {
         console.error("Error fetching sample items:", sampleError);
       }
       
-      // Now do the actual query for installation requests
+      const { data: garageItems, error: garageError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('garage_id', garageId);
+        
+      if (garageError) {
+        console.error("Error fetching garage items:", garageError);
+      } else {
+        console.log("Items with this garage_id:", garageItems);
+        setDebug(prev => ({ ...prev, garageItems, garageItemsCount: garageItems?.length || 0 }));
+        
+        const incompleteItems = garageItems?.filter(item => item.garage_id && !item.installation_status) || [];
+        
+        if (incompleteItems.length > 0) {
+          console.log("Found items with garage_id but missing installation_status:", incompleteItems);
+          
+          for (const item of incompleteItems) {
+            console.log(`Attempting to fix item ${item.id} by setting installation_status to 'new'`);
+            
+            const { error: fixError } = await supabase
+              .from('order_items')
+              .update({ installation_status: 'new' })
+              .eq('id', item.id);
+              
+            if (fixError) {
+              console.error(`Error fixing item ${item.id}:`, fixError);
+            } else {
+              console.log(`Successfully fixed item ${item.id}`);
+            }
+          }
+        }
+      }
+      
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -105,7 +129,7 @@ export const InstallationRequestsNotification = () => {
           part_id
         `)
         .eq('garage_id', garageId)
-        .not('installation_status', 'is', null); // Make sure we only get items with installation status
+        .not('installation_status', 'is', null);
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -129,7 +153,6 @@ export const InstallationRequestsNotification = () => {
         setIsLoading(false);
         setIsRefreshing(false);
         
-        // Add notification to make it clear for users
         toast({
           title: "No Installation Requests",
           description: "There are currently no installation requests for this garage."
@@ -137,10 +160,8 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
-      // Get all order IDs to fetch the order details
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       
-      // Fetch order details for these order items
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, user_id, created_at, status')
@@ -157,13 +178,11 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetched orders:", ordersData);
       setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
-      // Create a map of orders by ID for quick lookup
       const orderMap = new Map();
       ordersData.forEach(order => {
         orderMap.set(order.id, order);
       });
       
-      // Fetch customer information for these orders
       const userIds = ordersData
         .filter(order => order.user_id)
         .map(order => order.user_id);
@@ -193,13 +212,11 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetched users:", usersData);
       setDebug(prev => ({ ...prev, usersData, usersCount: usersData?.length || 0 }));
       
-      // Create a map of users by ID for quick lookup
       const userMap = new Map();
       usersData.forEach(user => {
         userMap.set(user.id, user);
       });
       
-      // Fetch part details separately
       const partIds = orderItemsData.map(item => item.part_id);
       const { data: partsData, error: partsError } = await supabase
         .from('parts')
@@ -214,7 +231,6 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetched parts:", partsData);
       setDebug(prev => ({ ...prev, partsData, partsCount: partsData?.length || 0 }));
       
-      // Create a map of parts by ID for quick lookup
       const partMap = new Map();
       if (partsData) {
         partsData.forEach(part => {
@@ -222,9 +238,8 @@ export const InstallationRequestsNotification = () => {
         });
       }
       
-      // Map the data to our interface
       const requests: InstallationRequest[] = orderItemsData
-        .filter(item => orderMap.has(item.order_id)) // Filter out items without orders data
+        .filter(item => orderMap.has(item.order_id))
         .map(item => {
           const order = orderMap.get(item.order_id);
           const user = userMap.get(order.user_id);
@@ -252,7 +267,6 @@ export const InstallationRequestsNotification = () => {
       
       setInstallationRequests(requests);
       
-      // Only notify if we found some requests while refreshing (not on initial load)
       if (requests.length > 0 && isRefreshing && !isLoading) {
         toast({
           title: `${requests.length} Installation Requests Found`,
@@ -271,7 +285,6 @@ export const InstallationRequestsNotification = () => {
   useEffect(() => {
     fetchInstallationRequests();
     
-    // Refresh data every 30 seconds to catch new installation requests
     const intervalId = setInterval(() => {
       fetchInstallationRequests();
     }, 30000);
@@ -311,7 +324,6 @@ export const InstallationRequestsNotification = () => {
         description: `Customer will be ${status === 'contacted' ? 'contacted' : 'scheduled for installation'}`
       });
       
-      // Refresh the data
       fetchInstallationRequests();
     } catch (error: any) {
       console.error("Error updating status:", error);
