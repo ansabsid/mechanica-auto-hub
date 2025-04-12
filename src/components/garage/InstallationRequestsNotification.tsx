@@ -13,66 +13,210 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
-// Mock installation requests
-const mockInstallationRequests = [
-  {
-    id: "req1",
-    customerName: "Ahmed Mohammed",
-    customerPhone: "+971 50 123 4567",
-    part: "Bosch Premium Oil Filter",
-    orderDate: "2025-04-10",
-    status: "new",
-    price: 35,
-    installationFee: 45
-  },
-  {
-    id: "req2",
-    customerName: "Fatima Ali",
-    customerPhone: "+971 55 987 6543",
-    part: "AC Delco Brake Pads",
-    orderDate: "2025-04-09",
-    status: "contacted",
-    price: 85,
-    installationFee: 50
-  },
-  {
-    id: "req3",
-    customerName: "Mohammed Rahman",
-    customerPhone: "+971 52 555 1234",
-    part: "NGK Laser Platinum Spark Plugs",
-    orderDate: "2025-04-08",
-    status: "scheduled",
-    appointmentDate: "2025-04-12",
-    appointmentTime: "14:00",
-    price: 45,
-    installationFee: 35
-  }
-];
+interface InstallationRequest {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  part: string;
+  orderDate: string;
+  status: string;
+  price: number;
+  installationFee: number;
+  appointmentDate?: string;
+  appointmentTime?: string;
+  garageId: string;
+  orderId: string;
+  orderItemId: string;
+}
 
 export const InstallationRequestsNotification = () => {
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<InstallationRequest | null>(null);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [installationRequests, setInstallationRequests] = useState<InstallationRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user, isAuthenticated, userRole } = useAuth();
   
-  const unreadRequests = mockInstallationRequests.filter(req => req.status === "new").length;
+  const fetchInstallationRequests = async () => {
+    setIsLoading(true);
+    try {
+      // Check if we're in demo mode (not authenticated)
+      if (!isAuthenticated) {
+        setInstallationRequests([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // For real garages (authenticated), fetch actual installation requests
+      const { data: garagesData, error: garagesError } = await supabase
+        .from('garages')
+        .select('id')
+        .eq('id', user?.garage_id);
+        
+      if (garagesError) {
+        console.error("Error fetching garage:", garagesError);
+        toast({
+          title: "Error",
+          description: "Could not fetch your garage information",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!garagesData || garagesData.length === 0) {
+        console.error("No garage found for this user");
+        setInstallationRequests([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      const garageId = garagesData[0].id;
+      
+      // Fetch installation requests for this garage from order items with installation data
+      const { data: orderItemsData, error: orderItemsError } = await supabase
+        .from('order_items')
+        .select(`
+          id,
+          order_id,
+          garage_id,
+          quantity,
+          price,
+          part:part_id (name),
+          installation_status,
+          scheduled_date,
+          scheduled_time,
+          orders:order_id (
+            id,
+            user_id,
+            created_at,
+            status
+          )
+        `)
+        .eq('garage_id', garageId)
+        .is('installation_status', null)
+        .not('orders.status', 'eq', 'cancelled');
+        
+      if (orderItemsError) {
+        console.error("Error fetching installation requests:", orderItemsError);
+        toast({
+          title: "Error",
+          description: "Failed to load installation requests",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!orderItemsData || orderItemsData.length === 0) {
+        setInstallationRequests([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fetch customer information for these orders
+      const userIds = orderItemsData.map(item => item.orders.user_id);
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, email, phone')
+        .in('id', userIds);
+        
+      if (usersError) {
+        console.error("Error fetching customer information:", usersError);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Map the data to our interface
+      const requests: InstallationRequest[] = orderItemsData.map(item => {
+        const user = usersData?.find(u => u.id === item.orders.user_id);
+        
+        return {
+          id: item.id,
+          customerName: user?.email || "Unknown",
+          customerPhone: user?.phone || "Not provided",
+          part: item.part?.name || "Unknown part",
+          orderDate: new Date(item.orders.created_at).toISOString().split('T')[0],
+          status: item.installation_status || "new",
+          price: Number(item.price),
+          installationFee: 50, // This should come from your installation data
+          garageId: item.garage_id,
+          orderId: item.order_id,
+          orderItemId: item.id,
+          appointmentDate: item.scheduled_date,
+          appointmentTime: item.scheduled_time
+        };
+      });
+      
+      setInstallationRequests(requests);
+    } catch (error) {
+      console.error("Unexpected error fetching installation requests:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
-  const handleRequestClick = (request: any) => {
+  useEffect(() => {
+    fetchInstallationRequests();
+  }, [isAuthenticated, user]);
+  
+  const handleRequestClick = (request: InstallationRequest) => {
     setSelectedRequest(request);
     setContactDialogOpen(true);
   };
   
-  const handleStatusUpdate = (status: string, appointmentDetails?: any) => {
-    // In a real app, this would update the request status in the database
-    toast({
-      title: "Status updated",
-      description: `Customer will be ${status === 'contacted' ? 'contacted' : 'scheduled for installation'}`
-    });
+  const handleStatusUpdate = async (status: string, appointmentDetails?: {date: string, time: string}) => {
+    if (!selectedRequest) return;
     
-    setContactDialogOpen(false);
-    setOpenDialog(false);
+    try {
+      let updateData: any = {
+        installation_status: status
+      };
+      
+      if (appointmentDetails) {
+        updateData.scheduled_date = appointmentDetails.date;
+        updateData.scheduled_time = appointmentDetails.time;
+      }
+      
+      const { error } = await supabase
+        .from('order_items')
+        .update(updateData)
+        .eq('id', selectedRequest.orderItemId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Status updated",
+        description: `Customer will be ${status === 'contacted' ? 'contacted' : 'scheduled for installation'}`
+      });
+      
+      // Refresh the data
+      fetchInstallationRequests();
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update installation status",
+        variant: "destructive",
+      });
+    } finally {
+      setContactDialogOpen(false);
+      setOpenDialog(false);
+    }
   };
+  
+  const unreadRequests = installationRequests.filter(req => req.status === "new").length;
   
   return (
     <>
@@ -98,10 +242,14 @@ export const InstallationRequestsNotification = () => {
           </DialogHeader>
           
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            {mockInstallationRequests.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mechanica-600"></div>
+              </div>
+            ) : installationRequests.length === 0 ? (
               <p className="text-center py-4 text-gray-500">No installation requests</p>
             ) : (
-              mockInstallationRequests.map(request => (
+              installationRequests.map(request => (
                 <div 
                   key={request.id}
                   className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 ${
@@ -131,7 +279,7 @@ export const InstallationRequestsNotification = () => {
                     </div>
                   </div>
                   
-                  {request.status === 'scheduled' && (
+                  {request.status === 'scheduled' && request.appointmentDate && request.appointmentTime && (
                     <div className="mt-2 text-xs bg-green-50 text-green-700 px-2 py-1 rounded flex items-center">
                       <Calendar className="h-3 w-3 mr-1" /> 
                       Scheduled: {new Date(request.appointmentDate).toLocaleDateString()} at {request.appointmentTime}
@@ -205,7 +353,7 @@ export const InstallationRequestsNotification = () => {
                   
                   <Button 
                     onClick={() => handleStatusUpdate('scheduled', {
-                      date: '2025-04-15',
+                      date: new Date().toISOString().split('T')[0],
                       time: '10:00'
                     })}
                     className="justify-start bg-mechanica-500 hover:bg-mechanica-600"

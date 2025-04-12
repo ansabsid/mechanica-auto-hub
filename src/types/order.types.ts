@@ -20,9 +20,17 @@ export interface OrderItem {
   quantity: number;
   price: number;
   created_at: string;
+  installation_fee?: number;
+  installation_status?: 'new' | 'contacted' | 'scheduled';
+  scheduled_date?: string;
+  scheduled_time?: string;
   part?: {
     name: string;
     description?: string;
+  };
+  garage?: {
+    name: string;
+    location: string;
   };
 }
 
@@ -31,4 +39,5 @@ export interface CreateOrderItem {
   garage_id: string | null;
   quantity: number;
   price: number;
+  installation_fee?: number | null;
 }

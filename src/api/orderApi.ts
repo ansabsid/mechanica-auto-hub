@@ -85,12 +85,13 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
         
       if (directOrderError) throw directOrderError;
       
-      // Get order items
+      // Get order items with installation details
       const { data: itemsData, error: itemsError } = await (supabase
         .from('order_items') as any)
         .select(`
           *,
-          part:part_id (name, description)
+          part:part_id (name, description),
+          garage:garage_id (name, location)
         `)
         .eq('order_id', orderId);
         
@@ -112,9 +113,17 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
           quantity: item.quantity,
           price: item.price,
           created_at: item.created_at,
+          installation_fee: item.installation_fee,
+          installation_status: item.installation_status,
+          scheduled_date: item.scheduled_date,
+          scheduled_time: item.scheduled_time,
           part: item.part ? {
             name: item.part.name,
             description: item.part.description
+          } : undefined,
+          garage: item.garage ? {
+            name: item.garage.name,
+            location: item.garage.location
           } : undefined
         })) || []
       };
@@ -139,9 +148,17 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
           quantity: item.quantity,
           price: item.price,
           created_at: item.created_at,
+          installation_fee: item.installation_fee,
+          installation_status: item.installation_status,
+          scheduled_date: item.scheduled_date,
+          scheduled_time: item.scheduled_time,
           part: item.part ? {
             name: item.part.name,
             description: item.part.description
+          } : undefined,
+          garage: item.garage ? {
+            name: item.garage.name,
+            location: item.garage.location
           } : undefined
         })) || []
       };
@@ -173,9 +190,10 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     // Format order items
     const orderItems: CreateOrderItem[] = cartItems.map(item => ({
       part_id: item.part_id,
-      garage_id: item.part.garage_id || null,
+      garage_id: item.installation_data?.garageId || null,
       quantity: item.quantity,
       price: item.part.price,
+      installation_fee: item.installation_data?.installationFee || null
     }));
     
     // Try to create order using RPC
@@ -200,13 +218,14 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
       
       if (orderError) throw orderError;
       
-      // 2. Create order items
+      // 2. Create order items with installation data if available
       const formattedItems = cartItems.map(item => ({
         order_id: order.id,
         part_id: item.part_id,
-        garage_id: item.part.garage_id || null,
+        garage_id: item.installation_data?.garageId || null,
         quantity: item.quantity,
         price: item.part.price,
+        installation_fee: item.installation_data?.installationFee || null
       }));
       
       const { error: itemsError } = await (supabase

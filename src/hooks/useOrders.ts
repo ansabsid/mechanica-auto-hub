@@ -90,6 +90,30 @@ export const useOrders = () => {
     try {
       const orderData = await createOrder(session.user.id, cartItems, totalAmount);
       
+      // Handle installation requests if any cart items have installation_data
+      const itemsWithInstallation = cartItems.filter(item => item.installation_data);
+      
+      if (itemsWithInstallation.length > 0 && orderData && orderData.id) {
+        // Process each item with installation data
+        for (const item of itemsWithInstallation) {
+          if (item.installation_data && item.installation_data.garageId) {
+            // Update the order_items to include garage_id for installation
+            const { error } = await supabase
+              .from('order_items')
+              .update({ 
+                garage_id: item.installation_data.garageId,
+                installation_fee: item.installation_data.installationFee
+              })
+              .eq('order_id', orderData.id)
+              .eq('part_id', item.part_id);
+              
+            if (error) {
+              console.error("Error updating order item with installation data:", error);
+            }
+          }
+        }
+      }
+      
       toast({
         title: "Order created",
         description: "Your order has been placed successfully!",
