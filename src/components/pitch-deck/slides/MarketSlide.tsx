@@ -25,7 +25,7 @@ const MarketSlide: React.FC = () => {
                 <span className="text-sm text-blue-600 font-medium">2024 Sales</span>
                 <div className="flex items-center">
                   <span className="text-xl font-bold mt-1 animate-fade-in">318,981</span>
-                  <SourceLink source="UAE Automotive Authority" />
+                  <SourceLink source="Yallamotor.com" />
                 </div>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -41,7 +41,7 @@ const MarketSlide: React.FC = () => {
                 <span className="text-sm text-blue-600 font-medium">Growth Rate</span>
                 <div className="flex items-center">
                   <span className="text-xl font-bold mt-1 animate-fade-in">19.1%</span>
-                  <SourceLink source="GCC Auto Report 2023" />
+                  <SourceLink source="Arabian Business" />
                 </div>
                 <div className="flex items-center mt-1">
                   <span className="text-xs">2023: 27.2% (330,532 units)</span>
@@ -56,7 +56,7 @@ const MarketSlide: React.FC = () => {
                 <span className="text-sm text-blue-600 font-medium">2032 Forecast</span>
                 <div className="flex items-center">
                   <span className="text-xl font-bold mt-1 animate-fade-in">$25.16B</span>
-                  <SourceLink source="Industry Projections Ltd." />
+                  <SourceLink source="Globalnewswire" />
                 </div>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -83,7 +83,7 @@ const MarketSlide: React.FC = () => {
                 <span className="text-sm text-amber-600 font-medium">2022 Market Value</span>
                 <div className="flex items-center">
                   <span className="text-xl font-bold mt-1 animate-fade-in">$20.15B</span>
-                  <SourceLink source="Middle East Auto Analytics" />
+                  <SourceLink source="Arabian Business" />
                 </div>
                 <PieChart className="h-4 w-4 text-amber-500 mt-2" />
               </div>
@@ -96,7 +96,7 @@ const MarketSlide: React.FC = () => {
                 <span className="text-sm text-amber-600 font-medium">2030 Projection</span>
                 <div className="flex items-center">
                   <span className="text-xl font-bold mt-1 animate-fade-in">$48.15B</span>
-                  <SourceLink source="Deloitte Automotive" />
+                  <SourceLink source="JobXDubai" />
                 </div>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -112,7 +112,7 @@ const MarketSlide: React.FC = () => {
                 <span className="text-sm text-amber-600 font-medium">Consumer Trends</span>
                 <div className="mt-1 flex items-center">
                   <span className="text-xs font-medium">Source: </span>
-                  <span className="text-xs ml-1 text-amber-600">UAE Consumer Insights 2023</span>
+                  <span className="text-xs ml-1 text-amber-600">Arabian Business</span>
                 </div>
                 <div className="mt-2">
                   <div className="flex justify-between text-xs">
@@ -162,4 +162,3 @@ const SourceLink: React.FC<SourceLinkProps> = ({ source }) => {
 };
 
 export default MarketSlide;
-
