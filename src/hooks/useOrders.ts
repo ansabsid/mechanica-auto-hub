@@ -351,6 +351,8 @@ export const useOrders = () => {
   ) => {
     setIsLoading(true);
     try {
+      console.log("Updating installation schedule for item:", orderItemId, "Date:", scheduledDate, "Time:", scheduledTime);
+      
       const { error: updateError } = await supabase
         .from('order_items')
         .update({ 
@@ -369,6 +371,27 @@ export const useOrders = () => {
         });
         setIsLoading(false);
         return false;
+      }
+      
+      const { data: orderItem } = await supabase
+        .from('order_items')
+        .select('garage_id')
+        .eq('id', orderItemId)
+        .single();
+        
+      if (orderItem && orderItem.garage_id) {
+        const { error: linkError } = await supabase
+          .from('installation_request_garages')
+          .upsert({
+            order_item_id: orderItemId,
+            garage_id: orderItem.garage_id
+          });
+          
+        if (linkError) {
+          console.error("Error updating installation_request_garages:", linkError);
+        } else {
+          console.log("Successfully updated installation_request_garages");
+        }
       }
       
       const { error: orderUpdateError } = await supabase

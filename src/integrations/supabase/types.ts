@@ -171,6 +171,42 @@ export type Database = {
         }
         Relationships: []
       }
+      installation_request_garages: {
+        Row: {
+          created_at: string | null
+          garage_id: string | null
+          id: string
+          order_item_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          garage_id?: string | null
+          id?: string
+          order_item_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          garage_id?: string | null
+          id?: string
+          order_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installation_request_garages_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installation_request_garages_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       manufacturers: {
         Row: {
           created_at: string | null
@@ -259,6 +295,13 @@ export type Database = {
           scheduled_time?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_items_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]

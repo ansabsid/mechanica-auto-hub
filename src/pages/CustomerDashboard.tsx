@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -105,8 +104,21 @@ const CustomerDashboard = () => {
       
       console.log("Fetching scheduled installations for user:", session.user.id);
       
-      // Modified query to directly get scheduled installations
-      const { data: orderItems, error } = await supabase
+      const { data: allOrderItems, error: debugError } = await supabase
+        .from('order_items')
+        .select(`
+          id, 
+          installation_status,
+          order_id,
+          orders!inner(id, user_id)
+        `)
+        .eq('orders.user_id', session.user.id);
+        
+      console.log("All user's order items:", allOrderItems?.length || 0);
+      console.log("Items with scheduled status:", 
+        allOrderItems?.filter(item => item.installation_status === 'scheduled').length || 0);
+      
+      const { data: scheduledItems, error } = await supabase
         .from('order_items')
         .select(`
           id, 
@@ -119,8 +131,7 @@ const CustomerDashboard = () => {
           order_id,
           part_id,
           garage_id,
-          orders!inner(id, user_id, status),
-          garages(id, name, location)
+          orders!inner(id, user_id, status)
         `)
         .eq('orders.user_id', session.user.id)
         .eq('installation_status', 'scheduled')
@@ -129,20 +140,33 @@ const CustomerDashboard = () => {
         .not('scheduled_time', 'is', null);
       
       if (error) {
-        console.error("Error fetching installations:", error);
+        console.error("Error fetching scheduled installations:", error);
         toast.error("Failed to load your scheduled installations");
         return;
       }
       
-      console.log("Found scheduled installations:", orderItems?.length || 0);
+      console.log("Found scheduled installations:", scheduledItems?.length || 0);
       
-      if (!orderItems || orderItems.length === 0) {
+      if (!scheduledItems || scheduledItems.length === 0) {
         setInstallations([]);
         setInstallationsLoading(false);
         return;
       }
       
-      const partIds = orderItems.map(item => item.part_id);
+      const garageIds = scheduledItems
+        .filter(item => item.garage_id)
+        .map(item => item.garage_id);
+        
+      const { data: garages, error: garageError } = await supabase
+        .from('garages')
+        .select('id, name, location')
+        .in('id', garageIds);
+        
+      if (garageError) {
+        console.error("Error fetching garage details:", garageError);
+      }
+      
+      const partIds = scheduledItems.map(item => item.part_id);
       
       const { data: parts, error: partsError } = await supabase
         .from('parts')
@@ -153,11 +177,21 @@ const CustomerDashboard = () => {
         console.error("Error fetching part details:", partsError);
       }
       
-      const installationsWithDetails = orderItems.map(item => {
+      const garageLookup: Record<string, any> = {};
+      if (garages) {
+        garages.forEach(garage => {
+          garageLookup[garage.id] = garage;
+        });
+      }
+      
+      const installationsWithDetails = scheduledItems.map(item => {
         const part = parts?.find(p => p.id === item.part_id);
+        const garage = item.garage_id ? garageLookup[item.garage_id] : null;
+        
         return {
           ...item,
-          part: part || { name: `Part #${item.part_id}`, description: null }
+          part: part || { name: `Part #${item.part_id}`, description: null },
+          garages: garage || null
         };
       });
       

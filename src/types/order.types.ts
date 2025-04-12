@@ -41,3 +41,10 @@ export interface CreateOrderItem {
   price: number;
   installation_fee?: number | null;
 }
+
+export interface InstallationRequestGarage {
+  id: string;
+  order_item_id: string;
+  garage_id: string;
+  created_at: string;
+}
