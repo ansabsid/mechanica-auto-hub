@@ -18,6 +18,7 @@ import PartScanner from './pages/PartScanner';
 import Categories from './pages/Categories';
 import CategoryPage from './components/categories/CategoryPage';
 import BookAppointment from './pages/BookAppointment';
+import PitchDeck from './pages/PitchDeck';
 import { AuthProvider } from './hooks/auth';
 import { useCapacitor } from './hooks/useCapacitor';
 import './App.css';
@@ -58,6 +59,7 @@ function App() {
             <Route path="category/:categoryName" element={<CategoryPage />} />
             <Route path="scanner" element={<PartScanner />} />
             <Route path="scan" element={<PartScanner />} /> {/* Adding this route as well for backward compatibility */}
+            <Route path="pitch-deck" element={<PitchDeck />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

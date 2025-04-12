@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, ShoppingCart, LogOut, Home, Settings } from "lucide-react";
+import { Menu, X, User, ShoppingCart, LogOut, Home, Settings, Presentation } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Check if the current path is the garage dashboard (demo mode)
   const isDemoMode = location.pathname === "/garage-dashboard" && !isAuthenticated;
 
   useEffect(() => {
@@ -46,12 +44,10 @@ const Header = () => {
     }
   };
 
-  // Determine the display name for the user menu
   const displayName = isDemoMode 
     ? "demo-garage@bookmyparts.com"
     : user?.email;
 
-  // Determine the role display for the user menu
   const roleDisplay = isDemoMode 
     ? "garage (demo)"
     : userRole || "User";
@@ -85,6 +81,10 @@ const Header = () => {
             </Link>
             <Link to="/contact" className="text-gray-700 hover:text-mechanica-500 transition-colors">
               Contact
+            </Link>
+            <Link to="/pitch-deck" className="text-gray-700 hover:text-mechanica-500 transition-colors flex items-center gap-1">
+              <Presentation className="h-4 w-4" />
+              Pitch Deck
             </Link>
           </nav>
 
@@ -203,6 +203,14 @@ const Header = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact
+              </Link>
+              <Link
+                to="/pitch-deck"
+                className="text-gray-700 hover:text-mechanica-500 transition-colors flex items-center gap-1"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Presentation className="h-4 w-4" />
+                Pitch Deck
               </Link>
               
               {(isAuthenticated && userRole === "garage") || isDemoMode ? (
