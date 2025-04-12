@@ -1,60 +1,14 @@
 
 import React from "react";
-import { Settings, Coffee, Download } from "lucide-react";
+import { Settings, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const ContactSlide: React.FC = () => {
   const navigate = useNavigate();
-  const [isDownloading, setIsDownloading] = React.useState(false);
   
   const handleContactClick = () => {
     navigate("/contact");
-  };
-  
-  const handleDownloadClick = async () => {
-    try {
-      setIsDownloading(true);
-      
-      // Simulate downloading process
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Create a new blob with PDF content type
-      const response = await fetch('/lovable-uploads/bc5d716e-e89a-48a9-b038-082d8861b31d.png');
-      const blob = await response.blob();
-      
-      // Create a new blob with the correct PDF MIME type
-      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-      
-      // Create a download link for the PDF
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = 'BookMyParts_PitchDeck_2025.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up the blob URL
-      URL.revokeObjectURL(blobUrl);
-      
-      toast({
-        title: "Download started",
-        description: "Your pitch deck is downloading now",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error("Download error:", error);
-      toast({
-        title: "Download failed",
-        description: "There was a problem downloading the pitch deck. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDownloading(false);
-    }
   };
   
   return (
@@ -71,31 +25,13 @@ const ContactSlide: React.FC = () => {
         <p className="text-muted-foreground mt-2">Ready to transform the auto parts and service industry?</p>
       </div>
       
-      <div className="flex space-x-4">
+      <div>
         <Button 
           variant="mechanica" 
           className="rounded-full shadow-md hover:shadow-lg transition-all"
           onClick={handleContactClick}
         >
           Contact Us
-        </Button>
-        <Button 
-          variant="outline" 
-          className="rounded-full border-mechanica-300 shadow-sm hover:bg-mechanica-50 flex items-center gap-2"
-          onClick={handleDownloadClick}
-          disabled={isDownloading}
-        >
-          {isDownloading ? (
-            <>
-              <LoadingSpinner size="sm" className="h-4 w-4" />
-              <span>Downloading...</span>
-            </>
-          ) : (
-            <>
-              <Download className="h-4 w-4" />
-              <span>Download Pitch Deck</span>
-            </>
-          )}
         </Button>
       </div>
       
