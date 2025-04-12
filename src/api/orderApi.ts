@@ -55,24 +55,31 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
   try {
     console.log("Fetching order details for ID:", orderId);
     
-    // Get order data
-    const { data: directOrderData, error: directOrderError } = await supabase
+    // Get order data with explicit logging
+    const { data: orderData, error: orderError } = await supabase
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .maybeSingle();
+      .single();
       
-    if (directOrderError) {
-      console.error("Error fetching order:", directOrderError.message);
-      throw directOrderError;
+    if (orderError) {
+      console.error("Error fetching order:", orderError.message, orderError);
+      
+      // Check if it's a "not found" error
+      if (orderError.code === 'PGRST116') {
+        console.log("Order not found with ID:", orderId);
+        return null;
+      }
+      
+      throw orderError;
     }
     
-    if (!directOrderData) {
-      console.error("No order found with ID:", orderId);
+    if (!orderData) {
+      console.log("No order data returned for ID:", orderId);
       return null;
     }
     
-    console.log("Order found:", directOrderData);
+    console.log("Order found:", orderData);
     
     // Get order items with installation details
     const { data: itemsData, error: itemsError } = await supabase
@@ -93,12 +100,12 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     
     // Format order with items
     const orderWithItems: Order = {
-      id: directOrderData.id,
-      user_id: directOrderData.user_id,
-      total_amount: directOrderData.total_amount,
-      status: directOrderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
-      created_at: directOrderData.created_at,
-      updated_at: directOrderData.updated_at,
+      id: orderData.id,
+      user_id: orderData.user_id,
+      total_amount: orderData.total_amount,
+      status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+      created_at: orderData.created_at,
+      updated_at: orderData.updated_at,
       items: itemsData?.map((item: any) => ({
         id: item.id,
         order_id: item.order_id,

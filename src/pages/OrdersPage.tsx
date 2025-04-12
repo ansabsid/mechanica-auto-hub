@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -17,17 +16,32 @@ import { Package, Clock, Check, X, ChevronLeft, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
+import { useAuth } from "@/hooks/auth";
 
 const OrderDetailPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { fetchOrderDetails, currentOrder, isLoading, cancelOrder } = useOrders();
+  const { user } = useAuth();
   
   useEffect(() => {
-    if (orderId) {
-      fetchOrderDetails(orderId);
-    }
-  }, [orderId]);
+    const loadOrderDetails = async () => {
+      if (!orderId) {
+        return;
+      }
+      
+      if (!user) {
+        console.log("No authenticated user found, redirecting to login");
+        navigate('/login', { state: { from: `/orders/${orderId}` } });
+        return;
+      }
+      
+      console.log("Loading order details for:", orderId);
+      await fetchOrderDetails(orderId);
+    };
+    
+    loadOrderDetails();
+  }, [orderId, user]);
   
   const getStatusBadge = (status: string) => {
     switch (status) {

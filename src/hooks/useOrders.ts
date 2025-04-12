@@ -46,11 +46,28 @@ export const useOrders = () => {
 
   // Fetch a single order with its items
   const fetchOrderDetails = async (orderId: string) => {
-    console.log("Fetching details for order:", orderId);
+    console.log("fetchOrderDetails called for order:", orderId);
     setIsLoading(true);
+    
     try {
       // Clear current order before fetching to avoid stale data
       setCurrentOrder(null);
+      
+      // Check if user is authenticated before fetching
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        console.error("No authenticated user found when fetching order");
+        toast({
+          title: "Authentication required",
+          description: "Please login to view order details",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return null;
+      }
+      
+      console.log("Fetching order with auth user:", session.user.id);
       
       const orderData = await getOrderDetails(orderId);
       console.log("Order data received:", orderData);
@@ -58,20 +75,33 @@ export const useOrders = () => {
       if (!orderData) {
         console.error("No order data returned for ID:", orderId);
         toast({
-          title: "Error",
-          description: "Order not found",
+          title: "Order not found",
+          description: "The requested order could not be found",
           variant: "destructive",
         });
+        setIsLoading(false);
+        return null;
+      }
+      
+      // Verify that the order belongs to the current user
+      if (orderData.user_id !== session.user.id) {
+        console.error("Order user_id doesn't match current user");
+        toast({
+          title: "Access denied",
+          description: "You don't have permission to view this order",
+          variant: "destructive",
+        });
+        setIsLoading(false);
         return null;
       }
       
       setCurrentOrder(orderData);
       return orderData;
     } catch (error: any) {
-      console.error("Error fetching order details:", error.message);
+      console.error("Error fetching order details:", error.message, error);
       toast({
         title: "Error",
-        description: "Failed to load order details",
+        description: "Failed to load order details: " + error.message,
         variant: "destructive",
       });
       return null;
