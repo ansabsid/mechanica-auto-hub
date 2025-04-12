@@ -59,51 +59,40 @@ export const useGarageAppointments = () => {
     try {
       console.log("Fetching appointments for garage ID:", garageId);
       
-      // First, fetch appointments with a join to vehicles table directly
+      // Use a direct query with explicit JOIN for clearer debugging
       const { data, error } = await supabase
         .from('appointments')
         .select(`
-          id,
-          user_id,
-          garage_id,
-          service_type,
-          appointment_date,
-          appointment_time,
-          status,
-          notes,
-          created_at,
-          updated_at,
-          confirmation_code,
-          vehicle_id,
-          service_slot_id,
-          vehicles:vehicle_id (id, make, model, year, license_plate)
+          *,
+          vehicles:vehicle_id (*)
         `)
         .eq('garage_id', garageId);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase query error:", error);
+        throw error;
+      }
       
-      console.log("Raw appointment data with vehicles join:", data);
+      console.log("Raw appointment data from database:", data);
+      
+      if (!data || data.length === 0) {
+        console.log("No appointments found for garage ID:", garageId);
+        setAppointments([]);
+        return [];
+      }
       
       // Process the data to ensure consistent structure
-      const processedAppointments = data ? data.map(appointment => {
-        // Extract vehicle data from the join result
-        const vehicleData = appointment.vehicles;
+      const processedAppointments = data.map(appointment => {
+        console.log("Processing appointment:", appointment.id, "Vehicle data:", appointment.vehicles);
         
-        // Create the appointment object with proper structure
+        // Create a properly structured appointment object
         return {
           ...appointment,
-          // Format vehicle data consistently - important for rendering
-          vehicle: vehicleData ? {
-            id: vehicleData.id,
-            make: vehicleData.make,
-            model: vehicleData.model,
-            year: vehicleData.year,
-            license_plate: vehicleData.license_plate
-          } : undefined
+          vehicle: appointment.vehicles || undefined
         };
-      }) : [];
+      });
       
-      console.log("Processed appointments with vehicle data:", processedAppointments);
+      console.log("Processed appointments:", processedAppointments);
       setAppointments(processedAppointments);
       return processedAppointments;
     } catch (error: any) {

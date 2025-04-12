@@ -61,7 +61,6 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
       const data = await fetchAppointments(garageId);
       setAppointments(data || []);
       
-      // Add a console log to help with debugging
       console.log(`Loaded ${data?.length || 0} appointments for garage ${garageId}`);
       console.log("Appointment data:", data);
     } finally {
@@ -73,7 +72,6 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
     if (garageId) {
       loadAppointments();
       
-      // Set up auto-refresh every minute to catch new appointments
       const intervalId = setInterval(() => {
         loadAppointments();
       }, 60000);
@@ -101,7 +99,6 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
     try {
       await updateAppointmentStatus(appointmentId, status);
       
-      // Update the selected appointment if it's the one being modified
       if (selectedAppointment?.id === appointmentId) {
         setSelectedAppointment({...selectedAppointment, status});
       }
@@ -109,7 +106,6 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
       toast.success(`Appointment status updated to ${status}`);
       setDetailsOpen(false);
       
-      // Refresh appointments to get the latest data
       loadAppointments();
       
     } catch (error: any) {
@@ -183,14 +179,10 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
       return "Not specified";
     }
     
-    // Convert vehicle data to expected format if it's not already
-    const vehicleData = typeof vehicle === 'object' ? vehicle : JSON.parse(vehicle);
+    console.log("Rendering vehicle info:", vehicle);
     
-    // Log the vehicle information to help debug
-    console.log("Rendering vehicle info:", vehicleData);
-    
-    if (vehicleData && vehicleData.make && vehicleData.model) {
-      return `${vehicleData.make} ${vehicleData.model} (${vehicleData.year})${vehicleData.license_plate ? ` • ${vehicleData.license_plate}` : ''}`;
+    if (vehicle && typeof vehicle === 'object' && vehicle.make && vehicle.model) {
+      return `${vehicle.make} ${vehicle.model} (${vehicle.year})${vehicle.license_plate ? ` • ${vehicle.license_plate}` : ''}`;
     }
     
     return "Not specified";
