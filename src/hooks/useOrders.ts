@@ -48,8 +48,9 @@ export const useOrders = () => {
     setIsLoading(true);
     
     try {
-      // Don't reset current order immediately to avoid flickering if fetch fails
-      // Only set to null if we get a new order
+      // Clear previous order data to avoid confusion if fetch fails
+      // This helps ensure we don't show stale data
+      setCurrentOrder(null);
       
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -91,6 +92,7 @@ export const useOrders = () => {
         return null;
       }
       
+      // Set current order with valid data
       setCurrentOrder(orderData);
       return orderData;
     } catch (error: any) {

@@ -70,7 +70,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       .from('orders')
       .select('*')
       .eq('id', orderId)
-      .maybeSingle(); // Changed from single() to maybeSingle() to avoid errors when not found
+      .maybeSingle();
       
     if (orderError) {
       console.error("Error fetching order:", orderError.message, orderError);
@@ -90,33 +90,52 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       return null;
     }
     
-    // Get order items with installation details
-    const { data: itemsData, error: itemsError } = await supabase
-      .from('order_items')
-      .select(`
-        id,
-        order_id,
-        part_id,
-        garage_id,
-        quantity,
-        price,
-        created_at,
-        scheduled_date,
-        scheduled_time,
-        installation_fee,
-        installation_status
-      `)
-      .eq('order_id', orderId);
+    // Get order items - use a delayed retry mechanism if no items are found on first attempt
+    let itemsData = [];
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    while (retryCount <= maxRetries) {
+      const { data: fetchedItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select(`
+          id,
+          order_id,
+          part_id,
+          garage_id,
+          quantity,
+          price,
+          created_at,
+          scheduled_date,
+          scheduled_time,
+          installation_fee,
+          installation_status
+        `)
+        .eq('order_id', orderId);
+        
+      if (itemsError) {
+        console.error("Error fetching order items:", itemsError.message);
+        throw itemsError;
+      }
       
-    if (itemsError) {
-      console.error("Error fetching order items:", itemsError.message);
-      throw itemsError;
+      console.log(`Order items attempt ${retryCount + 1}:`, fetchedItems);
+      
+      if (fetchedItems && fetchedItems.length > 0) {
+        itemsData = fetchedItems;
+        break; // We found items, exit the retry loop
+      } else if (retryCount < maxRetries) {
+        console.log(`No items found for order on attempt ${retryCount + 1}, retrying...`);
+        retryCount++;
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        console.log(`No items found for order after ${maxRetries + 1} attempts`);
+        break;
+      }
     }
     
-    console.log("Order items basic data:", itemsData);
-    
     // Only try to fetch part and garage details if we have items
-    if (!itemsData || itemsData.length === 0) {
+    if (itemsData.length === 0) {
       console.log("No items found for order:", orderId);
       
       // Return order without items
@@ -132,8 +151,8 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
     }
     
     // Now get the part and garage details separately to avoid nesting issues
-    const partIds = itemsData?.map(item => item.part_id) || [];
-    const garageIds = itemsData?.filter(item => item.garage_id).map(item => item.garage_id) || [];
+    const partIds = itemsData.map(item => item.part_id) || [];
+    const garageIds = itemsData.filter(item => item.garage_id).map(item => item.garage_id) || [];
     
     console.log("Fetching details for parts:", partIds, "and garages:", garageIds);
     
@@ -188,7 +207,7 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled',
       created_at: orderData.created_at,
       updated_at: orderData.updated_at,
-      items: itemsData?.map((item: any) => {
+      items: itemsData.map((item: any) => {
         console.log("Processing item:", item);
         const part = partsLookup[item.part_id];
         const garage = item.garage_id ? garagesLookup[item.garage_id] : undefined;

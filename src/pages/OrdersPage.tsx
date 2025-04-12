@@ -19,6 +19,7 @@ const OrderPage = () => {
   const navigate = useNavigate();
   const [retryCount, setRetryCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRefetching, setIsRefetching] = useState(false);
 
   useEffect(() => {
     const loadOrderDetails = async () => {
@@ -33,27 +34,37 @@ const OrderPage = () => {
           return;
         }
         
+        setIsRefetching(true);
         const result = await fetchOrderDetails(orderId);
+        setIsRefetching(false);
+        
         if (!result) {
           console.error(`Failed to load order: ${orderId}`);
-          if (retryCount < 2) {
+          if (retryCount < 3) {
             // Wait and retry if we haven't reached max retries
             setTimeout(() => {
               setRetryCount(prev => prev + 1);
-            }, 1500); // Wait 1.5 seconds before retrying
+            }, 2000); // Wait 2 seconds before retrying
+          } else {
+            setErrorMessage("Order could not be loaded after multiple attempts");
           }
         } else {
           console.log("Order details loaded successfully:", result.id);
           setErrorMessage(null);
         }
       } catch (error: any) {
+        setIsRefetching(false);
         console.error("Error loading order:", error.message);
         setErrorMessage(`Error loading order: ${error.message}`);
       }
     };
 
     loadOrderDetails();
-  }, [orderId, fetchOrderDetails, retryCount]); // Added fetchOrderDetails to dependencies
+  }, [orderId, fetchOrderDetails, retryCount]);
+
+  const handleManualRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
   const formatDate = (dateStr: string) => {
     try {
@@ -134,10 +145,13 @@ const OrderPage = () => {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || isRefetching) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex flex-col justify-center items-center h-64">
         <LoadingSpinner size="lg" />
+        <p className="mt-4 text-gray-500">
+          {retryCount > 0 ? `Loading order data (attempt ${retryCount + 1})...` : 'Loading order data...'}
+        </p>
       </div>
     );
   }
@@ -147,11 +161,7 @@ const OrderPage = () => {
       <div className="text-center py-12">
         <p className="text-lg text-gray-600">
           {errorMessage || "Order not found"}
-          {retryCount > 0 && !errorMessage && ` (Tried ${retryCount} times)`}
         </p>
-        {retryCount < 2 && !errorMessage && (
-          <p className="mt-2 text-gray-500">Attempting to reload... Please wait.</p>
-        )}
         <Button 
           variant="outline" 
           className="mt-4"
@@ -162,14 +172,24 @@ const OrderPage = () => {
         {orderId && (
           <div className="mt-4 p-4 bg-gray-100 rounded-md mx-auto max-w-md">
             <p className="text-sm text-gray-600 mb-2">Order ID: {orderId}</p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setRetryCount(prev => prev + 1)}
-              className="mr-2"
-            >
-              Try Again
-            </Button>
+            <div className="flex justify-center">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleManualRetry}
+                disabled={isRefetching}
+                className="mr-2"
+              >
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -210,28 +230,32 @@ const OrderPage = () => {
       
       <h2 className="text-xl font-semibold mb-4">Order Items</h2>
       <div className="space-y-4">
-        {currentOrder.items && currentOrder.items.map((item) => (
-          <Card key={item.id} className="overflow-hidden">
-            <div className="p-4">
-              <div className="flex flex-col md:flex-row justify-between">
-                <div>
-                  <h3 className="font-semibold">{item.part?.name || `Part #${item.part_id}`}</h3>
-                  {item.part?.description && (
-                    <p className="text-sm text-gray-600 mt-1">{item.part.description}</p>
-                  )}
+        {currentOrder.items && currentOrder.items.length > 0 ? (
+          currentOrder.items.map((item) => (
+            <Card key={item.id} className="overflow-hidden">
+              <div className="p-4">
+                <div className="flex flex-col md:flex-row justify-between">
+                  <div>
+                    <h3 className="font-semibold">{item.part?.name || `Part #${item.part_id}`}</h3>
+                    {item.part?.description && (
+                      <p className="text-sm text-gray-600 mt-1">{item.part.description}</p>
+                    )}
+                  </div>
+                  <div className="text-right mt-2 md:mt-0">
+                    <p className="font-medium">${item.price.toFixed(2)} × {item.quantity}</p>
+                    {item.installation_fee > 0 && (
+                      <p className="text-sm text-gray-600">+ ${item.installation_fee.toFixed(2)} installation</p>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right mt-2 md:mt-0">
-                  <p className="font-medium">${item.price.toFixed(2)} × {item.quantity}</p>
-                  {item.installation_fee > 0 && (
-                    <p className="text-sm text-gray-600">+ ${item.installation_fee.toFixed(2)} installation</p>
-                  )}
-                </div>
+                
+                {item.installation_fee > 0 && renderInstallationStatus(item)}
               </div>
-              
-              {item.installation_fee > 0 && renderInstallationStatus(item)}
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center py-6">No items found for this order</p>
+        )}
       </div>
     </div>
   );
