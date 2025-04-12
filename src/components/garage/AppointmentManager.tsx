@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Calendar, 
@@ -192,7 +193,15 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
 
   const renderVehicleInfo = (vehicle: any) => {
     if (!vehicle) return "Not specified";
-    return `${vehicle.make} ${vehicle.model} (${vehicle.year})${vehicle.license_plate ? ` • ${vehicle.license_plate}` : ''}`;
+    
+    // Log the vehicle information to help debug
+    console.log("Rendering vehicle info:", vehicle);
+    
+    if (vehicle.make && vehicle.model) {
+      return `${vehicle.make} ${vehicle.model} (${vehicle.year})${vehicle.license_plate ? ` • ${vehicle.license_plate}` : ''}`;
+    }
+    
+    return "Not specified";
   };
 
   return (
@@ -278,7 +287,10 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
                   </td>
                   <td className="p-3">{appointment.service_type}</td>
                   <td className="p-3">
-                    {renderVehicleInfo(appointment.vehicle)}
+                    <div className="flex items-center">
+                      <Car className="h-4 w-4 mr-1 text-gray-500" />
+                      <span>{renderVehicleInfo(appointment.vehicle)}</span>
+                    </div>
                   </td>
                   <td className="p-3">
                     <Badge className={getStatusColor(appointment.status)}>
@@ -349,7 +361,10 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
               
               <div>
                 <div className="text-sm text-gray-600">Vehicle</div>
-                <div className="font-medium">{renderVehicleInfo(selectedAppointment.vehicle)}</div>
+                <div className="font-medium flex items-center">
+                  <Car className="h-4 w-4 mr-1 text-gray-500" />
+                  {renderVehicleInfo(selectedAppointment.vehicle)}
+                </div>
               </div>
               
               <div>

@@ -12,7 +12,7 @@ export const fetchUserAppointmentsFromApi = async (userId: string): Promise<Appo
     // Using raw SQL query to avoid type issues with type assertion
     const { data, error } = await (supabase
       .from('appointments') as any)
-      .select('*, garage:garage_id(name, location)')
+      .select('*, garage:garage_id(name, location), vehicle:vehicle_id(*)')
       .eq('user_id', userId)
       .order('appointment_date', { ascending: true });
     
@@ -31,6 +31,15 @@ export const fetchUserAppointmentsFromApi = async (userId: string): Promise<Appo
         notes: item.notes,
         created_at: item.created_at,
         updated_at: item.updated_at,
+        confirmation_code: item.confirmation_code,
+        vehicle_id: item.vehicle_id,
+        vehicle: item.vehicle ? {
+          id: item.vehicle.id,
+          make: item.vehicle.make,
+          model: item.vehicle.model,
+          year: item.vehicle.year,
+          license_plate: item.vehicle.license_plate,
+        } : undefined,
         garage: item.garage ? {
           name: item.garage.name || 'Unknown',
           location: item.garage.location || 'Unknown'
@@ -79,6 +88,7 @@ export const mockFetchAvailableSlots = (garageId: string, date?: string): Availa
  * @param serviceType The type of service requested
  * @param date The appointment date
  * @param time The appointment time
+ * @param vehicleId The ID of the vehicle for the appointment
  * @param notes Optional notes for the appointment
  * @returns The created appointment data
  */
@@ -88,9 +98,12 @@ export const bookAppointmentApi = async (
   serviceType: string,
   date: string,
   time: string,
+  vehicleId?: string,
   notes?: string
 ) => {
   try {
+    console.log("Booking appointment with vehicle ID:", vehicleId);
+    
     // Try to use the RPC function if available
     const { data, error } = await (supabase as any).rpc('insert_appointment', {
       p_user_id: userId,
@@ -98,6 +111,7 @@ export const bookAppointmentApi = async (
       p_service_type: serviceType,
       p_appointment_date: date,
       p_appointment_time: time,
+      p_vehicle_id: vehicleId || null,
       p_notes: notes || null
     });
     
@@ -111,6 +125,7 @@ export const bookAppointmentApi = async (
           service_type: serviceType,
           appointment_date: date,
           appointment_time: time,
+          vehicle_id: vehicleId || null,
           notes: notes || null,
           status: 'pending'
         })

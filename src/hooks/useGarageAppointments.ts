@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ export interface Appointment {
   created_at: string;
   updated_at: string;
   vehicle_id?: string;
+  confirmation_code?: string;
   vehicle?: {
     make: string;
     model: string;
@@ -79,7 +81,7 @@ export const useGarageAppointments = () => {
       
       // If we have appointments, fetch the vehicle information
       if (data && data.length > 0) {
-        // Get all vehicle IDs to fetch in bulk
+        // Get all vehicle IDs to fetch in bulk (filter out null/undefined vehicle_ids)
         const vehicleIds = data
           .filter(appointment => appointment.vehicle_id)
           .map(appointment => appointment.vehicle_id);
@@ -97,18 +99,24 @@ export const useGarageAppointments = () => {
             
           if (vehicleError) {
             console.error("Error fetching vehicle details:", vehicleError);
-          } else if (vehicles) {
+          } else if (vehicles && vehicles.length > 0) {
             console.log("Fetched vehicles:", vehicles);
             // Create lookup object for faster access
             vehicles.forEach(vehicle => {
-              vehicleLookup[vehicle.id] = vehicle;
+              if (vehicle && vehicle.id) {
+                vehicleLookup[vehicle.id] = vehicle;
+              }
             });
+          } else {
+            console.log("No vehicles found for IDs:", vehicleIds);
           }
         }
         
         // Combine data to create complete appointment objects
         const appointmentsWithVehicles = data.map(appointment => {
-          const vehicle = appointment.vehicle_id ? vehicleLookup[appointment.vehicle_id] : null;
+          const vehicle = appointment.vehicle_id && vehicleLookup[appointment.vehicle_id] 
+            ? vehicleLookup[appointment.vehicle_id] 
+            : null;
           
           return {
             ...appointment,
