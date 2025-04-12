@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -165,7 +164,6 @@ export const InstallationOptionsDialog = ({
                   <Select
                     value={selectedArea}
                     onValueChange={setSelectedArea}
-                    disabled={availableAreas.length === 0}
                   >
                     <SelectTrigger id="area" className="w-full">
                       <div className="flex items-center gap-2">
