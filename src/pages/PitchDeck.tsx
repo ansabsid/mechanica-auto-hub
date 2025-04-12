@@ -132,6 +132,19 @@ const PitchDeck = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium">Online Parts Sales</h3>
+                <span className="text-blue-500 font-bold">$1.2B</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: "40%" }}></div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">23% YoY growth</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center mb-4">
                 <h3 className="font-medium">Vehicle Service Market</h3>
                 <span className="text-mechanica-500 font-bold">$2.8B</span>
               </div>
