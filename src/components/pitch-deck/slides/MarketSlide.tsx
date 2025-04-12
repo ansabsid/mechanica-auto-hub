@@ -1,9 +1,9 @@
-
 import React from "react";
-import { CarFront, Car, TrendingUp, PieChart, ExternalLink, BarChart2 } from "lucide-react";
+import { CarFront, Car, TrendingUp, PieChart, ExternalLink, BarChart2, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { 
   BarChart, 
   Bar, 
@@ -161,24 +161,38 @@ const MarketSlide: React.FC = () => {
           <AutoPartsMarketChart isMobile={isMobile} />
         </div>
         
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4 text-xs text-gray-500">
-          <div className="flex items-center mb-2 md:mb-0">
-            <span className="font-medium mr-1">Aftermarket Parts:</span>
-            <span>IMARC Group, UAE Automotive Aftermarket Market</span>
-            <SourceLink source="IMARC Group (CAGR: 3.8%)" />
-          </div>
-          <div className="flex items-center">
-            <span className="font-medium mr-1">E-Commerce Aftermarket:</span>
-            <span>P&S Intelligence, UAE E-Commerce Automotive Aftermarket Analysis</span>
-            <SourceLink source="P&S Intelligence (CAGR: 16.3%)" />
-          </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mt-4">
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button className="text-xs flex items-center text-gray-400 hover:text-gray-600 transition-colors" aria-label="View source information">
+                <Info size={14} className="mr-1" />
+                <span>Source information</span>
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Data Sources</h4>
+                <div className="text-xs space-y-1.5">
+                  <div>
+                    <p className="font-medium">Aftermarket Parts:</p>
+                    <p>IMARC Group, UAE Automotive Aftermarket Market</p>
+                    <p className="text-gray-500">CAGR: 3.8%</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">E-Commerce Aftermarket:</p>
+                    <p>P&S Intelligence, UAE E-Commerce Automotive Aftermarket Analysis</p>
+                    <p className="text-gray-500">CAGR: 16.3%</p>
+                  </div>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </div>
     </div>
   );
 };
 
-// Data for the automotive parts market chart
 const chartData = [
   {
     name: "Aftermarket Parts",
@@ -200,27 +214,22 @@ const chartData = [
   },
 ];
 
-// Improved chart component for automotive parts market
 const AutoPartsMarketChart: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
-  // Enhanced color palette for the bars
   const colors = {
-    value2024: "#9b87f5", // Purple
-    value2033: "#d3e4fd", // Light Blue
-    value2023: "#7E69AB", // Secondary Purple
-    value2030: "#E5DEFF", // Soft Purple
+    value2024: "#9b87f5",
+    value2033: "#d3e4fd",
+    value2023: "#7E69AB",
+    value2030: "#E5DEFF"
   };
 
-  // Format the value to display in USD billion with 2 decimal places
   const formatValue = (value: number) => {
     return `$${value.toFixed(2)}B`;
   };
 
-  // Custom tooltip formatter
   const tooltipFormatter = (value: number) => {
     return [`$${value.toFixed(2)} Billion`, 'Market Size'];
   };
 
-  // Transform data for the chart
   const transformedData = chartData.flatMap((item) => [
     {
       name: item.name,
