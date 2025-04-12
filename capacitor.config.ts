@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2d72b7aaa39a447aba13099dec9a2f3c',
+  appId: 'com.lovable.mechanicaautohub',
   appName: 'mechanica-auto-hub',
   webDir: 'dist',
   server: {
