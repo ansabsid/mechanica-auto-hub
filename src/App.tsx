@@ -41,7 +41,8 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="categories" element={<Categories />} />
             <Route path="category/:categoryName" element={<CategoryPage />} />
-            <Route path="scan" element={<PartScanner />} />
+            <Route path="scanner" element={<PartScanner />} />
+            <Route path="scan" element={<PartScanner />} /> {/* Adding this route as well for backward compatibility */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

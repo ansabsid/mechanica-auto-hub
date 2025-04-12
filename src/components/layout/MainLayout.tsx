@@ -3,6 +3,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
+import ScannerButton from "./ScannerButton";
 import { useAuth } from "@/hooks/auth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
@@ -32,6 +33,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <main className="flex-grow">
         {children || <Outlet />}
       </main>
+      <ScannerButton />
       <Footer />
     </div>
   );
