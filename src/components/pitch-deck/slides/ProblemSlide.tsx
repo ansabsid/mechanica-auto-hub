@@ -26,7 +26,7 @@ const ProblemSlide: React.FC = () => {
           <div className="animate-fade-in" style={{animationDelay: "0.3s"}}>
             <h3 className="font-medium mb-1">Trust Issues</h3>
             <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
-              Finding trusted mechanics for installation is time-consuming
+              Finding trustworthy, skilled auto mechanics in niche areas like detailing, electrical, engine, or body work—at a convenient time and location with quick turnaround during workdays—is a common market challenge.
             </p>
           </div>
         </li>
