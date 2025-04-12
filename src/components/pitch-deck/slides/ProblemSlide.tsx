@@ -7,24 +7,17 @@ import { cn } from "@/lib/utils";
 
 const ProblemSlide: React.FC = () => {
   const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [viewMode, setViewMode] = useState<"grid" | "list">(isMobile ? "list" : "grid");
   
-  const IconWrapper = ({ 
-    children, 
-    className,
-    color
-  }: { 
-    children: React.ReactNode; 
-    className?: string;
-    color: string;
-  }) => (
-    <div className={cn(`bg-${color}-100 rounded-full p-3 mr-4 mt-1 shadow-md`, className)}>
-      {children}
-    </div>
-  );
+  // Reset view mode when screen size changes
+  React.useEffect(() => {
+    if (isMobile) {
+      setViewMode("list");
+    }
+  }, [isMobile]);
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex justify-end mb-2">
         <div className="bg-gray-100 rounded-lg flex p-1">
           <button 
@@ -35,7 +28,7 @@ const ProblemSlide: React.FC = () => {
             )}
             aria-label="List view"
           >
-            <LayoutList size={16} />
+            <LayoutList size={isMobile ? 14 : 16} />
           </button>
           <button 
             onClick={() => setViewMode("grid")} 
@@ -45,21 +38,25 @@ const ProblemSlide: React.FC = () => {
             )}
             aria-label="Grid view"
           >
-            <LayoutGrid size={16} />
+            <LayoutGrid size={isMobile ? 14 : 16} />
           </button>
         </div>
       </div>
 
       <Tabs defaultValue="customer" className="w-full">
-        <TabsList className="w-full mb-4 bg-gradient-to-r from-gray-50 to-slate-100">
-          <TabsTrigger value="customer" className="flex-1">Customer-Facing Problems</TabsTrigger>
-          <TabsTrigger value="garage" className="flex-1">Garage-Facing Problems</TabsTrigger>
+        <TabsList className="w-full mb-3 md:mb-4 bg-gradient-to-r from-gray-50 to-slate-100 text-xs md:text-sm">
+          <TabsTrigger value="customer" className="flex-1">
+            {isMobile ? "Customer" : "Customer-Facing Problems"}
+          </TabsTrigger>
+          <TabsTrigger value="garage" className="flex-1">
+            {isMobile ? "Garage" : "Garage-Facing Problems"}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="customer" className="mt-0">
           <ul className={cn(
-            "gap-4", 
-            viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2" : "space-y-4"
+            "gap-3 md:gap-4", 
+            viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2" : "space-y-3 md:space-y-4"
           )}>
             <ProblemItem
               number="1"
@@ -98,15 +95,15 @@ const ProblemSlide: React.FC = () => {
         
         <TabsContent value="garage" className="mt-0">
           <ul className={cn(
-            "gap-4", 
-            viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2" : "space-y-4"
+            "gap-3 md:gap-4", 
+            viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2" : "space-y-3 md:space-y-4"
           )}>
             <ProblemItem
               number="1"
               title="Inventory Management Challenges"
               description="Limited connectivity to retail part vendors (OEM, aftermarket, and used parts) for efficient inventory sourcing and management"
               color="green"
-              delay="0.9s"
+              delay="0.1s"
               viewMode={viewMode}
             />
             <ProblemItem
@@ -114,7 +111,7 @@ const ProblemSlide: React.FC = () => {
               title="Limited Marketing Exposure"
               description="Lack of proper platform to showcase expertise and attract new customers in a competitive market"
               color="green"
-              delay="1.1s"
+              delay="0.2s"
               viewMode={viewMode}
             />
             <ProblemItem
@@ -122,7 +119,7 @@ const ProblemSlide: React.FC = () => {
               title="Operational Inefficiencies"
               description="Difficulties in managing timely appointments and service requests without a centralized booking system"
               color="green"
-              delay="1.3s"
+              delay="0.3s"
               viewMode={viewMode}
             />
             <ProblemItem
@@ -130,7 +127,7 @@ const ProblemSlide: React.FC = () => {
               title="Technological Gaps"
               description="Absence of user-friendly interfaces that effectively connect them to customers and streamline operations"
               color="green"
-              delay="1.5s"
+              delay="0.4s"
               viewMode={viewMode}
             />
             <ProblemItem
@@ -138,7 +135,7 @@ const ProblemSlide: React.FC = () => {
               title="B2B Connectivity Limitations"
               description="Insurance companies, leasing firms, and corporate fleets rely on single garage partnerships, limiting access to broader networks of niche automotive expertise"
               color="green"
-              delay="1.7s"
+              delay="0.5s"
               viewMode={viewMode}
             />
           </ul>
@@ -169,19 +166,22 @@ const ProblemItem: React.FC<ProblemItemProps> = ({
   
   return (
     <li className={cn(
-      "transform hover:scale-105 transition-all cursor-pointer rounded-lg p-2",
+      "transform transition-all cursor-pointer rounded-lg p-2 md:p-3",
       color === "red" ? "hover:bg-red-50" : "hover:bg-green-50",
       viewMode === "grid" ? "flex flex-col" : "flex items-start"
     )}>
       <div className={cn(
-        `bg-${color}-100 rounded-full p-3 shadow-md`,
-        viewMode === "grid" ? "self-start mb-2" : "mr-4 mt-1"
+        `bg-${color}-100 rounded-full p-2 md:p-3 shadow-md flex items-center justify-center`,
+        viewMode === "grid" ? "self-start mb-2" : "mr-3 md:mr-4 mt-1 flex-shrink-0"
       )}>
-        <span className={`text-${color}-500 font-bold text-lg`}>{number}</span>
+        <span className={`text-${color}-500 font-bold text-sm md:text-lg`}>{number}</span>
       </div>
       <div className="animate-fade-in" style={{animationDelay: delay}}>
-        <h3 className="font-medium mb-1">{title}</h3>
-        <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
+        <h3 className="font-medium text-sm md:text-base mb-1">{title}</h3>
+        <p className={cn(
+          "text-muted-foreground",
+          isMobile ? "text-xs" : "text-sm"
+        )}>
           {description}
         </p>
       </div>
