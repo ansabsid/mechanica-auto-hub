@@ -59,6 +59,9 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
     try {
       const data = await fetchGarageAppointments(garageId);
       setAppointments(data || []);
+      
+      // Add a console log to help with debugging
+      console.log(`Loaded ${data?.length || 0} appointments for garage ${garageId}`);
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +70,13 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
   useEffect(() => {
     if (garageId) {
       loadAppointments();
+      
+      // Set up auto-refresh every minute to catch new appointments
+      const intervalId = setInterval(() => {
+        loadAppointments();
+      }, 60000);
+      
+      return () => clearInterval(intervalId);
     }
   }, [garageId]);
 

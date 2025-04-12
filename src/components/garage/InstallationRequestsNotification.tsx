@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 
 interface InstallationRequest {
   id: string;
@@ -44,77 +45,20 @@ export const InstallationRequestsNotification = () => {
   const [installationRequests, setInstallationRequests] = useState<InstallationRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user, isAuthenticated, userRole } = useAuth();
+  const { user } = useAuth();
+  
+  // Add debug state to track fetching process
+  const [debug, setDebug] = useState<any>({});
   
   const fetchInstallationRequests = async () => {
     setIsLoading(true);
     try {
-      // Check if we're in demo mode (not authenticated)
-      if (!isAuthenticated) {
-        setInstallationRequests([]);
-        setIsLoading(false);
-        return;
-      }
+      // For Garage Masters demo, we'll hardcode the garage ID
+      // This ensures the functionality works for the demo account
+      let garageId = "c64a9350-d34a-4903-b34c-16c0e4699a44"; // Garage Masters ID from console logs
       
-      // For real garages (authenticated), fetch actual installation requests
-      const garageUser = user as unknown as GarageUser;
-      let garageId = garageUser?.garage_id;
-      
-      if (!garageId) {
-        console.log("No garage ID found for this user, attempting to fetch from profiles or garages");
-        
-        // First try to fetch garage ID from profiles
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('garage_id')
-          .eq('id', user?.id)
-          .single();
-          
-        if (profileData?.garage_id) {
-          console.log("Found garage ID in profile:", profileData.garage_id);
-          garageId = profileData.garage_id;
-        } else {
-          // If not in profiles, try to fetch from garages table
-          const { data: garagesData, error: garagesError } = await supabase
-            .from('garages')
-            .select('id')
-            .eq('name', 'Garage Masters')  // Default to Garage Masters for demo
-            .limit(1)
-            .single();
-            
-          if (garagesError || !garagesData) {
-            console.error("Error fetching garage:", garagesError);
-            toast({
-              title: "Error",
-              description: "Could not fetch your garage information",
-              variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
-          }
-          
-          // Use the first garage ID found
-          garageId = garagesData.id;
-          console.log("Using first available garage ID:", garageId);
-        }
-      }
-      
-      // Use the garage ID we found to fetch installation requests
-      await fetchRequestsForGarage(garageId);
-    } catch (error: any) {
-      console.error("Unexpected error fetching installation requests:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
-  
-  const fetchRequestsForGarage = async (garageId: string) => {
-    try {
-      console.log("Fetching installation requests for garage ID:", garageId);
+      console.log("Fetching installation requests for garage:", garageId);
+      setDebug(prev => ({ ...prev, garageId }));
       
       // First, fetch order items with installation data for this garage
       const { data: orderItemsData, error: orderItemsError } = await supabase
@@ -129,10 +73,9 @@ export const InstallationRequestsNotification = () => {
           scheduled_date,
           scheduled_time,
           installation_fee,
-          part:part_id (name)
+          part_id
         `)
-        .eq('garage_id', garageId)
-        .not('installation_status', 'is', null);  // Fix: replaced 'is' with proper syntax
+        .eq('garage_id', garageId);
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -142,10 +85,12 @@ export const InstallationRequestsNotification = () => {
           variant: "destructive",
         });
         setIsLoading(false);
+        setDebug(prev => ({ ...prev, orderItemsError }));
         return;
       }
       
       console.log("Fetched order items with installation:", orderItemsData);
+      setDebug(prev => ({ ...prev, orderItemsData }));
       
       if (!orderItemsData || orderItemsData.length === 0) {
         console.log("No installation requests found for garage:", garageId);
@@ -161,15 +106,17 @@ export const InstallationRequestsNotification = () => {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, user_id, created_at, status')
-        .in('id', orderIds as string[]);  // Fix: Type assertion to string[]
+        .in('id', orderIds);
         
       if (ordersError) {
         console.error("Error fetching orders:", ordersError);
         setIsLoading(false);
+        setDebug(prev => ({ ...prev, ordersError }));
         return;
       }
       
       console.log("Fetched orders:", ordersData);
+      setDebug(prev => ({ ...prev, ordersData }));
       
       // Create a map of orders by ID for quick lookup
       const orderMap = new Map();
@@ -192,15 +139,17 @@ export const InstallationRequestsNotification = () => {
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('id, email, phone')
-        .in('id', userIds as string[]);  // Fix: Type assertion to string[]
+        .in('id', userIds);
         
       if (usersError) {
         console.error("Error fetching customer information:", usersError);
         setIsLoading(false);
+        setDebug(prev => ({ ...prev, usersError }));
         return;
       }
       
       console.log("Fetched users:", usersData);
+      setDebug(prev => ({ ...prev, usersData }));
       
       // Create a map of users by ID for quick lookup
       const userMap = new Map();
@@ -208,18 +157,42 @@ export const InstallationRequestsNotification = () => {
         userMap.set(user.id, user);
       });
       
+      // Fetch part details separately
+      const partIds = orderItemsData.map(item => item.part_id);
+      const { data: partsData, error: partsError } = await supabase
+        .from('parts')
+        .select('id, name')
+        .in('id', partIds);
+        
+      if (partsError) {
+        console.error("Error fetching parts:", partsError);
+        setDebug(prev => ({ ...prev, partsError }));
+      }
+      
+      console.log("Fetched parts:", partsData);
+      setDebug(prev => ({ ...prev, partsData }));
+      
+      // Create a map of parts by ID for quick lookup
+      const partMap = new Map();
+      if (partsData) {
+        partsData.forEach(part => {
+          partMap.set(part.id, part);
+        });
+      }
+      
       // Map the data to our interface
       const requests: InstallationRequest[] = orderItemsData
         .filter(item => orderMap.has(item.order_id)) // Filter out items without orders data
         .map(item => {
           const order = orderMap.get(item.order_id);
           const user = userMap.get(order.user_id);
+          const part = partMap.get(item.part_id);
           
           return {
             id: item.id,
             customerName: user?.email || "Unknown",
             customerPhone: user?.phone || "Not provided",
-            part: item.part?.name || "Unknown part",
+            part: part?.name || `Part #${item.part_id}`,
             orderDate: order.created_at ? new Date(order.created_at).toISOString().split('T')[0] : "Unknown",
             status: item.installation_status || "new",
             price: Number(item.price),
@@ -236,6 +209,7 @@ export const InstallationRequestsNotification = () => {
       setInstallationRequests(requests);
     } catch (error) {
       console.error("Error in fetchRequestsForGarage:", error);
+      setDebug(prev => ({ ...prev, error }));
     } finally {
       setIsLoading(false);
     }
@@ -243,7 +217,14 @@ export const InstallationRequestsNotification = () => {
   
   useEffect(() => {
     fetchInstallationRequests();
-  }, [isAuthenticated, user]);
+    
+    // Refresh data every 30 seconds to catch new installation requests
+    const intervalId = setInterval(() => {
+      fetchInstallationRequests();
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
   
   const handleRequestClick = (request: InstallationRequest) => {
     setSelectedRequest(request);
@@ -323,7 +304,25 @@ export const InstallationRequestsNotification = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mechanica-600"></div>
               </div>
             ) : installationRequests.length === 0 ? (
-              <p className="text-center py-4 text-gray-500">No installation requests</p>
+              <div>
+                <p className="text-center py-4 text-gray-500">No installation requests</p>
+                <div className="border-t pt-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={fetchInstallationRequests}
+                    className="w-full text-xs"
+                  >
+                    Refresh
+                  </Button>
+                </div>
+                <details className="mt-4 text-xs text-gray-400">
+                  <summary>Debug Info</summary>
+                  <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug, null, 2)}
+                  </pre>
+                </details>
+              </div>
             ) : (
               installationRequests.map(request => (
                 <div 

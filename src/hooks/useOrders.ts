@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -152,7 +151,6 @@ export const useOrders = () => {
               installation_fee: item.installation_data.installationFee
             });
             
-            // Update the order_items to include garage_id for installation
             // Explicitly set installation_status to 'new' to ensure it appears in the garage notifications
             const { data, error } = await supabase
               .from('order_items')
