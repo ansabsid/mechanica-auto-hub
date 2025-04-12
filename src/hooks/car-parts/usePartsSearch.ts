@@ -38,6 +38,7 @@ export const usePartsSearch = (
 
     console.log("Fetching garages for part IDs:", partIds);
     
+    // Use a fresh query to get the latest installation fees from the database
     const { data, error } = await supabase.rpc('get_garages_for_part_bulk', {
       part_ids: partIds
     });
@@ -58,11 +59,15 @@ export const usePartsSearch = (
           garagesMap[item.part_id] = [];
         }
         
+        // Ensure all values are properly converted to the right types
+        const installationFee = parseFloat(String(item.installation_fee || '0'));
+        console.log(`For part ${item.part_id}, garage ${item.id}: installation fee raw=${item.installation_fee}, converted=${installationFee}`);
+        
         garagesMap[item.part_id].push({
           id: item.id, // This is a UUID string, no conversion needed
           name: item.name,
           location: item.location,
-          installationFee: parseFloat(String(item.installation_fee || '0'))
+          installationFee: installationFee
         });
       });
     }
@@ -118,9 +123,22 @@ export const usePartsSearch = (
         // Fetch garages for all parts in one call - this will get fresh installation fees from parts_garages table
         const garagesMap = await fetchGaragesForParts(partIds);
         
+        // Log all fetched installation fees for debugging
+        console.log("All fetched installation fees:", garagesMap);
+        
         // Map garages to each part
         const partsWithGarages = data.map(part => {
           const availableGarages = garagesMap[part.id] || [];
+          console.log(`Processing part ${part.id} with ${availableGarages.length} garages`);
+          
+          // Log installation fees for this part
+          if (availableGarages.length > 0) {
+            availableGarages.forEach(garage => {
+              console.log(`Part ${part.id}, Garage ${garage.id}: Installation Fee = ${garage.installationFee}`);
+            });
+          } else {
+            console.log(`Part ${part.id}: No garages available`);
+          }
           
           // Create a proper Part object with garages information
           return {

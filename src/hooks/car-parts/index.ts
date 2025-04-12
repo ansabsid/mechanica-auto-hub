@@ -20,12 +20,18 @@ export const useCarParts = () => {
     fetchManufacturers 
   } = useManufacturers();
   
-  // Get models functionality
+  // Get models functionality - direct connection
   const { 
     models, 
     isLoading: isLoadingModels, 
-    fetchModels 
+    fetchModels: originalFetchModels 
   } = useModels();
+  
+  // Wrap fetchModels to handle string to number conversion
+  const fetchModels = useCallback((manufacturerId: string) => {
+    console.log("Converting manufacturer ID from string to number:", manufacturerId);
+    return originalFetchModels(parseInt(manufacturerId, 10));
+  }, [originalFetchModels]);
   
   // Generate years range
   const years = generateYearRange();
