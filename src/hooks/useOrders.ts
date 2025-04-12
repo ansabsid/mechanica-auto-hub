@@ -102,7 +102,8 @@ export const useOrders = () => {
               .from('order_items')
               .update({ 
                 garage_id: item.installation_data.garageId,
-                installation_fee: item.installation_data.installationFee
+                installation_fee: item.installation_data.installationFee,
+                installation_status: 'new'  // Add initial status
               })
               .eq('order_id', orderData.id)
               .eq('part_id', item.part_id);

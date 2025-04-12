@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,12 @@ interface InstallationRequest {
   orderItemId: string;
 }
 
+interface GarageUser {
+  id: string;
+  email?: string;
+  garage_id?: string;
+}
+
 export const InstallationRequestsNotification = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<InstallationRequest | null>(null);
@@ -52,31 +57,51 @@ export const InstallationRequestsNotification = () => {
       }
       
       // For real garages (authenticated), fetch actual installation requests
-      const { data: garagesData, error: garagesError } = await supabase
-        .from('garages')
-        .select('id')
-        .eq('id', user?.garage_id);
+      const garageUser = user as unknown as GarageUser;
+      const garageId = garageUser?.garage_id;
+      
+      if (!garageId) {
+        console.error("No garage ID found for this user");
         
-      if (garagesError) {
-        console.error("Error fetching garage:", garagesError);
-        toast({
-          title: "Error",
-          description: "Could not fetch your garage information",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
+        // Try to fetch garage ID from profiles table
+        const { data: garagesData, error: garagesError } = await supabase
+          .from('garages')
+          .select('id')
+          .single();
+          
+        if (garagesError || !garagesData) {
+          console.error("Error fetching garage:", garagesError);
+          toast({
+            title: "Error",
+            description: "Could not fetch your garage information",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        // Use the first garage ID found
+        const fetchedGarageId = garagesData.id;
+        
+        // Fetch installation requests for this garage from order items with installation data
+        await fetchRequestsForGarage(fetchedGarageId);
+      } else {
+        // Use the garage ID from the user object
+        await fetchRequestsForGarage(garageId);
       }
-      
-      if (!garagesData || garagesData.length === 0) {
-        console.error("No garage found for this user");
-        setInstallationRequests([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      const garageId = garagesData[0].id;
-      
+    } catch (error: any) {
+      console.error("Unexpected error fetching installation requests:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchRequestsForGarage = async (garageId: string) => {
+    try {
       // Fetch installation requests for this garage from order items with installation data
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
@@ -86,10 +111,11 @@ export const InstallationRequestsNotification = () => {
           garage_id,
           quantity,
           price,
-          part:part_id (name),
           installation_status,
           scheduled_date,
           scheduled_time,
+          installation_fee,
+          part:part_id (name),
           orders:order_id (
             id,
             user_id,
@@ -98,8 +124,7 @@ export const InstallationRequestsNotification = () => {
           )
         `)
         .eq('garage_id', garageId)
-        .is('installation_status', null)
-        .not('orders.status', 'eq', 'cancelled');
+        .is('installation_status', null);
         
       if (orderItemsError) {
         console.error("Error fetching installation requests:", orderItemsError);
@@ -119,7 +144,17 @@ export const InstallationRequestsNotification = () => {
       }
       
       // Fetch customer information for these orders
-      const userIds = orderItemsData.map(item => item.orders.user_id);
+      const userIds = orderItemsData
+        .filter(item => item.orders && item.orders.user_id)
+        .map(item => item.orders.user_id);
+        
+      if (userIds.length === 0) {
+        console.error("No valid user IDs found in orders");
+        setInstallationRequests([]);
+        setIsLoading(false);
+        return;
+      }
+      
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('id, email, phone')
@@ -132,34 +167,31 @@ export const InstallationRequestsNotification = () => {
       }
       
       // Map the data to our interface
-      const requests: InstallationRequest[] = orderItemsData.map(item => {
-        const user = usersData?.find(u => u.id === item.orders.user_id);
-        
-        return {
-          id: item.id,
-          customerName: user?.email || "Unknown",
-          customerPhone: user?.phone || "Not provided",
-          part: item.part?.name || "Unknown part",
-          orderDate: new Date(item.orders.created_at).toISOString().split('T')[0],
-          status: item.installation_status || "new",
-          price: Number(item.price),
-          installationFee: 50, // This should come from your installation data
-          garageId: item.garage_id,
-          orderId: item.order_id,
-          orderItemId: item.id,
-          appointmentDate: item.scheduled_date,
-          appointmentTime: item.scheduled_time
-        };
-      });
+      const requests: InstallationRequest[] = orderItemsData
+        .filter(item => item.orders) // Filter out items without orders data
+        .map(item => {
+          const user = usersData?.find(u => u.id === item.orders.user_id);
+          
+          return {
+            id: item.id,
+            customerName: user?.email || "Unknown",
+            customerPhone: user?.phone || "Not provided",
+            part: item.part?.name || "Unknown part",
+            orderDate: new Date(item.orders.created_at).toISOString().split('T')[0],
+            status: item.installation_status || "new",
+            price: Number(item.price),
+            installationFee: Number(item.installation_fee) || 50,
+            garageId: item.garage_id,
+            orderId: item.order_id,
+            orderItemId: item.id,
+            appointmentDate: item.scheduled_date,
+            appointmentTime: item.scheduled_time
+          };
+        });
       
       setInstallationRequests(requests);
     } catch (error) {
-      console.error("Unexpected error fetching installation requests:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      console.error("Error in fetchRequestsForGarage:", error);
     } finally {
       setIsLoading(false);
     }

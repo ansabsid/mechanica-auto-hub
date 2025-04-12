@@ -225,7 +225,8 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
         garage_id: item.installation_data?.garageId || null,
         quantity: item.quantity,
         price: item.part.price,
-        installation_fee: item.installation_data?.installationFee || null
+        installation_fee: item.installation_data?.installationFee || null,
+        installation_status: item.installation_data?.garageId ? 'new' : null
       }));
       
       const { error: itemsError } = await (supabase

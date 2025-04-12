@@ -223,28 +223,40 @@ export type Database = {
           created_at: string
           garage_id: string | null
           id: string
+          installation_fee: number | null
+          installation_status: string | null
           order_id: string
           part_id: number
           price: number
           quantity: number
+          scheduled_date: string | null
+          scheduled_time: string | null
         }
         Insert: {
           created_at?: string
           garage_id?: string | null
           id?: string
+          installation_fee?: number | null
+          installation_status?: string | null
           order_id: string
           part_id: number
           price: number
           quantity?: number
+          scheduled_date?: string | null
+          scheduled_time?: string | null
         }
         Update: {
           created_at?: string
           garage_id?: string | null
           id?: string
+          installation_fee?: number | null
+          installation_status?: string | null
           order_id?: string
           part_id?: number
           price?: number
           quantity?: number
+          scheduled_date?: string | null
+          scheduled_time?: string | null
         }
         Relationships: [
           {
@@ -400,25 +412,39 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          garage_id: string | null
           id: string
+          phone: string | null
           role: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           email: string
+          garage_id?: string | null
           id: string
+          phone?: string | null
           role: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           email?: string
+          garage_id?: string | null
           id?: string
+          phone?: string | null
           role?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_slots: {
         Row: {
