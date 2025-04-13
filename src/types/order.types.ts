@@ -65,3 +65,14 @@ export interface InstallationRequestGarage {
   installation_status?: string;
   installation_fee?: number;
 }
+
+// Adding a helper type for debugging orphaned order items
+export interface OrphanedOrderItem {
+  id: string;
+  order_id: string;
+  part_id: number;
+  garage_id?: string;
+  installation_status?: string;
+  created_at: string;
+  verified: boolean;
+}
