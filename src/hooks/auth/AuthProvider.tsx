@@ -4,6 +4,19 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AuthContext from "./AuthContext";
 import { fetchUserRole, createUserProfile, isDemoAccount, handleDemoAccount } from "./authUtils";
+import { AuthContextType } from "./types";
+
+interface UserMetadata {
+  firstName?: string;
+  lastName?: string;
+  fullPhone?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  garageName?: string;
+  garageLocation?: string;
+  garageRegistrationNumber?: string;
+  [key: string]: any;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -164,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, role: "customer" | "garage", metadata = {}) => {
+  const signUp = async (email: string, password: string, role: "customer" | "garage", metadata: UserMetadata = {}) => {
     setIsLoading(true);
     try {
       const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
@@ -273,7 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,

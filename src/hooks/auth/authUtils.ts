@@ -1,6 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedSupabaseClient } from "./supabaseTypes";
 
+// Define metadata interface for consistency
+interface UserMetadata {
+  firstName?: string;
+  lastName?: string;
+  fullPhone?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  garageName?: string;
+  garageLocation?: string;
+  garageRegistrationNumber?: string;
+  [key: string]: any;
+}
+
 // Cast supabase client to enhanced type with RPC functions
 const enhancedSupabase = supabase as unknown as EnhancedSupabaseClient;
 
@@ -41,7 +54,7 @@ export const createUserProfile = async (
   userId: string, 
   email: string, 
   role: "customer" | "garage", 
-  metadata: any = {}
+  metadata: UserMetadata = {}
 ) => {
   try {
     console.log("Creating user profile with metadata:", metadata);
