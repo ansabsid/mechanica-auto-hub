@@ -92,7 +92,7 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       if (item.installation_data) {
         try {
           // If it's already an object, use it directly
-          if (typeof item.installation_data === 'object') {
+          if (typeof item.installation_data === 'object' && item.installation_data !== null) {
             parsedInstallationData = item.installation_data as InstallationOptions;
           } 
           // If it's a string, try to parse it as JSON

@@ -140,12 +140,17 @@ export const useCartActions = (
     }
   }, [toast, refreshCart, setCartItems]);
 
-  // Clear all items from cart
-  const clearCart = useCallback(async (cartId: string | undefined) => {
-    if (!cartId) return;
-    
+  // Clear all items from cart (updated to work without parameter)
+  const clearCart = useCallback(async () => {
     try {
-      await apiClearCart(cartId);
+      // Get the current cart first
+      const userCart = await getUserCart();
+      if (!userCart) {
+        console.log("No cart to clear");
+        return;
+      }
+      
+      await apiClearCart(userCart.id);
       
       // Update local state
       setCartItems([]);

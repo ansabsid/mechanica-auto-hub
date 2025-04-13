@@ -69,6 +69,13 @@ export const CartDrawer = () => {
       console.log("Attempting to navigate to /checkout");
     }, 300);
   };
+
+  // Handler for clearing the cart
+  const handleClearCart = () => {
+    if (cartItems.length > 0) {
+      clearCart();
+    }
+  };
   
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
@@ -202,7 +209,7 @@ export const CartDrawer = () => {
                   variant="outline"
                   size="sm"
                   className="text-muted-foreground"
-                  onClick={clearCart}
+                  onClick={handleClearCart}
                   disabled={isLoading}
                 >
                   <Trash className="mr-1 h-4 w-4" /> Clear
