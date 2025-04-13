@@ -67,12 +67,12 @@ export const InstallationOrdersDebugger = () => {
     setOrderId(orderId);
     
     try {
-      // Fetch specific order
+      // Fetch specific order - use maybeSingle instead of single to avoid errors when no results are found
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*')
         .eq('id', orderId)
-        .single();
+        .maybeSingle();
         
       if (orderError) {
         console.error("Error fetching order:", orderError);
@@ -87,6 +87,23 @@ export const InstallationOrdersDebugger = () => {
         setCustomerName(orderData.user_name || "");
         setCustomerEmail(orderData.user_email || "");
         setCustomerPhone(orderData.user_phone || "");
+      } else {
+        // Clear fields if no order data is found
+        setCustomerName("");
+        setCustomerEmail("");
+        setCustomerPhone("");
+        
+        // Add information to debug info that no order was found
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          orderDataStatus: `No order found with ID: ${orderId}. This might mean the order was deleted or doesn't exist.` 
+        }));
+        
+        toast({
+          title: "Warning",
+          description: `No order found with ID: ${orderId}`,
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Error fetching order details:", error);
@@ -117,6 +134,29 @@ export const InstallationOrdersDebugger = () => {
     
     setIsLoading(true);
     try {
+      // First check if the order exists
+      const { data: checkOrder, error: checkError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('id', orderId)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error("Error checking order:", checkError);
+        throw checkError;
+      }
+      
+      if (!checkOrder) {
+        toast({
+          title: "Error",
+          description: "Order not found. It may have been deleted.",
+          variant: "destructive"
+        });
+        setDebugInfo(prev => ({ ...prev, updateCheckResult: "Order not found" }));
+        setIsLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('orders')
         .update({
