@@ -10,7 +10,7 @@ export interface Order {
   created_at: string;
   updated_at: string;
   items?: OrderItem[];
-  // Add user details to the order
+  // User details attached to the order
   user_name?: string;
   user_email?: string;
   user_phone?: string;
@@ -32,10 +32,12 @@ export interface OrderItem {
   part?: {
     name: string;
     description?: string;
+    image_url?: string;
   };
   garage?: {
     name: string;
     location: string;
+    area?: string;
   };
 }
 
@@ -52,9 +54,14 @@ export interface InstallationRequestGarage {
   order_item_id: string;
   garage_id: string;
   created_at: string;
-  // Add customer info and part info
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  part_name?: string;
+  // Customer and part information
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  part_name: string;
+  part_id: number;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  installation_status?: string;
+  installation_fee?: number;
 }

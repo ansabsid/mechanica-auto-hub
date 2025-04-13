@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw, Clock } from "lucide-react";
+import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw, Clock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 import { toast } from "sonner";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InstallationRequestGarage } from "@/types/order.types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +122,7 @@ export const InstallationRequestsNotification = () => {
       
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, user_id, created_at, status, user_name, user_email, user_phone')
+        .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
         .in('id', orderIds);
         
       if (ordersError) {
@@ -490,7 +491,7 @@ export const InstallationRequestsNotification = () => {
                 </div>
                 
                 <div className="flex items-center text-sm">
-                  <User className="h-4 w-4 mr-2 text-gray-500" /> 
+                  <Mail className="h-4 w-4 mr-2 text-gray-500" /> 
                   <span className="font-medium">Email:</span> 
                   <span className="ml-2">{selectedRequest.customerEmail}</span>
                 </div>

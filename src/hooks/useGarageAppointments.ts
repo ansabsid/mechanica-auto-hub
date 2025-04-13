@@ -33,10 +33,10 @@ export interface Appointment {
     year: number;
     license_plate?: string;
   };
-  // Optional fields for UI display that might come from joins or be populated manually
-  customer?: string;
-  phone?: string;
-  car?: string;
+  // Customer details from the orders table
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
 }
 
 /**
@@ -60,12 +60,13 @@ export const useGarageAppointments = () => {
     try {
       console.log("Fetching appointments for garage ID:", garageId);
       
-      // Using explicit join syntax to get vehicle information
+      // Using explicit join syntax to get vehicle information and customer details
       const { data, error } = await supabase
         .from('appointments')
         .select(`
           *,
-          vehicle:vehicles(id, make, model, year, license_plate)
+          vehicle:vehicles(id, make, model, year, license_plate),
+          profiles(firstName, lastName, phone, email)
         `)
         .eq('garage_id', garageId);
         
@@ -82,20 +83,31 @@ export const useGarageAppointments = () => {
         return [];
       }
       
-      // Process the data to format vehicle information consistently
+      // Process the data to format vehicle information consistently and add customer details
       const processedAppointments = data.map(appointment => {
         // Extract vehicle data, which should now come through with our updated RLS policies
         const vehicleData = appointment.vehicle;
+        const profileData = appointment.profiles;
         
         console.log(`Processing appointment ${appointment.id}, vehicle data:`, vehicleData);
+        console.log(`Processing appointment ${appointment.id}, profile data:`, profileData);
         
-        return {
+        const formattedAppointment: Appointment = {
           ...appointment,
-          vehicle: vehicleData
+          vehicle: vehicleData,
+          customer_name: profileData?.firstName && profileData?.lastName 
+            ? `${profileData.firstName} ${profileData.lastName}` 
+            : appointment.customer_name || "Unknown Customer",
+          customer_phone: profileData?.phone || appointment.customer_phone || "Not provided",
+          customer_email: profileData?.email || "Not provided"
         };
+        
+        delete formattedAppointment.profiles; // Remove the nested profiles data
+        
+        return formattedAppointment;
       });
       
-      console.log("Processed appointments with vehicle data:", processedAppointments);
+      console.log("Processed appointments with vehicle data and customer details:", processedAppointments);
       setAppointments(processedAppointments);
       return processedAppointments;
     } catch (error: any) {
