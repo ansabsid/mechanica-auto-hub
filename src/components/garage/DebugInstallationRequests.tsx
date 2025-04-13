@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -188,7 +189,8 @@ export const DebugInstallationRequests = () => {
           console.log("🔍 [DEBUG] is_garage_staff result:", isStaffResult);
           results.isStaff = isStaffResult;
           
-          if (isStaffResult === false && profileData?.garage_id === garageMastersId) {
+          // Fixed the undefined profileData reference by using the results.profile instead
+          if (isStaffResult === false && results.profile?.garage_id === garageMastersId) {
             console.error("🔍 [DEBUG] Inconsistency detected: User has matching garage_id but is_garage_staff returns false");
             errors.push({
               type: "rls",
