@@ -27,6 +27,8 @@ const ProfileSettings = () => {
       if (!user?.id) return;
       
       try {
+        console.log("Fetching profile for user ID:", user.id);
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('firstName, lastName, phone, email')
@@ -38,6 +40,8 @@ const ProfileSettings = () => {
           return;
         }
         
+        console.log("Fetched profile data:", data);
+        
         if (data) {
           setFormData(prevData => ({
             ...prevData,
@@ -46,6 +50,18 @@ const ProfileSettings = () => {
             phone: data.phone || "",
             email: data.email || user?.email || "",
           }));
+        } else {
+          console.log("No profile data found, checking user metadata");
+          // Fallback to user metadata if profile data is not available
+          const metadata = user.user_metadata;
+          if (metadata) {
+            setFormData(prevData => ({
+              ...prevData,
+              firstName: metadata.firstName || "",
+              lastName: metadata.lastName || "",
+              phone: metadata.fullPhone || "",
+            }));
+          }
         }
       } catch (error) {
         console.error("Error in fetchProfileData:", error);

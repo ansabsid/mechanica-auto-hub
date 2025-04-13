@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -32,27 +31,21 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get the redirect path and parameters from location state
   const from = location.state?.from || "/";
   const garageName = location.state?.garageName;
   const garageId = location.state?.garageId;
   
-  // Add a state to track if we're coming from a logout
   const [afterLogout, setAfterLogout] = useState(false);
 
   useEffect(() => {
-    // Check if we navigated here from logout
     const isFromLogout = location.key !== 'default';
     if (isFromLogout) {
       setAfterLogout(true);
     }
     
-    // If user is already authenticated and we're not in a post-logout state,
-    // redirect them to appropriate page
     if (isAuthenticated && !afterLogout) {
       console.log("User is authenticated, redirecting to:", from);
       if (from.startsWith('/book-appointment/')) {
-        // If they were trying to book an appointment, redirect there with the garage info
         navigate(from, { 
           state: { 
             garageName,
@@ -61,7 +54,6 @@ const Login = () => {
           replace: true 
         });
       } else {
-        // Otherwise redirect to home or previous location
         navigate(from, { replace: true });
       }
     }
@@ -83,17 +75,21 @@ const Login = () => {
     
     try {
       await signIn(email, password, role);
-      // Redirect happens in the useEffect when isAuthenticated changes
     } catch (error: any) {
       console.error("Login error:", error);
-      setError(error.message || "Failed to login. Please check your credentials.");
+      
+      if (error.message.includes("Account not found") || 
+          error.message.includes("Invalid login credentials")) {
+        setError("This account doesn't exist. Please sign up first.");
+      } else {
+        setError(error.message || "Failed to login. Please check your credentials.");
+      }
     }
   };
 
   const handleDemoLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // For garage role demo
     const demoEmail = "demo-garage@bookmyparts.com";
     const demoPassword = "demo-garage";
     
@@ -103,8 +99,6 @@ const Login = () => {
     try {
       toast.info("Logging in with garage demo account");
       
-      // Skip the normal authentication flow for demo account
-      // and directly navigate to garage dashboard
       toast.success("Demo garage account activated");
       navigate("/garage-dashboard", { replace: true });
     } catch (error: any) {
@@ -116,7 +110,6 @@ const Login = () => {
   const handleGarageMastersDemo = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // For Garage Masters demo specifically
     const demoEmail = "garage-masters@bookmyparts.com";
     const demoPassword = "garage-masters";
     
@@ -126,7 +119,6 @@ const Login = () => {
     try {
       toast.info("Logging in with Garage Masters demo account");
       
-      // Use the auth system but with pre-filled credentials
       await signIn(demoEmail, demoPassword, "garage");
       
       toast.success("Garage Masters account activated");

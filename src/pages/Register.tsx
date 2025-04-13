@@ -121,17 +121,20 @@ const Register = () => {
         });
       }
 
-      await signUp(data.email, data.password, data.role, metadata);
+      const result = await signUp(data.email, data.password, data.role, metadata);
       
-      setRegistrationStatus("success");
-      toast({
-        title: "Registration successful",
-        description: "Please check your email to confirm your account",
-      });
-      
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      if (result && result.success) {
+        setRegistrationStatus("success");
+        
+        toast({
+          title: "Registration successful",
+          description: "Please log in with your new account credentials",
+        });
+        
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      }
     } catch (error: any) {
       console.error("Registration error:", error);
       setRegistrationStatus("error");
@@ -163,7 +166,7 @@ const Register = () => {
           <Check className="h-5 w-5 text-green-600" />
           <AlertTitle className="text-green-800">Registration Successful!</AlertTitle>
           <AlertDescription className="text-green-700">
-            Your account has been created. Please check your email to confirm your account.
+            Your account has been created. Please log in with your credentials.
           </AlertDescription>
         </Alert>
       )}

@@ -45,6 +45,8 @@ export const createUserProfile = async (
   metadata = {}
 ) => {
   try {
+    console.log("Creating user profile with metadata:", metadata);
+    
     // Check if profile already exists to avoid duplicate errors
     const { data: existingProfile } = await supabase
       .from('profiles')
@@ -54,7 +56,23 @@ export const createUserProfile = async (
     
     if (existingProfile) {
       console.log("Profile already exists for user:", userId);
-      return; // Profile already exists, no need to create a new one
+      
+      // Update the existing profile with new metadata
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          firstName: metadata?.firstName || null,
+          lastName: metadata?.lastName || null,
+          phone: metadata?.fullPhone || null,
+          role: role
+        })
+        .eq('id', userId);
+        
+      if (updateError) {
+        console.error("Error updating existing profile:", updateError);
+      }
+      
+      return; // Profile already exists and was updated
     }
     
     // Extract user information from metadata
@@ -66,9 +84,11 @@ export const createUserProfile = async (
       email: email,
       role: role,
       phone: fullPhone || (countryCode && phoneNumber ? `${countryCode}${phoneNumber}` : null),
-      firstName: firstName,
-      lastName: lastName,
+      firstName: firstName || null,
+      lastName: lastName || null,
     };
+    
+    console.log("Creating profile with data:", profileData);
     
     // Add garage-specific data if role is garage
     if (role === "garage" && metadata) {
@@ -98,14 +118,18 @@ export const createUserProfile = async (
     }
     
     // Use direct insert for creating the profile
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('profiles')
-      .insert(profileData);
+      .insert(profileData)
+      .select();
     
     if (error) {
       console.error("Error creating profile:", error);
       throw error;
     }
+    
+    console.log("Profile created successfully:", data);
+    
   } catch (error) {
     console.error("Error in createUserProfile:", error);
     throw error;

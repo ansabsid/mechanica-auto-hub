@@ -148,6 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
+        // Check if the error is related to user not found
+        if (error.message.includes("Invalid login credentials") || 
+            error.message.includes("Email not confirmed")) {
+          throw new Error("Account not found. Please sign up first or check your credentials.");
+        }
         throw error;
       }
 
@@ -173,6 +178,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, role: "customer" | "garage", metadata = {}) => {
     setIsLoading(true);
     try {
+      // First, check if the user already exists
+      const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
+        email,
+        password: password + '_checkonly', // Use an invalid password to prevent actual login
+      });
+
+      if (existingUser?.user) {
+        throw new Error("An account with this email already exists. Please log in instead.");
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -192,11 +207,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await createUserProfile(data.user.id, email, role, metadata);
         
         toast({
-          title: "Account created",
-          description: "Please check your email to confirm your account",
+          variant: "success",
+          title: "Account created successfully",
+          description: "You can now log in with your credentials.",
         });
         
         setUserRole(role);
+        return { success: true, message: "Account created successfully" };
       }
     } catch (error: any) {
       toast({
