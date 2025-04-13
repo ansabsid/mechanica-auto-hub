@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { RPCFunctions } from "@/hooks/auth/supabaseTypes";
 
 interface RlsDebugHelperProps {
   garageId: string;
@@ -24,10 +24,6 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         .eq('garage_id', garageId)
         .limit(1);
       
-      // Run diagnostic function to check RLS access
-      const { data: rlsDebugData, error: rlsDebugError } = await supabase
-        .rpc('debug_rls_access', { garage_id_param: garageId });
-      
       // Get current user and their profile
       const { data: { user } } = await supabase.auth.getUser();
       const { data: profileData } = await supabase
@@ -35,6 +31,18 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         .select('garage_id')
         .eq('id', user?.id || '')
         .single();
+        
+      // Check if the user's garage_id matches the requested garage_id
+      const hasAccess = profileData?.garage_id === garageId;
+      const requestMatches = profileData?.garage_id === garageId;
+      
+      // Build a diagnostic result similar to the previous RPC function
+      const diagnosisResult = {
+        has_access: hasAccess,
+        user_id: user?.id,
+        user_garage_id: profileData?.garage_id,
+        request_matches: requestMatches
+      };
       
       setResults({
         orderItemsAccess: {
@@ -42,8 +50,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
           count: orderItemsData?.length || 0,
           error: orderItemsError
         },
-        rlsDebug: rlsDebugData?.[0] || null,
-        rlsDebugError,
+        rlsDebug: diagnosisResult,
         user: {
           id: user?.id,
           email: user?.email

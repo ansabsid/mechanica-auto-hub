@@ -25,12 +25,6 @@ export type RPCFunctions = {
     user_email: string; 
     user_role: string;
   }) => void;
-  debug_rls_access: (args: { garage_id_param: string }) => {
-    has_access: boolean;
-    user_id: string;
-    user_garage_id: string;
-    request_matches: boolean;
-  }[];
   is_garage_staff: (args: { garage_id: string }) => boolean;
   generate_confirmation_code: () => string;
 };
