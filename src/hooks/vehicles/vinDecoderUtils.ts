@@ -76,7 +76,7 @@ const extractVehicleData = (data: NhtsaResponse): Vehicle => {
     make,
     model,
     year,
-    vin: data.Results[0]?.VIN || "",
+    vin: getValueByVariable("VIN"), // Fix: Use getValueByVariable instead of direct access
     engine_details: {
       type: engineType || "",
       size: engineSize || "",
