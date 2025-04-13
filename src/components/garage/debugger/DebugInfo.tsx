@@ -1,6 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { OrphanedOrderItem } from "@/types/order.types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DebugInfoProps {
   debugInfo: any;
@@ -15,6 +20,9 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
   customerEmail,
   customerPhone
 }) => {
+  const [orphanedItems, setOrphanedItems] = useState<OrphanedOrderItem[]>([]);
+  const [isCheckingOrphans, setIsCheckingOrphans] = useState(false);
+  
   // Helper function to safely convert any value to a string
   const safeStringify = (value: any): string => {
     if (value === null || value === undefined) {
@@ -28,6 +36,93 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
       }
     }
     return String(value);
+  };
+
+  // Function to scan for orphaned order items
+  const checkForOrphanedItems = async () => {
+    setIsCheckingOrphans(true);
+    try {
+      // First, get all order items with installation_status
+      const { data: orderItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select('id, order_id, part_id, garage_id, installation_status, created_at')
+        .not('installation_status', 'is', null)
+        .limit(50);
+        
+      if (itemsError) {
+        console.error("Error fetching order items:", itemsError);
+        toast.error("Failed to fetch order items");
+        setIsCheckingOrphans(false);
+        return;
+      }
+      
+      // For each order item, check if the order exists
+      const orphaned: OrphanedOrderItem[] = [];
+      
+      for (const item of orderItems || []) {
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('id', item.order_id)
+          .maybeSingle();
+          
+        if (orderError) {
+          console.error(`Error checking order ${item.order_id}:`, orderError);
+        }
+        
+        if (!order) {
+          orphaned.push({
+            ...item,
+            verified: false
+          });
+        }
+      }
+      
+      setOrphanedItems(orphaned);
+      
+      if (orphaned.length > 0) {
+        toast.warning(`Found ${orphaned.length} orphaned order items`);
+      } else {
+        toast.success("No orphaned order items found");
+      }
+    } catch (error) {
+      console.error("Error checking for orphaned items:", error);
+      toast.error("Failed to check for orphaned items");
+    } finally {
+      setIsCheckingOrphans(false);
+    }
+  };
+
+  // Function to delete an orphaned item
+  const deleteOrphanedItem = async (itemId: string) => {
+    try {
+      const { error } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('id', itemId);
+        
+      if (error) {
+        console.error("Error deleting orphaned item:", error);
+        toast.error("Failed to delete orphaned item");
+        return;
+      }
+      
+      setOrphanedItems(prevItems => prevItems.filter(item => item.id !== itemId));
+      toast.success("Orphaned item deleted successfully");
+    } catch (error) {
+      console.error("Error deleting orphaned item:", error);
+      toast.error("Failed to delete orphaned item");
+    }
+  };
+
+  // Function to verify an orphaned item
+  const verifyOrphanedItem = async (itemId: string) => {
+    setOrphanedItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId ? { ...item, verified: true } : item
+      )
+    );
+    toast.info("Item marked as verified");
   };
 
   return (
@@ -152,8 +247,78 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           </div>
         </div>
         
+        {/* Orphaned Items Section */}
+        <div className="mb-2">
+          <div className="flex items-center justify-between">
+            <div className="font-medium text-xs mb-1">Orphaned Items Check:</div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={checkForOrphanedItems} 
+              disabled={isCheckingOrphans}
+              className="text-xs h-6 py-0 px-2"
+            >
+              {isCheckingOrphans ? 'Checking...' : 'Scan for Orphaned Items'}
+            </Button>
+          </div>
+          
+          <div className="text-xs bg-gray-50 p-2 rounded">
+            {orphanedItems.length > 0 ? (
+              <>
+                <div className="text-red-500 font-medium mb-1">
+                  Found {orphanedItems.length} orphaned items!
+                </div>
+                <div className="max-h-[150px] overflow-y-auto border border-gray-200 rounded p-1">
+                  {orphanedItems.map(item => (
+                    <div key={item.id} className="flex items-center justify-between mb-1 p-1 bg-white rounded shadow-sm">
+                      <div>
+                        <span className="font-medium">Item ID: </span>{item.id.substring(0, 8)}...
+                        <Badge className="ml-1" variant={item.verified ? "outline" : "destructive"}>
+                          {item.verified ? 'Verified' : 'Orphaned'}
+                        </Badge>
+                        <div className="text-gray-500">
+                          Order ID: {item.order_id.substring(0, 8)}...
+                        </div>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => verifyOrphanedItem(item.id)} 
+                          className="h-6 py-0 px-2"
+                          disabled={item.verified}
+                        >
+                          Verify
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => deleteOrphanedItem(item.id)} 
+                          className="h-6 py-0 px-2"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Orphaned items refer to order items that reference non-existent orders, 
+                  causing "Unknown Customer" errors.
+                </div>
+              </>
+            ) : isCheckingOrphans ? (
+              <div className="text-blue-500">Checking for orphaned items...</div>
+            ) : (
+              <div className="text-gray-500">
+                Click "Scan for Orphaned Items" to check for order items that reference non-existent orders.
+              </div>
+            )}
+          </div>
+        </div>
+        
         <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-[200px]">
-          {JSON.stringify(debugInfo, null, 2)}
+          {safeStringify(debugInfo)}
         </pre>
       </div>
     </details>
