@@ -11,7 +11,7 @@ import { Cart, CartItem, InstallationOptions } from "./types";
 export const useCart = () => {
   const { cart, cartItems, setCartItems, isLoading, fetchCart } = useCartData();
   const { addToCart, updateCartItemQuantity, removeFromCart, clearCart } = useCartActions(fetchCart, setCartItems);
-  const { subtotal, tax, total, installationTotal } = useCartCalculations(cartItems);
+  const { subtotal, tax, total, installationTotal, calculateTotal } = useCartCalculations(cartItems);
 
   // Refresh cart state
   const refreshCart = useCallback(async () => {
@@ -36,6 +36,7 @@ export const useCart = () => {
     subtotal,
     tax,
     total,
-    installationTotal
+    installationTotal,
+    calculateTotal
   };
 };

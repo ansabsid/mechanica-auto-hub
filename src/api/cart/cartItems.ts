@@ -86,18 +86,29 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     const itemsWithGarages: CartItem[] = data.map((item: any) => {
       const garages = partGaragesMap[item.part.id] || [];
       
-      // Properly parse installation_data as InstallationOptions or undefined
+      // Properly handle installation_data conversion to InstallationOptions
       let parsedInstallationData: InstallationOptions | undefined = undefined;
       
       if (item.installation_data) {
         try {
           // If it's already an object, use it directly
           if (typeof item.installation_data === 'object' && item.installation_data !== null) {
-            parsedInstallationData = item.installation_data as InstallationOptions;
+            parsedInstallationData = {
+              installationRequired: true,
+              garageId: item.installation_data.garageId || "",
+              garageName: item.installation_data.garageName || "",
+              installationFee: Number(item.installation_data.installationFee) || 0
+            };
           } 
           // If it's a string, try to parse it as JSON
           else if (typeof item.installation_data === 'string') {
-            parsedInstallationData = JSON.parse(item.installation_data) as InstallationOptions;
+            const parsed = JSON.parse(item.installation_data);
+            parsedInstallationData = {
+              installationRequired: true,
+              garageId: parsed.garageId || "",
+              garageName: parsed.garageName || "",
+              installationFee: Number(parsed.installationFee) || 0
+            };
           }
         } catch (e) {
           console.error("Error parsing installation_data:", e);

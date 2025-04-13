@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/cart";
@@ -26,7 +25,6 @@ export const CartDrawer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, user } = useAuth();
   
-  // Check authentication state and refresh cart when auth changes
   useEffect(() => {
     if (isAuthenticated && user) {
       console.log("User is authenticated in CartDrawer, refreshing cart:", user.id);
@@ -36,7 +34,6 @@ export const CartDrawer = () => {
     }
   }, [isAuthenticated, user, refreshCart]);
   
-  // Force refresh cart when drawer is opened
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open && isAuthenticated) {
@@ -57,20 +54,14 @@ export const CartDrawer = () => {
     
     console.log("Navigating to checkout...");
     
-    // Close the drawer first and proceed with navigation
     setIsOpen(false);
     
-    // Use a more reliable navigation approach with a delay
     setTimeout(() => {
-      // Use direct window navigation to ensure a full page load to checkout
       window.location.href = "/checkout";
-      
-      // Log that we're attempting navigation
       console.log("Attempting to navigate to /checkout");
     }, 300);
   };
 
-  // Handler for clearing the cart
   const handleClearCart = () => {
     if (cartItems.length > 0) {
       clearCart();
@@ -86,7 +77,6 @@ export const CartDrawer = () => {
           className="relative"
           onClick={() => {
             if (isAuthenticated) {
-              // Fetch the latest cart data before opening
               console.log("Refreshing cart before opening drawer");
               refreshCart();
             }
