@@ -4,7 +4,7 @@ import {
   Lightbulb, Users, BarChart3, Gauge, Search, 
   CheckSquare, ShoppingBag, Wrench, HeartHandshake,
   CalendarDays, MapPin, CheckCircle, Clipboard,
-  ListChecks, Edit, ThumbsUp, Clock
+  ListChecks, Edit, ThumbsUp, Clock, Info
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -17,6 +17,9 @@ import {
 import {
   Tabs, TabsContent, TabsList, TabsTrigger
 } from "@/components/ui/tabs";
+import { 
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger 
+} from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
 
 const SolutionSlide: React.FC = () => {
@@ -142,6 +145,7 @@ const SolutionSlide: React.FC = () => {
                     isActive={activeTab === "customer"}
                     delay={0.5}
                     isMobile={isMobile}
+                    source="Mechanica Research"
                   />
                 </div>
               </div>
@@ -160,6 +164,7 @@ const SolutionSlide: React.FC = () => {
                     isActive={activeTab === "customer"}
                     delay={0.1}
                     isMobile={isMobile}
+                    source="GCC Auto Survey"
                   />
                   <FlowStep 
                     number={2} 
@@ -187,6 +192,7 @@ const SolutionSlide: React.FC = () => {
                     isActive={activeTab === "customer"}
                     delay={0.4}
                     isMobile={isMobile}
+                    source="Mechanica User Feedback"
                   />
                 </div>
               </div>
@@ -209,6 +215,7 @@ const SolutionSlide: React.FC = () => {
                     isActive={activeTab === "garage"}
                     delay={0.1}
                     isMobile={isMobile}
+                    source="UAE Garage Survey"
                   />
                   <FlowStep 
                     number={2} 
@@ -254,6 +261,7 @@ const SolutionSlide: React.FC = () => {
                     isActive={activeTab === "garage"}
                     delay={0.2}
                     isMobile={isMobile}
+                    source="Mechanica Partner Study"
                   />
                   <FlowStep 
                     number={3} 
@@ -302,6 +310,7 @@ interface FlowStepProps {
   isActive: boolean;
   delay: number;
   isMobile: boolean | undefined;
+  source?: string;
 }
 
 const FlowStep: React.FC<FlowStepProps> = ({ 
@@ -311,7 +320,8 @@ const FlowStep: React.FC<FlowStepProps> = ({
   icon,
   isActive,
   delay,
-  isMobile
+  isMobile,
+  source
 }) => {
   return (
     <motion.div 
@@ -334,6 +344,27 @@ const FlowStep: React.FC<FlowStepProps> = ({
         <div className="flex items-center gap-1.5 md:gap-2">
           {icon}
           <h5 className="font-medium text-xs md:text-sm">{title}</h5>
+          {source && (
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button 
+                    className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none" 
+                    aria-label={`Source: ${source}`}
+                  >
+                    <Info className="h-3 w-3 md:h-3.5 md:w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side={isMobile ? "top" : "right"}
+                  sideOffset={5}
+                  className="bg-white text-2xs md:text-xs p-1.5 md:p-2 max-w-[200px] md:max-w-[250px] border border-gray-100 shadow-sm z-50"
+                >
+                  <p>Source: {source}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
         <p className="text-[10px] md:text-[11px] text-muted-foreground mt-0.5 md:mt-1">{description}</p>
       </div>
