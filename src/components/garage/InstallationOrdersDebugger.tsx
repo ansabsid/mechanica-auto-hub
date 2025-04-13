@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -374,7 +373,7 @@ export const InstallationOrdersDebugger = () => {
                 <h3 className="text-sm font-semibold mb-4">Order Customer Information</h3>
                 
                 {showWarningAlert && (
-                  <Alert variant="warning" className="bg-yellow-50 border-yellow-300 mb-3">
+                  <Alert variant="default" className="bg-yellow-50 border-yellow-300 mb-3">
                     <AlertTriangle className="h-4 w-4 text-yellow-700" />
                     <AlertDescription className="text-sm text-yellow-700">
                       No customer information found for this order. Please enter the details below and save.
