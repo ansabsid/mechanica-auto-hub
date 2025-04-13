@@ -29,6 +29,7 @@ export const useCartData = () => {
       }
 
       console.log("User is authenticated, getting cart for user:", sessionData.session.user.id);
+      console.log("User email:", sessionData.session.user.email);
       
       // Always attempt to create/get a cart for the authenticated user
       try {

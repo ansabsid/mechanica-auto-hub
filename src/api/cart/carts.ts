@@ -19,21 +19,23 @@ export async function getUserCart(): Promise<Cart | null> {
     const userId = sessionData.session.user.id;
     
     console.log("Getting cart for user:", userId);
-    // Try to get an existing cart - use maybeSingle instead of single
-    const { data: carts, error } = await supabase
+    
+    // Try to get an existing cart using maybeSingle to handle no results gracefully
+    const { data: existingCart, error: fetchError } = await supabase
       .from('carts')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
       
-    if (error) {
-      console.error("Error fetching cart:", error);
-      throw error;
+    if (fetchError) {
+      console.error("Error fetching cart:", fetchError);
+      throw fetchError;
     }
     
-    if (carts) {
-      console.log("Found existing cart:", carts);
-      return carts;
+    // If cart exists, return it
+    if (existingCart) {
+      console.log("Found existing cart:", existingCart);
+      return existingCart;
     }
     
     console.log("No existing cart, creating new cart for user:", userId);
@@ -50,20 +52,20 @@ export async function getUserCart(): Promise<Cart | null> {
       // Handle case where the cart might already exist (race condition)
       if (createError.code === '23505') { // Unique violation error code
         console.log("Cart might already exist due to race condition, trying to fetch again");
-        const { data: existingCart, error: fetchError } = await supabase
+        const { data: reFetchCart, error: reFetchError } = await supabase
           .from('carts')
           .select('*')
           .eq('user_id', userId)
           .maybeSingle();
           
-        if (fetchError) {
-          console.error("Error fetching cart after race condition:", fetchError);
-          throw fetchError;
+        if (reFetchError) {
+          console.error("Error fetching cart after race condition:", reFetchError);
+          throw reFetchError;
         }
         
-        if (existingCart) {
-          console.log("Retrieved cart after race condition:", existingCart);
-          return existingCart;
+        if (reFetchCart) {
+          console.log("Retrieved cart after race condition:", reFetchCart);
+          return reFetchCart;
         }
       }
       
