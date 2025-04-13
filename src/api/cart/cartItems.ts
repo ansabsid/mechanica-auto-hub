@@ -82,11 +82,34 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       });
     }
     
-    // Add garages information to cart items
-    const itemsWithGarages = data.map((item: any) => {
+    // Add garages information to cart items and properly cast installation_data
+    const itemsWithGarages: CartItem[] = data.map((item: any) => {
       const garages = partGaragesMap[item.part.id] || [];
+      
+      // Properly parse installation_data as InstallationOptions or undefined
+      let parsedInstallationData: InstallationOptions | undefined = undefined;
+      
+      if (item.installation_data) {
+        try {
+          // If it's already an object, use it directly
+          if (typeof item.installation_data === 'object') {
+            parsedInstallationData = item.installation_data as InstallationOptions;
+          } 
+          // If it's a string, try to parse it as JSON
+          else if (typeof item.installation_data === 'string') {
+            parsedInstallationData = JSON.parse(item.installation_data) as InstallationOptions;
+          }
+        } catch (e) {
+          console.error("Error parsing installation_data:", e);
+        }
+      }
+      
       return {
-        ...item,
+        id: item.id,
+        cart_id: item.cart_id,
+        part_id: item.part_id,
+        quantity: item.quantity,
+        installation_data: parsedInstallationData,
         part: {
           ...item.part,
           availableGarages: garages
@@ -95,7 +118,7 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     });
     
     console.log("Cart items with garages:", itemsWithGarages);
-    return itemsWithGarages || [];
+    return itemsWithGarages;
   } catch (error) {
     console.error("Error getting cart items:", error);
     throw error;
