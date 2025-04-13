@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -680,4 +681,97 @@ const Index = () => {
                 <p className="text-gray-600 mb-6">"{testimonial.content}"</p>
                 <div className="flex items-center">
                   <div className="bg-blue-100 h-10 w-10 rounded-full flex items-center justify-center">
-                    <span className="font-semibold
+                    <span className="font-semibold text-blue-600">
+                      {testimonial.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="font-semibold">{testimonial.name}</p>
+                    <p className="text-sm text-gray-500">{testimonial.position}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trusted By */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-semibold text-gray-900">Trusted by Garages Across MENA</h2>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-8">
+            {trustedGarages.map((garage, index) => (
+              <div key={index} className="flex items-center">
+                <div className="bg-gray-100 px-6 py-3 rounded-lg">
+                  <span className="text-gray-700 font-semibold">{garage}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* App Download */}
+      <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-6">Download the BookMyParts App</h2>
+              <p className="text-xl mb-6 text-white/90">
+                Get the full experience on your smartphone. Find parts, book services, and manage
+                your vehicles on the go.
+              </p>
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <CheckCircle2 className="h-6 w-6 mr-3 text-white" />
+                  <span>Quick search for parts by vehicle</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle2 className="h-6 w-6 mr-3 text-white" />
+                  <span>Book service appointments</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle2 className="h-6 w-6 mr-3 text-white" />
+                  <span>Track orders and service history</span>
+                </li>
+              </ul>
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <Button 
+                  className="bg-white text-blue-700 hover:bg-gray-100"
+                  onClick={handleAppDownloadClick}
+                >
+                  Download on App Store
+                </Button>
+                <Button 
+                  className="bg-white text-blue-700 hover:bg-gray-100"
+                  onClick={handleAppDownloadClick}
+                >
+                  Get it on Google Play
+                </Button>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <img
+                src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&auto=format"
+                alt="BookMyParts App"
+                className="rounded-xl shadow-lg object-cover w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Coming Soon Dialog */}
+      <ComingSoonDialog 
+        open={isComingSoonOpen}
+        onOpenChange={setIsComingSoonOpen}
+      />
+    </>
+  );
+};
+
+export default Index;
