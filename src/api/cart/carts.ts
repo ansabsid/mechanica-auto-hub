@@ -8,16 +8,16 @@ import { getUserSession } from "./auth";
  * @returns Promise resolving to the user's cart or null if no user is logged in
  */
 export async function getUserCart(): Promise<Cart | null> {
-  const sessionData = await getUserSession();
-  
-  if (!sessionData.session?.user) {
-    console.log("No authenticated user found");
-    return null;
-  }
-
-  const userId = sessionData.session.user.id;
-  
   try {
+    const sessionData = await getUserSession();
+    
+    if (!sessionData.session?.user) {
+      console.log("No authenticated user found");
+      return null;
+    }
+
+    const userId = sessionData.session.user.id;
+    
     console.log("Getting cart for user:", userId);
     // Try to get an existing cart
     const { data: carts, error } = await supabase
@@ -26,7 +26,12 @@ export async function getUserCart(): Promise<Cart | null> {
       .eq('user_id', userId)
       .maybeSingle();
       
-    if (!error && carts) {
+    if (error) {
+      console.error("Error fetching cart:", error);
+      throw error;
+    }
+    
+    if (carts) {
       console.log("Found existing cart:", carts);
       return carts;
     }
@@ -51,7 +56,13 @@ export async function getUserCart(): Promise<Cart | null> {
           .eq('user_id', userId)
           .maybeSingle();
           
-        if (!fetchError && existingCart) {
+        if (fetchError) {
+          console.error("Error fetching cart after race condition:", fetchError);
+          throw fetchError;
+        }
+        
+        if (existingCart) {
+          console.log("Retrieved cart after race condition:", existingCart);
           return existingCart;
         }
       }
@@ -74,12 +85,18 @@ export async function getUserCart(): Promise<Cart | null> {
  */
 export async function clearCart(cartId: string): Promise<void> {
   try {
+    console.log("Clearing cart with ID:", cartId);
     const { error } = await supabase
       .from('cart_items')
       .delete()
       .eq('cart_id', cartId);
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error clearing cart:", error);
+      throw error;
+    }
+    
+    console.log("Cart cleared successfully");
   } catch (error) {
     console.error("Error clearing cart:", error);
     throw error;

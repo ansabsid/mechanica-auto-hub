@@ -7,17 +7,23 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function getUserSession() {
   try {
+    console.log("Getting user session...");
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       console.error("Error getting user session:", error);
       throw error;
     }
     
-    console.log("User session data:", data.session?.user ? `Authenticated as ${data.session.user.email}` : "Not authenticated");
+    if (data.session?.user) {
+      console.log("User session found:", data.session.user.id);
+      console.log("User email:", data.session.user.email);
+    } else {
+      console.log("No authenticated user session found");
+    }
+    
     return data;
   } catch (error) {
     console.error("Error in getUserSession:", error);
     throw error;
   }
 }
-

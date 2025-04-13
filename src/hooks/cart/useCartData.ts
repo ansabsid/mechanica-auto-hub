@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Cart, CartItem } from "./types";
@@ -44,7 +45,7 @@ export const useCartData = () => {
       console.error("Error fetching cart:", error.message);
       toast({
         title: "Error",
-        description: "Failed to load your cart",
+        description: "Failed to load your cart. Error: " + (error.message || "Unknown error"),
         variant: "destructive",
       });
     } finally {
