@@ -65,7 +65,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         
       // Test if is_garage_staff function works properly
       const { data: isStaffData, error: isStaffError } = await supabase
-        .rpc('is_garage_staff', { garage_id_param: garageId });
+        .rpc('is_garage_staff', { garage_id: garageId });
       
       if (isStaffError) {
         console.error("Staff function error:", isStaffError);
