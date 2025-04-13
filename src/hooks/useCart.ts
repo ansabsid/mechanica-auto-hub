@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
@@ -43,6 +44,10 @@ export const useCart = () => {
         const items = await getCartItems(userCart.id);
         console.log(`Retrieved ${items.length} cart items:`, items);
         setCartItems(items);
+      } else {
+        console.log("No cart found for user, setting empty cart");
+        setCart(null);
+        setCartItems([]);
       }
     } catch (error: any) {
       console.error("Error fetching cart:", error.message);
@@ -81,39 +86,34 @@ export const useCart = () => {
         return;
       }
       
-      if (!cart) {
-        console.log("No cart found, fetching cart");
-        await fetchCart();
-        if (!cart) {
-          console.log("Still no cart after fetch, creating new cart");
-          const newCart = await getUserCart();
-          setCart(newCart);
-          if (!newCart) {
-            console.error("Failed to create new cart");
-            toast({
-              title: "Error",
-              description: "Failed to create cart",
-              variant: "destructive",
-            });
-            return;
-          }
-        }
-      }
-      
+      // We'll handle cart creation/retrieval within the API call to avoid race conditions
       const cartId = cart?.id;
-      if (!cartId) {
-        console.error("No cart ID available");
-        toast({
-          title: "Error",
-          description: "Cart not available",
-          variant: "destructive",
-        });
-        return;
-      }
       
-      console.log("Adding to cart with ID:", cartId);
-      const addedItem = await apiAddToCart(partId, cartId, quantity, installationOptions);
-      console.log("Item added to cart:", addedItem);
+      if (!cartId) {
+        console.log("No cart found, creating new cart");
+        const newCart = await getUserCart();
+        if (!newCart) {
+          console.error("Failed to create or retrieve cart");
+          toast({
+            title: "Error",
+            description: "Failed to create cart",
+            variant: "destructive",
+          });
+          return;
+        }
+        setCart(newCart);
+        console.log("New cart created:", newCart);
+        
+        // Now that we have a cart, proceed with adding the item
+        console.log("Adding to cart with ID:", newCart.id);
+        const addedItem = await apiAddToCart(partId, newCart.id, quantity, installationOptions);
+        console.log("Item added to cart:", addedItem);
+      } else {
+        // We already have a cart, add the item directly
+        console.log("Adding to existing cart with ID:", cartId);
+        const addedItem = await apiAddToCart(partId, cartId, quantity, installationOptions);
+        console.log("Item added to cart:", addedItem);
+      }
       
       let message = "Item added to your cart";
       

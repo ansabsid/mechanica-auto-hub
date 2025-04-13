@@ -10,6 +10,7 @@ export async function getUserCart(): Promise<Cart | null> {
   const { data } = await supabase.auth.getSession();
   
   if (!data.session?.user) {
+    console.log("No authenticated user found");
     return null;
   }
 
@@ -39,8 +40,24 @@ export async function getUserCart(): Promise<Cart | null> {
       
     if (createError) {
       console.error("Error creating new cart:", createError);
+      
+      // Handle case where the cart might already exist (race condition)
+      if (createError.code === '23505') { // Unique violation error code
+        console.log("Cart might already exist due to race condition, trying to fetch again");
+        const { data: existingCart, error: fetchError } = await (supabase
+          .from('carts') as any)
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+          
+        if (!fetchError && existingCart) {
+          return existingCart;
+        }
+      }
+      
       throw createError;
     }
+    
     console.log("New cart created:", newCart);
     return newCart;
   } catch (error) {
