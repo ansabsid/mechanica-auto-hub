@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -5,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Bug, Save, RefreshCw } from "lucide-react";
+import { Bug, Save, RefreshCw, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const InstallationOrdersDebugger = () => {
@@ -18,6 +19,7 @@ export const InstallationOrdersDebugger = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [debugInfo, setDebugInfo] = useState<any>({});
+  const [showWarningAlert, setShowWarningAlert] = useState(false);
   const { toast } = useToast();
 
   const fetchOrderItems = async () => {
@@ -32,7 +34,9 @@ export const InstallationOrdersDebugger = () => {
           order_id,
           part_id,
           garage_id,
-          installation_status
+          installation_status,
+          scheduled_date,
+          scheduled_time
         `)
         .eq('garage_id', garageId)
         .order('created_at', { ascending: false })
@@ -64,10 +68,15 @@ export const InstallationOrdersDebugger = () => {
     
     setIsLoading(true);
     setOrderId(orderId);
+    setCustomerName("");
+    setCustomerEmail("");
+    setCustomerPhone("");
+    setShowWarningAlert(false);
     
     try {
       console.log(`Fetching order details for ID: ${orderId}`);
       
+      // Try to get order data from orders table
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*')
@@ -82,117 +91,61 @@ export const InstallationOrdersDebugger = () => {
         setDebugInfo(prev => ({ ...prev, directOrderData: orderData }));
       }
       
+      let hasCustomerData = false;
+      
+      // If we found an order with customer data, use it
+      if (orderData && (orderData.user_name || orderData.user_email || orderData.user_phone)) {
+        setCustomerName(orderData.user_name || '');
+        setCustomerEmail(orderData.user_email || '');
+        setCustomerPhone(orderData.user_phone || '');
+        hasCustomerData = !!(orderData.user_name && orderData.user_email && orderData.user_phone);
+        console.log("Found customer data in orders table:", {
+          name: orderData.user_name,
+          email: orderData.user_email,
+          phone: orderData.user_phone
+        });
+        setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'Found in orders table' }));
+      } 
+      // If no order exists or it has no customer data, we need to create one
+      else {
+        console.log("No valid customer data in orders table. Order data:", orderData);
+        setShowWarningAlert(true);
+        setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'Not found in orders table' }));
+      }
+      
+      // Get the actual order item details for reference
       const { data: orderItem, error: orderItemError } = await supabase
         .from('order_items')
         .select(`
           id,
-          order_id,
+          part_id,
+          installation_status,
           scheduled_date,
           scheduled_time,
-          installation_status,
-          orders (
-            id,
-            user_name,
-            user_email,
-            user_phone,
-            user_id
-          )
+          price,
+          installation_fee
         `)
         .eq('order_id', orderId)
+        .eq('garage_id', 'c64a9350-d34a-4903-b34c-16c0e4699a44')
         .maybeSingle();
         
       if (orderItemError) {
-        console.error("Error fetching order item with order data:", orderItemError);
-        setDebugInfo(prev => ({ ...prev, orderItemError }));
+        console.error("Error fetching order item details:", orderItemError);
       } else {
-        console.log("Order item with order data:", orderItem);
-        setDebugInfo(prev => ({ ...prev, orderItemWithOrderData: orderItem }));
+        console.log("Order item details:", orderItem);
+        setDebugInfo(prev => ({ ...prev, orderItemDetails: orderItem }));
+        setSelectedItem(orderItem);
       }
-      
-      let customerInfo = {
-        name: '',
-        email: '',
-        phone: ''
-      };
-      
-      if (orderData) {
-        customerInfo.name = orderData.user_name || '';
-        customerInfo.email = orderData.user_email || '';
-        customerInfo.phone = orderData.user_phone || '';
-        
-        console.log("Got customer info from orders table:", customerInfo);
-        setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'From orders table' }));
-      } 
-      else if (orderItem?.orders) {
-        customerInfo.name = orderItem.orders.user_name || '';
-        customerInfo.email = orderItem.orders.user_email || '';
-        customerInfo.phone = orderItem.orders.user_phone || '';
-        
-        console.log("Got customer info from order_items join:", customerInfo);
-        setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'From order_items join' }));
-      }
-      
-      const userId = orderData?.user_id || orderItem?.orders?.user_id;
-      if (userId && (!customerInfo.name || !customerInfo.email || !customerInfo.phone)) {
-        console.log("Trying to get missing info from user profile with ID:", userId);
-        
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('firstName, lastName, email, phone')
-          .eq('id', userId)
-          .maybeSingle();
-          
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          setDebugInfo(prev => ({ ...prev, profileError }));
-        } else if (profile) {
-          console.log("Got profile:", profile);
-          setDebugInfo(prev => ({ ...prev, profileData: profile }));
-          
-          if (!customerInfo.name && (profile.firstName || profile.lastName)) {
-            customerInfo.name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-          }
-          if (!customerInfo.email && profile.email) {
-            customerInfo.email = profile.email;
-          }
-          if (!customerInfo.phone && profile.phone) {
-            customerInfo.phone = profile.phone;
-          }
-          
-          console.log("Enhanced customer info with profile data:", customerInfo);
-          setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'Enhanced with profile data' }));
-        }
-      }
-      
-      setCustomerName(customerInfo.name || '');
-      setCustomerEmail(customerInfo.email || '');
-      setCustomerPhone(customerInfo.phone || '');
-      
-      console.log("Final customer info set to state:", {
-        name: customerInfo.name || '',
-        email: customerInfo.email || '',
-        phone: customerInfo.phone || ''
-      });
       
       setDebugInfo(prev => ({
         ...prev,
         finalCustomerInfo: {
-          name: customerInfo.name || '',
-          email: customerInfo.email || '',
-          phone: customerInfo.phone || ''
+          name: customerName || '',
+          email: customerEmail || '',
+          phone: customerPhone || '',
+          hasCompleteData: hasCustomerData
         }
       }));
-      
-      if (!customerInfo.name && !customerInfo.email && !customerInfo.phone) {
-        console.log("No customer information could be found for this order");
-        setDebugInfo(prev => ({ ...prev, customerInfoStatus: 'Not found' }));
-        
-        toast({
-          title: "Warning",
-          description: "No customer information found for this order",
-          variant: "destructive"
-        });
-      }
       
     } catch (error) {
       console.error("Error in fetchOrderDetails:", error);
@@ -233,6 +186,7 @@ export const InstallationOrdersDebugger = () => {
     
     setIsLoading(true);
     try {
+      // Check if the order already exists
       const { data: checkOrder, error: checkError } = await supabase
         .from('orders')
         .select('id')
@@ -244,12 +198,30 @@ export const InstallationOrdersDebugger = () => {
         throw checkError;
       }
       
+      // Get the current user's session for the user_id
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id || "00000000-0000-0000-0000-000000000000";
+      
+      console.log("Current user ID for order operations:", userId);
+      
       if (!checkOrder) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id || "00000000-0000-0000-0000-000000000000";
+        // Create new order with customer info if it doesn't exist
+        console.log("Creating new order with customer info:", {
+          id: orderId,
+          user_id: userId,
+          user_name: customerName,
+          user_email: customerEmail,
+          user_phone: customerPhone
+        });
         
-        console.log("Creating new order with user ID:", userId);
-        setDebugInfo(prev => ({ ...prev, userIdForNewOrder: userId }));
+        // Get total amount from the order item
+        let totalAmount = 0;
+        if (selectedItem) {
+          const price = Number(selectedItem.price) || 0;
+          const installationFee = Number(selectedItem.installation_fee) || 0;
+          totalAmount = price + installationFee;
+          console.log("Calculated total amount:", totalAmount, "from price:", price, "and fee:", installationFee);
+        }
         
         const { data: newOrder, error: createError } = await supabase
           .from('orders')
@@ -260,7 +232,7 @@ export const InstallationOrdersDebugger = () => {
             user_email: customerEmail,
             user_phone: customerPhone,
             status: 'pending',
-            total_amount: 0
+            total_amount: totalAmount || 0
           })
           .select()
           .maybeSingle();
@@ -278,9 +250,12 @@ export const InstallationOrdersDebugger = () => {
           description: "Order created with customer information"
         });
         
+        // The order was created, so we're done
+        await fetchOrderDetails(orderId);
         return;
       }
       
+      // Update the existing order with the new customer information
       console.log("Updating existing order with customer info:", {
         name: customerName,
         email: customerEmail,
@@ -307,7 +282,8 @@ export const InstallationOrdersDebugger = () => {
         description: "Order customer information updated successfully"
       });
       
-      fetchOrderDetails(orderId);
+      // Refresh order details to see the updated info
+      await fetchOrderDetails(orderId);
       
     } catch (error) {
       console.error("Error updating order:", error);
@@ -382,6 +358,11 @@ export const InstallationOrdersDebugger = () => {
                       <div>Order: <span className="font-mono">{item.order_id.substring(0, 8)}...</span></div>
                       <div>Part ID: {item.part_id}</div>
                       <div>Status: {item.installation_status || 'None'}</div>
+                      {item.scheduled_date && (
+                        <div>
+                          Scheduled: {new Date(item.scheduled_date).toLocaleDateString()} {item.scheduled_time}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -392,11 +373,20 @@ export const InstallationOrdersDebugger = () => {
               <div className="border p-4 rounded-md">
                 <h3 className="text-sm font-semibold mb-4">Order Customer Information</h3>
                 
+                {showWarningAlert && (
+                  <Alert variant="warning" className="bg-yellow-50 border-yellow-300 mb-3">
+                    <AlertTriangle className="h-4 w-4 text-yellow-700" />
+                    <AlertDescription className="text-sm text-yellow-700">
+                      No customer information found for this order. Please enter the details below and save.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
                 {orderId ? (
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="orderId">Order ID</Label>
-                      <Input id="orderId" value={orderId} readOnly className="bg-gray-50" />
+                      <Input id="orderId" value={orderId} readOnly className="bg-gray-50 font-mono text-xs" />
                     </div>
                     
                     <div>
@@ -406,9 +396,9 @@ export const InstallationOrdersDebugger = () => {
                         value={customerName} 
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Enter customer name" 
-                        className={!customerName || customerName === "Customer Name Required" ? "border-red-300 bg-red-50" : ""}
+                        className={!customerName ? "border-red-300 bg-red-50" : ""}
                       />
-                      {(!customerName || customerName === "Customer Name Required") && (
+                      {!customerName && (
                         <p className="text-xs text-red-500 mt-1">Customer name is required</p>
                       )}
                     </div>
@@ -420,9 +410,10 @@ export const InstallationOrdersDebugger = () => {
                         value={customerEmail} 
                         onChange={(e) => setCustomerEmail(e.target.value)}
                         placeholder="Enter customer email" 
-                        className={!customerEmail || customerEmail === "Email Required" ? "border-red-300 bg-red-50" : ""}
+                        className={!customerEmail ? "border-red-300 bg-red-50" : ""}
+                        type="email"
                       />
-                      {(!customerEmail || customerEmail === "Email Required") && (
+                      {!customerEmail && (
                         <p className="text-xs text-red-500 mt-1">Customer email is required</p>
                       )}
                     </div>
@@ -434,15 +425,15 @@ export const InstallationOrdersDebugger = () => {
                         value={customerPhone} 
                         onChange={(e) => setCustomerPhone(e.target.value)}
                         placeholder="Enter customer phone" 
-                        className={!customerPhone || customerPhone === "Phone Required" ? "border-red-300 bg-red-50" : ""}
+                        className={!customerPhone ? "border-red-300 bg-red-50" : ""}
                       />
-                      {(!customerPhone || customerPhone === "Phone Required") && (
+                      {!customerPhone && (
                         <p className="text-xs text-red-500 mt-1">Customer phone is required</p>
                       )}
                     </div>
                     
                     <Button 
-                      className="w-full" 
+                      className="w-full bg-mechanica-500 hover:bg-mechanica-600" 
                       onClick={updateOrderCustomerInfo}
                       disabled={isLoading}
                     >
@@ -481,7 +472,7 @@ export const InstallationOrdersDebugger = () => {
                         <div className="font-medium mb-1">Data Source:</div>
                         <div>{debugInfo.customerSourceInfo || 'Not set'}</div>
                         <div className="font-medium mt-1">Status:</div>
-                        <div>{debugInfo.customerInfoStatus || 'Unknown'}</div>
+                        <div>{!customerName && !customerEmail && !customerPhone ? 'Missing Data' : 'Data Available'}</div>
                       </div>
                     </div>
                     
