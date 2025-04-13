@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { RPCFunctions } from "@/hooks/auth/supabaseTypes";
 
 interface RlsDebugHelperProps {
   garageId: string;
@@ -26,7 +27,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       
       // Run diagnostic function to check RLS access
       const { data: rlsDebugData, error: rlsDebugError } = await supabase
-        .rpc('debug_rls_access', { garage_id_param: garageId });
+        .rpc('debug_rls_access' as keyof RPCFunctions, { garage_id_param: garageId });
       
       // Get current user and their profile
       const { data: { user } } = await supabase.auth.getUser();
