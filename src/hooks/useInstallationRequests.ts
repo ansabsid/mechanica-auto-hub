@@ -191,35 +191,6 @@ export const useInstallationRequests = (garageId: string) => {
         });
       }
       
-      const userIds = (ordersData || [])
-        .filter(order => order.user_id)
-        .map(order => order.user_id);
-      
-      console.log("User IDs for profiles:", userIds);
-      
-      // Fetch user profile data if available
-      let profileMap = new Map();
-      if (userIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, firstName, lastName, email, phone')
-          .in('id', userIds);
-          
-        if (profilesError) {
-          console.error("Error fetching user profiles:", profilesError);
-          setDebug(prev => ({ ...prev, profilesError }));
-        } else if (profilesData) {
-          console.log("Fetched user profiles:", profilesData);
-          setDebug(prev => ({ ...prev, profilesData, profilesCount: profilesData.length }));
-          
-          profilesData.forEach(profile => {
-            profileMap.set(profile.id, profile);
-          });
-        }
-      } else {
-        console.log("No user IDs found in orders data to fetch profiles");
-      }
-      
       // Map order items to installation requests for display
       const requests: InstallationRequest[] = orderItemsData
         .map(item => {
@@ -233,33 +204,16 @@ export const useInstallationRequests = (garageId: string) => {
             orderData: order
           }));
           
-          // Get corresponding profile if available
-          const profile = order?.user_id ? profileMap.get(order.user_id) : null;
-          
           // Get corresponding part if available
           const part = partMap.get(item.part_id);
           
-          // Enhanced logging for order customer data
-          console.log(`Order ${item.order_id} customer data:`, {
-            fromOrder: order ? {
-              name: order.user_name,
-              email: order.user_email,
-              phone: order.user_phone
-            } : 'No order data found',
-            fromProfile: profile ? {
-              name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
-              email: profile.email,
-              phone: profile.phone
-            } : 'No profile data'
-          });
-          
-          // Default values
+          // Default values - only use order data, no fallback to profiles
           let customerName = "Unknown Customer";
           let customerPhone = "No Phone";
           let customerEmail = "No Email";
           let customerSourceInfo = "Not found";
           
-          // First priority: Check for order data and use it directly from the orders table
+          // Use data directly from the orders table
           if (order) {
             if (order.user_name) {
               customerName = order.user_name;
@@ -287,26 +241,6 @@ export const useInstallationRequests = (garageId: string) => {
             });
           } else {
             console.log(`No order found for order_id: ${item.order_id}`);
-          }
-          
-          // Second priority: Only fall back to profile data if order data is missing
-          if (customerName === "Unknown Customer" && profile) {
-            if (profile.firstName && profile.lastName) {
-              customerName = `${profile.firstName} ${profile.lastName}`;
-              customerSourceInfo = "Profile Table (name)";
-            }
-          }
-          
-          if (customerEmail === "No Email" && profile && profile.email) {
-            customerEmail = profile.email;
-            customerSourceInfo = customerSourceInfo === "Not found" ? 
-              "Profile Table (email)" : customerSourceInfo + " + email";
-          }
-          
-          if (customerPhone === "No Phone" && profile && profile.phone) {
-            customerPhone = profile.phone;
-            customerSourceInfo = customerSourceInfo === "Not found" ? 
-              "Profile Table (phone)" : customerSourceInfo + " + phone";
           }
           
           // Default order date to current date if not available
