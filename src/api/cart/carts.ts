@@ -20,60 +20,66 @@ export async function getUserCart(): Promise<Cart | null> {
     
     console.log("Getting cart for user:", userId);
     
-    // Try to get an existing cart using maybeSingle to handle no results gracefully
-    const { data: existingCart, error: fetchError } = await supabase
+    // Try to get an existing cart with an explicit where clause for user_id
+    const { data, error } = await supabase
       .from('carts')
       .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .eq('user_id', userId);
       
-    if (fetchError) {
-      console.error("Error fetching cart:", fetchError);
-      throw fetchError;
+    if (error) {
+      console.error("Error fetching cart:", error);
+      throw error;
     }
     
-    // If cart exists, return it
-    if (existingCart) {
-      console.log("Found existing cart:", existingCart);
-      return existingCart;
+    console.log("Cart query results:", data);
+    
+    // If we found a cart, return the first one (should only be one per user)
+    if (data && data.length > 0) {
+      console.log("Found existing cart:", data[0]);
+      return data[0];
     }
     
     console.log("No existing cart, creating new cart for user:", userId);
-    // Create a new cart if it doesn't exist
+    
+    // Create a new cart with explicit user_id
     const { data: newCart, error: createError } = await supabase
       .from('carts')
       .insert({ user_id: userId })
-      .select()
-      .single();
+      .select();
       
     if (createError) {
       console.error("Error creating new cart:", createError);
       
-      // Handle case where the cart might already exist (race condition)
-      if (createError.code === '23505') { // Unique violation error code
+      // If we get a unique violation error (cart already exists), try fetching again
+      if (createError.code === '23505') {
         console.log("Cart might already exist due to race condition, trying to fetch again");
-        const { data: reFetchCart, error: reFetchError } = await supabase
+        const { data: reFetchData, error: reFetchError } = await supabase
           .from('carts')
           .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
+          .eq('user_id', userId);
           
         if (reFetchError) {
           console.error("Error fetching cart after race condition:", reFetchError);
           throw reFetchError;
         }
         
-        if (reFetchCart) {
-          console.log("Retrieved cart after race condition:", reFetchCart);
-          return reFetchCart;
+        if (reFetchData && reFetchData.length > 0) {
+          console.log("Retrieved cart after race condition:", reFetchData[0]);
+          return reFetchData[0];
         }
       }
       
       throw createError;
     }
     
-    console.log("New cart created:", newCart);
-    return newCart;
+    // Ensure we're getting the right data format back
+    if (newCart && newCart.length > 0) {
+      console.log("New cart created:", newCart[0]);
+      return newCart[0];
+    }
+    
+    console.error("Failed to create cart, no data returned");
+    return null;
   } catch (error) {
     console.error("Error getting/creating cart:", error);
     throw error;
