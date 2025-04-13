@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Order, CreateOrderItem } from "@/types/order.types";
+import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
 
 /**
@@ -31,7 +32,7 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
         id: order.id,
         user_id: order.user_id,
         total_amount: order.total_amount,
-        status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
+        status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed',
         created_at: order.created_at,
         updated_at: order.updated_at,
         user_name: order.user_name,
@@ -418,7 +419,18 @@ export const createOrder = async (
       }
     }
     
-    return order;
+    return {
+      id: order.id,
+      user_id: order.user_id,
+      total_amount: order.total_amount,
+      status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed',
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      user_name: order.user_name,
+      user_email: order.user_email,
+      user_phone: order.user_phone,
+      shipping_address: order.shipping_address
+    };
   } catch (error) {
     console.error("Error creating order:", error);
     throw error;
