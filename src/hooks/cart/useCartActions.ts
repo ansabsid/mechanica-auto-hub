@@ -1,10 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
+import { CartItem, InstallationOptions } from "./types";
 import { 
-  getUserCart, 
-  getCartItems, 
   addToCart as apiAddToCart, 
   updateCartItemQuantity as apiUpdateCartItemQuantity,
   removeFromCart as apiRemoveFromCart,
@@ -12,66 +10,14 @@ import {
   getUserSession
 } from "@/api/cartApi";
 
-// Use 'export type' for re-exporting types when isolatedModules is enabled
-export type { CartItem, Cart } from "@/types/cart.types";
-
-export const useCart = () => {
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export const useCartActions = (
+  refreshCart: () => Promise<void>,
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>
+) => {
   const { toast } = useToast();
 
-  // Fetch user's cart and items
-  const fetchCart = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      console.log("Fetching cart data...");
-      const sessionData = await getUserSession();
-      
-      if (!sessionData.session?.user) {
-        // If user is not logged in, show an empty cart
-        console.log("No user session, setting empty cart");
-        setCart(null);
-        setCartItems([]);
-        return;
-      }
-
-      console.log("User is authenticated, getting cart for user:", sessionData.session.user.id);
-      
-      // Always attempt to create/get a cart for the authenticated user
-      const userCart = await getUserCart();
-      
-      if (userCart) {
-        console.log("User cart found, fetching items:", userCart);
-        setCart(userCart);
-        const items = await getCartItems(userCart.id);
-        console.log(`Retrieved ${items.length} cart items:`, items);
-        setCartItems(items);
-      } else {
-        console.log("No cart found for user, setting empty cart");
-        setCart(null);
-        setCartItems([]);
-      }
-    } catch (error: any) {
-      console.error("Error fetching cart:", error.message);
-      toast({
-        title: "Error",
-        description: "Failed to load your cart",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  // Force refresh whenever the component using the hook mounts
-  useEffect(() => {
-    console.log("useCart hook mounted, fetching cart");
-    fetchCart();
-  }, [fetchCart]);
-
   // Add an item to the cart
-  const addToCart = async (partId: number, quantity: number = 1, installationOptions?: InstallationOptions) => {
+  const addToCart = useCallback(async (partId: number, quantity: number = 1, installationOptions?: InstallationOptions) => {
     try {
       console.log("Adding to cart:", {
         partId, 
@@ -93,7 +39,7 @@ export const useCart = () => {
       console.log("User is authenticated:", sessionData.session.user.id);
       
       // Always attempt to create/get a cart for the authenticated user
-      const userCart = await getUserCart();
+      const userCart = await getUserSession();
       
       if (!userCart) {
         console.error("Failed to create or retrieve cart");
@@ -111,9 +57,6 @@ export const useCart = () => {
       const addedItem = await apiAddToCart(partId, userCart.id, quantity, installationOptions);
       console.log("Item successfully added to cart:", addedItem);
       
-      // Update local state with the new cart
-      setCart(userCart);
-      
       let message = "Item added to your cart";
       
       // Customize message based on whether this is a purchase with installation
@@ -127,7 +70,7 @@ export const useCart = () => {
       });
       
       // Refresh cart items
-      await fetchCart();
+      await refreshCart();
     } catch (error: any) {
       console.error("Error adding to cart:", error);
       toast({
@@ -136,10 +79,10 @@ export const useCart = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [toast, refreshCart]);
 
   // Update quantity of a cart item
-  const updateCartItemQuantity = async (cartItemId: string, quantity: number) => {
+  const updateCartItemQuantity = useCallback(async (cartItemId: string, quantity: number) => {
     try {
       if (quantity <= 0) {
         await removeFromCart(cartItemId);
@@ -156,12 +99,12 @@ export const useCart = () => {
       );
       
       // Force refresh cart items to ensure we're in sync with the server
-      await fetchCart();
+      await refreshCart();
     } catch (error: any) {
       console.error("Error updating cart item:", error.message);
       // If the item was removed, refresh the cart
       if (error.message === "Item removed from cart") {
-        fetchCart();
+        refreshCart();
       } else {
         toast({
           title: "Error",
@@ -170,10 +113,10 @@ export const useCart = () => {
         });
       }
     }
-  };
+  }, [toast, refreshCart, setCartItems]);
 
   // Remove an item from cart
-  const removeFromCart = async (cartItemId: string) => {
+  const removeFromCart = useCallback(async (cartItemId: string) => {
     try {
       await apiRemoveFromCart(cartItemId);
       
@@ -192,16 +135,16 @@ export const useCart = () => {
         variant: "destructive",
       });
       // Refresh cart to ensure it's in sync
-      fetchCart();
+      refreshCart();
     }
-  };
+  }, [toast, refreshCart, setCartItems]);
 
   // Clear all items from cart
-  const clearCart = async () => {
-    if (!cart) return;
+  const clearCart = useCallback(async (cartId: string | undefined) => {
+    if (!cartId) return;
     
     try {
-      await apiClearCart(cart.id);
+      await apiClearCart(cartId);
       
       // Update local state
       setCartItems([]);
@@ -218,31 +161,12 @@ export const useCart = () => {
         variant: "destructive",
       });
     }
-  };
-
-  // Calculate total price of items in cart (including installation fees)
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => {
-      let itemTotal = item.part.price * item.quantity;
-      
-      // Add installation fee if applicable
-      if (item.installation_data) {
-        itemTotal += item.installation_data.installationFee;
-      }
-      
-      return total + itemTotal;
-    }, 0);
-  };
+  }, [toast, setCartItems]);
 
   return {
-    cart,
-    cartItems,
-    isLoading,
     addToCart,
     updateCartItemQuantity,
     removeFromCart,
-    clearCart,
-    calculateTotal,
-    refreshCart: fetchCart,
+    clearCart
   };
 };

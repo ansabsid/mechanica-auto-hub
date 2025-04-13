@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
-import { useCart, CartItem } from "@/hooks/useCart";
+import { useCart, CartItem } from "@/hooks/cart";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
