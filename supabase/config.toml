@@ -2,5 +2,5 @@
 project_id = "gwjvqtusnhahjlzafixp"
 
 [functions.scan-car-part]
-verify_jwt = true
+verify_jwt = false
 
