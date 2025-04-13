@@ -80,7 +80,6 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      // Get the authenticated user first to confirm our auth state
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error("Auth session error:", sessionError);
@@ -90,7 +89,6 @@ export const InstallationRequestsNotification = () => {
         setDebug(prev => ({ ...prev, authSession: sessionData }));
       }
       
-      // Fetch order items assigned to this garage with installation data
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -140,7 +138,6 @@ export const InstallationRequestsNotification = () => {
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       console.log("Order IDs to fetch:", orderIds);
       
-      // Updated approach: Fetch each order individually to troubleshoot potential issues
       let ordersData = [];
       let errorCounts = 0;
       
@@ -148,7 +145,6 @@ export const InstallationRequestsNotification = () => {
         try {
           console.log("Fetching individual order:", orderId);
           
-          // Use maybeSingle to handle when an order might not exist
           const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
@@ -186,7 +182,6 @@ export const InstallationRequestsNotification = () => {
         });
       }
       
-      // Direct query to test RLS policies
       const { data: directTestData, error: directTestError } = await supabase
         .from('order_items')
         .select('*')
@@ -201,7 +196,6 @@ export const InstallationRequestsNotification = () => {
         }
       }));
       
-      // Fetch part data for display
       const partIds = orderItemsData.map(item => item.part_id);
       
       const { data: partsData, error: partsError } = await supabase
@@ -230,7 +224,6 @@ export const InstallationRequestsNotification = () => {
       
       console.log("User IDs for profiles:", userIds);
       
-      // Fetch user profile data if available
       let profileMap = new Map();
       if (userIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
@@ -253,7 +246,6 @@ export const InstallationRequestsNotification = () => {
         console.log("No user IDs found in orders data to fetch profiles");
       }
       
-      // Map order items to installation requests for display
       const requests: InstallationRequest[] = orderItemsData
         .map(item => {
           const order = orderMap.get(item.order_id) || { 
@@ -268,7 +260,6 @@ export const InstallationRequestsNotification = () => {
           
           const part = partMap.get(item.part_id);
           
-          // Enhanced logging for order customer data
           console.log(`Order ${item.order_id} customer data:`, {
             fromOrder: {
               name: order.user_name,
@@ -591,7 +582,6 @@ export const InstallationRequestsNotification = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Debug Dialog */}
       <Dialog open={debugDialogOpen} onOpenChange={setDebugDialogOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -602,3 +592,166 @@ export const InstallationRequestsNotification = () => {
           </DialogHeader>
           
           <div className="space-y-4">
+            <div className="bg-gray-100 p-4 rounded-md">
+              <h3 className="font-medium mb-2">Authentication Status</h3>
+              <pre className="text-xs overflow-auto max-h-40">
+                {JSON.stringify({
+                  isAuthenticated: !!user,
+                  userId: user?.id,
+                  userEmail: user?.email,
+                  authSession: debug.authSession
+                }, null, 2)}
+              </pre>
+            </div>
+            
+            <div className="bg-gray-100 p-4 rounded-md">
+              <h3 className="font-medium mb-2">Data Fetch Details</h3>
+              <pre className="text-xs overflow-auto max-h-40">
+                {JSON.stringify({
+                  garageId: debug.garageId,
+                  fetchStarted: debug.fetchStarted,
+                  itemsCount: debug.itemsCount || 0,
+                  ordersCount: debug.ordersCount || 0,
+                  profilesCount: debug.profilesCount || 0,
+                  partsCount: debug.partsCount || 0,
+                  requestsCount: debug.requestsCount || 0,
+                  errorCounts: debug.errorCounts || 0
+                }, null, 2)}
+              </pre>
+            </div>
+            
+            <div className="bg-gray-100 p-4 rounded-md">
+              <h3 className="font-medium mb-2">Direct RLS Policy Test</h3>
+              <pre className="text-xs overflow-auto max-h-40">
+                {JSON.stringify(debug.directTest, null, 2)}
+              </pre>
+            </div>
+            
+            <details className="border rounded-md p-4">
+              <summary className="font-medium cursor-pointer">Full Debug Data</summary>
+              <pre className="mt-2 text-xs overflow-auto max-h-60">
+                {JSON.stringify(debug, null, 2)}
+              </pre>
+            </details>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {selectedRequest && (
+        <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Customer Information</DialogTitle>
+              <DialogDescription>
+                Contact information for installation request
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <User className="mr-2 h-5 w-5 text-gray-600" />
+                  <h3 className="font-medium">{selectedRequest.customerName}</h3>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center">
+                    <Phone className="mr-2 h-4 w-4 text-gray-500" />
+                    <p>{selectedRequest.customerPhone}</p>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Mail className="mr-2 h-4 w-4 text-gray-500" />
+                    <p>{selectedRequest.customerEmail}</p>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Car className="mr-2 h-4 w-4 text-gray-500" />
+                    <p>{selectedRequest.part}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Update Status</h4>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => handleStatusUpdate('contacted')}
+                    variant="outline"
+                    className="flex items-center"
+                  >
+                    <Phone className="mr-2 h-4 w-4" /> Mark Contacted
+                  </Button>
+                  
+                  <Button
+                    onClick={handleScheduleAppointment}
+                    className="flex items-center"
+                  >
+                    <Calendar className="mr-2 h-4 w-4" /> Schedule Installation
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {selectedRequest && (
+        <Dialog open={schedulingDialogOpen} onOpenChange={setSchedulingDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Schedule Installation</DialogTitle>
+              <DialogDescription>
+                Select date and time for installation
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <h4 className="text-sm font-medium">Select Date</h4>
+                <div className="border rounded-md p-2">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    disabled={(date) => date < new Date() || date.getDay() === 0 || date.getDay() === 6}
+                    className="mx-auto"
+                  />
+                </div>
+              </div>
+              
+              {selectedDate && (
+                <div className="flex flex-col space-y-2">
+                  <h4 className="text-sm font-medium">Select Time</h4>
+                  <Select onValueChange={setSelectedTime} value={selectedTime}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTimes.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {formatTimeDisplay(time)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter className="mt-4">
+              <Button
+                type="button"
+                onClick={handleConfirmSchedule}
+                disabled={!selectedDate || !selectedTime}
+              >
+                Confirm Appointment
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+};
