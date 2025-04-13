@@ -124,7 +124,7 @@ export const InstallationRequestsNotification = () => {
       // Get all order IDs for these order items
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       
-      // Fetch orders with user details
+      // Directly fetch orders with user details - important for customer information
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
@@ -175,33 +175,36 @@ export const InstallationRequestsNotification = () => {
       }
       
       // Get all user IDs from orders
-      const userIds = ordersData.map(order => order.user_id).filter(Boolean);
+      const userIds = ordersData
+        .filter(order => order.user_id)
+        .map(order => order.user_id);
       
-      // Fetch profiles for these users
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, firstName, lastName, email, phone')
-        .in('id', userIds);
-        
-      if (profilesError) {
-        console.error("Error fetching user profiles:", profilesError);
-        setDebug(prev => ({ ...prev, profilesError }));
-      }
-      
-      console.log("Fetched user profiles:", profilesData);
-      setDebug(prev => ({ ...prev, profilesData, profilesCount: profilesData?.length || 0 }));
-      
-      // Create a map of user IDs to profile data for easy lookup
-      const profileMap = new Map();
-      if (profilesData) {
-        profilesData.forEach(profile => {
-          profileMap.set(profile.id, profile);
-        });
+      // Fetch profiles for these users only if we have user IDs
+      let profileMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, firstName, lastName, email, phone')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          console.error("Error fetching user profiles:", profilesError);
+          setDebug(prev => ({ ...prev, profilesError }));
+        } else if (profilesData) {
+          console.log("Fetched user profiles:", profilesData);
+          setDebug(prev => ({ ...prev, profilesData, profilesCount: profilesData.length }));
+          
+          // Create a map of user IDs to profile data for easy lookup
+          profilesData.forEach(profile => {
+            profileMap.set(profile.id, profile);
+          });
+        }
       }
       
       // Map order items to installation requests with all the details
       const requests: InstallationRequest[] = orderItemsData
         .map(item => {
+          // Get order information - prioritize using order data for customer info
           const order = orderMap.get(item.order_id) || { 
             created_at: new Date().toISOString(), 
             user_id: null,
@@ -216,14 +219,13 @@ export const InstallationRequestsNotification = () => {
           // Get part information
           const part = partMap.get(item.part_id);
           
-          // Determine customer name from profile first, then order data
-          const customerName = profile?.firstName && profile?.lastName
-            ? `${profile.firstName} ${profile.lastName}`
-            : order.user_name || "Unknown Customer";
+          // Determine customer name - prioritize order's user_name over profile
+          const customerName = order.user_name || 
+            (profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : "Unknown Customer");
             
-          // Determine customer contact info from profile first, then order data
-          const customerPhone = profile?.phone || order.user_phone || "No Phone";
-          const customerEmail = profile?.email || order.user_email || "No Email";
+          // Determine customer contact info - prioritize order's contact info over profile
+          const customerPhone = order.user_phone || profile?.phone || "No Phone";
+          const customerEmail = order.user_email || profile?.email || "No Email";
           
           return {
             id: item.id,
