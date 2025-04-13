@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedSupabaseClient } from "./supabaseTypes";
 
@@ -75,24 +74,21 @@ export const createUserProfile = async (
       return; // Profile already exists and was updated
     }
     
-    // Extract user information from metadata
-    const { countryCode, phoneNumber, firstName, lastName, fullPhone } = metadata as any;
-    
     // Create profile data object with basic info
     const profileData: any = {
       id: userId,
       email: email,
       role: role,
-      phone: fullPhone || (countryCode && phoneNumber ? `${countryCode}${phoneNumber}` : null),
-      firstName: firstName || null,
-      lastName: lastName || null,
+      phone: metadata?.fullPhone || (metadata?.countryCode && metadata?.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
+      firstName: metadata?.firstName || null,
+      lastName: metadata?.lastName || null,
     };
     
     console.log("Creating profile with data:", profileData);
     
     // Add garage-specific data if role is garage
     if (role === "garage" && metadata) {
-      const { garageName, garageLocation, garageRegistrationNumber } = metadata as any;
+      const { garageName, garageLocation, garageRegistrationNumber } = metadata;
       
       if (garageName && garageLocation) {
         // Create a new garage entry

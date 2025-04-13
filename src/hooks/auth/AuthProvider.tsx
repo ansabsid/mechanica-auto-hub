@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
         
         if (currentUser) {
-          // Fetch user role - use timeout to avoid supabase listener deadlocks
           setTimeout(async () => {
             const role = await fetchUserRole(currentUser.id);
             if (role) {
@@ -40,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }, 0);
         } else {
-          // Clear auth state if no user is found
           setUser(null);
           setUserRole(null);
         }
@@ -58,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         console.log("Auth state changed:", event);
         
-        // Set user to null first to ensure clean state transitions
         if (event === 'SIGNED_OUT') {
           console.log("Setting user to null due to SIGNED_OUT event");
           setUser(null);
@@ -73,13 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         
-        // Handle other auth events
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
         if (currentUser) {
           try {
-            // Use timeout to avoid supabase listener deadlocks
             setTimeout(async () => {
               const role = await fetchUserRole(currentUser.id);
               
@@ -87,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.log("Setting user role in auth state change:", role);
                 setUserRole(role);
                 
-                // Only show toast when SIGNED_IN event occurs and hasn't been handled yet
                 if (event === 'SIGNED_IN' && !authChangeHandled) {
                   setAuthChangeHandled(true);
                   
@@ -115,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log(`Attempting to sign in with email: ${email}, role: ${role}`);
       
-      // Special demo login handling
       if (isDemoAccount(email)) {
         console.log("Using demo account login flow");
         const demoResult = await handleDemoAccount(email);
@@ -141,14 +133,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Regular login process
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        // Check if the error is related to user not found
         if (error.message.includes("Invalid login credentials") || 
             error.message.includes("Email not confirmed")) {
           throw new Error("Account not found. Please sign up first or check your credentials.");
@@ -157,7 +147,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        // Successful login - role checking will happen in the auth listener
         toast({
           title: "Processing login",
           description: "Authenticating your account...",
@@ -171,31 +160,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "An error occurred during login",
       });
       setIsLoading(false);
-      throw error; // Re-throw so form handler can catch it
+      throw error;
     }
   };
 
   const signUp = async (email: string, password: string, role: "customer" | "garage", metadata = {}) => {
     setIsLoading(true);
     try {
-      // First, check if the user already exists
       const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
         email,
-        password: password + '_checkonly', // Use an invalid password to prevent actual login
+        password: password + '_checkonly',
       });
 
       if (existingUser?.user) {
         throw new Error("An account with this email already exists. Please log in instead.");
       }
 
+      console.log("Creating new user with metadata:", metadata);
+
+      const userMetadata = {
+        role,
+        firstName: metadata.firstName || null,
+        lastName: metadata.lastName || null,
+        fullPhone: metadata.fullPhone || (metadata.countryCode && metadata.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
+        ...metadata
+      };
+
+      console.log("Prepared user metadata:", userMetadata);
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            role,
-            ...metadata
-          }
+          data: userMetadata
         }
       });
 
@@ -204,7 +201,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        await createUserProfile(data.user.id, email, role, metadata);
+        console.log("User created, now creating profile");
+        await createUserProfile(data.user.id, email, role, userMetadata);
         
         toast({
           variant: "default",
@@ -224,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "An error occurred during registration",
       });
       console.error("Error signing up:", error.message);
-      throw error; // Re-throw so the form handler can catch it
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -234,12 +232,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("Signing out: Starting signOut process...");
       
-      // First, clear the auth state to prevent auto-redirect
       setUser(null);
       setUserRole(null);
       setAuthChangeHandled(false);
       
-      // Then set loading state to true while signing out
       setIsLoading(true);
       
       const { error } = await supabase.auth.signOut();
@@ -256,7 +252,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Signing out: Successfully signed out from Supabase");
       
-      // Clear user state again to be extra sure UI updates
       setUser(null);
       setUserRole(null);
       setAuthChangeHandled(false);
@@ -274,7 +269,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "An error occurred during logout",
       });
     } finally {
-      // Ensure loading state is properly reset 
       setIsLoading(false);
     }
   };

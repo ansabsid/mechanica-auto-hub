@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { Check, AlertCircle, MapPin, Building, User, Mail, Lock, Phone, Flag, UserPlus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -121,6 +121,8 @@ const Register = () => {
         });
       }
 
+      console.log("Submitting registration with metadata:", metadata);
+      
       const result = await signUp(data.email, data.password, data.role, metadata);
       
       if (result && result.success) {
@@ -134,6 +136,9 @@ const Register = () => {
         setTimeout(() => {
           navigate("/login");
         }, 2000);
+      } else {
+        setRegistrationStatus("error");
+        setErrorMessage(result?.message || "Registration failed");
       }
     } catch (error: any) {
       console.error("Registration error:", error);
