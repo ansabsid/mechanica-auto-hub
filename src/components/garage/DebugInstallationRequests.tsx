@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -143,6 +142,63 @@ export const DebugInstallationRequests = () => {
           message: "User is not authenticated",
           details: "A valid session is required to access installation requests"
         });
+      }
+      
+      // Enhanced RLS Policy checks
+      console.log("🔍 [DEBUG] Running enhanced RLS policy tests");
+      
+      // Test direct table access with RLS
+      try {
+        const { data: directAccessTest, error: directAccessError } = await supabase
+          .from('order_items')
+          .select('count(*)', { count: 'exact', head: true })
+          .eq('garage_id', garageMastersId);
+        
+        if (directAccessError) {
+          console.error("🔍 [DEBUG] Direct RLS access error:", directAccessError);
+          results.directAccessError = directAccessError;
+          errors.push({
+            type: "rls",
+            message: "Direct RLS access error",
+            details: directAccessError
+          });
+        } else {
+          console.log("🔍 [DEBUG] Direct RLS access successful");
+          results.directAccess = { success: true };
+        }
+      } catch (e) {
+        console.error("🔍 [DEBUG] Exception in direct RLS test:", e);
+      }
+      
+      // Test the is_garage_staff function
+      try {
+        console.log(`🔍 [DEBUG] Testing is_garage_staff function with garage ID: ${garageMastersId}`);
+        const { data: isStaffResult, error: isStaffError } = await supabase
+          .rpc('is_garage_staff', { garage_id: garageMastersId });
+        
+        if (isStaffError) {
+          console.error("🔍 [DEBUG] is_garage_staff function error:", isStaffError);
+          results.isStaffError = isStaffError;
+          errors.push({
+            type: "rls",
+            message: "Error checking garage staff status",
+            details: isStaffError
+          });
+        } else {
+          console.log("🔍 [DEBUG] is_garage_staff result:", isStaffResult);
+          results.isStaff = isStaffResult;
+          
+          if (isStaffResult === false && profileData?.garage_id === garageMastersId) {
+            console.error("🔍 [DEBUG] Inconsistency detected: User has matching garage_id but is_garage_staff returns false");
+            errors.push({
+              type: "rls",
+              message: "RLS function inconsistency detected",
+              details: "User has matching garage_id but is_garage_staff returns false"
+            });
+          }
+        }
+      } catch (e) {
+        console.error("🔍 [DEBUG] Exception in is_garage_staff test:", e);
       }
       
       // Run the comprehensive debug function
@@ -543,4 +599,3 @@ export const DebugInstallationRequests = () => {
     </>
   );
 };
-

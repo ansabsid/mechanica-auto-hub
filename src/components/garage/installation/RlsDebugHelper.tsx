@@ -28,7 +28,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('garage_id')
+        .select('garage_id, role')
         .eq('id', user?.id || '')
         .single();
         
@@ -36,12 +36,33 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       const hasAccess = profileData?.garage_id === garageId;
       const requestMatches = profileData?.garage_id === garageId;
       
-      // Build a diagnostic result similar to the previous RPC function
+      // Additional tests to check various RLS configurations
+      const { data: directTestData, error: directTestError } = await supabase
+        .from('garages')
+        .select('id, name')
+        .eq('id', garageId)
+        .single();
+        
+      // Test if is_garage_staff function works properly
+      const { data: isStaffData, error: isStaffError } = await supabase
+        .rpc('is_garage_staff', { garage_id: garageId })
+        .single();
+      
+      // Build a comprehensive diagnostic result
       const diagnosisResult = {
         has_access: hasAccess,
         user_id: user?.id,
         user_garage_id: profileData?.garage_id,
-        request_matches: requestMatches
+        user_role: profileData?.role,
+        request_matches: requestMatches,
+        is_staff_function: {
+          result: isStaffData,
+          error: isStaffError ? isStaffError.message : null
+        },
+        garage_data: {
+          exists: !!directTestData,
+          error: directTestError ? directTestError.message : null
+        }
       };
       
       setResults({
@@ -119,6 +140,8 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
               <strong>User ID:</strong> {results.user.id?.substring(0, 8) || 'Unknown'}...
               <br />
               <strong>Garage ID:</strong> {results.profile?.garage_id?.substring(0, 8) || 'Not set'}...
+              <br />
+              <strong>Role:</strong> {results.profile?.role || 'Unknown'}
             </div>
             <div className="p-2 rounded bg-white">
               <strong>Access Status:</strong> 
@@ -131,6 +154,11 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
               <strong>Items Found:</strong> {results.orderItemsAccess.count}
               <br />
               <strong>Target Garage:</strong> {garageId.substring(0, 8)}...
+              <br />
+              <strong>Staff Check:</strong> {results.rlsDebug?.is_staff_function?.result === true ? 
+                <span className="text-green-600">Yes</span> : 
+                <span className="text-red-600">No</span>
+              }
             </div>
           </div>
           
@@ -149,6 +177,13 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
                   <span className="text-green-600"> Yes</span>
                 ) : (
                   <span className="text-red-600"> No</span>
+                )}
+                {results.rlsDebug.is_staff_function?.error && (
+                  <>
+                    <br />
+                    <strong>Staff Function Error:</strong> 
+                    <span className="text-red-600"> {results.rlsDebug.is_staff_function.error}</span>
+                  </>
                 )}
               </AlertDescription>
             </Alert>
