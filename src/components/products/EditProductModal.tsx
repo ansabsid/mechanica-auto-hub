@@ -79,7 +79,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 overflow-y-auto px-6">
+        <ScrollArea className="flex-1 px-6 pb-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Product Name</Label>
@@ -237,13 +237,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            
-            {/* Add extra padding at the bottom to ensure space for footer buttons on mobile */}
-            <div className="h-16 md:h-0 col-span-full"></div>
           </div>
         </ScrollArea>
         
-        <DialogFooter className="sticky bottom-0 w-full border-t bg-white p-4 mt-auto">
+        <DialogFooter className="fixed bottom-0 left-0 right-0 border-t bg-white p-4 z-10">
           <div className="flex flex-row justify-end gap-2 w-full">
             <Button 
               variant="outline" 
