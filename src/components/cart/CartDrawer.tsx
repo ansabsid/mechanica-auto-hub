@@ -23,25 +23,22 @@ export const CartDrawer = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   // Check authentication state and refresh cart when auth changes
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log("User is authenticated, refreshing cart");
+    if (isAuthenticated && user) {
+      console.log("User is authenticated in CartDrawer, refreshing cart:", user.id);
       refreshCart();
+    } else {
+      console.log("User is not authenticated in CartDrawer");
     }
-  }, [isAuthenticated, refreshCart]);
+  }, [isAuthenticated, user, refreshCart]);
   
-  // Only refresh cart when component mounts and when the drawer is opened
-  useEffect(() => {
-    console.log("CartDrawer mounted, refreshing cart");
-    refreshCart();
-  }, [refreshCart]);
-  
+  // Force refresh cart when drawer is opened
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (open) {
+    if (open && isAuthenticated) {
       console.log("Cart drawer opened, refreshing cart");
       refreshCart();
     }
@@ -82,6 +79,7 @@ export const CartDrawer = () => {
           onClick={() => {
             if (isAuthenticated) {
               // Fetch the latest cart data before opening
+              console.log("Refreshing cart before opening drawer");
               refreshCart();
             }
           }}
@@ -98,10 +96,23 @@ export const CartDrawer = () => {
         <SheetHeader>
           <SheetTitle className="flex items-center">
             <ShoppingCart className="mr-2 h-5 w-5" /> Your Cart
+            {!isAuthenticated && (
+              <span className="ml-2 text-sm text-red-500">(Login required)</span>
+            )}
           </SheetTitle>
         </SheetHeader>
         
-        {isLoading ? (
+        {!isAuthenticated ? (
+          <div className="py-6 text-center">
+            <p className="text-muted-foreground mb-4">Please log in to view your cart</p>
+            <Button 
+              onClick={() => navigate("/login")}
+              className="bg-mechanica-500"
+            >
+              Login
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="py-6 text-center">Loading your cart...</div>
         ) : cartItems.length === 0 ? (
           <div className="py-6 text-center">

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
@@ -62,9 +63,10 @@ export const useCart = () => {
       setIsLoading(false);
     }
   }, [toast]);
-  
-  // Initialize cart
+
+  // Force refresh whenever the component using the hook mounts
   useEffect(() => {
+    console.log("useCart hook mounted, fetching cart");
     fetchCart();
   }, [fetchCart]);
 
@@ -152,6 +154,9 @@ export const useCart = () => {
           item.id === cartItemId ? { ...item, quantity } : item
         )
       );
+      
+      // Force refresh cart items to ensure we're in sync with the server
+      await fetchCart();
     } catch (error: any) {
       console.error("Error updating cart item:", error.message);
       // If the item was removed, refresh the cart

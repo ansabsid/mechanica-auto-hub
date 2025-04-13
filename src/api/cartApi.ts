@@ -359,6 +359,17 @@ export async function getGaragesForPart(partId: number): Promise<Garage[]> {
 }
 
 export async function getUserSession() {
-  const { data } = await supabase.auth.getSession();
-  return data;
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error("Error getting user session:", error);
+      throw error;
+    }
+    
+    console.log("User session data:", data.session?.user ? "Authenticated" : "Not authenticated");
+    return data;
+  } catch (error) {
+    console.error("Error in getUserSession:", error);
+    throw error;
+  }
 }
