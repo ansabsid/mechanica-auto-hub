@@ -20,8 +20,8 @@ export async function getUserCart(): Promise<Cart | null> {
   try {
     console.log("Getting cart for user:", userId);
     // Try to get an existing cart
-    const { data: carts, error } = await (supabase
-      .from('carts') as any)
+    const { data: carts, error } = await supabase
+      .from('carts')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
@@ -33,8 +33,8 @@ export async function getUserCart(): Promise<Cart | null> {
     
     console.log("No existing cart, creating new cart for user:", userId);
     // Create a new cart if it doesn't exist
-    const { data: newCart, error: createError } = await (supabase
-      .from('carts') as any)
+    const { data: newCart, error: createError } = await supabase
+      .from('carts')
       .insert({ user_id: userId })
       .select()
       .single();
@@ -45,8 +45,8 @@ export async function getUserCart(): Promise<Cart | null> {
       // Handle case where the cart might already exist (race condition)
       if (createError.code === '23505') { // Unique violation error code
         console.log("Cart might already exist due to race condition, trying to fetch again");
-        const { data: existingCart, error: fetchError } = await (supabase
-          .from('carts') as any)
+        const { data: existingCart, error: fetchError } = await supabase
+          .from('carts')
           .select('*')
           .eq('user_id', userId)
           .maybeSingle();
@@ -74,8 +74,8 @@ export async function getUserCart(): Promise<Cart | null> {
  */
 export async function clearCart(cartId: string): Promise<void> {
   try {
-    const { error } = await (supabase
-      .from('cart_items') as any)
+    const { error } = await supabase
+      .from('cart_items')
       .delete()
       .eq('cart_id', cartId);
       

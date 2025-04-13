@@ -13,8 +13,8 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
   try {
     console.log("Fetching cart items for cart:", cartId);
     // Get all cart items with their part details
-    const { data, error } = await (supabase
-      .from('cart_items') as any)
+    const { data, error } = await supabase
+      .from('cart_items')
       .select(`
         *,
         part:part_id (

@@ -13,10 +13,11 @@ export async function getUserSession() {
       throw error;
     }
     
-    console.log("User session data:", data.session?.user ? "Authenticated" : "Not authenticated");
+    console.log("User session data:", data.session?.user ? `Authenticated as ${data.session.user.email}` : "Not authenticated");
     return data;
   } catch (error) {
     console.error("Error in getUserSession:", error);
     throw error;
   }
 }
+
