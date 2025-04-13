@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -47,7 +48,10 @@ export const InstallationOrdersDebugger = () => {
       setDebugInfo(prev => ({ ...prev, fetchedItems: items }));
       
       if (items && items.length > 0) {
-        fetchOrderDetails(items[0].order_id);
+        // Don't automatically fetch order details to avoid errors
+        // Just select the first item and set its ID for later use
+        setSelectedItem(items[0]);
+        setOrderId(items[0].order_id);
       }
     } catch (error) {
       console.error("Error fetching order items:", error);
@@ -199,7 +203,7 @@ export const InstallationOrdersDebugger = () => {
       
       // Get the current user's session for the user_id
       const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id || "00000000-0000-0000-0000-000000000000";
+      const userId = sessionData?.session?.user?.id || null;
       
       console.log("Current user ID for order operations:", userId);
       
@@ -234,7 +238,7 @@ export const InstallationOrdersDebugger = () => {
             total_amount: totalAmount || 0
           })
           .select()
-          .maybeSingle();
+          .single();
           
         if (createError) {
           console.error("Error creating order:", createError);
