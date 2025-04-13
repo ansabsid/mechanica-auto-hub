@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, AlertTriangle } from "lucide-react";
+import { AlertCircle, AlertTriangle, FileWarning } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface DebugDialogProps {
   open: boolean;
@@ -40,7 +41,14 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
           <TabsList className="mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="installation-requests">Installation Requests</TabsTrigger>
-            <TabsTrigger value="order-failures">Order Failures</TabsTrigger>
+            <TabsTrigger value="order-failures">
+              Order Failures
+              {debug.orderLookupFailures?.length > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {debug.orderLookupFailures.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="raw">Raw Data</TabsTrigger>
           </TabsList>
@@ -57,6 +65,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                     <p>Order Items: {debug.itemsCount || 0}</p>
                     <p>Order IDs: {debug.orderIds?.length || 0}</p>
                     <p>Orders Found: {debug.ordersCount || 0}</p>
+                    <p className="text-red-500 font-medium mt-2">Failed Order Lookups: {debug.orderLookupFailures?.length || 0}</p>
                   </div>
                 </div>
                 
@@ -74,7 +83,8 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                 <Alert variant="destructive" className="mt-4">
                   <AlertTriangle className="h-4 w-4 mr-2" />
                   <AlertDescription>
-                    <span className="font-bold">Warning:</span> {debug.orderLookupFailures.length} orders failed to load
+                    <span className="font-bold">Warning:</span> {debug.orderLookupFailures.length} orders failed to load.
+                    <span className="block mt-1 italic">Check the "Order Failures" tab for details.</span>
                   </AlertDescription>
                 </Alert>
               )}
@@ -109,7 +119,11 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                       {debug.mappedRequests.map((request: any) => (
                         <tr key={request.id} className={request.customerName === 'Unknown Customer' ? 'bg-red-50' : ''}>
                           <td className="px-2 py-1 border text-xs">{request.orderItemId.slice(0, 8)}...</td>
-                          <td className="px-2 py-1 border text-xs">{request.orderId.slice(0, 8)}...</td>
+                          <td className="px-2 py-1 border text-xs">{request.orderId.slice(0, 8)}...
+                            {debug.orderLookupFailures?.some(f => f.orderId === request.orderId) && (
+                              <span className="ml-1 text-red-500" title="Order lookup failed">⚠️</span>
+                            )}
+                          </td>
                           <td className="px-2 py-1 border text-xs">{request.customerName}</td>
                           <td className="px-2 py-1 border text-xs">{request.customerPhone}</td>
                           <td className="px-2 py-1 border text-xs">{request.status}</td>
@@ -128,19 +142,62 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
             <div className="space-y-4">
               <h4 className="font-medium">Order Lookup Failures</h4>
               {debug.orderLookupFailures && debug.orderLookupFailures.length > 0 ? (
-                <div className="space-y-2">
-                  {debug.orderLookupFailures.map((failure: any, index: number) => (
-                    <Alert key={index} variant="destructive">
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      <AlertDescription>
-                        <div className="text-xs">
-                          <div><strong>Order ID:</strong> {failure.orderId}</div>
-                          <div><strong>Error:</strong> {failure.message || failure.error}</div>
-                          <div><strong>Time:</strong> {new Date(failure.timestamp).toLocaleString()}</div>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  ))}
+                <div className="space-y-4">
+                  <Alert variant="destructive" className="mb-3">
+                    <FileWarning className="h-4 w-4 mr-2" />
+                    <AlertDescription>
+                      <strong>{debug.orderLookupFailures.length} order lookup failures detected</strong>
+                      <p className="mt-1 text-sm">These failures are causing "Unknown Customer" entries in your installation requests.</p>
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-200">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-3 py-2 border text-xs">Order ID</th>
+                          <th className="px-3 py-2 border text-xs">Error Message</th>
+                          <th className="px-3 py-2 border text-xs">Time</th>
+                          <th className="px-3 py-2 border text-xs">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {debug.orderLookupFailures.map((failure: any, index: number) => (
+                          <tr key={index} className="bg-red-50">
+                            <td className="px-3 py-2 border text-xs font-mono">{failure.orderId}</td>
+                            <td className="px-3 py-2 border text-xs">{failure.message || failure.error}</td>
+                            <td className="px-3 py-2 border text-xs">{new Date(failure.timestamp).toLocaleString()}</td>
+                            <td className="px-3 py-2 border text-xs">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-xs"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(failure.orderId);
+                                  toast({
+                                    title: "Order ID Copied",
+                                    description: "The Order ID has been copied to your clipboard"
+                                  });
+                                }}
+                              >
+                                Copy ID
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-200">
+                    <h5 className="font-medium text-amber-800 mb-2">Possible Solutions:</h5>
+                    <ul className="list-disc pl-5 text-sm space-y-1 text-amber-800">
+                      <li>Check if the order items reference valid order IDs in the database</li>
+                      <li>Verify that your user account has permission to access these orders</li>
+                      <li>Examine if RLS policies are preventing access to the orders table</li>
+                      <li>Confirm there are no data consistency issues between order_items and orders tables</li>
+                    </ul>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm">No order lookup failures recorded.</p>
