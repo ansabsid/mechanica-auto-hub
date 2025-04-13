@@ -128,6 +128,14 @@ const SolutionSlide: React.FC = () => {
                     isActive={activeTab === "customer"}
                     delay={0.4}
                   />
+                  <FlowStep 
+                    number={5} 
+                    title="Schedule Installation" 
+                    description="Book a nearby garage to install your purchased part"
+                    icon={<CalendarDays className="h-5 w-5 text-mechanica-500" />}
+                    isActive={activeTab === "customer"}
+                    delay={0.5}
+                  />
                 </div>
               </div>
               
