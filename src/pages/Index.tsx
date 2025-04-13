@@ -166,49 +166,57 @@ const customerJourneySteps = [
     icon: <Car className="h-8 w-8 text-blue-600" />,
     title: "Enter Vehicle Details",
     description: "Select your car make, model, and year to find compatible parts",
-    step: 1
+    step: 1,
+    benefit: "Ensures perfect fitment and compatibility for your specific vehicle"
   },
   {
     icon: <Search className="h-8 w-8 text-blue-600" />,
     title: "Scan or Search for Parts",
     description: "Use our scanning feature or search for the exact part you need",
-    step: 2
+    step: 2,
+    benefit: "AI-powered part recognition gives you accurate results in seconds"
   },
   {
     icon: <CheckSquare className="h-8 w-8 text-blue-600" />,
     title: "Compare Options",
     description: "View pricing, availability, and reviews for parts from multiple suppliers",
-    step: 3
+    step: 3,
+    benefit: "Get the best value with side-by-side comparisons of quality and price"
   },
   {
     icon: <ShoppingBag className="h-8 w-8 text-blue-600" />,
     title: "Purchase Parts",
     description: "Order the part directly through our secure marketplace",
-    step: 4
+    step: 4,
+    benefit: "Secure payment with buyer protection and order tracking"
   },
   {
     icon: <MapPin className="h-8 w-8 text-blue-600" />,
     title: "Select a Garage",
     description: "Choose from nearby verified garages for installation",
-    step: 5
+    step: 5,
+    benefit: "Access our network of 100+ trusted mechanics with verified reviews"
   },
   {
     icon: <CalendarDays className="h-8 w-8 text-blue-600" />,
     title: "Book Appointment",
     description: "Schedule a convenient time for your service",
-    step: 6
+    step: 6,
+    benefit: "Real-time availability with instant confirmation"
   },
   {
     icon: <PaymentIcon className="h-8 w-8 text-blue-600" />,
     title: "Pay Securely",
     description: "Complete your transaction with our secure payment system",
-    step: 7
+    step: 7,
+    benefit: "Transparent pricing with no hidden fees or surprise charges"
   },
   {
     icon: <Star className="h-8 w-8 text-blue-600" />,
     title: "Rate & Review",
     description: "Share your experience to help other car owners",
-    step: 8
+    step: 8,
+    benefit: "Help build our community of trusted service providers"
   }
 ];
 
@@ -722,12 +730,8 @@ const Index = () => {
                           {step.icon}
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-800">{index % 2 === 0 ? 'Why It Matters' : 'Benefits'}</h4>
-                          <p className="text-sm text-gray-600">
-                            {index % 2 === 0 
-                              ? 'Save time finding exactly what you need'
-                              : 'Get the best value and trusted service'}
-                          </p>
+                          <h4 className="font-medium text-gray-800">Key Benefit</h4>
+                          <p className="text-sm text-gray-600">{step.benefit}</p>
                         </div>
                       </motion.div>
                     </div>
@@ -760,7 +764,10 @@ const Index = () => {
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                         </div>
-                        <p className="text-gray-600 text-sm">{step.description}</p>
+                        <p className="text-gray-600 text-sm mb-2">{step.description}</p>
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <p className="text-sm text-blue-600 font-medium">Benefit: {step.benefit}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
