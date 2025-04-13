@@ -43,7 +43,7 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
             <div className="font-medium mb-1">Data Source:</div>
             <div>{debugInfo.customerSourceInfo || 'Not set'}</div>
             <div className="font-medium mt-1">Status:</div>
-            <div>{!customerName && !customerEmail && !customerPhone ? 'Missing Data' : 'Data Available'}</div>
+            <div>{!customerName || customerName === 'Unknown Customer' ? 'Missing Data' : 'Data Available'}</div>
           </div>
         </div>
         
