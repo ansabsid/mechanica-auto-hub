@@ -11,6 +11,13 @@ export interface Vehicle {
   year: number;
   license_plate?: string;
   vin?: string;
+  engine_details?: {
+    type: string;
+    size: string;
+    fuel: string;
+  };
+  body_style?: string;
+  transmission?: string;
 }
 
 export const useVehicles = () => {
@@ -68,10 +75,14 @@ export const useVehicles = () => {
 
     setIsLoading(true);
     try {
+      // Extract the engine_details and other extended fields
+      const { engine_details, body_style, transmission, ...vehicleData } = vehicle;
+      
+      // Store the main vehicle information in the vehicles table
       const { data, error } = await supabase
         .from('vehicles')
         .insert({
-          ...vehicle,
+          ...vehicleData,
           user_id: session.user.id
         })
         .select()

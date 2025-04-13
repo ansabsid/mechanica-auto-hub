@@ -20,6 +20,7 @@ import CategoryPage from './components/categories/CategoryPage';
 import BookAppointment from './pages/BookAppointment';
 import PitchDeck from './pages/PitchDeck';
 import Settings from './pages/Settings';
+import VinDecoder from './pages/VinDecoder';
 import { AuthProvider } from './hooks/auth';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { useCapacitor } from './hooks/useCapacitor';
@@ -64,6 +65,7 @@ function App() {
               <Route path="scan" element={<PartScanner />} /> {/* Adding this route as well for backward compatibility */}
               <Route path="pitch-deck" element={<PitchDeck />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="vin-decoder" element={<VinDecoder />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
