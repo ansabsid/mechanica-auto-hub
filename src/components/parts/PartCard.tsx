@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { MapPin, ShoppingCart, Info, Star, Tag, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Part } from "@/hooks/car-parts/types";
-import { useCart } from "@/hooks/useCart";
+import { useCart } from "@/hooks/cart";
 import { PurchaseOptionsDialog } from "@/components/parts/PurchaseOptionsDialog";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -14,9 +13,7 @@ interface PartCardProps {
   part: Part;
 }
 
-// Function to get an appropriate image URL based on part name
 const getPartImageUrl = (part: Part): string => {
-  // If the part has an image_url, use it
   if (part.image_url) {
     return part.image_url;
   }
@@ -38,7 +35,6 @@ const getPartImageUrl = (part: Part): string => {
   } else if (name.includes('belt')) {
     return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
   } else {
-    // Default auto parts image for other categories
     return "https://images.unsplash.com/photo-1647427060118-4911c9821b82?w=800&h=600&auto=format";
   }
 };
@@ -48,14 +44,12 @@ export const PartCard = ({ part }: PartCardProps) => {
   const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
   const { toast } = useToast();
   
-  // Check if this part with installation is already in cart
   const existingCartItem = cartItems.find(item => item.part_id === part.id);
   const existingInstallation = existingCartItem?.installation_data;
   
   const handleAddToCartClick = async () => {
     if (part.stock <= 0) return;
     
-    // Always show purchase options when clicking Add button
     setShowPurchaseOptions(true);
   };
   
@@ -63,13 +57,12 @@ export const PartCard = ({ part }: PartCardProps) => {
     try {
       console.log("Adding part to cart:", part.id);
       await addToCart(part.id, 1);
-      // Explicitly refresh the cart to ensure we see the updated items
       await refreshCart();
       toast({
         title: "Added to cart",
         description: `${part.name} added to your cart`,
       });
-      return true; // Indicate success to the calling function
+      return true;
     } catch (error) {
       console.error("Error adding part only to cart:", error);
       toast({
@@ -77,7 +70,7 @@ export const PartCard = ({ part }: PartCardProps) => {
         description: "Failed to add part to cart",
         variant: "destructive",
       });
-      throw error; // Re-throw to indicate failure
+      throw error;
     }
   };
   

@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, InstallationOptions } from "./types";
@@ -8,7 +7,7 @@ import {
   removeFromCart as apiRemoveFromCart,
   clearCart as apiClearCart,
   getUserSession
-} from "@/api/cartApi";
+} from "@/api/cart";
 
 export const useCartActions = (
   refreshCart: () => Promise<void>,

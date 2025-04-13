@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { ShoppingCart, Wrench } from "lucide-react";
 import {
@@ -13,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Part } from "@/hooks/car-parts/types";
 import { InstallationOptionsDialog } from "@/components/parts/InstallationOptionsDialog";
 import { useToast } from "@/hooks/use-toast";
-import { useCart } from "@/hooks/useCart";
+import { useCart } from "@/hooks/cart";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PurchaseOptionsDialogProps {
@@ -34,7 +33,6 @@ export const PurchaseOptionsDialog = ({
   const { toast } = useToast();
   const { refreshCart } = useCart();
   
-  // Force refresh cart when dialog opens
   useEffect(() => {
     if (isOpen) {
       refreshCart();
@@ -43,14 +41,11 @@ export const PurchaseOptionsDialog = ({
   
   const handleBuyWithInstallation = () => {
     setShowInstallationOptions(true);
-    // Close the purchase options dialog when showing installation options
     onClose();
   };
   
   const handleInstallationComplete = () => {
-    // Close installation dialog only
     setShowInstallationOptions(false);
-    // Force a refresh of the cart to ensure we see the updated items with installation
     setTimeout(() => {
       refreshCart();
     }, 100);
@@ -60,11 +55,8 @@ export const PurchaseOptionsDialog = ({
     try {
       console.log("Handling cart only click");
       setIsAddingToCart(true);
-      // Call the passed callback to add to cart
       await onAddToCartOnly();
-      // Force refresh cart to make sure we see the new items
       await refreshCart();
-      // Close the dialog after adding to cart
       onClose();
       
       toast({

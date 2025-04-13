@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCart } from "@/hooks/useCart";
+import { useCart } from "@/hooks/cart";
 import { InstallationOptions } from "@/types/cart.types";
 import { MapPin } from "lucide-react";
 import { useGarageManagement } from "@/hooks/useGarageManagement";

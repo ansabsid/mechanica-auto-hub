@@ -1,8 +1,7 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Cart, CartItem } from "./types";
-import { getUserCart, getCartItems, getUserSession } from "@/api/cartApi";
+import { getUserCart, getCartItems, getUserSession } from "@/api/cart";
 
 export const useCartData = () => {
   const [cart, setCart] = useState<Cart | null>(null);
