@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -411,7 +412,7 @@ const Register = () => {
           
           <Button 
             type="submit" 
-            className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600 text-lg py-6 mt-8 text-white font-bold rounded-md shadow-lg" 
+            className="w-full bg-mechanica-500 hover:bg-mechanica-600 text-lg py-6 mt-8 text-white font-bold rounded-md shadow-lg" 
             disabled={isLoading || registrationStatus === "success"}
           >
             <UserPlus className="mr-2 h-5 w-5" />
@@ -423,7 +424,7 @@ const Register = () => {
       <div className="text-center mt-6">
         <p className="text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/login" className="text-bookmyparts-600 hover:underline">
+          <Link to="/login" className="text-mechanica-600 hover:underline">
             Log in
           </Link>
         </p>
