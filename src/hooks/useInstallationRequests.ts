@@ -273,11 +273,30 @@ export const useInstallationRequests = (garageId: string) => {
             } : 'No profile data'
           });
           
-          const customerName = order.user_name || 
-            (profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : "Unknown Customer");
-            
-          const customerPhone = order.user_phone || profile?.phone || "No Phone";
-          const customerEmail = order.user_email || profile?.email || "No Email";
+          // Prioritize customer data from the order table 
+          // Only use "Unknown Customer" if both order and profile data are missing
+          let customerName = "Unknown Customer";
+          let customerPhone = "No Phone";
+          let customerEmail = "No Email";
+          
+          // Check for order data first (from the debug tool or direct database)
+          if (order.user_name) {
+            customerName = order.user_name;
+          } else if (profile?.firstName && profile?.lastName) {
+            customerName = `${profile.firstName} ${profile.lastName}`;
+          }
+          
+          if (order.user_phone) {
+            customerPhone = order.user_phone;
+          } else if (profile?.phone) {
+            customerPhone = profile.phone;
+          }
+          
+          if (order.user_email) {
+            customerEmail = order.user_email;
+          } else if (profile?.email) {
+            customerEmail = profile.email;
+          }
           
           return {
             id: item.id,
