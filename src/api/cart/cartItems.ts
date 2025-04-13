@@ -59,7 +59,45 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     if (garagesError) {
       console.error("Error fetching garages data:", garagesError);
       // Return the items without garage information if there's an error
-      return data || [];
+      return data.map((item: any) => {
+        // Ensure proper conversion of installation_data to InstallationOptions
+        let parsedInstallationData: InstallationOptions | undefined = undefined;
+        
+        if (item.installation_data) {
+          try {
+            if (typeof item.installation_data === 'object' && item.installation_data !== null) {
+              parsedInstallationData = {
+                installationRequired: true,
+                garageId: item.installation_data.garageId || "",
+                garageName: item.installation_data.garageName || "",
+                installationFee: Number(item.installation_data.installationFee) || 0
+              };
+            } else if (typeof item.installation_data === 'string') {
+              const parsed = JSON.parse(item.installation_data);
+              parsedInstallationData = {
+                installationRequired: true,
+                garageId: parsed.garageId || "",
+                garageName: parsed.garageName || "",
+                installationFee: Number(parsed.installationFee) || 0
+              };
+            }
+          } catch (e) {
+            console.error("Error parsing installation_data:", e);
+          }
+        }
+        
+        return {
+          id: item.id,
+          cart_id: item.cart_id,
+          part_id: item.part_id,
+          quantity: item.quantity,
+          installation_data: parsedInstallationData,
+          part: {
+            ...item.part,
+            availableGarages: []
+          }
+        };
+      });
     }
     
     console.log("Garages data for parts:", garagesData);
