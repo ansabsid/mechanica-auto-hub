@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,8 +47,6 @@ export const InstallationOrdersDebugger = () => {
       setDebugInfo(prev => ({ ...prev, fetchedItems: items }));
       
       if (items && items.length > 0) {
-        // Don't automatically fetch order details to avoid errors
-        // Just select the first item and set its ID for later use
         setSelectedItem(items[0]);
         setOrderId(items[0].order_id);
       }
@@ -79,7 +76,6 @@ export const InstallationOrdersDebugger = () => {
     try {
       console.log(`Fetching order details for ID: ${orderId}`);
       
-      // Try to get order data from orders table
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*')
@@ -96,7 +92,6 @@ export const InstallationOrdersDebugger = () => {
       
       let hasCustomerData = false;
       
-      // If we found an order with customer data, use it
       if (orderData && (orderData.user_name || orderData.user_email || orderData.user_phone)) {
         setCustomerName(orderData.user_name || '');
         setCustomerEmail(orderData.user_email || '');
@@ -109,14 +104,12 @@ export const InstallationOrdersDebugger = () => {
         });
         setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'Found in orders table' }));
       } 
-      // If no order exists or it has no customer data, we need to create one
       else {
         console.log("No valid customer data in orders table. Order data:", orderData);
         setShowWarningAlert(true);
         setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'Not found in orders table' }));
       }
       
-      // Get the actual order item details for reference
       const { data: orderItem, error: orderItemError } = await supabase
         .from('order_items')
         .select(`
@@ -189,7 +182,6 @@ export const InstallationOrdersDebugger = () => {
     
     setIsLoading(true);
     try {
-      // Check if the order already exists
       const { data: checkOrder, error: checkError } = await supabase
         .from('orders')
         .select('id')
@@ -201,14 +193,12 @@ export const InstallationOrdersDebugger = () => {
         throw checkError;
       }
       
-      // Get the current user's session for the user_id
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id || null;
       
       console.log("Current user ID for order operations:", userId);
       
       if (!checkOrder) {
-        // Create new order with customer info if it doesn't exist
         console.log("Creating new order with customer info:", {
           id: orderId,
           user_id: userId,
@@ -217,7 +207,6 @@ export const InstallationOrdersDebugger = () => {
           user_phone: customerPhone
         });
         
-        // Get total amount from the order item
         let totalAmount = 0;
         if (selectedItem) {
           const price = Number(selectedItem.price) || 0;
@@ -229,7 +218,6 @@ export const InstallationOrdersDebugger = () => {
         const { data: newOrder, error: createError } = await supabase
           .from('orders')
           .insert({
-            id: orderId,
             user_id: userId,
             user_name: customerName,
             user_email: customerEmail,
@@ -248,17 +236,34 @@ export const InstallationOrdersDebugger = () => {
         console.log("Order created successfully:", newOrder);
         setDebugInfo(prev => ({ ...prev, createOrderResult: newOrder }));
         
+        if (newOrder && newOrder.id) {
+          console.log(`Updating order_items to use new order ID: ${newOrder.id} instead of ${orderId}`);
+          
+          const { error: updateItemError } = await supabase
+            .from('order_items')
+            .update({ order_id: newOrder.id })
+            .eq('order_id', orderId)
+            .eq('garage_id', 'c64a9350-d34a-4903-b34c-16c0e4699a44');
+            
+          if (updateItemError) {
+            console.error("Error updating order items with new order ID:", updateItemError);
+          } else {
+            console.log("Successfully updated order items with new order ID");
+            setOrderId(newOrder.id);
+          }
+        }
+        
         toast({
           title: "Success",
           description: "Order created with customer information"
         });
         
-        // The order was created, so we're done
-        await fetchOrderDetails(orderId);
+        if (newOrder && newOrder.id) {
+          await fetchOrderDetails(newOrder.id);
+        }
         return;
       }
       
-      // Update the existing order with the new customer information
       console.log("Updating existing order with customer info:", {
         name: customerName,
         email: customerEmail,
@@ -285,7 +290,6 @@ export const InstallationOrdersDebugger = () => {
         description: "Order customer information updated successfully"
       });
       
-      // Refresh order details to see the updated info
       await fetchOrderDetails(orderId);
       
     } catch (error) {
