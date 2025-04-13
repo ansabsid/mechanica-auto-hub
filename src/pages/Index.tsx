@@ -34,7 +34,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValue, MotionValue } from "framer-motion";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -145,6 +145,10 @@ const Index = () => {
   const y = useTransform(scrollYProgress, [0, 1], [0, -150]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   
+  // Create motion values for mouse movement
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
   // Track mouse movement for parallax effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -154,12 +158,16 @@ const Index = () => {
         const x = (clientX - rect.left) / rect.width;
         const y = (clientY - rect.top) / rect.height;
         setMousePosition({ x, y });
+        
+        // Update motion values
+        mouseX.set(x);
+        mouseY.set(y);
       }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  }, [mouseX, mouseY]);
   
   useEffect(() => {
     const fetchFeaturedParts = async () => {
@@ -289,8 +297,8 @@ const Index = () => {
             style={{ 
               top: '10%', 
               right: '-15%',
-              x: useTransform(mousePosition.x, [0, 1], [-20, 20]),
-              y: useTransform(mousePosition.y, [0, 1], [-20, 20]),
+              x: useTransform(mouseX, [0, 1], [-20, 20]),
+              y: useTransform(mouseY, [0, 1], [-20, 20]),
             }}
           />
           
@@ -300,8 +308,8 @@ const Index = () => {
             style={{ 
               bottom: '15%', 
               left: '10%',
-              x: useTransform(mousePosition.x, [0, 1], [30, -30]),
-              y: useTransform(mousePosition.y, [0, 1], [30, -30]),
+              x: useTransform(mouseX, [0, 1], [30, -30]),
+              y: useTransform(mouseY, [0, 1], [30, -30]),
             }}
           />
           
@@ -310,8 +318,8 @@ const Index = () => {
             style={{ 
               top: '25%', 
               left: '25%',
-              x: useTransform(mousePosition.x, [0, 1], [-10, 10]),
-              y: useTransform(mousePosition.y, [0, 1], [-10, 10]),
+              x: useTransform(mouseX, [0, 1], [-10, 10]),
+              y: useTransform(mouseY, [0, 1], [-10, 10]),
             }}
           />
         </div>
