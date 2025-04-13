@@ -10,7 +10,7 @@ const IntroSlide: React.FC = () => {
   const navigate = useNavigate();
   
   const handleExploreClick = () => {
-    navigate("/about");
+    navigate("/register");
   };
   
   return (
