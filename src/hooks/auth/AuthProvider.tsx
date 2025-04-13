@@ -213,7 +213,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("Signing out: Starting signOut process...");
       
-      // Set loading state to true while signing out
+      // First, clear the auth state to prevent auto-redirect
+      setUser(null);
+      setUserRole(null);
+      setAuthChangeHandled(false);
+      
+      // Then set loading state to true while signing out
       setIsLoading(true);
       
       const { error } = await supabase.auth.signOut();
@@ -230,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Signing out: Successfully signed out from Supabase");
       
-      // Clear user state immediately to ensure UI updates
+      // Clear user state again to be extra sure UI updates
       setUser(null);
       setUserRole(null);
       setAuthChangeHandled(false);
@@ -248,6 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "An error occurred during logout",
       });
     } finally {
+      // Ensure loading state is properly reset 
       setIsLoading(false);
     }
   };

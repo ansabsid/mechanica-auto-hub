@@ -1,4 +1,5 @@
 
-import { AuthProvider, useAuth } from "./auth";
+// This file is a convenience re-export to maintain backward compatibility
+import { useAuth } from "./auth";
 
-export { AuthProvider, useAuth };
+export { useAuth };

@@ -18,7 +18,7 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { AlertTriangle, AlertCircle, Wrench } from "lucide-react";
 import { toast } from "sonner";
@@ -36,10 +36,21 @@ const Login = () => {
   const from = location.state?.from || "/";
   const garageName = location.state?.garageName;
   const garageId = location.state?.garageId;
+  
+  // Add a state to track if we're coming from a logout
+  const [afterLogout, setAfterLogout] = useState(false);
 
   useEffect(() => {
-    // If user is already authenticated, redirect them
-    if (isAuthenticated) {
+    // Check if we navigated here from logout
+    const isFromLogout = location.key !== 'default';
+    if (isFromLogout) {
+      setAfterLogout(true);
+    }
+    
+    // If user is already authenticated and we're not in a post-logout state,
+    // redirect them to appropriate page
+    if (isAuthenticated && !afterLogout) {
+      console.log("User is authenticated, redirecting to:", from);
       if (from.startsWith('/book-appointment/')) {
         // If they were trying to book an appointment, redirect there with the garage info
         navigate(from, { 
@@ -54,7 +65,7 @@ const Login = () => {
         navigate(from, { replace: true });
       }
     }
-  }, [isAuthenticated, navigate, from, garageName, garageId]);
+  }, [isAuthenticated, navigate, from, garageName, garageId, afterLogout, location.key]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +144,7 @@ const Login = () => {
           <CardTitle>Login to BookMyParts</CardTitle>
           <CardDescription>
             Enter your email and password to access your account
-            {from !== "/" && (
+            {from !== "/" && !afterLogout && (
               <div className="mt-2 text-mechanica-600 font-semibold">
                 Login required to continue
               </div>
