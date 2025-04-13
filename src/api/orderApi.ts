@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
+import { Order, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
 
 /**
@@ -236,17 +236,17 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
  * @param userDetails Optional user contact details for the order
  * @returns Promise resolving to the created order data
  */
-export async function createOrder(
+export const createOrder = async (
   userId: string, 
   cartItems: CartItem[], 
-  totalAmount: number, 
+  totalAmount: number,
   userDetails?: {
     name?: string;
     email?: string;
     phone?: string;
     address?: string;
   }
-): Promise<any> {
+): Promise<Order | null> => {
   try {
     if (cartItems.length === 0) {
       throw new Error("Cart is empty");
@@ -280,7 +280,7 @@ export async function createOrder(
       part_id: item.part_id,
       garage_id: item.installation_data?.garageId || null,
       quantity: item.quantity,
-      price: item.part.price,
+      price: item.part.price || 0,
       installation_fee: item.installation_data?.installationFee || null
     }));
     
@@ -292,10 +292,10 @@ export async function createOrder(
         user_id: userId,
         total_amount: totalAmount,
         status: 'pending',
-        user_name: userDetails?.name || null,
-        user_email: userDetails?.email || null,
-        user_phone: userDetails?.phone || null,
-        shipping_address: userDetails?.address || null
+        user_name: userDetails?.name || undefined,
+        user_email: userDetails?.email || undefined,
+        user_phone: userDetails?.phone || undefined,
+        shipping_address: userDetails?.address || undefined
       })
       .select()
       .single();

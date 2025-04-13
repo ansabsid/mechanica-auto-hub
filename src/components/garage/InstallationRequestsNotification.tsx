@@ -123,8 +123,10 @@ export const InstallationRequestsNotification = () => {
       
       // Get all order IDs for these order items
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
+      console.log("Order IDs to fetch:", orderIds);
       
       // Directly fetch orders with user details - important for customer information
+      // Use .in() instead of .eq() to fetch multiple orders at once
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
@@ -175,7 +177,7 @@ export const InstallationRequestsNotification = () => {
       }
       
       // Get all user IDs from orders
-      const userIds = ordersData
+      const userIds = (ordersData || [])
         .filter(order => order.user_id)
         .map(order => order.user_id);
       

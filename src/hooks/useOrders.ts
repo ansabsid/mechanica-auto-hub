@@ -253,6 +253,8 @@ export const useOrders = () => {
     try {
       const orderData = await createOrder(session.user.id, cartItems, totalAmount, userDetails);
       
+      console.log("🔍 [Order Creation] Order created:", orderData);
+      
       const itemsWithInstallation = cartItems.filter(item => item.installation_data);
       
       console.log("Items with installation:", itemsWithInstallation);
