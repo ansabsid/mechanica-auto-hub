@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,18 +22,31 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
   const [orphanedItems, setOrphanedItems] = useState<OrphanedOrderItem[]>([]);
   const [isCheckingOrphans, setIsCheckingOrphans] = useState(false);
   
-  // Helper function to safely convert any value to a string
+  // Enhanced safeStringify to handle complex objects and errors
   const safeStringify = (value: any): string => {
     if (value === null || value === undefined) {
       return '(empty)';
     }
+    
+    // Handle error objects specifically
+    if (value instanceof Error || (typeof value === 'object' && value.message)) {
+      return `Error: ${value.message || 'Unknown error'}`;
+    }
+    
     if (typeof value === 'object') {
       try {
-        return JSON.stringify(value);
-      } catch (err) {
+        // If it's a plain object, stringify its keys and values
+        if (Object.keys(value).length > 0) {
+          return Object.entries(value)
+            .map(([k, v]) => `${k}: ${safeStringify(v)}`)
+            .join(', ');
+        }
         return '[Object]';
+      } catch (err) {
+        return '[Unstringifiable Object]';
       }
     }
+    
     return String(value);
   };
 
