@@ -19,7 +19,7 @@ export async function getUserCart(): Promise<Cart | null> {
     const userId = sessionData.session.user.id;
     
     console.log("Getting cart for user:", userId);
-    // Try to get an existing cart
+    // Try to get an existing cart - use maybeSingle instead of single
     const { data: carts, error } = await supabase
       .from('carts')
       .select('*')

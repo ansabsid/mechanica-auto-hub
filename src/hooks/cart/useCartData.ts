@@ -24,31 +24,44 @@ export const useCartData = () => {
         console.log("No user session, setting empty cart");
         setCart(null);
         setCartItems([]);
+        setIsLoading(false);
         return;
       }
 
       console.log("User is authenticated, getting cart for user:", sessionData.session.user.id);
       
       // Always attempt to create/get a cart for the authenticated user
-      const userCart = await getUserCart();
-      
-      if (userCart) {
-        console.log("User cart found, fetching items:", userCart);
-        setCart(userCart);
+      try {
+        const userCart = await getUserCart();
         
-        try {
-          const items = await getCartItems(userCart.id);
-          console.log(`Retrieved ${items.length} cart items:`, items);
-          setCartItems(items);
-        } catch (cartItemsError: any) {
-          console.error("Error fetching cart items:", cartItemsError.message || cartItemsError);
-          setLastError(`Failed to load cart items: ${cartItemsError.message || "Unknown error"}`);
+        if (userCart) {
+          console.log("User cart found, fetching items:", userCart);
+          setCart(userCart);
+          
+          try {
+            const items = await getCartItems(userCart.id);
+            console.log(`Retrieved ${items.length} cart items:`, items);
+            setCartItems(items);
+          } catch (cartItemsError: any) {
+            console.error("Error fetching cart items:", cartItemsError.message || cartItemsError);
+            setLastError(`Failed to load cart items: ${cartItemsError.message || "Unknown error"}`);
+            setCartItems([]);
+          }
+        } else {
+          console.log("No cart found for user, setting empty cart");
+          setCart(null);
           setCartItems([]);
         }
-      } else {
-        console.log("No cart found for user, setting empty cart");
+      } catch (cartError: any) {
+        console.error("Failed to get/create cart:", cartError.message || cartError);
+        setLastError(`Failed to load cart: ${cartError.message || "Unknown error"}`);
         setCart(null);
         setCartItems([]);
+        toast({
+          title: "Error",
+          description: "Failed to load your cart. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       const errorMessage = error.message || "Unknown error";
