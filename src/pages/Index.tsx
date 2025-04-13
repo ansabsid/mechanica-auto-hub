@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,10 @@ import {
   Wrench as ToolIcon,
   Clock,
   Shield,
-  CircleCheck
+  CircleCheck,
+  Scanner,
+  CheckSquare,
+  CreditCard as PaymentIcon
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
@@ -156,6 +158,58 @@ const heroBenefits = [
     icon: <Shield className="h-5 w-5" />,
     title: "Quality Guaranteed",
     description: "All parts and services backed by our satisfaction guarantee"
+  }
+];
+
+// Customer journey steps
+const customerJourneySteps = [
+  {
+    icon: <Car className="h-8 w-8 text-blue-600" />,
+    title: "Enter Vehicle Details",
+    description: "Select your car make, model, and year to find compatible parts",
+    step: 1
+  },
+  {
+    icon: <Scanner className="h-8 w-8 text-blue-600" />,
+    title: "Scan or Search for Parts",
+    description: "Use our scanning feature or search for the exact part you need",
+    step: 2
+  },
+  {
+    icon: <CheckSquare className="h-8 w-8 text-blue-600" />,
+    title: "Compare Options",
+    description: "View pricing, availability, and reviews for parts from multiple suppliers",
+    step: 3
+  },
+  {
+    icon: <ShoppingBag className="h-8 w-8 text-blue-600" />,
+    title: "Purchase Parts",
+    description: "Order the part directly through our secure marketplace",
+    step: 4
+  },
+  {
+    icon: <MapPin className="h-8 w-8 text-blue-600" />,
+    title: "Select a Garage",
+    description: "Choose from nearby verified garages for installation",
+    step: 5
+  },
+  {
+    icon: <CalendarDays className="h-8 w-8 text-blue-600" />,
+    title: "Book Appointment",
+    description: "Schedule a convenient time for your service",
+    step: 6
+  },
+  {
+    icon: <PaymentIcon className="h-8 w-8 text-blue-600" />,
+    title: "Pay Securely",
+    description: "Complete your transaction with our secure payment system",
+    step: 7
+  },
+  {
+    icon: <Star className="h-8 w-8 text-blue-600" />,
+    title: "Rate & Review",
+    description: "Share your experience to help other car owners",
+    step: 8
   }
 ];
 
@@ -614,46 +668,115 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* How It Works - Updated Customer Journey */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How BookMyParts Works</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Find parts and book services in three simple steps
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">The BookMyParts Customer Journey</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-8">
+              From finding the right part to getting it installed, our streamlined process saves you time and money
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
-              <div className="bg-blue-100 p-4 rounded-full mb-6">
-                <Search className="h-8 w-8 text-blue-600" />
+          {/* Journey Steps - Desktop View */}
+          <div className="hidden md:block">
+            <div className="relative">
+              {/* Timeline connector */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-blue-200 -translate-x-1/2 z-0"></div>
+              
+              <div className="space-y-16">
+                {customerJourneySteps.map((step, index) => (
+                  <div key={index} className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                    <div className={`w-5/12 ${index % 2 === 0 ? 'text-right pr-10' : 'text-left pl-10'}`}>
+                      <motion.div
+                        initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                      >
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
+                        <p className="text-gray-600">{step.description}</p>
+                      </motion.div>
+                    </div>
+                    
+                    <div className="z-10 relative">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
+                        className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg"
+                      >
+                        <span className="text-xl font-bold">{step.step}</span>
+                      </motion.div>
+                    </div>
+                    
+                    <div className={`w-5/12 ${index % 2 === 0 ? 'text-left pl-10' : 'text-right pr-10'}`}>
+                      <motion.div
+                        initial={{ opacity: 0, x: index % 2 === 0 ? 20 : -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="bg-white p-4 rounded-xl shadow-md flex items-center"
+                      >
+                        <div className="bg-blue-100 p-3 rounded-full mr-4">
+                          {step.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-800">{index % 2 === 0 ? 'Why It Matters' : 'Benefits'}</h4>
+                          <p className="text-sm text-gray-600">
+                            {index % 2 === 0 
+                              ? 'Save time finding exactly what you need'
+                              : 'Get the best value and trusted service'}
+                          </p>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-xl font-semibold mb-3">Search For Parts</h3>
-              <p className="text-gray-600">
-                Find the exact parts you need by vehicle make, model, or by scanning your existing part
-              </p>
             </div>
+          </div>
 
-            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
-              <div className="bg-blue-100 p-4 rounded-full mb-6">
-                <MapPin className="h-8 w-8 text-blue-600" />
+          {/* Journey Steps - Mobile View */}
+          <div className="md:hidden">
+            <div className="relative pb-4">
+              {/* Timeline connector */}
+              <div className="absolute left-7 top-0 bottom-0 w-1 bg-blue-200 z-0"></div>
+              
+              <div className="space-y-8">
+                {customerJourneySteps.map((step, index) => (
+                  <div key={index} className="flex">
+                    <div className="z-10 relative">
+                      <div className="w-14 h-14 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md">
+                        <span className="text-lg font-bold">{step.step}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-6 flex-1">
+                      <div className="bg-white p-4 rounded-xl shadow-md">
+                        <div className="flex items-center mb-3">
+                          <div className="bg-blue-100 p-2 rounded-full mr-3">
+                            {step.icon}
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                        </div>
+                        <p className="text-gray-600 text-sm">{step.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-xl font-semibold mb-3">Connect With Garages</h3>
-              <p className="text-gray-600">
-                Choose from nearby trusted garages with transparent pricing and reviews
-              </p>
             </div>
-
-            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
-              <div className="bg-blue-100 p-4 rounded-full mb-6">
-                <CalendarDays className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Book & Complete</h3>
-              <p className="text-gray-600">
-                Schedule appointments, purchase parts, and track your service history all in one place
-              </p>
-            </div>
+          </div>
+          
+          <div className="text-center mt-16">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md"
+              onClick={handleAppDownloadClick}
+            >
+              Start Your Journey Today <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </section>
@@ -756,7 +879,7 @@ const Index = () => {
             </div>
             <div className="hidden lg:block">
               <img
-                src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&auto=format"
+                src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&auto=format&fit=crop"
                 alt="BookMyParts App"
                 className="rounded-xl shadow-lg object-cover w-full"
               />
