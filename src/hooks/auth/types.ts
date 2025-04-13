@@ -7,6 +7,8 @@ export interface Profile {
   role: "customer" | "garage";
   created_at?: string;
   updated_at?: string;
+  phone?: string;
+  garage_id?: string;
 }
 
 export type AuthContextType = {

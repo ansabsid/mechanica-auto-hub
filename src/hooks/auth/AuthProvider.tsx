@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -188,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        await createUserProfile(data.user.id, email, role);
+        await createUserProfile(data.user.id, email, role, metadata);
         
         toast({
           title: "Account created",
@@ -204,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "An error occurred during registration",
       });
       console.error("Error signing up:", error.message);
+      throw error; // Re-throw so the form handler can catch it
     } finally {
       setIsLoading(false);
     }

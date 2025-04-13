@@ -36,8 +36,14 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
  * @param userId The UUID of the user to create a profile for
  * @param email The email address of the user
  * @param role The role to assign to the user
+ * @param metadata Additional metadata for the user profile
  */
-export const createUserProfile = async (userId: string, email: string, role: "customer" | "garage") => {
+export const createUserProfile = async (
+  userId: string, 
+  email: string, 
+  role: "customer" | "garage", 
+  metadata = {}
+) => {
   try {
     // Check if profile already exists to avoid duplicate errors
     const { data: existingProfile } = await supabase
@@ -51,14 +57,48 @@ export const createUserProfile = async (userId: string, email: string, role: "cu
       return; // Profile already exists, no need to create a new one
     }
     
-    // Use direct insert instead of RPC function
+    // Extract phone information from metadata
+    const { countryCode, phoneNumber, firstName, lastName, fullPhone } = metadata as any;
+    
+    // Create profile data object with basic info
+    const profileData: any = {
+      id: userId,
+      email: email,
+      role: role,
+      phone: fullPhone || (countryCode && phoneNumber ? `${countryCode}${phoneNumber}` : null),
+    };
+    
+    // Add garage-specific data if role is garage
+    if (role === "garage" && metadata) {
+      const { garageName, garageLocation, garageRegistrationNumber } = metadata as any;
+      
+      if (garageName && garageLocation) {
+        // Create a new garage entry
+        const { data: garage, error: garageError } = await supabase
+          .from('garages')
+          .insert({
+            name: garageName,
+            location: garageLocation,
+          })
+          .select('id')
+          .single();
+          
+        if (garageError) {
+          console.error("Error creating garage:", garageError);
+          throw garageError;
+        }
+        
+        if (garage) {
+          // Associate the garage_id with the user profile
+          profileData.garage_id = garage.id;
+        }
+      }
+    }
+    
+    // Use direct insert for creating the profile
     const { error } = await supabase
       .from('profiles')
-      .insert({
-        id: userId,
-        email: email,
-        role: role
-      });
+      .insert(profileData);
     
     if (error) {
       console.error("Error creating profile:", error);
