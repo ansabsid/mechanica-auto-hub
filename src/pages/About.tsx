@@ -40,7 +40,7 @@ const About = () => {
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 md:mb-6">Our Story</h2>
               <p className="text-gray-600 mb-4">
-                Bookmyparts was founded in 2023 with a simple mission: to transform how car owners
+                Bookmyparts was founded in 2025 with a simple mission: to transform how car owners
                 in the MENA region find parts and book maintenance services.
               </p>
               <p className="text-gray-600 mb-4">
