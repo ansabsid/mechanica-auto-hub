@@ -128,7 +128,9 @@ export const useOrdersDebugger = () => {
           scheduled_date,
           scheduled_time,
           price,
-          installation_fee
+          installation_fee,
+          quantity,
+          garage_id
         `)
         .eq('order_id', orderId)
         .eq('garage_id', 'c64a9350-d34a-4903-b34c-16c0e4699a44')
@@ -138,8 +140,15 @@ export const useOrdersDebugger = () => {
         console.error("Error fetching order item details:", orderItemError);
       } else if (orderItem) {
         console.log("Order item details:", orderItem);
-        setDebugInfo(prev => ({ ...prev, orderItemDetails: orderItem }));
-        setSelectedItem(orderItem);
+        
+        // Ensure order_id is explicitly set if it's not in the result
+        const completeOrderItem: OrderItem = {
+          ...orderItem,
+          order_id: orderItem.order_id || orderId // Fallback to orderId if order_id is missing
+        };
+        
+        setDebugInfo(prev => ({ ...prev, orderItemDetails: completeOrderItem }));
+        setSelectedItem(completeOrderItem);
       }
       
       setDebugInfo(prev => ({
