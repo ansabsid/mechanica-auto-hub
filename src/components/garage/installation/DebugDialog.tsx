@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,9 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, AlertTriangle, FileWarning } from "lucide-react";
+import { AlertCircle, AlertTriangle, FileWarning, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DebugDialogProps {
   open: boolean;
@@ -27,6 +30,75 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
   debug,
   user
 }) => {
+  const [orderIdToCheck, setOrderIdToCheck] = useState("");
+  const [orderCheckResult, setOrderCheckResult] = useState<any>(null);
+  const [isCheckingOrder, setIsCheckingOrder] = useState(false);
+
+  const checkOrderExists = async (orderId: string) => {
+    if (!orderId) {
+      toast({
+        title: "Error",
+        description: "Please enter an order ID to check",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCheckingOrder(true);
+    try {
+      console.log(`Manually checking order ID: ${orderId}`);
+      
+      // Check orders table
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .maybeSingle();
+      
+      // Check order_items table
+      const { data: orderItemsData, error: orderItemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId);
+      
+      setOrderCheckResult({
+        orderExists: !!orderData,
+        orderData,
+        orderError: orderError?.message,
+        orderItemsExist: orderItemsData && orderItemsData.length > 0,
+        orderItemsData,
+        orderItemsError: orderItemsError?.message,
+        timestamp: new Date().toISOString()
+      });
+
+      if (orderData) {
+        toast({
+          title: "Order Found",
+          description: `Order ID ${orderId} exists in the database`,
+        });
+      } else {
+        toast({
+          title: "Order Not Found",
+          description: `Order ID ${orderId} was not found in the orders table`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error checking order:", error);
+      setOrderCheckResult({
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+      toast({
+        title: "Error",
+        description: `Failed to check order: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingOrder(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -49,6 +121,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="manual-check">Manual Order Check</TabsTrigger>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="raw">Raw Data</TabsTrigger>
           </TabsList>
@@ -84,7 +157,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                   <AlertTriangle className="h-4 w-4 mr-2" />
                   <AlertDescription>
                     <span className="font-bold">Warning:</span> {debug.orderLookupFailures.length} orders failed to load.
-                    <span className="block mt-1 italic">Check the "Order Failures" tab for details.</span>
+                    <span className="block mt-1 italic">Check the "Order Failures" tab for details or use the "Manual Order Check" tab for direct verification.</span>
                   </AlertDescription>
                 </Alert>
               )}
@@ -113,6 +186,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                         <th className="px-2 py-1 border text-xs">Customer</th>
                         <th className="px-2 py-1 border text-xs">Phone</th>
                         <th className="px-2 py-1 border text-xs">Status</th>
+                        <th className="px-2 py-1 border text-xs">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -127,6 +201,20 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                           <td className="px-2 py-1 border text-xs">{request.customerName}</td>
                           <td className="px-2 py-1 border text-xs">{request.customerPhone}</td>
                           <td className="px-2 py-1 border text-xs">{request.status}</td>
+                          <td className="px-2 py-1 border text-xs">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-6 text-xs"
+                              onClick={() => {
+                                setOrderIdToCheck(request.orderId);
+                                checkOrderExists(request.orderId);
+                                document.querySelector('[data-value="manual-check"]')?.click();
+                              }}
+                            >
+                              Verify
+                            </Button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -168,20 +256,34 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                             <td className="px-3 py-2 border text-xs">{failure.message || failure.error}</td>
                             <td className="px-3 py-2 border text-xs">{new Date(failure.timestamp).toLocaleString()}</td>
                             <td className="px-3 py-2 border text-xs">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-7 text-xs"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(failure.orderId);
-                                  toast({
-                                    title: "Order ID Copied",
-                                    description: "The Order ID has been copied to your clipboard"
-                                  });
-                                }}
-                              >
-                                Copy ID
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-7 text-xs"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(failure.orderId);
+                                    toast({
+                                      title: "Order ID Copied",
+                                      description: "The Order ID has been copied to your clipboard"
+                                    });
+                                  }}
+                                >
+                                  Copy ID
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-7 text-xs"
+                                  onClick={() => {
+                                    setOrderIdToCheck(failure.orderId);
+                                    checkOrderExists(failure.orderId);
+                                    document.querySelector('[data-value="manual-check"]')?.click();
+                                  }}
+                                >
+                                  Verify
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -201,6 +303,164 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                 </div>
               ) : (
                 <p className="text-sm">No order lookup failures recorded.</p>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="manual-check">
+            <div className="space-y-4">
+              <h4 className="font-medium">Check Order Directly in Database</h4>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Enter Order ID to check"
+                    value={orderIdToCheck}
+                    onChange={(e) => setOrderIdToCheck(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  onClick={() => checkOrderExists(orderIdToCheck)}
+                  disabled={isCheckingOrder || !orderIdToCheck}
+                >
+                  {isCheckingOrder ? "Checking..." : "Check Order"}
+                  {!isCheckingOrder && <Search className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
+              
+              {orderCheckResult && (
+                <div className="mt-4">
+                  <h5 className="font-medium text-sm mb-2">Check Results ({new Date(orderCheckResult.timestamp).toLocaleString()})</h5>
+                  
+                  {orderCheckResult.error ? (
+                    <Alert variant="destructive">
+                      <AlertDescription>
+                        Error checking order: {orderCheckResult.error}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <h6 className="font-medium text-sm">Order Table Results</h6>
+                        {orderCheckResult.orderExists ? (
+                          <div className="mt-2">
+                            <Alert variant="default" className="bg-green-50 border-green-200">
+                              <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                              <AlertDescription className="text-green-800">
+                                Order found in database
+                              </AlertDescription>
+                            </Alert>
+                            
+                            <div className="mt-3 text-xs space-y-1">
+                              <p><strong>User ID:</strong> {orderCheckResult.orderData.user_id}</p>
+                              <p><strong>User Name:</strong> {orderCheckResult.orderData.user_name || 'Not set'}</p>
+                              <p><strong>User Email:</strong> {orderCheckResult.orderData.user_email || 'Not set'}</p>
+                              <p><strong>User Phone:</strong> {orderCheckResult.orderData.user_phone || 'Not set'}</p>
+                              <p><strong>Status:</strong> {orderCheckResult.orderData.status}</p>
+                              <p><strong>Created:</strong> {new Date(orderCheckResult.orderData.created_at).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-2">
+                            <Alert variant="destructive">
+                              <AlertCircle className="h-4 w-4 mr-2" />
+                              <AlertDescription>
+                                Order not found in orders table
+                                {orderCheckResult.orderError && `: ${orderCheckResult.orderError}`}
+                              </AlertDescription>
+                            </Alert>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <h6 className="font-medium text-sm">Order Items Results</h6>
+                        {orderCheckResult.orderItemsExist ? (
+                          <div className="mt-2">
+                            <Alert variant="default" className="bg-green-50 border-green-200">
+                              <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                              <AlertDescription className="text-green-800">
+                                Found {orderCheckResult.orderItemsData.length} order items with this order ID
+                              </AlertDescription>
+                            </Alert>
+                            
+                            <div className="overflow-x-auto mt-3">
+                              <table className="w-full border border-gray-200 text-xs">
+                                <thead className="bg-gray-100">
+                                  <tr>
+                                    <th className="px-2 py-1 border">ID</th>
+                                    <th className="px-2 py-1 border">Part ID</th>
+                                    <th className="px-2 py-1 border">Garage ID</th>
+                                    <th className="px-2 py-1 border">Installation Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {orderCheckResult.orderItemsData.map((item: any) => (
+                                    <tr key={item.id}>
+                                      <td className="px-2 py-1 border">{item.id.substring(0, 8)}...</td>
+                                      <td className="px-2 py-1 border">{item.part_id}</td>
+                                      <td className="px-2 py-1 border">{item.garage_id ? item.garage_id.substring(0, 8) + '...' : 'None'}</td>
+                                      <td className="px-2 py-1 border">{item.installation_status || 'None'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-2">
+                            <Alert variant="destructive">
+                              <AlertCircle className="h-4 w-4 mr-2" />
+                              <AlertDescription>
+                                No order items found with this order ID
+                                {orderCheckResult.orderItemsError && `: ${orderCheckResult.orderItemsError}`}
+                              </AlertDescription>
+                            </Alert>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <h6 className="font-medium text-sm">Diagnosis</h6>
+                        <div className="mt-2">
+                          {orderCheckResult.orderExists ? (
+                            orderCheckResult.orderItemsExist ? (
+                              <Alert variant="default" className="bg-green-50 border-green-200">
+                                <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                                <AlertDescription className="text-green-800">
+                                  Both order and order items exist in the database. If you're seeing "Unknown Customer",
+                                  check if customer information is properly set in the order record above.
+                                </AlertDescription>
+                              </Alert>
+                            ) : (
+                              <Alert variant="default" className="bg-amber-50 border-amber-200">
+                                <AlertTriangle className="h-4 w-4 text-amber-500 mr-2" />
+                                <AlertDescription className="text-amber-800">
+                                  Order exists but no order items were found. This indicates a data consistency issue.
+                                </AlertDescription>
+                              </Alert>
+                            )
+                          ) : (
+                            orderCheckResult.orderItemsExist ? (
+                              <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4 mr-2" />
+                                <AlertDescription>
+                                  Order items reference a non-existent order ID. This is the cause of "Unknown Customer" errors.
+                                </AlertDescription>
+                              </Alert>
+                            ) : (
+                              <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4 mr-2" />
+                                <AlertDescription>
+                                  Neither order nor order items exist with this ID.
+                                </AlertDescription>
+                              </Alert>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </TabsContent>
