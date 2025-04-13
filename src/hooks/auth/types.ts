@@ -19,6 +19,6 @@ export type AuthContextType = {
   isAuthenticated: boolean;
   userRole: "customer" | "garage" | null;
   signIn: (email: string, password: string, role: "customer" | "garage") => Promise<void>;
-  signUp: (email: string, password: string, role: "customer" | "garage", metadata?: any) => Promise<void>;
+  signUp: (email: string, password: string, role: "customer" | "garage", metadata?: any) => Promise<{ success: boolean; message: string; } | undefined>;
   signOut: () => Promise<void>;
 };

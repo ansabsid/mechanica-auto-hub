@@ -207,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await createUserProfile(data.user.id, email, role, metadata);
         
         toast({
-          variant: "success",
+          variant: "default",
           title: "Account created successfully",
           description: "You can now log in with your credentials.",
         });
@@ -215,6 +215,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserRole(role);
         return { success: true, message: "Account created successfully" };
       }
+      
+      return { success: false, message: "Failed to create account" };
     } catch (error: any) {
       toast({
         variant: "destructive",

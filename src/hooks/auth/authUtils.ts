@@ -42,7 +42,7 @@ export const createUserProfile = async (
   userId: string, 
   email: string, 
   role: "customer" | "garage", 
-  metadata = {}
+  metadata: any = {}
 ) => {
   try {
     console.log("Creating user profile with metadata:", metadata);
