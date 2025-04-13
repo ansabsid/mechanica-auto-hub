@@ -52,4 +52,9 @@ export interface InstallationRequestGarage {
   order_item_id: string;
   garage_id: string;
   created_at: string;
+  // Add customer info and part info
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  part_name?: string;
 }

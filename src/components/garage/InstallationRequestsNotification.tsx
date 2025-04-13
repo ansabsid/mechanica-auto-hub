@@ -31,6 +31,7 @@ interface InstallationRequest {
   id: string;
   customerName: string;
   customerPhone: string;
+  customerEmail: string;
   part: string;
   orderDate: string;
   status: string;
@@ -120,7 +121,7 @@ export const InstallationRequestsNotification = () => {
       
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, user_id, created_at, status')
+        .select('id, user_id, created_at, status, user_name, user_email, user_phone')
         .in('id', orderIds);
         
       if (ordersError) {
@@ -131,7 +132,7 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
-      console.log("Fetched orders:", ordersData);
+      console.log("Fetched orders with user details:", ordersData);
       setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
       const orderMap = new Map();
@@ -139,61 +140,10 @@ export const InstallationRequestsNotification = () => {
         orderMap.set(order.id, order);
       });
       
-      const userIds = ordersData
-        .filter(order => order.user_id)
-        .map(order => order.user_id);
-        
-      if (userIds.length === 0) {
-        console.log("No valid user IDs found in orders, using dummy data for display");
-        
-        const placeholderRequests: InstallationRequest[] = orderItemsData.map(item => ({
-          id: item.id,
-          customerName: "Customer Information Unavailable",
-          customerPhone: "Phone Not Available",
-          part: `Part #${item.part_id}`,
-          orderDate: "Unknown Date",
-          status: item.installation_status || "new",
-          price: Number(item.price),
-          installationFee: Number(item.installation_fee) || 50,
-          garageId: item.garage_id,
-          orderId: item.order_id,
-          orderItemId: item.id,
-          appointmentDate: item.scheduled_date,
-          appointmentTime: item.scheduled_time
-        }));
-        
-        console.log("Created placeholder installation requests:", placeholderRequests);
-        setInstallationRequests(placeholderRequests);
-        setIsLoading(false);
-        setIsRefreshing(false);
-        return;
-      }
-      
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, email, phone')
-        .in('id', userIds);
-        
-      if (usersError) {
-        console.error("Error fetching customer information:", usersError);
-        setIsLoading(false);
-        setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, usersError }));
-        return;
-      }
-      
-      console.log("Fetched users:", usersData);
-      setDebug(prev => ({ ...prev, usersData, usersCount: usersData?.length || 0 }));
-      
-      const userMap = new Map();
-      usersData?.forEach(user => {
-        userMap.set(user.id, user);
-      });
-      
       const partIds = orderItemsData.map(item => item.part_id);
       const { data: partsData, error: partsError } = await supabase
         .from('parts')
-        .select('id, name')
+        .select('id, name, description')
         .in('id', partIds);
         
       if (partsError) {
@@ -213,14 +163,21 @@ export const InstallationRequestsNotification = () => {
       
       const requests: InstallationRequest[] = orderItemsData
         .map(item => {
-          const order = orderMap.get(item.order_id) || { created_at: new Date().toISOString(), user_id: null };
-          const user = order.user_id ? userMap.get(order.user_id) : null;
+          const order = orderMap.get(item.order_id) || { 
+            created_at: new Date().toISOString(), 
+            user_id: null,
+            user_name: "Unknown Customer",
+            user_email: "No Email",
+            user_phone: "No Phone"
+          };
+          
           const part = partMap.get(item.part_id);
           
           return {
             id: item.id,
-            customerName: user?.email || "Unknown",
-            customerPhone: user?.phone || "Not provided",
+            customerName: order.user_name || "Unknown Customer",
+            customerPhone: order.user_phone || "Not provided",
+            customerEmail: order.user_email || "Not provided",
             part: part?.name || `Part #${item.part_id}`,
             orderDate: order.created_at ? new Date(order.created_at).toISOString().split('T')[0] : "Unknown",
             status: item.installation_status || "new",
@@ -234,7 +191,7 @@ export const InstallationRequestsNotification = () => {
           };
         });
       
-      console.log("Processed installation requests:", requests);
+      console.log("Processed installation requests with customer info and part names:", requests);
       setDebug(prev => ({ ...prev, mappedRequests: requests, requestsCount: requests.length }));
       
       setInstallationRequests(requests);
@@ -470,7 +427,11 @@ export const InstallationRequestsNotification = () => {
                           )}
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{request.part}</p>
-                        <div className="flex items-center text-xs text-gray-500 mt-2">
+                        <div className="flex items-center text-xs text-gray-500 mt-1">
+                          <Phone className="h-3 w-3 mr-1" /> 
+                          {request.customerPhone}
+                        </div>
+                        <div className="flex items-center text-xs text-gray-500 mt-1">
                           <Calendar className="h-3 w-3 mr-1" /> 
                           Order date: {new Date(request.orderDate).toLocaleDateString()}
                         </div>
@@ -526,6 +487,12 @@ export const InstallationRequestsNotification = () => {
                   <Phone className="h-4 w-4 mr-2 text-gray-500" /> 
                   <span className="font-medium">Phone:</span> 
                   <span className="ml-2">{selectedRequest.customerPhone}</span>
+                </div>
+                
+                <div className="flex items-center text-sm">
+                  <User className="h-4 w-4 mr-2 text-gray-500" /> 
+                  <span className="font-medium">Email:</span> 
+                  <span className="ml-2">{selectedRequest.customerEmail}</span>
                 </div>
                 
                 <div className="flex items-center text-sm">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Calendar, 
@@ -13,7 +14,8 @@ import {
   InfoIcon,
   AlertTriangle,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -245,6 +247,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
               <tr className="border-b">
                 <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Confirmation</th>
                 <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                 <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                 <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
                 <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -267,6 +270,20 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
                         <Clock className="h-3 w-3 mr-1" />
                         <span>{formatTime(appointment.appointment_time)}</span>
                       </div>
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <div className="flex flex-col">
+                      <div className="flex items-center">
+                        <User className="h-3 w-3 mr-1 text-gray-500" />
+                        <span>{appointment.customer_name || "Unknown"}</span>
+                      </div>
+                      {appointment.customer_phone && (
+                        <div className="flex items-center text-xs text-gray-600 mt-1">
+                          <Phone className="h-3 w-3 mr-1" />
+                          <span>{appointment.customer_phone}</span>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="p-3">{appointment.service_type}</td>
@@ -336,6 +353,23 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
                   <div className="text-sm text-gray-600">Time</div>
                   <div className="font-medium">{formatTime(selectedAppointment.appointment_time)}</div>
                 </div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-gray-600">Customer</div>
+                <div className="font-medium">{selectedAppointment.customer_name || "Not specified"}</div>
+                {selectedAppointment.customer_email && (
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <Mail className="h-3 w-3 mr-1" />
+                    <span>{selectedAppointment.customer_email}</span>
+                  </div>
+                )}
+                {selectedAppointment.customer_phone && (
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <Phone className="h-3 w-3 mr-1" />
+                    <span>{selectedAppointment.customer_phone}</span>
+                  </div>
+                )}
               </div>
               
               <div>
