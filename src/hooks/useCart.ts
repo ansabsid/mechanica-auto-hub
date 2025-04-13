@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
@@ -36,10 +35,13 @@ export const useCart = () => {
         return;
       }
 
+      console.log("User is authenticated, getting cart for user:", sessionData.session.user.id);
+      
+      // Always attempt to create/get a cart for the authenticated user
       const userCart = await getUserCart();
       
       if (userCart) {
-        console.log("User cart found, fetching items");
+        console.log("User cart found, fetching items:", userCart);
         setCart(userCart);
         const items = await getCartItems(userCart.id);
         console.log(`Retrieved ${items.length} cart items:`, items);
@@ -86,34 +88,29 @@ export const useCart = () => {
         return;
       }
       
-      // We'll handle cart creation/retrieval within the API call to avoid race conditions
-      const cartId = cart?.id;
+      console.log("User is authenticated:", sessionData.session.user.id);
       
-      if (!cartId) {
-        console.log("No cart found, creating new cart");
-        const newCart = await getUserCart();
-        if (!newCart) {
-          console.error("Failed to create or retrieve cart");
-          toast({
-            title: "Error",
-            description: "Failed to create cart",
-            variant: "destructive",
-          });
-          return;
-        }
-        setCart(newCart);
-        console.log("New cart created:", newCart);
-        
-        // Now that we have a cart, proceed with adding the item
-        console.log("Adding to cart with ID:", newCart.id);
-        const addedItem = await apiAddToCart(partId, newCart.id, quantity, installationOptions);
-        console.log("Item added to cart:", addedItem);
-      } else {
-        // We already have a cart, add the item directly
-        console.log("Adding to existing cart with ID:", cartId);
-        const addedItem = await apiAddToCart(partId, cartId, quantity, installationOptions);
-        console.log("Item added to cart:", addedItem);
+      // Always attempt to create/get a cart for the authenticated user
+      const userCart = await getUserCart();
+      
+      if (!userCart) {
+        console.error("Failed to create or retrieve cart");
+        toast({
+          title: "Error",
+          description: "Failed to create cart",
+          variant: "destructive",
+        });
+        return;
       }
+      
+      console.log("Using cart with ID:", userCart.id);
+      
+      // Now that we definitely have a cart, add the item
+      const addedItem = await apiAddToCart(partId, userCart.id, quantity, installationOptions);
+      console.log("Item successfully added to cart:", addedItem);
+      
+      // Update local state with the new cart
+      setCart(userCart);
       
       let message = "Item added to your cart";
       

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/useCart";
@@ -17,12 +16,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
+import { useAuth } from "@/hooks/auth";
 
 export const CartDrawer = () => {
   const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal, refreshCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  
+  // Check authentication state and refresh cart when auth changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log("User is authenticated, refreshing cart");
+      refreshCart();
+    }
+  }, [isAuthenticated, refreshCart]);
   
   // Only refresh cart when component mounts and when the drawer is opened
   useEffect(() => {
@@ -70,6 +79,12 @@ export const CartDrawer = () => {
           variant="outline" 
           size="icon" 
           className="relative"
+          onClick={() => {
+            if (isAuthenticated) {
+              // Fetch the latest cart data before opening
+              refreshCart();
+            }
+          }}
         >
           <ShoppingCart className="h-5 w-5" />
           {cartItems.length > 0 && (

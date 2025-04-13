@@ -30,7 +30,7 @@ export async function getUserCart(): Promise<Cart | null> {
       return carts;
     }
     
-    console.log("No existing cart, creating new cart");
+    console.log("No existing cart, creating new cart for user:", userId);
     // Create a new cart if it doesn't exist
     const { data: newCart, error: createError } = await (supabase
       .from('carts') as any)
