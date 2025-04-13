@@ -16,6 +16,7 @@ import { InventoryTab } from "@/components/garage/dashboard/InventoryTab";
 import { GarageTab } from "@/components/garage/dashboard/GarageTab";
 import { EmptyTabContent } from "@/components/garage/dashboard/EmptyTabContent";
 import { Calendar, Clock } from "lucide-react";
+import InstallationOrdersDebugger from "@/components/garage/InstallationOrdersDebugger";
 
 const dubaiAreas = [
   "Dubai Marina",
@@ -331,6 +332,12 @@ const GarageDashboard = () => {
             availableGarages={availableGarages}
             onGarageChange={handleGarageChange}
           />
+          
+          <div className="flex justify-end mb-4">
+            <div className="flex space-x-2">
+              <InstallationOrdersDebugger />
+            </div>
+          </div>
           
           <DashboardTabs 
             activeTab={activeTab} 

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw, Clock, Mail } from "lucide-react";
+import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw, Clock, Mail, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -56,10 +57,79 @@ export const InstallationRequestsNotification = () => {
   const [schedulingDialogOpen, setSchedulingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+  const [debugDialogOpen, setDebugDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   
-  const [debug, setDebug] = useState<any>({});
+  const [debug, setDebug] = useState<any>({
+    authUser: null,
+    lastFetchTime: null,
+    rpcTest: null,
+    dbAccessTest: null,
+    directOrdersQuery: null
+  });
+  
+  const runDebugTests = async () => {
+    setDebug(prev => ({ ...prev, lastFetchTime: new Date().toISOString() }));
+    
+    // Test 1: Check current auth user
+    const { data: authSession } = await supabase.auth.getSession();
+    setDebug(prev => ({ 
+      ...prev, 
+      authUser: authSession?.session?.user || null
+    }));
+    
+    // Test 2: Try to access orders table directly
+    const { data: orderSample, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .limit(5);
+      
+    setDebug(prev => ({ 
+      ...prev, 
+      directOrdersQuery: {
+        data: orderSample,
+        error: orderError,
+        count: orderSample?.length || 0
+      }
+    }));
+    
+    // Test 3: Try to access user profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .limit(5);
+      
+    setDebug(prev => ({ 
+      ...prev, 
+      profilesAccess: {
+        data: profiles,
+        error: profilesError,
+        count: profiles?.length || 0
+      }
+    }));
+    
+    // Fetch a specific order with known items to debug
+    const knownOrderIds = installationRequests.map(req => req.orderId);
+    
+    if (knownOrderIds.length > 0) {
+      const testOrderId = knownOrderIds[0];
+      const { data: testOrder, error: testOrderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', testOrderId)
+        .single();
+        
+      setDebug(prev => ({ 
+        ...prev, 
+        specificOrderTest: {
+          orderId: testOrderId,
+          data: testOrder,
+          error: testOrderError
+        }
+      }));
+    }
+  };
   
   const fetchInstallationRequests = async () => {
     if (isRefreshing) return;
@@ -122,23 +192,56 @@ export const InstallationRequestsNotification = () => {
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       console.log("Order IDs to fetch:", orderIds);
       
+      // Updated approach: Fetch each order individually to troubleshoot potential issues
       let ordersData = [];
+      let errorCounts = 0;
+      
       for (const orderId of orderIds) {
-        const { data: orderData, error: orderError } = await supabase
-          .from('orders')
-          .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
-          .eq('id', orderId)
-          .maybeSingle();
+        try {
+          console.log("Fetching individual order:", orderId);
           
-        if (orderError) {
-          console.error(`Error fetching order ${orderId}:`, orderError);
-        } else if (orderData) {
-          ordersData.push(orderData);
+          const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
+            .eq('id', orderId)
+            .single();
+            
+          if (orderError) {
+            console.error(`Error fetching order ${orderId}:`, orderError);
+            errorCounts++;
+            // Try again with maybeSingle instead of single
+            const { data: retryData, error: retryError } = await supabase
+              .from('orders')
+              .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
+              .eq('id', orderId)
+              .maybeSingle();
+              
+            if (!retryError && retryData) {
+              console.log(`Successfully fetched order ${orderId} on retry:`, retryData);
+              ordersData.push(retryData);
+            } else {
+              console.error(`Failed to fetch order ${orderId} on retry:`, retryError);
+            }
+          } else if (orderData) {
+            console.log(`Successfully fetched order ${orderId}:`, orderData);
+            ordersData.push(orderData);
+          } else {
+            console.log(`No data returned for order ${orderId}`);
+          }
+        } catch (err) {
+          console.error(`Exception fetching order ${orderId}:`, err);
+          errorCounts++;
         }
       }
       
-      console.log("Fetched orders with user details:", ordersData);
-      setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
+      console.log(`Fetched ${ordersData.length} orders, encountered ${errorCounts} errors`);
+      setDebug(prev => ({ 
+        ...prev, 
+        ordersData, 
+        ordersCount: ordersData?.length || 0,
+        errorCounts,
+        orderIds 
+      }));
       
       const orderMap = new Map();
       if (ordersData) {
@@ -173,6 +276,8 @@ export const InstallationRequestsNotification = () => {
         .filter(order => order.user_id)
         .map(order => order.user_id);
       
+      console.log("User IDs for profiles:", userIds);
+      
       let profileMap = new Map();
       if (userIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
@@ -191,6 +296,8 @@ export const InstallationRequestsNotification = () => {
             profileMap.set(profile.id, profile);
           });
         }
+      } else {
+        console.log("No user IDs found in orders data to fetch profiles");
       }
       
       const requests: InstallationRequest[] = orderItemsData
@@ -206,6 +313,20 @@ export const InstallationRequestsNotification = () => {
           const profile = order.user_id ? profileMap.get(order.user_id) : null;
           
           const part = partMap.get(item.part_id);
+          
+          // Enhanced logging for order customer data
+          console.log(`Order ${item.order_id} customer data:`, {
+            fromOrder: {
+              name: order.user_name,
+              email: order.user_email,
+              phone: order.user_phone
+            },
+            fromProfile: profile ? {
+              name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
+              email: profile.email,
+              phone: profile.phone
+            } : 'No profile data'
+          });
           
           const customerName = order.user_name || 
             (profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : "Unknown Customer");
@@ -401,8 +522,18 @@ export const InstallationRequestsNotification = () => {
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Wrench className="mr-2 h-5 w-5" /> Installation Requests
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Wrench className="mr-2 h-5 w-5" /> Installation Requests
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setDebugDialogOpen(true)}
+                className="h-8 w-8"
+              >
+                <Bug className="h-4 w-4" />
+              </Button>
             </DialogTitle>
             <DialogDescription>
               Customers who purchased parts with installation service
@@ -511,6 +642,95 @@ export const InstallationRequestsNotification = () => {
               </>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Debug Dialog */}
+      <Dialog open={debugDialogOpen} onOpenChange={setDebugDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Debug Information</DialogTitle>
+            <DialogDescription>
+              Technical details to troubleshoot installation requests
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Actions</h3>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" onClick={runDebugTests}>
+                  Run Diagnostics
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleManualRefresh}>
+                  Refresh Data
+                </Button>
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-2">Authentication</h3>
+              <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                {JSON.stringify(debug.authUser, null, 2) || "Not checked yet"}
+              </pre>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-2">Database Access Tests</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <h4 className="text-xs font-medium mb-1">Orders Table (Direct)</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug.directOrdersQuery, null, 2) || "Not checked yet"}
+                  </pre>
+                </div>
+                
+                <div>
+                  <h4 className="text-xs font-medium mb-1">Profiles Access</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug.profilesAccess, null, 2) || "Not checked yet"}
+                  </pre>
+                </div>
+                
+                <div>
+                  <h4 className="text-xs font-medium mb-1">Specific Order Test</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug.specificOrderTest, null, 2) || "Not checked yet"}
+                  </pre>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium mb-2">Fetched Data</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <h4 className="text-xs font-medium mb-1">Installation Requests</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(installationRequests, null, 2) || "None"}
+                  </pre>
+                </div>
+                
+                <div>
+                  <h4 className="text-xs font-medium mb-1">Order IDs</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug.orderIds, null, 2) || "None"}
+                  </pre>
+                </div>
+                
+                <div>
+                  <h4 className="text-xs font-medium mb-1">Orders Data</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug.ordersData, null, 2) || "None"}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setDebugDialogOpen(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       
@@ -668,3 +888,4 @@ export const InstallationRequestsNotification = () => {
 };
 
 export default InstallationRequestsNotification;
+
