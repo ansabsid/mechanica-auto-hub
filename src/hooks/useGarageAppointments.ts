@@ -60,34 +60,56 @@ export const useGarageAppointments = () => {
     try {
       console.log("Fetching appointments for garage ID:", garageId);
       
-      // Using explicit join syntax to get vehicle information and customer details
-      const { data, error } = await supabase
+      // First, fetch appointments with vehicle information
+      const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           *,
-          vehicle:vehicles(id, make, model, year, license_plate),
-          profiles(firstName, lastName, phone, email)
+          vehicle:vehicles(id, make, model, year, license_plate)
         `)
         .eq('garage_id', garageId);
         
-      if (error) {
-        console.error("Supabase query error:", error);
-        throw error;
+      if (appointmentsError) {
+        console.error("Supabase query error:", appointmentsError);
+        throw appointmentsError;
       }
       
-      console.log("Raw appointment data from database:", data);
+      console.log("Raw appointment data from database:", appointmentsData);
       
-      if (!data || data.length === 0) {
+      if (!appointmentsData || appointmentsData.length === 0) {
         console.log("No appointments found for garage ID:", garageId);
         setAppointments([]);
         return [];
       }
       
+      // Now we need to get user information for each appointment
+      // We'll use a separate query to fetch profile information for each user_id
+      const userIds = appointmentsData.map(appointment => appointment.user_id);
+      
+      // Fetch user profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, firstName, lastName, phone, email')
+        .in('id', userIds);
+        
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        // Continue without profile data rather than failing completely
+      }
+      
+      // Create a map of user_id to profile data for easy lookup
+      const profileMap = new Map();
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          profileMap.set(profile.id, profile);
+        });
+      }
+      
       // Process the data to format vehicle information consistently and add customer details
-      const processedAppointments = data.map(appointment => {
+      const processedAppointments = appointmentsData.map(appointment => {
         // Extract vehicle data, which should now come through with our updated RLS policies
         const vehicleData = appointment.vehicle;
-        const profileData = appointment.profiles;
+        const profileData = profileMap.get(appointment.user_id);
         
         console.log(`Processing appointment ${appointment.id}, vehicle data:`, vehicleData);
         console.log(`Processing appointment ${appointment.id}, profile data:`, profileData);
@@ -97,12 +119,10 @@ export const useGarageAppointments = () => {
           vehicle: vehicleData,
           customer_name: profileData?.firstName && profileData?.lastName 
             ? `${profileData.firstName} ${profileData.lastName}` 
-            : appointment.customer_name || "Unknown Customer",
-          customer_phone: profileData?.phone || appointment.customer_phone || "Not provided",
+            : "Unknown Customer",
+          customer_phone: profileData?.phone || "Not provided",
           customer_email: profileData?.email || "Not provided"
         };
-        
-        delete formattedAppointment.profiles; // Remove the nested profiles data
         
         return formattedAppointment;
       });
