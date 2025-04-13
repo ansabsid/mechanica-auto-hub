@@ -86,6 +86,28 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
         </div>
         
         <div className="mb-2">
+          <div className="font-medium text-xs mb-1">Profile Data:</div>
+          <div className="text-xs bg-gray-50 p-2 rounded">
+            {debugInfo.profileData ? (
+              <>
+                <div className="font-medium">Profile Information:</div>
+                <div className={!debugInfo.profileData.firstName && !debugInfo.profileData.lastName ? 'text-red-500' : 'text-green-600'}>
+                  Name: {[debugInfo.profileData.firstName, debugInfo.profileData.lastName].filter(Boolean).join(' ') || '(empty)'}
+                </div>
+                <div className={!debugInfo.profileData.email ? 'text-red-500' : 'text-green-600'}>
+                  Email: {debugInfo.profileData.email || '(empty)'}
+                </div>
+                <div className={!debugInfo.profileData.phone ? 'text-red-500' : 'text-green-600'}>
+                  Phone: {debugInfo.profileData.phone || '(empty)'}
+                </div>
+              </>
+            ) : (
+              <div className="text-orange-600">No profile data found</div>
+            )}
+          </div>
+        </div>
+        
+        <div className="mb-2">
           <div className="font-medium text-xs mb-1">Direct Customer Data Fetch:</div>
           <div className="text-xs bg-gray-50 p-2 rounded">
             {debugInfo.customerDataFromOrders ? (

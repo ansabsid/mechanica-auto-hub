@@ -47,6 +47,7 @@ interface DebugData {
   };
   error?: any;
   customerDataFromOrders?: any;
+  profileData?: any;
 }
 
 export const useInstallationRequests = (garageId: string) => {
@@ -66,7 +67,7 @@ export const useInstallationRequests = (garageId: string) => {
       
       const { data, error } = await supabase
         .from('orders')
-        .select('user_name, user_email, user_phone')
+        .select('user_name, user_email, user_phone, user_id')
         .eq('id', orderId)
         .single();
         
@@ -79,6 +80,30 @@ export const useInstallationRequests = (garageId: string) => {
       return data;
     } catch (error) {
       console.error(`Error in fetchOrderCustomerDetails for ${orderId}:`, error);
+      return null;
+    }
+  };
+  
+  // Function to fetch customer profile data
+  const fetchProfileData = async (userId: string) => {
+    try {
+      console.log(`Fetching profile data for user: ${userId}`);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('firstName, lastName, email, phone')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error(`Error fetching profile for user ${userId}:`, error);
+        return null;
+      }
+      
+      console.log(`Profile data for user ${userId}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Error in fetchProfileData for ${userId}:`, error);
       return null;
     }
   };
@@ -222,6 +247,21 @@ export const useInstallationRequests = (garageId: string) => {
         const customerData = await fetchOrderCustomerDetails(orderId);
         if (customerData) {
           customerDataMap.set(orderId, customerData);
+          
+          // Now fetch profile data if we have a user_id
+          if (customerData.user_id) {
+            const profileData = await fetchProfileData(customerData.user_id);
+            if (profileData) {
+              // Store profile data in debug info
+              setDebug(prev => ({ 
+                ...prev, 
+                profileData: {
+                  ...(prev.profileData || {}),
+                  [customerData.user_id]: profileData
+                }
+              }));
+            }
+          }
         }
       }
       
@@ -253,6 +293,16 @@ export const useInstallationRequests = (garageId: string) => {
           let customerEmail = "No Email";
           let customerSourceInfo = "Not found";
           
+          // Get profile data if user_id exists
+          let profileData = null;
+          if (order?.user_id) {
+            // Look up profile data from debug state
+            const profileInfo = debug.profileData?.[order.user_id];
+            if (profileInfo) {
+              profileData = profileInfo;
+            }
+          }
+          
           // First try direct customer data
           if (directCustomerData) {
             if (directCustomerData.user_name) {
@@ -270,6 +320,25 @@ export const useInstallationRequests = (garageId: string) => {
               customerPhone = directCustomerData.user_phone;
               customerSourceInfo = customerSourceInfo === "Not found" ? 
                 "Direct Order Query (phone)" : customerSourceInfo + " + phone";
+            }
+            
+            // If there's profile data, prioritize it for name and phone
+            if (profileData) {
+              if (profileData.firstName || profileData.lastName) {
+                const fullName = [profileData.firstName, profileData.lastName]
+                  .filter(Boolean)
+                  .join(' ');
+                if (fullName) {
+                  customerName = fullName;
+                  customerSourceInfo = "Profile (name)";
+                }
+              }
+              
+              if (profileData.phone) {
+                customerPhone = profileData.phone;
+                customerSourceInfo = customerSourceInfo === "Not found" ? 
+                  "Profile (phone)" : customerSourceInfo + " + profile phone";
+              }
             }
           }
           // Then use data from the orders table
@@ -289,6 +358,26 @@ export const useInstallationRequests = (garageId: string) => {
               customerPhone = order.user_phone;
               customerSourceInfo = customerSourceInfo === "Not found" ? 
                 "Order Table (phone)" : customerSourceInfo + " + phone";
+            }
+            
+            // If there's profile data, use it when available
+            if (profileData) {
+              if (profileData.firstName || profileData.lastName) {
+                const fullName = [profileData.firstName, profileData.lastName]
+                  .filter(Boolean)
+                  .join(' ');
+                if (fullName) {
+                  customerName = fullName;
+                  customerSourceInfo = customerSourceInfo === "Not found" ? 
+                    "Profile (name)" : customerSourceInfo + " + profile name";
+                }
+              }
+              
+              if (profileData.phone) {
+                customerPhone = profileData.phone;
+                customerSourceInfo = customerSourceInfo === "Not found" ? 
+                  "Profile (phone)" : customerSourceInfo + " + profile phone";
+              }
             }
             
             // Debug logging for order data
