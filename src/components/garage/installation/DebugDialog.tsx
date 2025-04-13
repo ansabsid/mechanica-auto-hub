@@ -3,14 +3,15 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { RlsDebugHelper } from "./RlsDebugHelper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 
 interface DebugDialogProps {
   open: boolean;
@@ -25,107 +26,160 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
   debug,
   user
 }) => {
-  // Function to copy debug data to clipboard
-  const handleCopyDebug = () => {
-    navigator.clipboard.writeText(JSON.stringify(debug, null, 2))
-      .then(() => {
-        toast({
-          title: "Copied to clipboard",
-          description: "Debug information has been copied to clipboard"
-        });
-      })
-      .catch(err => {
-        console.error("Failed to copy: ", err);
-        toast({
-          variant: "destructive",
-          title: "Copy failed",
-          description: "Could not copy debug information to clipboard"
-        });
-      });
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Debug Information</DialogTitle>
           <DialogDescription>
-            Technical details to troubleshoot installation requests
+            Technical details for troubleshooting installation requests
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {debug.garageId && <RlsDebugHelper garageId={debug.garageId} />}
+        <Tabs defaultValue="overview">
+          <TabsList className="mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="installation-requests">Installation Requests</TabsTrigger>
+            <TabsTrigger value="order-failures">Order Failures</TabsTrigger>
+            <TabsTrigger value="auth">Authentication</TabsTrigger>
+            <TabsTrigger value="raw">Raw Data</TabsTrigger>
+          </TabsList>
           
-          <div className="bg-gray-100 p-4 rounded-md">
-            <h3 className="font-medium mb-2">Authentication Status</h3>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify({
-                isAuthenticated: !!user,
-                userId: user?.id,
-                userEmail: user?.email,
-                authSession: debug.authSession
-              }, null, 2)}
-            </pre>
-          </div>
-          
-          <div className="bg-gray-100 p-4 rounded-md">
-            <h3 className="font-medium mb-2">Data Fetch Details</h3>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify({
-                garageId: debug.garageId,
-                fetchStarted: debug.fetchStarted,
-                itemsCount: debug.itemsCount || 0,
-                ordersCount: debug.ordersCount || 0,
-                profilesCount: debug.profilesCount || 0,
-                partsCount: debug.partsCount || 0,
-                requestsCount: debug.requestsCount || 0,
-                errorCounts: debug.errorCounts || 0
-              }, null, 2)}
-            </pre>
-          </div>
-          
-          <div className="bg-gray-100 p-4 rounded-md">
-            <h3 className="font-medium mb-2">Direct RLS Policy Test</h3>
-            <pre className="text-xs overflow-auto max-h-40">
-              {JSON.stringify(debug.directTest, null, 2)}
-            </pre>
-          </div>
-
-          <div className="bg-gray-100 p-4 rounded-md">
-            <h3 className="font-medium mb-2">Customer Information</h3>
-            <div className="space-y-2">
-              {debug.mappedRequests && debug.mappedRequests.map((req: any, index: number) => (
-                <div key={index} className="border-b pb-2">
-                  <p><strong>Order ID:</strong> {req.orderId.substring(0, 8)}...</p>
-                  <p><strong>Name:</strong> {req.customerName}</p>
-                  <p><strong>Email:</strong> {req.customerEmail}</p>
-                  <p><strong>Phone:</strong> {req.customerPhone}</p>
-                  <p><strong>Status:</strong> {req.status}</p>
+          <TabsContent value="overview">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Request Summary</h4>
+                  <div className="text-sm">
+                    <p>Garage ID: <code className="bg-gray-200 px-1 py-0.5 rounded text-xs">{debug.garageId}</code></p>
+                    <p>Requests Found: {debug.requestsCount || 0}</p>
+                    <p>Last Fetch: {debug.lastFetchTime ? new Date(debug.lastFetchTime).toLocaleString() : 'Never'}</p>
+                    <p>Order Items: {debug.itemsCount || 0}</p>
+                    <p>Order IDs: {debug.orderIds?.length || 0}</p>
+                    <p>Orders Found: {debug.ordersCount || 0}</p>
+                  </div>
                 </div>
-              ))}
-              {!debug.mappedRequests?.length && (
-                <p className="text-sm text-gray-500">No customer data available</p>
+                
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Authentication</h4>
+                  <div className="text-sm">
+                    <p>User ID: {user?.id || 'Not authenticated'}</p>
+                    <p>Email: {user?.email || 'Not available'}</p>
+                    <p>Session: {debug.authSession?.session ? 'Active' : 'None'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {(debug.orderLookupFailures?.length > 0) && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <AlertDescription>
+                    <span className="font-bold">Warning:</span> {debug.orderLookupFailures.length} orders failed to load
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {(!debug.ordersData || debug.ordersData.length === 0) && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  <AlertDescription>
+                    No orders were found. This may indicate a data access issue or empty results.
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
-          </div>
+          </TabsContent>
           
-          <details className="border rounded-md p-4">
-            <summary className="font-medium cursor-pointer">Full Debug Data</summary>
-            <pre className="mt-2 text-xs overflow-auto max-h-60">
-              {JSON.stringify(debug, null, 2)}
-            </pre>
-          </details>
+          <TabsContent value="installation-requests">
+            <div className="space-y-4">
+              <h4 className="font-medium">Mapped Installation Requests</h4>
+              {debug.mappedRequests && debug.mappedRequests.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-200">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-2 py-1 border text-xs">Order Item ID</th>
+                        <th className="px-2 py-1 border text-xs">Order ID</th>
+                        <th className="px-2 py-1 border text-xs">Customer</th>
+                        <th className="px-2 py-1 border text-xs">Phone</th>
+                        <th className="px-2 py-1 border text-xs">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {debug.mappedRequests.map((request: any) => (
+                        <tr key={request.id} className={request.customerName === 'Unknown Customer' ? 'bg-red-50' : ''}>
+                          <td className="px-2 py-1 border text-xs">{request.orderItemId.slice(0, 8)}...</td>
+                          <td className="px-2 py-1 border text-xs">{request.orderId.slice(0, 8)}...</td>
+                          <td className="px-2 py-1 border text-xs">{request.customerName}</td>
+                          <td className="px-2 py-1 border text-xs">{request.customerPhone}</td>
+                          <td className="px-2 py-1 border text-xs">{request.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm">No installation requests mapped.</p>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="order-failures">
+            <div className="space-y-4">
+              <h4 className="font-medium">Order Lookup Failures</h4>
+              {debug.orderLookupFailures && debug.orderLookupFailures.length > 0 ? (
+                <div className="space-y-2">
+                  {debug.orderLookupFailures.map((failure: any, index: number) => (
+                    <Alert key={index} variant="destructive">
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      <AlertDescription>
+                        <div className="text-xs">
+                          <div><strong>Order ID:</strong> {failure.orderId}</div>
+                          <div><strong>Error:</strong> {failure.message || failure.error}</div>
+                          <div><strong>Time:</strong> {new Date(failure.timestamp).toLocaleString()}</div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm">No order lookup failures recorded.</p>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="auth">
+            <div className="space-y-2">
+              <h4 className="font-medium">Auth Session</h4>
+              <pre className="bg-gray-50 p-2 rounded-md text-xs overflow-auto max-h-40">
+                {JSON.stringify(debug.authSession, null, 2)}
+              </pre>
+              
+              {debug.sessionError && (
+                <>
+                  <h4 className="font-medium text-red-500">Auth Error</h4>
+                  <pre className="bg-red-50 p-2 rounded-md text-xs overflow-auto max-h-40">
+                    {JSON.stringify(debug.sessionError, null, 2)}
+                  </pre>
+                </>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="raw">
+            <div className="space-y-2">
+              <pre className="bg-gray-50 p-2 rounded-md text-xs overflow-auto max-h-96">
+                {JSON.stringify(debug, null, 2)}
+              </pre>
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end space-x-2 mt-4">
+          <DialogClose asChild>
+            <Button>Close</Button>
+          </DialogClose>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCopyDebug}>
-            Copy Debug Info
-          </Button>
-          <Button onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

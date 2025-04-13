@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +48,7 @@ interface DebugData {
   error?: any;
   customerDataFromOrders?: any;
   profileData?: any;
+  orderLookupFailures?: any[];
 }
 
 export const useInstallationRequests = (garageId: string) => {
@@ -56,6 +58,7 @@ export const useInstallationRequests = (garageId: string) => {
   const [debug, setDebug] = useState<DebugData>({
     authUser: null,
     lastFetchTime: null,
+    orderLookupFailures: []
   });
   const { toast } = useToast();
 
@@ -71,6 +74,15 @@ export const useInstallationRequests = (garageId: string) => {
         
       if (error) {
         console.error(`Error fetching customer details for order ${orderId}:`, error);
+        setDebug(prev => ({ 
+          ...prev, 
+          orderLookupFailures: [...(prev.orderLookupFailures || []), {
+            orderId,
+            error,
+            timestamp: new Date().toISOString(),
+            message: 'Failed to fetch order details from orders table'
+          }]
+        }));
         return null;
       }
       
@@ -105,6 +117,61 @@ export const useInstallationRequests = (garageId: string) => {
     }
   };
 
+  // Function to directly check if order exists
+  const verifyOrderExists = async (orderId: string) => {
+    try {
+      console.log(`Verifying order exists: ${orderId}`);
+      
+      // First check if the order ID is valid
+      if (!orderId || orderId.length < 10) {
+        console.error(`Invalid order ID format: ${orderId}`);
+        return {
+          exists: false,
+          error: 'Invalid order ID format',
+          details: null
+        };
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, user_id, created_at, status')
+        .eq('id', orderId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error(`Error verifying order ${orderId}:`, error);
+        return {
+          exists: false,
+          error: error.message,
+          details: error
+        };
+      }
+      
+      if (!data) {
+        console.error(`Order not found: ${orderId}`);
+        return {
+          exists: false,
+          error: 'Order not found',
+          details: null
+        };
+      }
+      
+      console.log(`Order verification successful for ${orderId}:`, data);
+      return {
+        exists: true,
+        error: null,
+        details: data
+      };
+    } catch (error: any) {
+      console.error(`Exception in verifyOrderExists for ${orderId}:`, error);
+      return {
+        exists: false,
+        error: error.message || 'Unknown error',
+        details: error
+      };
+    }
+  };
+
   const fetchInstallationRequests = async () => {
     if (isRefreshing) return;
     
@@ -113,7 +180,7 @@ export const useInstallationRequests = (garageId: string) => {
     
     try {
       console.log("Fetching installation requests for garage:", garageId);
-      setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
+      setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString(), orderLookupFailures: [] }));
       
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
@@ -173,6 +240,29 @@ export const useInstallationRequests = (garageId: string) => {
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       console.log("Order IDs to fetch:", orderIds);
       setDebug(prev => ({ ...prev, orderIds }));
+      
+      // Verify each order exists before proceeding
+      const orderVerificationResults = [];
+      for (const orderId of orderIds) {
+        const result = await verifyOrderExists(orderId);
+        orderVerificationResults.push({
+          orderId,
+          ...result
+        });
+        
+        if (!result.exists) {
+          setDebug(prev => ({ 
+            ...prev, 
+            orderLookupFailures: [...(prev.orderLookupFailures || []), {
+              orderId,
+              error: result.error,
+              timestamp: new Date().toISOString(),
+              message: 'Order verification failed',
+              details: result.details
+            }]
+          }));
+        }
+      }
       
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
@@ -256,17 +346,20 @@ export const useInstallationRequests = (garageId: string) => {
       
       const requests: InstallationRequest[] = await Promise.all(orderItemsData
         .map(async (item) => {
+          // Get order and verify it exists
           const order = orderMap.get(item.order_id);
+          const orderVerification = orderVerificationResults.find(r => r.orderId === item.order_id);
           
           console.log(`Processing order item ${item.id}:`, {
             orderId: item.order_id,
             orderDetails: order,
+            orderExists: orderVerification?.exists,
             profileData: order?.user_id ? debug.profileData?.[order.user_id] : null
           });
           
           console.group(`Customer Info for Order Item ${item.id}`);
-          console.log('Order Details:', order);
-          console.log('Direct Customer Data:', customerDataMap.get(item.order_id));
+          console.log('Order Details:', order || { _type: 'undefined', value: 'undefined' });
+          console.log('Direct Customer Data:', customerDataMap.get(item.order_id) || { _type: 'undefined', value: 'undefined' });
           console.log('Profile Data:', order?.user_id ? debug.profileData?.[order.user_id] : 'No profile data');
           console.groupEnd();
           
@@ -392,6 +485,7 @@ export const useInstallationRequests = (garageId: string) => {
         requestsCount: requests.length,
         customerSourceSummary: requests.map(r => ({
           orderItemId: r.orderItemId,
+          orderId: r.orderId,
           customerName: r.customerName,
           customerEmail: r.customerEmail,
           customerPhone: r.customerPhone,
