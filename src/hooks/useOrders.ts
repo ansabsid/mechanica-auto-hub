@@ -202,7 +202,16 @@ export const useOrders = () => {
     }
   };
 
-  const handleCreateOrder = async (cartItems: CartItem[], totalAmount: number) => {
+  const handleCreateOrder = async (
+    cartItems: CartItem[], 
+    totalAmount: number,
+    userDetails?: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+    }
+  ) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
@@ -224,6 +233,8 @@ export const useOrders = () => {
     }
 
     console.log("🔍 [Order Creation] Cart items being ordered:", cartItems);
+    console.log("🔍 [Order Creation] User details for order:", userDetails);
+    
     const installationItems = cartItems.filter(item => item.installation_data);
     console.log("🔍 [Order Creation] Items with installation:", installationItems);
     
@@ -232,6 +243,7 @@ export const useOrders = () => {
         installationItems.map(item => ({
           garageId: item.installation_data?.garageId,
           garageName: item.installation_data?.garageName,
+          partName: item.part.name,
           fee: item.installation_data?.installationFee
         }))
       );
@@ -239,7 +251,7 @@ export const useOrders = () => {
 
     setIsProcessing(true);
     try {
-      const orderData = await createOrder(session.user.id, cartItems, totalAmount);
+      const orderData = await createOrder(session.user.id, cartItems, totalAmount, userDetails);
       
       const itemsWithInstallation = cartItems.filter(item => item.installation_data);
       
@@ -250,10 +262,10 @@ export const useOrders = () => {
         
         for (const item of itemsWithInstallation) {
           if (item.installation_data && item.installation_data.garageId) {
-            console.log(`🔍 [Order Creation] Setting installation data for part ${item.part_id}:`, {
+            console.log(`🔍 [Order Creation] Setting installation data for part ${item.part_id} (${item.part.name}):`, {
               garage_id: item.installation_data.garageId,
-              installation_fee: item.installation_data.installationFee,
-              part_name: item.part.name
+              garage_name: item.installation_data.garageName,
+              installation_fee: item.installation_data.installationFee
             });
             
             const { data, error } = await supabase

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ const formSchema = z.object({
   address: z.string().min(5, { message: "Address is required" }),
   city: z.string().min(2, { message: "City is required" }),
   postalCode: z.string().min(3, { message: "Postal code is required" }),
+  phone: z.string().min(5, { message: "Phone number is required" }),
   cardNumber: z.string().min(13, { message: "Valid card number is required" }),
   cardExpiry: z.string().min(5, { message: "Expiry date required (MM/YY)" }),
   cardCVC: z.string().min(3, { message: "CVC is required" }),
@@ -70,6 +72,7 @@ const Checkout = () => {
       address: "",
       city: "",
       postalCode: "",
+      phone: "",
       cardNumber: "",
       cardExpiry: "",
       cardCVC: "",
@@ -100,7 +103,15 @@ const Checkout = () => {
       
       console.log("Processing order with values:", values);
       
-      const order = await createOrder(cartItems, calculateTotal());
+      // Pass user details to createOrder
+      const userDetails = {
+        name: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        address: `${values.address}, ${values.city}, ${values.postalCode}`
+      };
+      
+      const order = await createOrder(cartItems, calculateTotal(), userDetails);
       
       if (order) {
         setIsSuccess(true);
@@ -134,7 +145,12 @@ const Checkout = () => {
       
       console.log("Processing Apple Pay order");
       
-      const order = await createOrder(cartItems, calculateTotal());
+      // Get user email from session for Apple Pay
+      const userDetails = {
+        email: user.email
+      };
+      
+      const order = await createOrder(cartItems, calculateTotal(), userDetails);
       
       if (order) {
         setIsSuccess(true);
@@ -385,6 +401,20 @@ const Checkout = () => {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phone Number</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>

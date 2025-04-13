@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
@@ -33,7 +34,11 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
         total_amount: order.total_amount,
         status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled',
         created_at: order.created_at,
-        updated_at: order.updated_at
+        updated_at: order.updated_at,
+        user_name: order.user_name,
+        user_email: order.user_email,
+        user_phone: order.user_phone,
+        shipping_address: order.shipping_address
       }));
       
       return typedOrders;
@@ -208,7 +213,11 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
       status: orderData.status as 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed',
       created_at: orderData.created_at,
       updated_at: orderData.updated_at,
-      items: formattedItems
+      items: formattedItems,
+      user_name: orderData.user_name,
+      user_email: orderData.user_email,
+      user_phone: orderData.user_phone,
+      shipping_address: orderData.shipping_address
     };
     
     console.log("Returning formatted order with", formattedItems.length, "items");
@@ -225,9 +234,20 @@ export async function getOrderDetails(orderId: string): Promise<Order | null> {
  * @param userId The UUID of the user placing the order
  * @param cartItems Array of cart items to convert to order items
  * @param totalAmount The total amount of the order
+ * @param userDetails Optional user contact details for the order
  * @returns Promise resolving to the created order data
  */
-export async function createOrder(userId: string, cartItems: CartItem[], totalAmount: number): Promise<any> {
+export async function createOrder(
+  userId: string, 
+  cartItems: CartItem[], 
+  totalAmount: number, 
+  userDetails?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+  }
+): Promise<any> {
   try {
     if (cartItems.length === 0) {
       throw new Error("Cart is empty");
@@ -236,6 +256,10 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     console.log("🔍 [API] Creating order for user:", userId);
     console.log("🔍 [API] Order total amount:", totalAmount);
     console.log("🔍 [API] Cart items count:", cartItems.length);
+    
+    if (userDetails) {
+      console.log("🔍 [API] User details provided:", userDetails);
+    }
 
     // Debug: Check for installation data
     const installationItems = cartItems.filter(item => item.installation_data);
@@ -244,6 +268,7 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     if (installationItems.length > 0) {
       installationItems.forEach(item => {
         console.log("🔍 [API] Installation details for part:", item.part_id, {
+          part_name: item.part.name,
           garage: item.installation_data?.garageId,
           garageName: item.installation_data?.garageName,
           installationFee: item.installation_data?.installationFee
@@ -261,13 +286,17 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     }));
     
     // Create order manually (skip RPC for reliability)
-    // 1. Create the order with initial status 'pending'
+    // 1. Create the order with initial status 'pending' and user details
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         user_id: userId,
         total_amount: totalAmount,
         status: 'pending',
+        user_name: userDetails?.name || null,
+        user_email: userDetails?.email || null,
+        user_phone: userDetails?.phone || null,
+        shipping_address: userDetails?.address || null
       })
       .select()
       .single();
@@ -280,7 +309,7 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
     console.log("🔍 [API] Order created:", order.id);
     
     // 2. Create order items with installation data if available
-    // FIXED: Explicitly include installation_status for installation items
+    // Explicitly include installation_status for installation items
     const formattedItems = cartItems.map(item => ({
       order_id: order.id,
       part_id: item.part_id,
@@ -307,10 +336,10 @@ export async function createOrder(userId: string, cartItems: CartItem[], totalAm
 
     // 3. Verify the installation data was properly saved
     if (installationItems.length > 0) {
-      // FIXED: Log more details about the verification query
+      // Log more details about the verification query
       console.log("🔍 [API] Verifying installation data was saved, querying with order_id:", order.id);
       
-      // FIXED: Run multiple verification queries to isolate issues
+      // Run multiple verification queries to isolate issues
       console.log("🔍 [API] Verification query 1: All items for this order");
       const { data: allOrderItems, error: allOrderItemsError } = await supabase
         .from('order_items')

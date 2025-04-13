@@ -10,6 +10,11 @@ export interface Order {
   created_at: string;
   updated_at: string;
   items?: OrderItem[];
+  // Add user details to the order
+  user_name?: string;
+  user_email?: string;
+  user_phone?: string;
+  shipping_address?: string;
 }
 
 export interface OrderItem {

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, Clock, MapPin, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, CheckCircle2, AlertTriangle, Phone, Mail, User, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -173,15 +173,6 @@ const OrderPage = () => {
     );
   };
 
-  console.log("Current Component State:", {
-    orderId,
-    currentOrder: currentOrder ? "Present" : "Not loaded",
-    isLoading,
-    isRefetching,
-    retryCount,
-    errorMessage
-  });
-
   if (isLoading || isRefetching) {
     return (
       <div className="flex flex-col justify-center items-center h-64">
@@ -254,6 +245,41 @@ const OrderPage = () => {
           {currentOrder.status.charAt(0).toUpperCase() + currentOrder.status.slice(1)}
         </Badge>
       </div>
+      
+      {/* Customer Information Card */}
+      {(currentOrder.user_name || currentOrder.user_email || currentOrder.user_phone) && (
+        <Card className="mb-4 md:mb-6">
+          <CardHeader className="p-3 md:p-4">
+            <CardTitle className="text-base md:text-lg">Customer Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 md:p-4 pt-0 space-y-2">
+            {currentOrder.user_name && (
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-2 text-gray-500" />
+                <span>{currentOrder.user_name}</span>
+              </div>
+            )}
+            {currentOrder.user_email && (
+              <div className="flex items-center">
+                <Mail className="h-4 w-4 mr-2 text-gray-500" />
+                <span>{currentOrder.user_email}</span>
+              </div>
+            )}
+            {currentOrder.user_phone && (
+              <div className="flex items-center">
+                <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                <span>{currentOrder.user_phone}</span>
+              </div>
+            )}
+            {currentOrder.shipping_address && (
+              <div className="flex items-start">
+                <Home className="h-4 w-4 mr-2 text-gray-500 mt-0.5" />
+                <span>{currentOrder.shipping_address}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
       
       <Card className="mb-4 md:mb-6">
         <CardHeader className="p-3 md:p-4">
