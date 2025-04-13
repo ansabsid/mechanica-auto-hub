@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Check, AlertCircle, MapPin, Building, User, Mail, Lock, Phone, Flag } from "lucide-react";
+import { Check, AlertCircle, MapPin, Building, User, Mail, Lock, Phone, Flag, UserPlus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define a schema for country codes
@@ -422,10 +422,11 @@ const Register = () => {
           
           <Button 
             type="submit" 
-            className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600" 
+            className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600 text-lg py-6" 
             disabled={isLoading || registrationStatus === "success"}
           >
-            {isLoading ? "Creating Account..." : "Sign Up"}
+            <UserPlus className="mr-2 h-5 w-5" />
+            {isLoading ? "Creating Account..." : "Signup"}
           </Button>
         </form>
       </Form>
