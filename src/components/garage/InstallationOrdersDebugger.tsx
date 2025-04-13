@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Bug, Save, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const InstallationOrdersDebugger = () => {
   const [open, setOpen] = useState(false);
@@ -67,6 +68,8 @@ export const InstallationOrdersDebugger = () => {
     setOrderId(orderId);
     
     try {
+      console.log(`Fetching order details for ID: ${orderId}`);
+      
       // Fetch specific order - use maybeSingle instead of single to avoid errors when no results are found
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -80,13 +83,31 @@ export const InstallationOrdersDebugger = () => {
         throw orderError;
       }
       
+      // Add full order data to debug info
       setDebugInfo(prev => ({ ...prev, orderData }));
       
       // Set customer details if available
       if (orderData) {
-        setCustomerName(orderData.user_name || "");
-        setCustomerEmail(orderData.user_email || "");
-        setCustomerPhone(orderData.user_phone || "");
+        console.log("Order data found:", orderData);
+        
+        // Set the values, using empty string as fallback
+        const name = orderData.user_name || "";
+        const email = orderData.user_email || "";
+        const phone = orderData.user_phone || "";
+        
+        setCustomerName(name);
+        setCustomerEmail(email);
+        setCustomerPhone(phone);
+        
+        // Log the values we're setting
+        console.log("Setting customer values:", { name, email, phone });
+        
+        // Add this info to debug
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          customerInfo: { name, email, phone },
+          customerInfoSource: "From order data"
+        }));
       } else {
         // Clear fields if no order data is found
         setCustomerName("");
@@ -96,7 +117,8 @@ export const InstallationOrdersDebugger = () => {
         // Add information to debug info that no order was found
         setDebugInfo(prev => ({ 
           ...prev, 
-          orderDataStatus: `No order found with ID: ${orderId}. This might mean the order was deleted or doesn't exist.` 
+          orderDataStatus: `No order found with ID: ${orderId}. This might mean the order was deleted or doesn't exist.`,
+          customerInfoSource: "No order data found" 
         }));
         
         toast({
@@ -104,6 +126,9 @@ export const InstallationOrdersDebugger = () => {
           description: `No order found with ID: ${orderId}`,
           variant: "destructive"
         });
+        
+        // Try to fetch user profile if we can't get customer info from the order
+        await tryFetchUserProfile(orderId);
       }
     } catch (error) {
       console.error("Error fetching order details:", error);
@@ -112,8 +137,72 @@ export const InstallationOrdersDebugger = () => {
         description: "Failed to fetch order details",
         variant: "destructive"
       });
+      setDebugInfo(prev => ({ ...prev, orderDetailsError: error }));
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Try to get user profile information if order data doesn't have customer details
+  const tryFetchUserProfile = async (orderId: string) => {
+    try {
+      console.log("Trying to fetch user profile for order:", orderId);
+      
+      // First get the user_id from the order
+      const { data: orderWithUserId, error: orderError } = await supabase
+        .from('orders')
+        .select('user_id')
+        .eq('id', orderId)
+        .maybeSingle();
+        
+      if (orderError || !orderWithUserId || !orderWithUserId.user_id) {
+        console.log("Could not get user_id from order:", orderWithUserId, orderError);
+        setDebugInfo(prev => ({ ...prev, userIdLookupResult: "No user_id found in order" }));
+        return;
+      }
+      
+      const userId = orderWithUserId.user_id;
+      console.log("Found user_id:", userId);
+      
+      // Now get the profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('firstName, lastName, email, phone')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (profileError || !profile) {
+        console.log("Could not get profile:", profile, profileError);
+        setDebugInfo(prev => ({ ...prev, profileLookupResult: "Profile not found" }));
+        return;
+      }
+      
+      console.log("Found profile:", profile);
+      
+      // If we found a profile, use its data
+      if (profile) {
+        let name = "";
+        if (profile.firstName || profile.lastName) {
+          name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+        }
+        
+        if (name) setCustomerName(name);
+        if (profile.email) setCustomerEmail(profile.email);
+        if (profile.phone) setCustomerPhone(profile.phone);
+        
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          customerInfoFromProfile: { 
+            name, 
+            email: profile.email || "", 
+            phone: profile.phone || "" 
+          },
+          customerInfoSource: "From user profile"
+        }));
+      }
+    } catch (error) {
+      console.error("Error in tryFetchUserProfile:", error);
+      setDebugInfo(prev => ({ ...prev, profileFetchError: error }));
     }
   };
   
@@ -156,6 +245,12 @@ export const InstallationOrdersDebugger = () => {
         setIsLoading(false);
         return;
       }
+      
+      console.log("Updating order with customer info:", {
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone
+      });
       
       const { data, error } = await supabase
         .from('orders')
@@ -316,6 +411,26 @@ export const InstallationOrdersDebugger = () => {
                 <details>
                   <summary className="text-sm font-semibold cursor-pointer">Debug Information</summary>
                   <div className="mt-2">
+                    <Alert variant="default" className="bg-yellow-50 border-yellow-200 mb-2">
+                      <AlertDescription className="text-xs">
+                        This section shows the current state of customer information and data source.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="text-xs bg-gray-50 p-2 rounded">
+                        <div className="font-medium mb-1">Current Values:</div>
+                        <div>Name: {customerName || '(empty)'}</div>
+                        <div>Email: {customerEmail || '(empty)'}</div>
+                        <div>Phone: {customerPhone || '(empty)'}</div>
+                      </div>
+                      
+                      <div className="text-xs bg-gray-50 p-2 rounded">
+                        <div className="font-medium mb-1">Data Source:</div>
+                        <div>{debugInfo.customerInfoSource || 'Not set'}</div>
+                      </div>
+                    </div>
+                    
                     <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-[200px]">
                       {JSON.stringify(debugInfo, null, 2)}
                     </pre>
