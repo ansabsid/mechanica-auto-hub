@@ -52,6 +52,22 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           </div>
         </div>
         
+        <div className="mb-2">
+          <div className="font-medium text-xs mb-1">Customer Data Diagnostics:</div>
+          <div className="text-xs bg-gray-50 p-2 rounded">
+            {debugInfo.orderData ? (
+              <>
+                <div className="font-medium">Order Table Data:</div>
+                <div>Name: {debugInfo.orderData.user_name || '(empty)'}</div>
+                <div>Email: {debugInfo.orderData.user_email || '(empty)'}</div>
+                <div>Phone: {debugInfo.orderData.user_phone || '(empty)'}</div>
+              </>
+            ) : (
+              <div className="text-orange-600">No order record found</div>
+            )}
+          </div>
+        </div>
+        
         <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-[200px]">
           {JSON.stringify(debugInfo, null, 2)}
         </pre>

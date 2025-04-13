@@ -131,47 +131,23 @@ export const useInstallationRequests = (garageId: string) => {
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       console.log("Order IDs to fetch:", orderIds);
       
-      // Updated approach: Fetch each order individually to troubleshoot potential issues
-      let ordersData = [];
-      let errorCounts = 0;
+      // Fetch all orders in a single query
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
+        .in('id', orderIds);
       
-      for (const orderId of orderIds) {
-        try {
-          console.log("Fetching individual order:", orderId);
-          
-          // Use maybeSingle to handle when an order might not exist
-          const { data: orderData, error: orderError } = await supabase
-            .from('orders')
-            .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
-            .eq('id', orderId)
-            .maybeSingle();
-            
-          if (orderError) {
-            console.error(`Error fetching order ${orderId}:`, orderError);
-            errorCounts++;
-          } else if (orderData) {
-            console.log(`Successfully fetched order ${orderId}:`, orderData);
-            ordersData.push(orderData);
-          } else {
-            console.log(`No data returned for order ${orderId}`);
-          }
-        } catch (err) {
-          console.error(`Exception fetching order ${orderId}:`, err);
-          errorCounts++;
-        }
+      if (ordersError) {
+        console.error("Error fetching orders:", ordersError);
+        setDebug(prev => ({ ...prev, ordersError }));
       }
       
-      console.log(`Fetched ${ordersData.length} orders, encountered ${errorCounts} errors`);
-      setDebug(prev => ({ 
-        ...prev, 
-        ordersData, 
-        ordersCount: ordersData?.length || 0,
-        errorCounts,
-        orderIds 
-      }));
+      console.log("Fetched orders:", ordersData);
+      setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
+      // Create a map for quick order lookup
       const orderMap = new Map();
-      if (ordersData) {
+      if (ordersData && ordersData.length > 0) {
         ordersData.forEach(order => {
           orderMap.set(order.id, order);
         });
@@ -247,25 +223,28 @@ export const useInstallationRequests = (garageId: string) => {
       // Map order items to installation requests for display
       const requests: InstallationRequest[] = orderItemsData
         .map(item => {
-          const order = orderMap.get(item.order_id) || { 
-            created_at: new Date().toISOString(), 
-            user_id: null,
-            user_name: "Unknown Customer",
-            user_email: "No Email",
-            user_phone: "No Phone"
-          };
+          // Get the corresponding order data
+          const order = orderMap.get(item.order_id);
           
-          const profile = order.user_id ? profileMap.get(order.user_id) : null;
+          // Store the order data in debug
+          setDebug(prev => ({ 
+            ...prev, 
+            [`orderData_${item.order_id}`]: order
+          }));
           
+          // Get corresponding profile if available
+          const profile = order?.user_id ? profileMap.get(order.user_id) : null;
+          
+          // Get corresponding part if available
           const part = partMap.get(item.part_id);
           
           // Enhanced logging for order customer data
           console.log(`Order ${item.order_id} customer data:`, {
-            fromOrder: {
+            fromOrder: order ? {
               name: order.user_name,
               email: order.user_email,
               phone: order.user_phone
-            },
+            } : 'No order data found',
             fromProfile: profile ? {
               name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(),
               email: profile.email,
@@ -273,30 +252,53 @@ export const useInstallationRequests = (garageId: string) => {
             } : 'No profile data'
           });
           
-          // Prioritize customer data from the order table 
-          // Only use "Unknown Customer" if both order and profile data are missing
+          // PRIORITY: We will now prioritize getting customer info from the orders table first
+          // Default values for customer info
           let customerName = "Unknown Customer";
           let customerPhone = "No Phone";
           let customerEmail = "No Email";
+          let customerSourceInfo = "Not found";
           
-          // Check for order data first (from the debug tool or direct database)
-          if (order.user_name) {
+          // First priority: Check for order data (always use this if available)
+          if (order && order.user_name) {
             customerName = order.user_name;
-          } else if (profile?.firstName && profile?.lastName) {
-            customerName = `${profile.firstName} ${profile.lastName}`;
+            customerSourceInfo = "Order Table (name)";
           }
           
-          if (order.user_phone) {
-            customerPhone = order.user_phone;
-          } else if (profile?.phone) {
-            customerPhone = profile.phone;
-          }
-          
-          if (order.user_email) {
+          if (order && order.user_email) {
             customerEmail = order.user_email;
-          } else if (profile?.email) {
-            customerEmail = profile.email;
+            customerSourceInfo = customerSourceInfo === "Not found" ? 
+              "Order Table (email)" : customerSourceInfo + " + email";
           }
+          
+          if (order && order.user_phone) {
+            customerPhone = order.user_phone;
+            customerSourceInfo = customerSourceInfo === "Not found" ? 
+              "Order Table (phone)" : customerSourceInfo + " + phone";
+          }
+          
+          // Second priority: Fall back to profile data ONLY if order data is missing
+          if (customerName === "Unknown Customer" && profile && profile.firstName && profile.lastName) {
+            customerName = `${profile.firstName} ${profile.lastName}`;
+            customerSourceInfo = "Profile Table";
+          }
+          
+          if (customerEmail === "No Email" && profile && profile.email) {
+            customerEmail = profile.email;
+            customerSourceInfo = customerSourceInfo === "Not found" ? 
+              "Profile Table (email)" : customerSourceInfo + " + email";
+          }
+          
+          if (customerPhone === "No Phone" && profile && profile.phone) {
+            customerPhone = profile.phone;
+            customerSourceInfo = customerSourceInfo === "Not found" ? 
+              "Profile Table (phone)" : customerSourceInfo + " + phone";
+          }
+          
+          // Default order date to current date if not available
+          const orderDate = order?.created_at ? 
+            new Date(order.created_at).toISOString().split('T')[0] : 
+            new Date().toISOString().split('T')[0];
           
           return {
             id: item.id,
@@ -304,7 +306,7 @@ export const useInstallationRequests = (garageId: string) => {
             customerPhone,
             customerEmail,
             part: part?.name || `Part #${item.part_id}`,
-            orderDate: order.created_at ? new Date(order.created_at).toISOString().split('T')[0] : "Unknown",
+            orderDate,
             status: item.installation_status || "new",
             price: Number(item.price),
             installationFee: Number(item.installation_fee) || 50,
@@ -318,7 +320,17 @@ export const useInstallationRequests = (garageId: string) => {
         });
       
       console.log("Processed installation requests with customer info and part names:", requests);
-      setDebug(prev => ({ ...prev, mappedRequests: requests, requestsCount: requests.length }));
+      setDebug(prev => ({ 
+        ...prev, 
+        mappedRequests: requests, 
+        requestsCount: requests.length,
+        customerSourceSummary: requests.map(r => ({
+          orderItemId: r.orderItemId,
+          customerName: r.customerName,
+          customerEmail: r.customerEmail,
+          customerPhone: r.customerPhone
+        }))
+      }));
       
       setInstallationRequests(requests);
       
