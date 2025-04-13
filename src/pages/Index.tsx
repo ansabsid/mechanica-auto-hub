@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,26 @@ import {
   Star, 
   ChevronRight, 
   CheckCircle2,
-  Loader2
+  Lightbulb,
+  Wrench,
+  HeartHandshake,
+  BarChart3,
+  Users,
+  CalendarDays,
+  MapPin,
+  ShoppingBag,
+  Search
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
 import ComingSoonDialog from "@/components/ui/coming-soon-dialog";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -51,11 +67,73 @@ const testimonials = [
   }
 ];
 
+// Market problems data
+const customerProblems = [
+  {
+    icon: <ShoppingBag className="h-5 w-5 text-red-500" />,
+    title: "Parts Availability Crisis",
+    description: "Difficulty finding OEM, aftermarket, or used parts causing service delays"
+  },
+  {
+    icon: <HeartHandshake className="h-5 w-5 text-red-500" />,
+    title: "Trust Issues",
+    description: "Finding trustworthy mechanics with the right expertise is challenging"
+  },
+  {
+    icon: <BarChart3 className="h-5 w-5 text-red-500" />,
+    title: "Lack of Transparency",
+    description: "No clarity in parts pricing and service quality"
+  }
+];
+
+const garageProblems = [
+  {
+    icon: <Search className="h-5 w-5 text-green-500" />,
+    title: "Digital Presence Gaps",
+    description: "Lack of user-friendly platforms to showcase expertise and attract customers"
+  },
+  {
+    icon: <CalendarDays className="h-5 w-5 text-green-500" />,
+    title: "Operational Inefficiencies",
+    description: "Difficulties managing appointments without a centralized booking system"
+  },
+  {
+    icon: <Users className="h-5 w-5 text-green-500" />,
+    title: "B2B Connectivity Limits",
+    description: "Limited access to broader networks of service partnerships"
+  }
+];
+
+// Solution features data
+const solutionFeatures = [
+  {
+    icon: <Lightbulb className="h-6 w-6 text-blue-600" />,
+    title: "All-in-One Platform",
+    description: "Parts, service requests, and installations in one place"
+  },
+  {
+    icon: <Users className="h-6 w-6 text-blue-600" />,
+    title: "Nearby Garages",
+    description: "Schedule appointments with local trusted mechanics"
+  },
+  {
+    icon: <BarChart3 className="h-6 w-6 text-blue-600" />,
+    title: "Transparent Pricing",
+    description: "Compare prices and read real reviews"
+  },
+  {
+    icon: <MapPin className="h-6 w-6 text-blue-600" />,
+    title: "Convenient Location",
+    description: "Find services near you with easy navigation"
+  }
+];
+
 const Index = () => {
   const { isAuthenticated } = useAuth();
   const [featuredParts, setFeaturedParts] = useState<Part[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("customer");
   
   // Fetch featured parts from the database with real garage data
   useEffect(() => {
@@ -173,40 +251,191 @@ const Index = () => {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-16 md:py-24">
-        <div className="container-custom">
+      {/* Enhanced Hero Section - Appeals to both customers and garages */}
+      <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-white py-12 md:py-24 overflow-hidden relative">
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-5">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium mb-1">
+                <span className="animate-pulse mr-2">●</span> Revolutionizing Auto Parts & Services
+              </div>
+              
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-                Find Car Parts & Book Services <span className="text-blue-600">Easily</span>
+                Connect With <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Parts & Garages</span> In One Place
               </h1>
+              
               <p className="text-xl text-gray-600">
-                Connect with local garages and suppliers to find the right parts
-                and book service appointments for your vehicle.
+                No more fragmented market. Find quality parts and trusted garages for all your vehicle needs.
               </p>
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-2">
+              
+              <div className="grid grid-cols-2 gap-3 pt-2 md:flex md:space-x-3 md:space-y-0">
                 <Button 
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
                   onClick={handleAppDownloadClick}
                 >
-                  <Smartphone className="mr-2 h-5 w-5" /> Download App
+                  <Smartphone className="mr-2 h-5 w-5" /> Get The App
                 </Button>
-                {!isAuthenticated && (
-                  <Link to="/login">
-                    <Button variant="outline" className="w-full sm:w-auto">
-                      Login
+                
+                {!isAuthenticated ? (
+                  <Link to="/login" className="w-full md:w-auto">
+                    <Button variant="outline" className="w-full">
+                      Login / Sign Up
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/customer-dashboard" className="w-full md:w-auto">
+                    <Button variant="outline" className="w-full">
+                      Dashboard
                     </Button>
                   </Link>
                 )}
               </div>
+              
+              <div className="flex items-center space-x-2 pt-3">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3, 4].map(num => (
+                    <div key={num} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-200 to-blue-300 border-2 border-white flex items-center justify-center text-xs font-medium text-blue-700">
+                      {num}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">
+                  <span className="font-medium text-blue-700">1,000+</span> users joined this month
+                </p>
+              </div>
             </div>
-            <div className="lg:block hidden">
-              <img
-                src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&auto=format"
-                alt="BookMyParts Car Service"
-                className="rounded-xl shadow-md object-cover w-full"
-              />
+            
+            <div className="relative lg:block hidden">
+              <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 transform rotate-1 relative">
+                <div className="absolute -top-3 -right-3 bg-blue-100 px-3 py-1 rounded-full text-blue-700 text-xs font-medium">
+                  Transparent prices
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {solutionFeatures.slice(0, 4).map((feature, index) => (
+                    <motion.div 
+                      key={index}
+                      className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-all"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
+                      <div className="bg-blue-100 p-2 rounded-full w-10 h-10 flex items-center justify-center mb-3">
+                        {feature.icon}
+                      </div>
+                      <h3 className="font-medium text-sm mb-1">{feature.title}</h3>
+                      <p className="text-xs text-gray-500">{feature.description}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="absolute -bottom-5 -left-5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg shadow-lg p-4 transform -rotate-3">
+                <div className="font-medium text-sm mb-2 text-blue-800">Ready to join?</div>
+                <div className="flex space-x-2">
+                  <div className="bg-white px-3 py-2 rounded text-xs">Customers</div>
+                  <div className="bg-blue-600 text-white px-3 py-2 rounded text-xs">Garages</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-blue-100/20 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-blue-100/20 to-transparent"></div>
+      </section>
+
+      {/* Market Problems & Our Solution Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">The Problems We Solve</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              BookMyParts addresses critical challenges faced by both vehicle owners and garages in the auto parts and service market
+            </p>
+          </div>
+          
+          <Tabs defaultValue="customer" className="w-full" onValueChange={setActiveTab}>
+            <div className="flex justify-center mb-8">
+              <TabsList className="grid grid-cols-2 w-full max-w-md">
+                <TabsTrigger value="customer" className="text-sm md:text-base py-2">
+                  Vehicle Owners
+                </TabsTrigger>
+                <TabsTrigger value="garage" className="text-sm md:text-base py-2">
+                  Garage Businesses
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="customer" className="mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {customerProblems.map((problem, index) => (
+                  <motion.div
+                    key={index}
+                    className="bg-white border border-red-100 rounded-lg p-6 shadow-sm hover:shadow-md transition-all"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ 
+                      opacity: activeTab === "customer" ? 1 : 0,
+                      y: activeTab === "customer" ? 0 : 20,
+                    }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <div className="bg-red-50 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                      {problem.icon}
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{problem.title}</h3>
+                    <p className="text-gray-600">{problem.description}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="garage" className="mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {garageProblems.map((problem, index) => (
+                  <motion.div
+                    key={index}
+                    className="bg-white border border-green-100 rounded-lg p-6 shadow-sm hover:shadow-md transition-all"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ 
+                      opacity: activeTab === "garage" ? 1 : 0,
+                      y: activeTab === "garage" ? 0 : 20,
+                    }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <div className="bg-green-50 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                      {problem.icon}
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{problem.title}</h3>
+                    <p className="text-gray-600">{problem.description}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <div className="mt-16 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Our Solution</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-10">
+              An all-in-one platform that connects vehicle owners with parts and trusted garages
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {solutionFeatures.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-blue-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <div className="bg-white w-16 h-16 rounded-full shadow-sm flex items-center justify-center mb-4 mx-auto">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2 text-center">{feature.title}</h3>
+                  <p className="text-gray-600 text-center">{feature.description}</p>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>
@@ -246,7 +475,7 @@ const Index = () => {
       {/* How It Works */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">How BookMyParts Works</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Find parts and book services in three simple steps
@@ -254,33 +483,33 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center p-6">
+            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
               <div className="bg-blue-100 p-4 rounded-full mb-6">
-                <Settings className="h-8 w-8 text-blue-600" />
+                <Search className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Choose Your Car</h3>
+              <h3 className="text-xl font-semibold mb-3">Search For Parts</h3>
               <p className="text-gray-600">
-                Select your car's manufacturer, model, and make year to find compatible parts.
+                Find the exact parts you need by vehicle make, model, or by scanning your existing part
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-6">
+            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
               <div className="bg-blue-100 p-4 rounded-full mb-6">
-                <Settings className="h-8 w-8 text-blue-600" />
+                <MapPin className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Browse Parts</h3>
+              <h3 className="text-xl font-semibold mb-3">Connect With Garages</h3>
               <p className="text-gray-600">
-                Explore a wide range of parts from various garages and suppliers in your area.
+                Choose from nearby trusted garages with transparent pricing and reviews
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-6">
+            <div className="flex flex-col items-center text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
               <div className="bg-blue-100 p-4 rounded-full mb-6">
-                <CreditCard className="h-8 w-8 text-blue-600" />
+                <CalendarDays className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Connect & Buy</h3>
+              <h3 className="text-xl font-semibold mb-3">Book & Complete</h3>
               <p className="text-gray-600">
-                Purchase parts or book service appointments directly through our platform.
+                Schedule appointments, purchase parts, and track your service history all in one place
               </p>
             </div>
           </div>
