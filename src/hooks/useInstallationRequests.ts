@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -60,7 +59,6 @@ export const useInstallationRequests = (garageId: string) => {
   });
   const { toast } = useToast();
 
-  // Function to fetch customer details directly from an order
   const fetchOrderCustomerDetails = async (orderId: string) => {
     try {
       console.log(`Fetching customer details for order: ${orderId}`);
@@ -83,8 +81,7 @@ export const useInstallationRequests = (garageId: string) => {
       return null;
     }
   };
-  
-  // Function to fetch customer profile data
+
   const fetchProfileData = async (userId: string) => {
     try {
       console.log(`Fetching profile data for user: ${userId}`);
@@ -118,7 +115,6 @@ export const useInstallationRequests = (garageId: string) => {
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      // Get the authenticated user first to confirm our auth state
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error("Auth session error:", sessionError);
@@ -128,7 +124,6 @@ export const useInstallationRequests = (garageId: string) => {
         setDebug(prev => ({ ...prev, authSession: sessionData }));
       }
       
-      // Fetch order items assigned to this garage with installation data
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -179,7 +174,6 @@ export const useInstallationRequests = (garageId: string) => {
       console.log("Order IDs to fetch:", orderIds);
       setDebug(prev => ({ ...prev, orderIds }));
       
-      // Fetch all orders in a single query
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
@@ -193,7 +187,6 @@ export const useInstallationRequests = (garageId: string) => {
       console.log("Fetched orders:", ordersData);
       setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
-      // Create a map for quick order lookup
       const orderMap = new Map();
       if (ordersData && ordersData.length > 0) {
         ordersData.forEach(order => {
@@ -201,7 +194,6 @@ export const useInstallationRequests = (garageId: string) => {
         });
       }
       
-      // Direct query to test RLS policies
       const { data: directTestData, error: directTestError } = await supabase
         .from('order_items')
         .select('*')
@@ -216,7 +208,6 @@ export const useInstallationRequests = (garageId: string) => {
         }
       }));
       
-      // Fetch part data for display
       const partIds = orderItemsData.map(item => item.part_id);
       
       const { data: partsData, error: partsError } = await supabase
@@ -239,20 +230,16 @@ export const useInstallationRequests = (garageId: string) => {
         });
       }
       
-      // Map to store customer data fetched directly
       const customerDataMap = new Map();
       
-      // For each order ID, fetch customer details directly to ensure we have the latest data
       for (const orderId of orderIds) {
         const customerData = await fetchOrderCustomerDetails(orderId);
         if (customerData) {
           customerDataMap.set(orderId, customerData);
           
-          // Now fetch profile data if we have a user_id
           if (customerData.user_id) {
             const profileData = await fetchProfileData(customerData.user_id);
             if (profileData) {
-              // Store profile data in debug info
               setDebug(prev => ({ 
                 ...prev, 
                 profileData: {
@@ -265,64 +252,55 @@ export const useInstallationRequests = (garageId: string) => {
         }
       }
       
-      // Save the customer data for debugging
       setDebug(prev => ({ ...prev, customerDataFromOrders: Object.fromEntries(customerDataMap) }));
       
-      // Map order items to installation requests for display
       const requests: InstallationRequest[] = await Promise.all(orderItemsData
         .map(async (item) => {
-          // Get the corresponding order data
           const order = orderMap.get(item.order_id);
           
-          // Debug: Store the order data for better troubleshooting
-          setDebug(prev => ({ 
-            ...prev, 
-            [`orderData_${item.order_id}`]: order,
-            orderData: order
-          }));
+          console.log(`Processing order item ${item.id}:`, {
+            orderId: item.order_id,
+            orderDetails: order,
+            profileData: order?.user_id ? debug.profileData?.[order.user_id] : null
+          });
           
-          // Get corresponding part if available
-          const part = partMap.get(item.part_id);
+          console.group(`Customer Info for Order Item ${item.id}`);
+          console.log('Order Details:', order);
+          console.log('Direct Customer Data:', customerDataMap.get(item.order_id));
+          console.log('Profile Data:', order?.user_id ? debug.profileData?.[order.user_id] : 'No profile data');
+          console.groupEnd();
           
-          // Get customer data that was fetched directly
-          const directCustomerData = customerDataMap.get(item.order_id);
-          
-          // Default values - only use order data, no fallback to profiles
           let customerName = "Unknown Customer";
           let customerPhone = "No Phone";
           let customerEmail = "No Email";
           let customerSourceInfo = "Not found";
           
-          // Get profile data if user_id exists
           let profileData = null;
           if (order?.user_id) {
-            // Look up profile data from debug state
             const profileInfo = debug.profileData?.[order.user_id];
             if (profileInfo) {
               profileData = profileInfo;
             }
           }
           
-          // First try direct customer data
-          if (directCustomerData) {
-            if (directCustomerData.user_name) {
-              customerName = directCustomerData.user_name;
+          if (customerDataMap.get(item.order_id)) {
+            if (customerDataMap.get(item.order_id).user_name) {
+              customerName = customerDataMap.get(item.order_id).user_name;
               customerSourceInfo = "Direct Order Query (name)";
             }
             
-            if (directCustomerData.user_email) {
-              customerEmail = directCustomerData.user_email;
+            if (customerDataMap.get(item.order_id).user_email) {
+              customerEmail = customerDataMap.get(item.order_id).user_email;
               customerSourceInfo = customerSourceInfo === "Not found" ? 
                 "Direct Order Query (email)" : customerSourceInfo + " + email";
             }
             
-            if (directCustomerData.user_phone) {
-              customerPhone = directCustomerData.user_phone;
+            if (customerDataMap.get(item.order_id).user_phone) {
+              customerPhone = customerDataMap.get(item.order_id).user_phone;
               customerSourceInfo = customerSourceInfo === "Not found" ? 
                 "Direct Order Query (phone)" : customerSourceInfo + " + phone";
             }
             
-            // If there's profile data, prioritize it for name and phone
             if (profileData) {
               if (profileData.firstName || profileData.lastName) {
                 const fullName = [profileData.firstName, profileData.lastName]
@@ -341,8 +319,8 @@ export const useInstallationRequests = (garageId: string) => {
               }
             }
           }
-          // Then use data from the orders table
-          else if (order) {
+          
+          if (order) {
             if (order.user_name) {
               customerName = order.user_name;
               customerSourceInfo = "Order Table (name)";
@@ -360,7 +338,6 @@ export const useInstallationRequests = (garageId: string) => {
                 "Order Table (phone)" : customerSourceInfo + " + phone";
             }
             
-            // If there's profile data, use it when available
             if (profileData) {
               if (profileData.firstName || profileData.lastName) {
                 const fullName = [profileData.firstName, profileData.lastName]
@@ -379,19 +356,8 @@ export const useInstallationRequests = (garageId: string) => {
                   "Profile (phone)" : customerSourceInfo + " + profile phone";
               }
             }
-            
-            // Debug logging for order data
-            console.log(`Using order data for ${item.order_id}:`, {
-              customerName,
-              customerEmail,
-              customerPhone,
-              source: customerSourceInfo
-            });
-          } else {
-            console.log(`No order found for order_id: ${item.order_id}`);
           }
           
-          // Default order date to current date if not available
           const orderDate = order?.created_at ? 
             new Date(order.created_at).toISOString().split('T')[0] : 
             new Date().toISOString().split('T')[0];
@@ -401,7 +367,7 @@ export const useInstallationRequests = (garageId: string) => {
             customerName,
             customerPhone,
             customerEmail,
-            part: part?.name || `Part #${item.part_id}`,
+            part: partMap.get(item.part_id)?.name || `Part #${item.part_id}`,
             orderDate,
             status: item.installation_status || "new",
             price: Number(item.price),
@@ -414,7 +380,6 @@ export const useInstallationRequests = (garageId: string) => {
             partId: item.part_id
           };
           
-          // Final debug log for this request
           console.log(`Processed installation request for ${item.id}:`, requestData);
           
           return requestData;
@@ -452,7 +417,6 @@ export const useInstallationRequests = (garageId: string) => {
     }
   };
 
-  // Update the status of an installation request
   const updateInstallationStatus = async (
     orderItemId: string, 
     status: string, 
@@ -495,7 +459,6 @@ export const useInstallationRequests = (garageId: string) => {
     }
   };
 
-  // Schedule an appointment for installation
   const scheduleInstallation = async (
     orderItemId: string,
     selectedDate: Date,
