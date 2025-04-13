@@ -32,6 +32,7 @@ export type RPCFunctions = {
     request_matches: boolean;
   }[];
   is_garage_staff: (args: { garage_id: string }) => boolean;
+  generate_confirmation_code: () => string;
 };
 
 // Enhance the SupabaseClient type with our custom RPC function signatures
