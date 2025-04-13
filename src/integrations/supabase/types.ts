@@ -112,6 +112,13 @@ export type Database = {
             foreignKeyName: "cart_items_part_id_fkey"
             columns: ["part_id"]
             isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["part_id"]
+          },
+          {
+            foreignKeyName: "cart_items_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
             referencedRelation: "parts"
             referencedColumns: ["id"]
           },
@@ -194,6 +201,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "garages"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installation_request_garages_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["order_item_id"]
           },
           {
             foreignKeyName: "installation_request_garages_order_item_id_fkey"
@@ -305,6 +319,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["part_id"]
           },
           {
             foreignKeyName: "order_items_part_id_fkey"
@@ -455,6 +476,13 @@ export type Database = {
             foreignKeyName: "parts_garages_part_id_fkey"
             columns: ["part_id"]
             isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["part_id"]
+          },
+          {
+            foreignKeyName: "parts_garages_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
             referencedRelation: "parts"
             referencedColumns: ["id"]
           },
@@ -589,12 +617,86 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      installation_request_details: {
+        Row: {
+          garage_id: string | null
+          garage_location: string | null
+          garage_name: string | null
+          installation_fee: number | null
+          installation_status: string | null
+          item_part_id: number | null
+          order_id: string | null
+          order_item_id: string | null
+          part_description: string | null
+          part_id: number | null
+          part_image_url: string | null
+          part_name: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          user_email: string | null
+          user_first_name: string | null
+          user_id: string | null
+          user_last_name: string | null
+          user_name: string | null
+          user_phone: string | null
+          user_phone_profile: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_part_id_fkey"
+            columns: ["item_part_id"]
+            isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["part_id"]
+          },
+          {
+            foreignKeyName: "order_items_part_id_fkey"
+            columns: ["item_part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      debug_installation_request_access: {
+        Args: { garage_id_param: string }
+        Returns: {
+          has_access: boolean
+          user_id: string
+          user_garage_id: string
+          request_garage_id: string
+          is_staff: boolean
+          error_message: string
+        }[]
+      }
       generate_confirmation_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_customer_info_for_installation: {
+        Args: { order_id_param: string }
+        Returns: {
+          customer_name: string
+          customer_email: string
+          customer_phone: string
+          customer_source_info: string
+        }[]
       }
       get_garages_for_part: {
         Args: { part_id_param: number }
@@ -614,6 +716,36 @@ export type Database = {
           location: string
           installation_fee: number
         }[]
+      }
+      get_installation_requests_for_garage: {
+        Args: { garage_id_param: string }
+        Returns: {
+          garage_id: string | null
+          garage_location: string | null
+          garage_name: string | null
+          installation_fee: number | null
+          installation_status: string | null
+          item_part_id: number | null
+          order_id: string | null
+          order_item_id: string | null
+          part_description: string | null
+          part_id: number | null
+          part_image_url: string | null
+          part_name: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          user_email: string | null
+          user_first_name: string | null
+          user_id: string | null
+          user_last_name: string | null
+          user_name: string | null
+          user_phone: string | null
+          user_phone_profile: string | null
+        }[]
+      }
+      has_installation_request_access: {
+        Args: { request_garage_id: string }
+        Returns: boolean
       }
       insert_part: {
         Args: { part_data: Json }
