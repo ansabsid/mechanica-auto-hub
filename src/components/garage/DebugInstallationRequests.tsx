@@ -1,23 +1,29 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { debugCheckAllInstallationRequests } from "@/api/orderApi";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Bug, Info, ShieldAlert, User, Wrench } from "lucide-react";
+import { Loader2, Bug, Info, ShieldAlert, User, Wrench, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const DebugInstallationRequests = () => {
   const [loading, setLoading] = React.useState(false);
   const [debugResults, setDebugResults] = React.useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [errorDetails, setErrorDetails] = React.useState<any[]>([]);
   const garageMastersId = "c64a9350-d34a-4903-b34c-16c0e4699a44"; // Hardcoded for demo
 
   const runFullDiagnostics = async () => {
     setLoading(true);
+    setErrorDetails([]);
     toast.info("Running diagnostics...");
     
     try {
       console.log("🔍 [DEBUG] Starting full installation requests diagnostics");
       const results: any = {};
+      const errors: any[] = [];
       
       // Check if current user is authenticated
       const { data: sessionData } = await supabase.auth.getSession();
@@ -40,6 +46,11 @@ export const DebugInstallationRequests = () => {
         if (profileError) {
           console.error("🔍 [DEBUG] Error checking user profile:", profileError);
           results.profileError = profileError;
+          errors.push({
+            type: "profile",
+            message: "Failed to fetch user profile",
+            details: profileError
+          });
         } else {
           console.log("🔍 [DEBUG] User profile:", profileData);
           results.profile = profileData;
@@ -58,6 +69,11 @@ export const DebugInstallationRequests = () => {
             if (garageError) {
               console.error("🔍 [DEBUG] Error checking garage:", garageError);
               results.garageError = garageError;
+              errors.push({
+                type: "garage",
+                message: "Failed to fetch garage data",
+                details: garageError
+              });
             } else {
               console.log("🔍 [DEBUG] Garage data:", garageData);
               results.garage = garageData;
@@ -75,6 +91,11 @@ export const DebugInstallationRequests = () => {
             if (garageMastersError) {
               console.error(`🔍 [DEBUG] Error checking Garage Masters (${garageMastersId}):`, garageMastersError);
               results.garageMastersError = garageMastersError;
+              errors.push({
+                type: "garageMasters",
+                message: "Failed to fetch Garage Masters data",
+                details: garageMastersError
+              });
             } else {
               console.log("🔍 [DEBUG] Garage Masters data:", garageMastersData);
               results.garageMasters = garageMastersData;
@@ -97,6 +118,11 @@ export const DebugInstallationRequests = () => {
         if (policiesTestError) {
           console.error("🔍 [DEBUG] Error checking policies access:", policiesTestError);
           results.policiesError = policiesTestError;
+          errors.push({
+            type: "policies",
+            message: "RLS policy issues detected",
+            details: policiesTestError
+          });
           
           // Provide more information about potential RLS issues
           console.log("🔍 [DEBUG] Using alternative method to check policies");
@@ -111,16 +137,30 @@ export const DebugInstallationRequests = () => {
             success: true
           };
         }
+      } else {
+        errors.push({
+          type: "auth",
+          message: "User is not authenticated",
+          details: "A valid session is required to access installation requests"
+        });
       }
       
       // Run the comprehensive debug function
-      await debugCheckAllInstallationRequests();
+      try {
+        await debugCheckAllInstallationRequests();
+      } catch (debugError) {
+        console.error("🔍 [DEBUG] Error in debugCheckAllInstallationRequests:", debugError);
+        errors.push({
+          type: "debugFunction",
+          message: "Error in installation requests diagnostic function",
+          details: debugError
+        });
+      }
       
       // Check specifically for Garage Masters ID installations
       console.log(`🔍 [DEBUG] Checking installation requests for garage: ${garageMastersId}`);
       console.log(`🔍 [DEBUG] Running query: .eq('garage_id', '${garageMastersId}')`);
       
-      // IMPORTANT: Fixed the query with proper string quotes for UUID
       const { data: specificItems, error: specificError } = await supabase
         .from('order_items')
         .select('*')
@@ -130,6 +170,11 @@ export const DebugInstallationRequests = () => {
       if (specificError) {
         console.error("🔍 [DEBUG] Error checking for specific garage:", specificError);
         results.specificItemsError = specificError;
+        errors.push({
+          type: "specificItems",
+          message: "Failed to fetch items for garage",
+          details: specificError
+        });
       } else {
         console.log("🔍 [DEBUG] All order items for this garage:", specificItems);
         results.specificItems = specificItems;
@@ -144,6 +189,11 @@ export const DebugInstallationRequests = () => {
       if (allItemsError) {
         console.error("🔍 [DEBUG] Error checking all order_items:", allItemsError);
         results.allItemsError = allItemsError;
+        errors.push({
+          type: "allItems",
+          message: "Failed to fetch all order items",
+          details: allItemsError
+        });
       } else {
         console.log("🔍 [DEBUG] Checking ALL order_items in the database (limit 10):");
         console.log("🔍 [DEBUG] Sample items from order_items table:", allItems);
@@ -167,6 +217,11 @@ export const DebugInstallationRequests = () => {
       if (installationError) {
         console.error("🔍 [DEBUG] Error checking items with installation_status:", installationError);
         results.installationItemsError = installationError;
+        errors.push({
+          type: "installationItems",
+          message: "Failed to fetch items with installation status",
+          details: installationError
+        });
       } else {
         console.log(`🔍 [DEBUG] Fetched order items with installation: ${JSON.stringify(installationItems)}`);
         results.installationItems = installationItems;
@@ -177,6 +232,11 @@ export const DebugInstallationRequests = () => {
         } else {
           console.log(`🔍 [DEBUG] No installation requests found for garage: ${garageMastersId}`);
           toast.warning("No installation requests found in the database");
+          errors.push({
+            type: "noInstallations",
+            message: "No installation requests found",
+            details: "Check if any orders with installation have been created"
+          });
         }
       }
       
@@ -191,6 +251,11 @@ export const DebugInstallationRequests = () => {
       if (incompleteError) {
         console.error("🔍 [DEBUG] Error checking for incomplete installation items:", incompleteError);
         results.incompleteItemsError = incompleteError;
+        errors.push({
+          type: "incompleteItems",
+          message: "Failed to check for incomplete installation items",
+          details: incompleteError
+        });
       } else {
         console.log("🔍 [DEBUG] Items with garage_id but no installation_status:", incompleteItems);
         results.incompleteItems = incompleteItems;
@@ -198,14 +263,51 @@ export const DebugInstallationRequests = () => {
         if (incompleteItems && incompleteItems.length > 0) {
           console.log("🔍 [DEBUG] Found incomplete installation items! These need fixing:", incompleteItems);
           toast.error(`Found ${incompleteItems.length} incomplete installation requests. These may need fixing.`);
+          errors.push({
+            type: "incompleteInstallations",
+            message: `${incompleteItems.length} installations have missing data`,
+            details: "Items have garage_id but no installation_status"
+          });
         }
       }
       
+      // Check for orders with customer info
+      console.log("🔍 [DEBUG] Checking for orders with customer information");
+      const { data: ordersWithCustomer, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, user_name, user_email, user_phone')
+        .not('user_name', 'is', null)
+        .limit(10);
+        
+      if (ordersError) {
+        console.error("🔍 [DEBUG] Error checking orders with customer info:", ordersError);
+        errors.push({
+          type: "customerInfo",
+          message: "Failed to check orders with customer info",
+          details: ordersError
+        });
+      } else {
+        console.log("🔍 [DEBUG] Orders with customer info:", ordersWithCustomer);
+        results.ordersWithCustomer = ordersWithCustomer;
+      }
+      
       setDebugResults(results);
-      toast.success("Diagnostics completed, check console logs for details");
+      setErrorDetails(errors);
+      
+      if (errors.length > 0) {
+        toast.error(`Found ${errors.length} issues that need attention`);
+        setIsDialogOpen(true);
+      } else {
+        toast.success("Diagnostics completed with no issues detected");
+      }
     } catch (error) {
       console.error("🔍 [DEBUG] Error in diagnostics:", error);
       toast.error("Error running diagnostics, check console");
+      setErrorDetails([{
+        type: "general",
+        message: "Unexpected error during diagnostics",
+        details: error
+      }]);
     } finally {
       setLoading(false);
     }
@@ -235,6 +337,42 @@ export const DebugInstallationRequests = () => {
     } catch (error) {
       console.error("🔍 [DEBUG] Error in fixUserProfile:", error);
       toast.error("Error fixing user profile");
+    }
+  };
+
+  const fixIncompleteItems = async () => {
+    if (!debugResults?.incompleteItems || debugResults.incompleteItems.length === 0) {
+      toast.error("No incomplete items to fix");
+      return;
+    }
+    
+    try {
+      toast.info("Attempting to fix incomplete installation items...");
+      let fixedCount = 0;
+      
+      for (const item of debugResults.incompleteItems) {
+        const { error } = await supabase
+          .from('order_items')
+          .update({ installation_status: 'new' })
+          .eq('id', item.id);
+          
+        if (error) {
+          console.error(`🔍 [DEBUG] Error fixing item ${item.id}:`, error);
+        } else {
+          console.log(`🔍 [DEBUG] Successfully fixed item ${item.id}`);
+          fixedCount++;
+        }
+      }
+      
+      if (fixedCount > 0) {
+        toast.success(`Fixed ${fixedCount} installation items`);
+        runFullDiagnostics();
+      } else {
+        toast.error("Failed to fix any installation items");
+      }
+    } catch (error) {
+      console.error("🔍 [DEBUG] Error in fixIncompleteItems:", error);
+      toast.error("Error fixing incomplete items");
     }
   };
 
@@ -329,8 +467,19 @@ export const DebugInstallationRequests = () => {
             <div className="mb-2">
               <strong>Incomplete items:</strong> {debugResults.incompleteItems?.length || 0}
               {debugResults.incompleteItems?.length > 0 && (
-                <div className="text-red-500">⚠️ Installation data may be incomplete</div>
+                <div className="flex flex-col">
+                  <div className="text-red-500">⚠️ Installation data may be incomplete</div>
+                  <button
+                    onClick={fixIncompleteItems}
+                    className="mt-1 text-white bg-mechanica-500 hover:bg-mechanica-600 p-1 rounded text-xs"
+                  >
+                    Fix Incomplete Items
+                  </button>
+                </div>
               )}
+            </div>
+            <div className="mb-2">
+              <strong>Orders with customer info:</strong> {debugResults.ordersWithCustomer?.length || 0}
             </div>
             <button
               onClick={() => console.log("Full debug results:", debugResults)}
@@ -341,6 +490,57 @@ export const DebugInstallationRequests = () => {
           </div>
         </div>
       )}
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
+              Installation System Diagnostic Results
+            </DialogTitle>
+            <DialogDescription>
+              The following issues were detected with the installation request system:
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {errorDetails.map((error, index) => (
+              <Alert key={index} variant="destructive">
+                <AlertDescription className="space-y-2">
+                  <div className="font-semibold">{error.message}</div>
+                  <div className="text-sm opacity-90">{typeof error.details === 'string' ? error.details : JSON.stringify(error.details)}</div>
+                </AlertDescription>
+              </Alert>
+            ))}
+            
+            {errorDetails.some(e => e.type === "incompleteInstallations") && (
+              <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
+                <h4 className="font-medium text-sm mb-1">Fixing Incomplete Installations</h4>
+                <p className="text-sm mb-2">Some installations have missing data. This can be fixed automatically.</p>
+                <Button 
+                  onClick={fixIncompleteItems}
+                  className="w-full mt-2"
+                  variant="outline"
+                >
+                  Fix Incomplete Installation Items
+                </Button>
+              </div>
+            )}
+            
+            {errorDetails.some(e => e.type === "auth" || e.type === "profile") && (
+              <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
+                <h4 className="font-medium text-sm mb-1">Authentication & Profile Issues</h4>
+                <p className="text-sm">Make sure you're logged in with a garage account and properly associated with Garage Masters.</p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
+
