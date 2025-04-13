@@ -182,8 +182,8 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-50"
       style={{ 
-        opacity: 0.7, // Lower the opacity of the entire canvas
-        mixBlendMode: 'normal' // Changed from 'lighten' to 'normal'
+        opacity: 0.8, // Updated to 80% opacity as requested
+        mixBlendMode: 'normal'
       }}
     />
   );
