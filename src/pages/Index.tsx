@@ -34,7 +34,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { motion, useScroll, useTransform, useMotionValue, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValue } from "framer-motion";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -483,7 +483,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.5 }}
-                className="relative"
+                className="relative h-[560px]"
                 style={{
                   transform: `rotateY(${mousePosition.x * 10 - 5}deg) rotateX(${-mousePosition.y * 10 + 5}deg)`,
                   transformStyle: "preserve-3d",
@@ -491,7 +491,7 @@ const Index = () => {
                 }}
               >
                 {/* Main glass card */}
-                <div className="relative z-20 bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-glass p-8 hover:shadow-lg transition-all duration-300">
+                <div className="relative z-20 bg-white/60 backdrop-blur-xl rounded-3xl border border-white/40 shadow-glass p-8 hover:shadow-lg transition-all duration-300 w-[90%] mx-auto mt-10">
                   <div className="absolute -top-3 -right-3 bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 rounded-full text-white text-xs font-semibold z-30 shadow-md">
                     Transparent pricing
                   </div>
@@ -529,9 +529,9 @@ const Index = () => {
                   <div className="absolute bottom-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-transparent to-blue-50/50 pointer-events-none rounded-3xl" />
                 </div>
                 
-                {/* Floating card 1 */}
+                {/* Floating card 1 - Positioned to be visible to the right */}
                 <div 
-                  className="absolute -bottom-14 -right-5 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-5 z-10 text-white shadow-lg transform rotate-3 w-64"
+                  className="absolute -bottom-2 right-0 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-5 z-10 text-white shadow-lg transform rotate-3 w-64"
                   style={{
                     transformStyle: "preserve-3d",
                     transform: "translateZ(-30px) rotate(3deg)",
@@ -551,9 +551,9 @@ const Index = () => {
                   </div>
                 </div>
                 
-                {/* Floating card 2 */}
+                {/* Floating card 2 - Positioned to be visible to the left */}
                 <div 
-                  className="absolute -top-10 -left-8 bg-white/80 backdrop-blur-md rounded-2xl p-5 z-10 shadow-glass transform -rotate-6 w-56 border border-white/40"
+                  className="absolute -top-8 -left-4 bg-white/80 backdrop-blur-md rounded-2xl p-5 z-10 shadow-glass transform -rotate-6 w-56 border border-white/40"
                   style={{
                     transformStyle: "preserve-3d",
                     transform: "translateZ(-20px) rotate(-6deg)",
@@ -601,7 +601,7 @@ const Index = () => {
                 </motion.div>
                 
                 <motion.div 
-                  className="absolute bottom-4 -left-6 bg-gradient-to-r from-amber-100 to-yellow-100 px-4 py-2 rounded-full text-amber-800 text-xs font-medium shadow-sm z-30"
+                  className="absolute bottom-10 -left-10 bg-gradient-to-r from-amber-100 to-yellow-100 px-4 py-2 rounded-full text-amber-800 text-xs font-medium shadow-sm z-30"
                   style={{
                     transformStyle: "preserve-3d",
                     transform: "translateZ(40px) rotate(-5deg)",
