@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { slideData } from "@/components/pitch-deck/SlideData";
 import SlideContainer from "@/components/pitch-deck/SlideContainer";
@@ -61,7 +62,7 @@ const PitchDeck = () => {
       setIsConfettiActive(true);
       const timer = setTimeout(() => {
         setIsConfettiActive(false);
-      }, 8000);
+      }, 5000); // Reduced from 8000 to 5000
       return () => clearTimeout(timer);
     }
   }, [currentSlide]);

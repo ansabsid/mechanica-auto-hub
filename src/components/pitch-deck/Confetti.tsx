@@ -42,17 +42,17 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     const shapes = ['circle', 'star', 'square', 'triangle'] as const;
     
     // Generate particles
-    const particleCount = 120;
+    const particleCount = 100; // Reduced from 120
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: -Math.random() * canvas.height * 0.5,
-        size: Math.random() * 10 + 5,
+        size: Math.random() * 8 + 4, // Slightly smaller sizes
         color: colors[Math.floor(Math.random() * colors.length)],
-        speed: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.5 + 0.5,
+        speed: Math.random() * 1.5 + 0.8, // Slightly slower
+        opacity: Math.random() * 0.4 + 0.3, // Lower opacity
         rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (Math.random() - 0.5) * 0.05,
+        rotationSpeed: (Math.random() - 0.5) * 0.04,
         type: shapes[Math.floor(Math.random() * shapes.length)]
       });
     }
@@ -122,9 +122,8 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     const animate = () => {
       if (!ctx) return;
       
-      // Apply subtle fade effect to create trails
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear canvas completely each frame to prevent buildup
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Update and draw particles
       particles.forEach((particle, index) => {
@@ -135,21 +134,18 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
         // Add some horizontal drift
         particle.x += Math.sin(particle.y * 0.01) * 0.5;
         
-        // Gradually reduce opacity
-        particle.opacity = Math.max(0, particle.opacity - 0.001);
-        
         // Draw the particle
         drawParticle(particle);
         
-        // Reset particles that go offscreen or fade out
-        if (particle.y > canvas.height || particle.opacity <= 0.1) {
+        // Reset particles that go offscreen
+        if (particle.y > canvas.height) {
           particles[index] = {
             ...particle,
             x: Math.random() * canvas.width,
             y: -particle.size,
-            size: Math.random() * 10 + 5,
-            speed: Math.random() * 2 + 1,
-            opacity: Math.random() * 0.5 + 0.5
+            size: Math.random() * 8 + 4,
+            speed: Math.random() * 1.5 + 0.8,
+            opacity: Math.random() * 0.4 + 0.3
           };
         }
       });
@@ -185,7 +181,10 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-50"
-      style={{ mixBlendMode: 'lighten' }}
+      style={{ 
+        opacity: 0.7, // Lower the opacity of the entire canvas
+        mixBlendMode: 'normal' // Changed from 'lighten' to 'normal'
+      }}
     />
   );
 };
