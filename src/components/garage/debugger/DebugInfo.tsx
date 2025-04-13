@@ -41,6 +41,17 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           </div>
         </div>
         
+        <div className="mb-2">
+          <div className="font-medium text-xs mb-1">RLS Status:</div>
+          <div className="text-xs bg-gray-50 p-2 rounded">
+            <div>Garage Access: {debugInfo.hasGarageAccess ? 'Granted' : 'Denied'}</div>
+            <div>Policy Status: {debugInfo.rlsStatus || 'Unknown'}</div>
+            {debugInfo.rlsError && (
+              <div className="text-red-600">Error: {debugInfo.rlsError}</div>
+            )}
+          </div>
+        </div>
+        
         <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-[200px]">
           {JSON.stringify(debugInfo, null, 2)}
         </pre>
