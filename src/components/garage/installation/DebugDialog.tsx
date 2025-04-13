@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { RlsDebugHelper } from "./RlsDebugHelper";
 
 interface DebugDialogProps {
   open: boolean;
@@ -54,6 +55,8 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
         </DialogHeader>
         
         <div className="space-y-4">
+          {debug.garageId && <RlsDebugHelper garageId={debug.garageId} />}
+          
           <div className="bg-gray-100 p-4 rounded-md">
             <h3 className="font-medium mb-2">Authentication Status</h3>
             <pre className="text-xs overflow-auto max-h-40">
