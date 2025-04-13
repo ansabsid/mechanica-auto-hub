@@ -29,7 +29,6 @@ import {
   Clock,
   Shield,
   CircleCheck,
-  Scanner,
   CheckSquare,
   CreditCard as PaymentIcon
 } from "lucide-react";
@@ -170,7 +169,7 @@ const customerJourneySteps = [
     step: 1
   },
   {
-    icon: <Scanner className="h-8 w-8 text-blue-600" />,
+    icon: <Search className="h-8 w-8 text-blue-600" />,
     title: "Scan or Search for Parts",
     description: "Use our scanning feature or search for the exact part you need",
     step: 2
