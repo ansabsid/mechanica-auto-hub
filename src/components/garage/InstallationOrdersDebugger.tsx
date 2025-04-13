@@ -70,7 +70,35 @@ export const InstallationOrdersDebugger = () => {
     try {
       console.log(`Fetching order details for ID: ${orderId}`);
       
-      // Fetch specific order - use maybeSingle instead of single to avoid errors when no results are found
+      // IMPORTANT FIX: Directly querying order_items to get customer information
+      const { data: orderItem, error: orderItemError } = await supabase
+        .from('order_items')
+        .select(`
+          id,
+          order_id,
+          scheduled_date,
+          scheduled_time,
+          installation_status,
+          orders (
+            id,
+            user_name,
+            user_email,
+            user_phone,
+            user_id
+          )
+        `)
+        .eq('order_id', orderId)
+        .maybeSingle();
+        
+      if (orderItemError) {
+        console.error("Error fetching order item with order data:", orderItemError);
+        setDebugInfo(prev => ({ ...prev, orderItemError }));
+      }
+      
+      console.log("Order item with order data:", orderItem);
+      setDebugInfo(prev => ({ ...prev, orderItemWithOrderData: orderItem }));
+      
+      // Direct approach: Get order data without join
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select('*')
@@ -80,129 +108,109 @@ export const InstallationOrdersDebugger = () => {
       if (orderError) {
         console.error("Error fetching order:", orderError);
         setDebugInfo(prev => ({ ...prev, orderError }));
-        throw orderError;
+      } else {
+        console.log("Direct order data:", orderData);
+        setDebugInfo(prev => ({ ...prev, directOrderData: orderData }));
       }
       
-      // Add full order data to debug info
-      setDebugInfo(prev => ({ ...prev, orderData }));
+      let customerInfo = {
+        name: '',
+        email: '',
+        phone: ''
+      };
       
-      // Set customer details if available
+      // Try to get customer info from order data
       if (orderData) {
-        console.log("Order data found:", orderData);
+        customerInfo.name = orderData.user_name || '';
+        customerInfo.email = orderData.user_email || '';
+        customerInfo.phone = orderData.user_phone || '';
         
-        // Set the values, using empty string as fallback
-        const name = orderData.user_name || "";
-        const email = orderData.user_email || "";
-        const phone = orderData.user_phone || "";
+        console.log("Got customer info from orders table:", customerInfo);
+        setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'From orders table' }));
+      } 
+      // If no order data or missing customer info, try to get from order item join
+      else if (orderItem?.orders) {
+        customerInfo.name = orderItem.orders.user_name || '';
+        customerInfo.email = orderItem.orders.user_email || '';
+        customerInfo.phone = orderItem.orders.user_phone || '';
         
-        setCustomerName(name);
-        setCustomerEmail(email);
-        setCustomerPhone(phone);
-        
-        // Log the values we're setting
-        console.log("Setting customer values:", { name, email, phone });
-        
-        // Add this info to debug
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          customerInfo: { name, email, phone },
-          customerInfoSource: "From order data"
-        }));
-      } else {
-        // Clear fields if no order data is found
-        setCustomerName("");
-        setCustomerEmail("");
-        setCustomerPhone("");
-        
-        // Add information to debug info that no order was found
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          orderDataStatus: `No order found with ID: ${orderId}. This might mean the order was deleted or doesn't exist.`,
-          customerInfoSource: "No order data found" 
-        }));
+        console.log("Got customer info from order_items join:", customerInfo);
+        setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'From order_items join' }));
+      }
+      
+      // If we still don't have all customer info and we have a user_id, try profiles
+      const userId = orderData?.user_id || orderItem?.orders?.user_id;
+      if (userId && (!customerInfo.name || !customerInfo.email || !customerInfo.phone)) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('firstName, lastName, email, phone')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          setDebugInfo(prev => ({ ...prev, profileError }));
+        } else if (profile) {
+          console.log("Got profile:", profile);
+          
+          // Use profile data to fill in missing customer info
+          if (!customerInfo.name && (profile.firstName || profile.lastName)) {
+            customerInfo.name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+          }
+          if (!customerInfo.email && profile.email) {
+            customerInfo.email = profile.email;
+          }
+          if (!customerInfo.phone && profile.phone) {
+            customerInfo.phone = profile.phone;
+          }
+          
+          console.log("Enhanced customer info with profile data:", customerInfo);
+          setDebugInfo(prev => ({ ...prev, customerSourceInfo: 'Enhanced with profile data' }));
+        }
+      }
+      
+      // Set customer info to state, defaulting to empty string if not available
+      setCustomerName(customerInfo.name || '');
+      setCustomerEmail(customerInfo.email || '');
+      setCustomerPhone(customerInfo.phone || '');
+      
+      console.log("Final customer info set to state:", {
+        name: customerInfo.name || '',
+        email: customerInfo.email || '',
+        phone: customerInfo.phone || ''
+      });
+      
+      setDebugInfo(prev => ({
+        ...prev,
+        finalCustomerInfo: {
+          name: customerInfo.name || '',
+          email: customerInfo.email || '',
+          phone: customerInfo.phone || ''
+        }
+      }));
+      
+      // If we couldn't get any customer info, show a toast
+      if (!customerInfo.name && !customerInfo.email && !customerInfo.phone) {
+        console.log("No customer information could be found for this order");
+        setDebugInfo(prev => ({ ...prev, customerInfoStatus: 'Not found' }));
         
         toast({
           title: "Warning",
-          description: `No order found with ID: ${orderId}`,
+          description: "No customer information found for this order",
           variant: "destructive"
         });
-        
-        // Try to fetch user profile if we can't get customer info from the order
-        await tryFetchUserProfile(orderId);
       }
+      
     } catch (error) {
-      console.error("Error fetching order details:", error);
+      console.error("Error in fetchOrderDetails:", error);
       toast({
         title: "Error",
         description: "Failed to fetch order details",
         variant: "destructive"
       });
-      setDebugInfo(prev => ({ ...prev, orderDetailsError: error }));
+      setDebugInfo(prev => ({ ...prev, fetchOrderDetailsError: error }));
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  // Try to get user profile information if order data doesn't have customer details
-  const tryFetchUserProfile = async (orderId: string) => {
-    try {
-      console.log("Trying to fetch user profile for order:", orderId);
-      
-      // First get the user_id from the order
-      const { data: orderWithUserId, error: orderError } = await supabase
-        .from('orders')
-        .select('user_id')
-        .eq('id', orderId)
-        .maybeSingle();
-        
-      if (orderError || !orderWithUserId || !orderWithUserId.user_id) {
-        console.log("Could not get user_id from order:", orderWithUserId, orderError);
-        setDebugInfo(prev => ({ ...prev, userIdLookupResult: "No user_id found in order" }));
-        return;
-      }
-      
-      const userId = orderWithUserId.user_id;
-      console.log("Found user_id:", userId);
-      
-      // Now get the profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('firstName, lastName, email, phone')
-        .eq('id', userId)
-        .maybeSingle();
-        
-      if (profileError || !profile) {
-        console.log("Could not get profile:", profile, profileError);
-        setDebugInfo(prev => ({ ...prev, profileLookupResult: "Profile not found" }));
-        return;
-      }
-      
-      console.log("Found profile:", profile);
-      
-      // If we found a profile, use its data
-      if (profile) {
-        let name = "";
-        if (profile.firstName || profile.lastName) {
-          name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-        }
-        
-        if (name) setCustomerName(name);
-        if (profile.email) setCustomerEmail(profile.email);
-        if (profile.phone) setCustomerPhone(profile.phone);
-        
-        setDebugInfo(prev => ({ 
-          ...prev, 
-          customerInfoFromProfile: { 
-            name, 
-            email: profile.email || "", 
-            phone: profile.phone || "" 
-          },
-          customerInfoSource: "From user profile"
-        }));
-      }
-    } catch (error) {
-      console.error("Error in tryFetchUserProfile:", error);
-      setDebugInfo(prev => ({ ...prev, profileFetchError: error }));
     }
   };
   
@@ -236,13 +244,34 @@ export const InstallationOrdersDebugger = () => {
       }
       
       if (!checkOrder) {
+        // If order doesn't exist, we need to create it
+        console.log("Order not found, creating new order record");
+        setDebugInfo(prev => ({ ...prev, orderAction: 'Creating new order' }));
+        
+        const { data: newOrder, error: createError } = await supabase
+          .from('orders')
+          .insert({
+            id: orderId,
+            user_name: customerName,
+            user_email: customerEmail,
+            user_phone: customerPhone,
+            status: 'pending',
+            total_amount: 0  // Required field, set to default
+          })
+          .select('id')
+          .maybeSingle();
+          
+        if (createError) {
+          console.error("Error creating order:", createError);
+          throw createError;
+        }
+        
         toast({
-          title: "Error",
-          description: "Order not found. It may have been deleted.",
-          variant: "destructive"
+          title: "Success",
+          description: "Order created with customer information"
         });
-        setDebugInfo(prev => ({ ...prev, updateCheckResult: "Order not found" }));
-        setIsLoading(false);
+        
+        setDebugInfo(prev => ({ ...prev, createOrderResult: newOrder }));
         return;
       }
       
@@ -427,7 +456,7 @@ export const InstallationOrdersDebugger = () => {
                       
                       <div className="text-xs bg-gray-50 p-2 rounded">
                         <div className="font-medium mb-1">Data Source:</div>
-                        <div>{debugInfo.customerInfoSource || 'Not set'}</div>
+                        <div>{debugInfo.customerSourceInfo || 'Not set'}</div>
                       </div>
                     </div>
                     
