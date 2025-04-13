@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -38,9 +39,6 @@ interface DebugData {
   partsData?: any;
   partsError?: any;
   partsCount?: number;
-  profilesData?: any;
-  profilesError?: any;
-  profilesCount?: number;
   mappedRequests?: InstallationRequest[];
   requestsCount?: number;
   directTest?: {
@@ -48,6 +46,7 @@ interface DebugData {
     error: any;
   };
   error?: any;
+  customerDataFromOrders?: any;
 }
 
 export const useInstallationRequests = (garageId: string) => {
@@ -59,6 +58,30 @@ export const useInstallationRequests = (garageId: string) => {
     lastFetchTime: null,
   });
   const { toast } = useToast();
+
+  // Function to fetch customer details directly from an order
+  const fetchOrderCustomerDetails = async (orderId: string) => {
+    try {
+      console.log(`Fetching customer details for order: ${orderId}`);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .select('user_name, user_email, user_phone')
+        .eq('id', orderId)
+        .single();
+        
+      if (error) {
+        console.error(`Error fetching customer details for order ${orderId}:`, error);
+        return null;
+      }
+      
+      console.log(`Customer details for order ${orderId}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Error in fetchOrderCustomerDetails for ${orderId}:`, error);
+      return null;
+    }
+  };
 
   const fetchInstallationRequests = async () => {
     if (isRefreshing) return;
@@ -191,9 +214,23 @@ export const useInstallationRequests = (garageId: string) => {
         });
       }
       
+      // Map to store customer data fetched directly
+      const customerDataMap = new Map();
+      
+      // For each order ID, fetch customer details directly to ensure we have the latest data
+      for (const orderId of orderIds) {
+        const customerData = await fetchOrderCustomerDetails(orderId);
+        if (customerData) {
+          customerDataMap.set(orderId, customerData);
+        }
+      }
+      
+      // Save the customer data for debugging
+      setDebug(prev => ({ ...prev, customerDataFromOrders: Object.fromEntries(customerDataMap) }));
+      
       // Map order items to installation requests for display
-      const requests: InstallationRequest[] = orderItemsData
-        .map(item => {
+      const requests: InstallationRequest[] = await Promise.all(orderItemsData
+        .map(async (item) => {
           // Get the corresponding order data
           const order = orderMap.get(item.order_id);
           
@@ -207,14 +244,36 @@ export const useInstallationRequests = (garageId: string) => {
           // Get corresponding part if available
           const part = partMap.get(item.part_id);
           
+          // Get customer data that was fetched directly
+          const directCustomerData = customerDataMap.get(item.order_id);
+          
           // Default values - only use order data, no fallback to profiles
           let customerName = "Unknown Customer";
           let customerPhone = "No Phone";
           let customerEmail = "No Email";
           let customerSourceInfo = "Not found";
           
-          // Use data directly from the orders table
-          if (order) {
+          // First try direct customer data
+          if (directCustomerData) {
+            if (directCustomerData.user_name) {
+              customerName = directCustomerData.user_name;
+              customerSourceInfo = "Direct Order Query (name)";
+            }
+            
+            if (directCustomerData.user_email) {
+              customerEmail = directCustomerData.user_email;
+              customerSourceInfo = customerSourceInfo === "Not found" ? 
+                "Direct Order Query (email)" : customerSourceInfo + " + email";
+            }
+            
+            if (directCustomerData.user_phone) {
+              customerPhone = directCustomerData.user_phone;
+              customerSourceInfo = customerSourceInfo === "Not found" ? 
+                "Direct Order Query (phone)" : customerSourceInfo + " + phone";
+            }
+          }
+          // Then use data from the orders table
+          else if (order) {
             if (order.user_name) {
               customerName = order.user_name;
               customerSourceInfo = "Order Table (name)";
@@ -270,7 +329,7 @@ export const useInstallationRequests = (garageId: string) => {
           console.log(`Processed installation request for ${item.id}:`, requestData);
           
           return requestData;
-        });
+        }));
       
       console.log("Processed installation requests with customer info:", requests);
       setDebug(prev => ({ 

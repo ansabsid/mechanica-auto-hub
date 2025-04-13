@@ -80,6 +80,19 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           </div>
         </div>
         
+        <div className="mb-2">
+          <div className="font-medium text-xs mb-1">Direct Customer Data Fetch:</div>
+          <div className="text-xs bg-gray-50 p-2 rounded">
+            {debugInfo.customerDataFromOrders ? (
+              <pre className="overflow-auto max-h-[100px]">
+                {JSON.stringify(debugInfo.customerDataFromOrders, null, 2)}
+              </pre>
+            ) : (
+              <div className="text-orange-600">No direct customer data fetched</div>
+            )}
+          </div>
+        </div>
+        
         <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-[200px]">
           {JSON.stringify(debugInfo, null, 2)}
         </pre>
