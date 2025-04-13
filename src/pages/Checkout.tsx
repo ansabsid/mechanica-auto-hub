@@ -39,10 +39,11 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { formatPrice } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
-  email: z.string().email({ message: "Invalid email address" }),
+  email: z.string().email({ message: "Valid email address is required" }),
   address: z.string().min(5, { message: "Address is required" }),
   city: z.string().min(2, { message: "City is required" }),
   postalCode: z.string().min(3, { message: "Postal code is required" }),
@@ -62,6 +63,12 @@ const Checkout = () => {
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<"card" | "applepay">("card");
   const isMobile = useIsMobile();
+  const [userProfile, setUserProfile] = useState<{
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  } | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,6 +84,48 @@ const Checkout = () => {
       cardCVC: "",
     },
   });
+  
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        setIsLoadingProfile(true);
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('firstName, lastName, phone')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) {
+            console.error("Error fetching user profile:", error);
+            return;
+          }
+          
+          if (data) {
+            setUserProfile(data);
+            
+            const fullName = [data.firstName, data.lastName]
+              .filter(Boolean)
+              .join(' ');
+              
+            if (fullName) {
+              form.setValue('fullName', fullName);
+            }
+            
+            if (data.phone) {
+              form.setValue('phone', data.phone);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        } finally {
+          setIsLoadingProfile(false);
+        }
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user, form]);
   
   useEffect(() => {
     console.log("Checkout page mounted");
@@ -102,7 +151,6 @@ const Checkout = () => {
       
       console.log("Processing order with values:", values);
       
-      // Pass user details to createOrder
       const userDetails = {
         name: values.fullName,
         email: values.email,
@@ -142,11 +190,24 @@ const Checkout = () => {
         return;
       }
       
+      const formData = form.getValues();
+      
+      if (!formData.fullName || !formData.phone || !formData.address || !formData.city || !formData.postalCode) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in your contact and shipping details before proceeding with Apple Pay",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       console.log("Processing Apple Pay order");
       
-      // Get user email from session for Apple Pay
       const userDetails = {
-        email: user.email
+        name: formData.fullName,
+        email: user.email,
+        phone: formData.phone,
+        address: `${formData.address}, ${formData.city}, ${formData.postalCode}`
       };
       
       const order = await createOrder(cartItems, calculateTotal(), userDetails);
@@ -345,7 +406,12 @@ const Checkout = () => {
                   </Button>
                 </div>
 
-                {paymentMethod === "applepay" ? (
+                {isLoadingProfile ? (
+                  <div className="py-4 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                    <p>Loading your profile information...</p>
+                  </div>
+                ) : paymentMethod === "applepay" ? (
                   <div className="py-4 md:py-6">
                     <Card className="border-2 bg-black text-white">
                       <CardContent className="pt-6 pb-6">
@@ -372,6 +438,91 @@ const Checkout = () => {
                         </div>
                       </CardContent>
                     </Card>
+                    
+                    <div className="mt-6">
+                      <h3 className="font-medium text-base mb-4">Shipping & Contact Details</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Please complete your shipping information before continuing with Apple Pay
+                      </p>
+                      
+                      <Form {...form}>
+                        <form className="space-y-5 md:space-y-6">
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="fullName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Full Name *</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="phone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Phone Number *</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="address"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Address *</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="city"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>City *</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="postalCode"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Postal Code *</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </form>
+                      </Form>
+                    </div>
                   </div>
                 ) : (
                   <Form {...form}>
@@ -385,7 +536,7 @@ const Checkout = () => {
                             name="fullName"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Full Name</FormLabel>
+                                <FormLabel>Full Name *</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
@@ -399,7 +550,7 @@ const Checkout = () => {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel>Email *</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
@@ -413,7 +564,7 @@ const Checkout = () => {
                             name="phone"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Phone Number</FormLabel>
+                                <FormLabel>Phone Number *</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
@@ -431,7 +582,7 @@ const Checkout = () => {
                           name="address"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Address</FormLabel>
+                              <FormLabel>Address *</FormLabel>
                               <FormControl>
                                 <Input {...field} />
                               </FormControl>
@@ -446,7 +597,7 @@ const Checkout = () => {
                             name="city"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>City</FormLabel>
+                                <FormLabel>City *</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
@@ -460,7 +611,7 @@ const Checkout = () => {
                             name="postalCode"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Postal Code</FormLabel>
+                                <FormLabel>Postal Code *</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
@@ -481,7 +632,7 @@ const Checkout = () => {
                           name="cardNumber"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Card Number</FormLabel>
+                              <FormLabel>Card Number *</FormLabel>
                               <FormControl>
                                 <Input 
                                   {...field} 
@@ -501,7 +652,7 @@ const Checkout = () => {
                             name="cardExpiry"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Expiry Date</FormLabel>
+                                <FormLabel>Expiry Date *</FormLabel>
                                 <FormControl>
                                   <Input 
                                     {...field} 
@@ -519,7 +670,7 @@ const Checkout = () => {
                             name="cardCVC"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>CVC</FormLabel>
+                                <FormLabel>CVC *</FormLabel>
                                 <FormControl>
                                   <Input 
                                     {...field} 
