@@ -319,26 +319,38 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          shipping_address: string | null
           status: string
           total_amount: number
           updated_at: string
+          user_email: string | null
           user_id: string
+          user_name: string | null
+          user_phone: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          shipping_address?: string | null
           status?: string
           total_amount: number
           updated_at?: string
+          user_email?: string | null
           user_id: string
+          user_name?: string | null
+          user_phone?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          shipping_address?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
+          user_email?: string | null
           user_id?: string
+          user_name?: string | null
+          user_phone?: string | null
         }
         Relationships: []
       }
