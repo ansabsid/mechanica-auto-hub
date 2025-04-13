@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, User, ShoppingCart, LogOut, Home, Settings, Presentation } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,9 +30,10 @@ const Header = () => {
       console.log("Handling logout click...");
       await signOut();
       console.log("Sign out completed, redirecting to login...");
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Error logging out:", error);
+      navigate("/login", { replace: true });
     }
   };
 

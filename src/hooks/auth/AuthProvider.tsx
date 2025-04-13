@@ -233,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear user state immediately to ensure UI updates
       setUser(null);
       setUserRole(null);
+      setAuthChangeHandled(false);
       
       toast({
         title: "Logged out",
