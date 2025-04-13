@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderItem, CreateOrderItem } from "@/types/order.types";
 import { CartItem } from "@/types/cart.types";
@@ -285,6 +284,49 @@ export const createOrder = async (
       installation_fee: item.installation_data?.installationFee || null
     }));
     
+    // Get user data if not provided
+    let enhancedUserDetails = { ...userDetails };
+    
+    if (!userDetails || !userDetails.email) {
+      console.log("🔍 [API] Fetching user details from auth session");
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user?.email && (!userDetails || !userDetails.email)) {
+        enhancedUserDetails.email = user.email;
+        console.log("🔍 [API] Added user email from auth:", user.email);
+      }
+      
+      // Try to get profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('firstName, lastName, phone, email')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (!profileError && profileData) {
+        console.log("🔍 [API] Got user profile data:", profileData);
+        
+        if (profileData.firstName && profileData.lastName && (!userDetails || !userDetails.name)) {
+          enhancedUserDetails.name = `${profileData.firstName} ${profileData.lastName}`;
+          console.log("🔍 [API] Added user name from profile:", enhancedUserDetails.name);
+        }
+        
+        if (profileData.phone && (!userDetails || !userDetails.phone)) {
+          enhancedUserDetails.phone = profileData.phone;
+          console.log("🔍 [API] Added user phone from profile:", enhancedUserDetails.phone);
+        }
+        
+        if (profileData.email && (!userDetails || !userDetails.email)) {
+          enhancedUserDetails.email = profileData.email;
+          console.log("🔍 [API] Added user email from profile:", profileData.email);
+        }
+      } else if (profileError) {
+        console.log("🔍 [API] Error fetching profile:", profileError);
+      }
+    }
+    
+    console.log("🔍 [API] Final user details for order:", enhancedUserDetails);
+    
     // Create order manually (skip RPC for reliability)
     // 1. Create the order with initial status 'pending' and user details
     const { data: order, error: orderError } = await supabase
@@ -293,10 +335,10 @@ export const createOrder = async (
         user_id: userId,
         total_amount: totalAmount,
         status: 'pending',
-        user_name: userDetails?.name || undefined,
-        user_email: userDetails?.email || undefined,
-        user_phone: userDetails?.phone || undefined,
-        shipping_address: userDetails?.address || undefined
+        user_name: enhancedUserDetails.name || undefined,
+        user_email: enhancedUserDetails.email || undefined,
+        user_phone: enhancedUserDetails.phone || undefined,
+        shipping_address: enhancedUserDetails.address || undefined
       })
       .select()
       .single();
@@ -426,10 +468,10 @@ export const createOrder = async (
       status: order.status as 'pending' | 'processing' | 'completed' | 'cancelled' | 'confirmed',
       created_at: order.created_at,
       updated_at: order.updated_at,
-      user_name: order.user_name,
-      user_email: order.user_email,
-      user_phone: order.user_phone,
-      shipping_address: order.shipping_address
+      user_name: enhancedUserDetails.name || undefined,
+      user_email: enhancedUserDetails.email || undefined,
+      user_phone: enhancedUserDetails.phone || undefined,
+      shipping_address: enhancedUserDetails.address || undefined
     };
   } catch (error) {
     console.error("Error creating order:", error);

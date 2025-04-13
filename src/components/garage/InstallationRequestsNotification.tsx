@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw, Clock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,6 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString() }));
       
-      // Fetch order items with installation data that belong to this garage
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -121,29 +119,27 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
-      // Get all order IDs for these order items
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       console.log("Order IDs to fetch:", orderIds);
       
-      // Directly fetch orders with user details - important for customer information
-      // Use .in() instead of .eq() to fetch multiple orders at once
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
-        .in('id', orderIds);
-        
-      if (ordersError) {
-        console.error("Error fetching orders:", ordersError);
-        setIsLoading(false);
-        setIsRefreshing(false);
-        setDebug(prev => ({ ...prev, ordersError }));
-        return;
+      let ordersData = [];
+      for (const orderId of orderIds) {
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
+          .eq('id', orderId)
+          .maybeSingle();
+          
+        if (orderError) {
+          console.error(`Error fetching order ${orderId}:`, orderError);
+        } else if (orderData) {
+          ordersData.push(orderData);
+        }
       }
       
       console.log("Fetched orders with user details:", ordersData);
       setDebug(prev => ({ ...prev, ordersData, ordersCount: ordersData?.length || 0 }));
       
-      // Create a map of order IDs to order data for easy lookup
       const orderMap = new Map();
       if (ordersData) {
         ordersData.forEach(order => {
@@ -151,10 +147,8 @@ export const InstallationRequestsNotification = () => {
         });
       }
       
-      // Get all part IDs for these order items
       const partIds = orderItemsData.map(item => item.part_id);
       
-      // Fetch parts data for these parts
       const { data: partsData, error: partsError } = await supabase
         .from('parts')
         .select('id, name, description, image_url')
@@ -168,7 +162,6 @@ export const InstallationRequestsNotification = () => {
       console.log("Fetched parts:", partsData);
       setDebug(prev => ({ ...prev, partsData, partsCount: partsData?.length || 0 }));
       
-      // Create a map of part IDs to part data for easy lookup
       const partMap = new Map();
       if (partsData) {
         partsData.forEach(part => {
@@ -176,12 +169,10 @@ export const InstallationRequestsNotification = () => {
         });
       }
       
-      // Get all user IDs from orders
       const userIds = (ordersData || [])
         .filter(order => order.user_id)
         .map(order => order.user_id);
       
-      // Fetch profiles for these users only if we have user IDs
       let profileMap = new Map();
       if (userIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
@@ -196,17 +187,14 @@ export const InstallationRequestsNotification = () => {
           console.log("Fetched user profiles:", profilesData);
           setDebug(prev => ({ ...prev, profilesData, profilesCount: profilesData.length }));
           
-          // Create a map of user IDs to profile data for easy lookup
           profilesData.forEach(profile => {
             profileMap.set(profile.id, profile);
           });
         }
       }
       
-      // Map order items to installation requests with all the details
       const requests: InstallationRequest[] = orderItemsData
         .map(item => {
-          // Get order information - prioritize using order data for customer info
           const order = orderMap.get(item.order_id) || { 
             created_at: new Date().toISOString(), 
             user_id: null,
@@ -215,19 +203,23 @@ export const InstallationRequestsNotification = () => {
             user_phone: "No Phone"
           };
           
-          // Get profile information if available
           const profile = order.user_id ? profileMap.get(order.user_id) : null;
           
-          // Get part information
           const part = partMap.get(item.part_id);
           
-          // Determine customer name - prioritize order's user_name over profile
           const customerName = order.user_name || 
             (profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : "Unknown Customer");
             
-          // Determine customer contact info - prioritize order's contact info over profile
           const customerPhone = order.user_phone || profile?.phone || "No Phone";
           const customerEmail = order.user_email || profile?.email || "No Email";
+          
+          console.log(`Building request for order item ${item.id}:`, {
+            orderId: item.order_id,
+            orderData: order,
+            customerName,
+            customerPhone,
+            customerEmail
+          });
           
           return {
             id: item.id,
