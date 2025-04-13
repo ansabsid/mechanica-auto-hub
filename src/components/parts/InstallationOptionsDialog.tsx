@@ -47,12 +47,10 @@ export const InstallationOptionsDialog = ({
   const { addToCart, refreshCart } = useCart();
   const { fetchGarages, garages } = useGarageManagement();
 
-  // Fetch garages on component mount
   useEffect(() => {
     fetchGarages();
   }, [fetchGarages]);
 
-  // Extract available areas from garages
   useEffect(() => {
     if (garages && garages.length > 0) {
       const areas = Array.from(new Set(
@@ -71,14 +69,12 @@ export const InstallationOptionsDialog = ({
     }
   }, [garages]);
 
-  // Filter garages by selected area - only run this when selectedArea or garages change
   useEffect(() => {
     if (selectedArea && garages && garages.length > 0) {
       const garagesInArea = garages.filter(
         garage => garage.area === selectedArea
       );
       
-      // Only reset garage selection when area changes
       if (selectedGarageId) {
         const currentGarageStillValid = garagesInArea.some(g => g.id === selectedGarageId);
         if (!currentGarageStillValid) {
@@ -87,10 +83,7 @@ export const InstallationOptionsDialog = ({
         }
       }
       
-      // Find matching part-garage combinations to get installation fees
-      // Installation fees come from part.availableGarages which contains data from parts_garages table
       const filteredGaragesWithFees: Garage[] = garagesInArea.map(garage => {
-        // Try to find the installation fee for this garage and part from availableGarages
         const partGarageInfo = part.availableGarages?.find(g => g.id === garage.id);
         
         return {
@@ -98,7 +91,6 @@ export const InstallationOptionsDialog = ({
           name: garage.name,
           location: garage.location,
           area: garage.area || "",
-          // Use the installation fee from parts_garages if available, otherwise default to 0
           installationFee: partGarageInfo?.installationFee || 0
         };
       });
@@ -107,7 +99,6 @@ export const InstallationOptionsDialog = ({
     }
   }, [selectedArea, garages, part.availableGarages]);
   
-  // A stable handler for garage selection that won't recreate on every render
   const handleGarageSelection = useCallback((garageId: string) => {
     if (!garageId) {
       setSelectedGarageId("");
@@ -115,17 +106,14 @@ export const InstallationOptionsDialog = ({
       return;
     }
     
-    // Find the garage in our filtered list
     const foundGarage = filteredGarages.find(g => g.id === garageId);
     
     if (foundGarage) {
-      // Update both states together
       setSelectedGarageId(garageId);
       setSelectedGarage(foundGarage);
     }
   }, [filteredGarages]);
   
-  // Stable navigation functions
   const goToNextStep = useCallback(() => {
     setStep(prevStep => prevStep + 1);
   }, []);
@@ -154,6 +142,12 @@ export const InstallationOptionsDialog = ({
         installationFee: selectedGarage.installationFee
       };
       
+      console.log("Adding part to cart with installation:", {
+        partId: part.id,
+        quantity: 1,
+        installationOptions
+      });
+      
       await addToCart(part.id, 1, installationOptions);
       
       toast({
@@ -161,7 +155,6 @@ export const InstallationOptionsDialog = ({
         description: `${part.name} with installation has been added to your cart`,
       });
       
-      // Reset the state
       setStep(1);
       setSelectedArea("");
       setSelectedGarageId("");
@@ -171,7 +164,7 @@ export const InstallationOptionsDialog = ({
       
       setTimeout(() => {
         refreshCart();
-      }, 100);
+      }, 300);
     } catch (error) {
       console.error("Error adding to cart with installation:", error);
       toast({
@@ -184,16 +177,14 @@ export const InstallationOptionsDialog = ({
     }
   };
   
-  // Reset states when dialog opens or closes
   useEffect(() => {
     if (!isOpen) {
-      // Don't reset during steps, only when dialog fully closes
       setTimeout(() => {
         setStep(1);
         setSelectedArea("");
         setSelectedGarageId("");
         setSelectedGarage(null);
-      }, 300); // Wait for dialog close animation
+      }, 300);
     }
   }, [isOpen]);
 

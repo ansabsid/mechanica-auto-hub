@@ -16,6 +16,7 @@ export async function getUserCart(): Promise<Cart | null> {
   const userId = data.session.user.id;
   
   try {
+    console.log("Getting cart for user:", userId);
     // Try to get an existing cart
     const { data: carts, error } = await (supabase
       .from('carts') as any)
@@ -24,9 +25,11 @@ export async function getUserCart(): Promise<Cart | null> {
       .maybeSingle();
       
     if (!error && carts) {
+      console.log("Found existing cart:", carts);
       return carts;
     }
     
+    console.log("No existing cart, creating new cart");
     // Create a new cart if it doesn't exist
     const { data: newCart, error: createError } = await (supabase
       .from('carts') as any)
@@ -34,7 +37,11 @@ export async function getUserCart(): Promise<Cart | null> {
       .select()
       .single();
       
-    if (createError) throw createError;
+    if (createError) {
+      console.error("Error creating new cart:", createError);
+      throw createError;
+    }
+    console.log("New cart created:", newCart);
     return newCart;
   } catch (error) {
     console.error("Error getting/creating cart:", error);
@@ -49,6 +56,7 @@ export async function getUserCart(): Promise<Cart | null> {
  */
 export async function getCartItems(cartId: string): Promise<CartItem[]> {
   try {
+    console.log("Fetching cart items for cart:", cartId);
     // Get all cart items with their part details
     const { data, error } = await (supabase
       .from('cart_items') as any)
@@ -65,12 +73,18 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       `)
       .eq('cart_id', cartId);
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching cart items:", error);
+      throw error;
+    }
+    
+    console.log("Cart items raw data:", data);
     
     // Get all part IDs from cart items to fetch available garages
     const partIds = data.map((item: any) => item.part.id);
     
     if (partIds.length === 0) {
+      console.log("No items in cart, returning empty array");
       return []; // If no items in cart, return empty array
     }
     
@@ -92,6 +106,8 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       // Return the items without garage information if there's an error
       return data || [];
     }
+    
+    console.log("Garages data for parts:", garagesData);
     
     // Create a map of part_id to garages for quick lookup
     const partGaragesMap: Record<number, Garage[]> = {};
@@ -123,6 +139,7 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
       };
     });
     
+    console.log("Cart items with garages:", itemsWithGarages);
     return itemsWithGarages || [];
   } catch (error) {
     console.error("Error getting cart items:", error);
@@ -146,6 +163,13 @@ export async function addToCart(
   installationOptions?: InstallationOptions
 ): Promise<CartItem> {
   try {
+    console.log("addToCart called with:", {
+      partId,
+      cartId,
+      quantity,
+      installationOptions
+    });
+    
     // Check if the item already exists in the cart WITH THE SAME INSTALLATION OPTIONS
     const { data: existingItems, error: checkError } = await (supabase
       .from('cart_items') as any)
@@ -153,7 +177,12 @@ export async function addToCart(
       .eq('cart_id', cartId)
       .eq('part_id', partId);
       
-    if (checkError) throw checkError;
+    if (checkError) {
+      console.error("Error checking existing items:", checkError);
+      throw checkError;
+    }
+    
+    console.log("Existing cart items:", existingItems);
     
     // Check if we have an item with the same installation configuration
     const matchingItem = existingItems?.find(item => {
@@ -169,6 +198,7 @@ export async function addToCart(
     });
     
     if (matchingItem) {
+      console.log("Found matching item, updating quantity:", matchingItem);
       // Update quantity if the item with same installation options already exists
       const newQuantity = matchingItem.quantity + quantity;
       
@@ -179,9 +209,15 @@ export async function addToCart(
         .select()
         .single();
         
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error updating item quantity:", updateError);
+        throw updateError;
+      }
+      
+      console.log("Item quantity updated:", updatedItem);
       return updatedItem;
     } else {
+      console.log("No matching item found, adding new item");
       // Add new item to cart
       const newItem = {
         cart_id: cartId,
@@ -189,6 +225,8 @@ export async function addToCart(
         quantity: quantity,
         installation_data: installationOptions || null
       };
+      
+      console.log("New item to insert:", newItem);
       
       // Insert new item with installation data
       const { data: insertedItem, error: addError } = await (supabase
@@ -202,6 +240,7 @@ export async function addToCart(
         throw addError;
       }
       
+      console.log("New item inserted:", insertedItem);
       return insertedItem;
     }
   } catch (error) {
@@ -240,11 +279,6 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
   }
 }
 
-/**
- * Removes an item from the cart
- * @param cartItemId The UUID of the cart item to remove
- * @returns Promise resolving to void
- */
 export async function removeFromCart(cartItemId: string): Promise<void> {
   try {
     const { error } = await (supabase
@@ -259,11 +293,6 @@ export async function removeFromCart(cartItemId: string): Promise<void> {
   }
 }
 
-/**
- * Clears all items from a cart
- * @param cartId The UUID of the cart to clear
- * @returns Promise resolving to void
- */
 export async function clearCart(cartId: string): Promise<void> {
   try {
     const { error } = await (supabase
@@ -278,12 +307,6 @@ export async function clearCart(cartId: string): Promise<void> {
   }
 }
 
-/**
- * Gets all garages that can install a specific part
- * Uses the get_garages_for_part RPC function
- * @param partId The ID of the part to find garages for
- * @returns Promise resolving to an array of garages
- */
 export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   try {
     // Using RPC function with proper type casting
@@ -318,10 +341,6 @@ export async function getGaragesForPart(partId: number): Promise<Garage[]> {
   }
 }
 
-/**
- * Gets the current user session
- * @returns User session data from Supabase
- */
 export async function getUserSession() {
   const { data } = await supabase.auth.getSession();
   return data;

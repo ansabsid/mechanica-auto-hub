@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, Cart, InstallationOptions } from "@/types/cart.types";
@@ -42,7 +41,7 @@ export const useCart = () => {
         console.log("User cart found, fetching items");
         setCart(userCart);
         const items = await getCartItems(userCart.id);
-        console.log(`Retrieved ${items.length} cart items`);
+        console.log(`Retrieved ${items.length} cart items:`, items);
         setCartItems(items);
       }
     } catch (error: any) {
@@ -65,6 +64,12 @@ export const useCart = () => {
   // Add an item to the cart
   const addToCart = async (partId: number, quantity: number = 1, installationOptions?: InstallationOptions) => {
     try {
+      console.log("Adding to cart:", {
+        partId, 
+        quantity, 
+        installationOptions
+      });
+      
       const sessionData = await getUserSession();
       
       if (!sessionData.session?.user) {
@@ -77,11 +82,38 @@ export const useCart = () => {
       }
       
       if (!cart) {
+        console.log("No cart found, fetching cart");
         await fetchCart();
-        if (!cart) return;
+        if (!cart) {
+          console.log("Still no cart after fetch, creating new cart");
+          const newCart = await getUserCart();
+          setCart(newCart);
+          if (!newCart) {
+            console.error("Failed to create new cart");
+            toast({
+              title: "Error",
+              description: "Failed to create cart",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
       }
       
-      await apiAddToCart(partId, cart.id, quantity, installationOptions);
+      const cartId = cart?.id;
+      if (!cartId) {
+        console.error("No cart ID available");
+        toast({
+          title: "Error",
+          description: "Cart not available",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log("Adding to cart with ID:", cartId);
+      const addedItem = await apiAddToCart(partId, cartId, quantity, installationOptions);
+      console.log("Item added to cart:", addedItem);
       
       let message = "Item added to your cart";
       
@@ -96,12 +128,12 @@ export const useCart = () => {
       });
       
       // Refresh cart items
-      fetchCart();
+      await fetchCart();
     } catch (error: any) {
-      console.error("Error adding to cart:", error.message);
+      console.error("Error adding to cart:", error);
       toast({
         title: "Error",
-        description: "Failed to add item to cart",
+        description: "Failed to add item to cart: " + (error.message || "Unknown error"),
         variant: "destructive",
       });
     }
