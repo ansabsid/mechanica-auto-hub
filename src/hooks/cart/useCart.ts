@@ -9,7 +9,7 @@ import { Cart, CartItem, InstallationOptions } from "./types";
  * Custom hook for managing cart functionality
  */
 export const useCart = () => {
-  const { cart, cartItems, setCartItems, isLoading, fetchCart } = useCartData();
+  const { cart, cartItems, setCartItems, isLoading, fetchCart, lastError } = useCartData();
   const { addToCart, updateCartItemQuantity, removeFromCart, clearCart } = useCartActions(fetchCart, setCartItems);
   const { subtotal, tax, total, installationTotal, calculateTotal } = useCartCalculations(cartItems);
 
@@ -32,6 +32,7 @@ export const useCart = () => {
     removeFromCart,
     clearCart,
     refreshCart,
+    lastError,
     // Calculated values
     subtotal,
     tax,

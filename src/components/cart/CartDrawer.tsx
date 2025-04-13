@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from "react";
-import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench } from "lucide-react";
+import { ShoppingCart, X, Trash, Plus, Minus, ArrowRight, Wrench, AlertTriangle } from "lucide-react";
 import { useCart, CartItem } from "@/hooks/cart";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +18,10 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { useAuth } from "@/hooks/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const CartDrawer = () => {
-  const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal, refreshCart } = useCart();
+  const { cartItems, isLoading, updateCartItemQuantity, removeFromCart, clearCart, calculateTotal, refreshCart, lastError } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -67,6 +69,11 @@ export const CartDrawer = () => {
       clearCart();
     }
   };
+
+  const handleRetryLoadCart = () => {
+    console.log("Manually refreshing cart...");
+    refreshCart();
+  };
   
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
@@ -112,9 +119,34 @@ export const CartDrawer = () => {
           </div>
         ) : isLoading ? (
           <div className="py-6 text-center">Loading your cart...</div>
+        ) : lastError ? (
+          <div className="py-4">
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                {lastError}
+              </AlertDescription>
+            </Alert>
+            <div className="text-center">
+              <Button onClick={handleRetryLoadCart}>
+                Retry Loading Cart
+              </Button>
+            </div>
+          </div>
         ) : cartItems.length === 0 ? (
           <div className="py-6 text-center">
-            <p className="text-muted-foreground">Your cart is empty</p>
+            <p className="text-muted-foreground mb-4">Your cart is empty</p>
+            <p className="text-sm text-muted-foreground">
+              Authenticated as: {user?.email}
+            </p>
+            <Button 
+              onClick={handleRetryLoadCart}
+              className="mt-4"
+              variant="outline"
+              size="sm"
+            >
+              Refresh Cart
+            </Button>
           </div>
         ) : (
           <div className="py-4 flex flex-col h-full">

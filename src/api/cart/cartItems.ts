@@ -35,13 +35,21 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     
     console.log("Cart items raw data:", data);
     
+    // If no items in cart, return empty array
+    if (!data || data.length === 0) {
+      console.log("No items in cart, returning empty array");
+      return [];
+    }
+    
     // Get all part IDs from cart items to fetch available garages
-    const partIds = data.map((item: any) => item.part.id);
+    const partIds = data.map((item: any) => item.part_id);
     
     if (partIds.length === 0) {
       console.log("No items in cart, returning empty array");
       return []; // If no items in cart, return empty array
     }
+    
+    console.log("Fetching garages for part IDs:", partIds);
     
     // Use the RPC function to get garages data with proper typing
     const { data: garagesData, error: garagesError } = await supabase
@@ -122,6 +130,27 @@ export async function getCartItems(cartId: string): Promise<CartItem[]> {
     
     // Add garages information to cart items and properly cast installation_data
     const itemsWithGarages: CartItem[] = data.map((item: any) => {
+      // Check for null part data which would indicate RLS policy issues
+      if (!item.part) {
+        console.error("Part data missing for cart item:", item);
+        // Handle the case where part data is missing due to RLS
+        return {
+          id: item.id,
+          cart_id: item.cart_id,
+          part_id: item.part_id,
+          quantity: item.quantity,
+          installation_data: undefined,
+          part: {
+            id: item.part_id,
+            name: "Unknown Part (RLS Error)",
+            description: "Unable to load part data due to permissions",
+            price: 0,
+            stock: 0,
+            availableGarages: []
+          }
+        };
+      }
+      
       const garages = partGaragesMap[item.part.id] || [];
       
       // Properly handle installation_data conversion to InstallationOptions
