@@ -73,3 +73,9 @@ CREATE POLICY "Allow update access to orders"
 ON public.orders
 FOR UPDATE 
 USING (true);
+
+DROP POLICY IF EXISTS "Allow delete access to orders" ON public.orders;
+CREATE POLICY "Allow delete access to orders" 
+ON public.orders
+FOR DELETE 
+USING (true);

@@ -619,6 +619,10 @@ export type Database = {
         Args: { part_data: Json }
         Returns: Json
       }
+      is_garage_staff: {
+        Args: { garage_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

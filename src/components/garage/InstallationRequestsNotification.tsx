@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, User, Phone, Car, Wrench, RefreshCw, Clock, Mail, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -200,28 +199,16 @@ export const InstallationRequestsNotification = () => {
         try {
           console.log("Fetching individual order:", orderId);
           
+          // Changed from .single() to .maybeSingle() to avoid errors when the order doesn't exist
           const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
             .eq('id', orderId)
-            .single();
+            .maybeSingle();
             
           if (orderError) {
             console.error(`Error fetching order ${orderId}:`, orderError);
             errorCounts++;
-            // Try again with maybeSingle instead of single
-            const { data: retryData, error: retryError } = await supabase
-              .from('orders')
-              .select('id, user_id, created_at, status, user_name, user_email, user_phone, shipping_address')
-              .eq('id', orderId)
-              .maybeSingle();
-              
-            if (!retryError && retryData) {
-              console.log(`Successfully fetched order ${orderId} on retry:`, retryData);
-              ordersData.push(retryData);
-            } else {
-              console.error(`Failed to fetch order ${orderId} on retry:`, retryError);
-            }
           } else if (orderData) {
             console.log(`Successfully fetched order ${orderId}:`, orderData);
             ordersData.push(orderData);
@@ -888,4 +875,3 @@ export const InstallationRequestsNotification = () => {
 };
 
 export default InstallationRequestsNotification;
-
