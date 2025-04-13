@@ -8,14 +8,14 @@ import { getUserSession } from "./auth";
  * @returns Promise resolving to the user's cart or null if no user is logged in
  */
 export async function getUserCart(): Promise<Cart | null> {
-  const { data } = await getUserSession();
+  const sessionData = await getUserSession();
   
-  if (!data.session?.user) {
+  if (!sessionData.session?.user) {
     console.log("No authenticated user found");
     return null;
   }
 
-  const userId = data.session.user.id;
+  const userId = sessionData.session.user.id;
   
   try {
     console.log("Getting cart for user:", userId);

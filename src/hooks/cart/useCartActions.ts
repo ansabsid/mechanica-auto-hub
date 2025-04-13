@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem, InstallationOptions } from "./types";
@@ -6,7 +7,8 @@ import {
   updateCartItemQuantity as apiUpdateCartItemQuantity,
   removeFromCart as apiRemoveFromCart,
   clearCart as apiClearCart,
-  getUserSession
+  getUserSession,
+  getUserCart
 } from "@/api/cart";
 
 export const useCartActions = (
@@ -38,7 +40,7 @@ export const useCartActions = (
       console.log("User is authenticated:", sessionData.session.user.id);
       
       // Always attempt to create/get a cart for the authenticated user
-      const userCart = await getUserSession();
+      const userCart = await getUserCart();
       
       if (!userCart) {
         console.error("Failed to create or retrieve cart");

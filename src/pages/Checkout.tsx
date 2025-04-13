@@ -27,7 +27,7 @@ import { useCart } from "@/hooks/cart";
 import { useOrders } from "@/hooks/useOrders";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, CreditCard, ShoppingCart, Loader2, Check, Apple } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Drawer,
