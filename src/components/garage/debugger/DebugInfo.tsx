@@ -28,14 +28,19 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="text-xs bg-gray-50 p-2 rounded">
             <div className="font-medium mb-1">Current Values:</div>
-            <div className={customerName === 'Unknown Customer' ? 'text-red-500 font-bold' : ''}>
+            <div className={customerName === 'Unknown Customer' ? 'text-red-500 font-bold' : 'text-green-600 font-medium'}>
               Name: {customerName || '(empty)'}
             </div>
-            <div className={customerEmail === 'No Email' ? 'text-red-500' : ''}>
+            <div className={customerEmail === 'No Email' ? 'text-red-500' : 'text-green-600'}>
               Email: {customerEmail || '(empty)'}
             </div>
-            <div className={customerPhone === 'No Phone' ? 'text-red-500' : ''}>
+            <div className={customerPhone === 'No Phone' ? 'text-red-500' : 'text-green-600'}>
               Phone: {customerPhone || '(empty)'}
+            </div>
+            <div className="mt-1 text-xs italic">
+              {customerName !== 'Unknown Customer' ? 
+                '✓ Customer details available' : 
+                '⚠️ Missing customer information'}
             </div>
           </div>
           
@@ -64,13 +69,13 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
             {debugInfo.orderData ? (
               <>
                 <div className="font-medium">Order Data:</div>
-                <div className={!debugInfo.orderData.user_name ? 'text-red-500' : ''}>
+                <div className={!debugInfo.orderData.user_name ? 'text-red-500' : 'text-green-600'}>
                   Name: {debugInfo.orderData.user_name || '(empty)'}
                 </div>
-                <div className={!debugInfo.orderData.user_email ? 'text-red-500' : ''}>
+                <div className={!debugInfo.orderData.user_email ? 'text-red-500' : 'text-green-600'}>
                   Email: {debugInfo.orderData.user_email || '(empty)'}
                 </div>
-                <div className={!debugInfo.orderData.user_phone ? 'text-red-500' : ''}>
+                <div className={!debugInfo.orderData.user_phone ? 'text-red-500' : 'text-green-600'}>
                   Phone: {debugInfo.orderData.user_phone || '(empty)'}
                 </div>
               </>
@@ -84,9 +89,23 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           <div className="font-medium text-xs mb-1">Direct Customer Data Fetch:</div>
           <div className="text-xs bg-gray-50 p-2 rounded">
             {debugInfo.customerDataFromOrders ? (
-              <pre className="overflow-auto max-h-[100px]">
-                {JSON.stringify(debugInfo.customerDataFromOrders, null, 2)}
-              </pre>
+              <>
+                <div className="text-sm font-medium mb-1">Direct Fetch Results:</div>
+                {Object.entries(debugInfo.customerDataFromOrders).map(([orderId, data]: [string, any]) => (
+                  <div key={orderId} className="mb-2 p-1 border-b border-gray-200">
+                    <div className="font-medium">Order ID: {orderId}</div>
+                    <div className={!data?.user_name ? 'text-red-500' : 'text-green-600'}>
+                      Name: {data?.user_name || '(empty)'}
+                    </div>
+                    <div className={!data?.user_email ? 'text-red-500' : 'text-green-600'}>
+                      Email: {data?.user_email || '(empty)'}
+                    </div>
+                    <div className={!data?.user_phone ? 'text-red-500' : 'text-green-600'}>
+                      Phone: {data?.user_phone || '(empty)'}
+                    </div>
+                  </div>
+                ))}
+              </>
             ) : (
               <div className="text-orange-600">No direct customer data fetched</div>
             )}
