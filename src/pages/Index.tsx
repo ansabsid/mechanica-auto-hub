@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,7 +21,9 @@ import {
   CalendarDays,
   MapPin,
   ShoppingBag,
-  Search
+  Search,
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Footer from "@/components/layout/Footer";
@@ -32,7 +34,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 // Trusted garage logos
 const trustedGarages = [
@@ -133,8 +135,32 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("customer");
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
   
-  // Fetch featured parts from the database with real garage data
+  const y = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  
+  // Track mouse movement for parallax effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (heroRef.current) {
+        const { clientX, clientY } = e;
+        const rect = heroRef.current.getBoundingClientRect();
+        const x = (clientX - rect.left) / rect.width;
+        const y = (clientY - rect.top) / rect.height;
+        setMousePosition({ x, y });
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+  
   useEffect(() => {
     const fetchFeaturedParts = async () => {
       setIsLoading(true);
@@ -250,100 +276,282 @@ const Index = () => {
 
   return (
     <>
-      {/* Enhanced Hero Section - Appeals to both customers and garages */}
-      <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-white py-12 md:py-24 overflow-hidden relative">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="flex flex-col space-y-5">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium mb-1">
-                <span className="animate-pulse mr-2">●</span> Revolutionizing Auto Parts & Services
-              </div>
+      {/* Enhanced Interactive Hero Section with Parallax and Floating Elements */}
+      <section ref={heroRef} className="overflow-hidden relative min-h-[90vh] flex items-center">
+        {/* Background gradients */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-white opacity-70 z-0"></div>
+        
+        {/* Animated background shapes */}
+        <div className="absolute inset-0 overflow-hidden z-0">
+          {/* Large floating circle */}
+          <motion.div 
+            className="absolute w-[30rem] h-[30rem] rounded-full bg-gradient-to-br from-blue-100 to-blue-200/30 blur-3xl"
+            style={{ 
+              top: '10%', 
+              right: '-15%',
+              x: useTransform(mousePosition.x, [0, 1], [-20, 20]),
+              y: useTransform(mousePosition.y, [0, 1], [-20, 20]),
+            }}
+          />
+          
+          {/* Smaller floating shapes */}
+          <motion.div 
+            className="absolute w-64 h-64 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100/30 blur-xl"
+            style={{ 
+              bottom: '15%', 
+              left: '10%',
+              x: useTransform(mousePosition.x, [0, 1], [30, -30]),
+              y: useTransform(mousePosition.y, [0, 1], [30, -30]),
+            }}
+          />
+          
+          <motion.div 
+            className="absolute w-40 h-40 rounded-full bg-gradient-to-br from-blue-200/40 to-cyan-100/30 blur-xl"
+            style={{ 
+              top: '25%', 
+              left: '25%',
+              x: useTransform(mousePosition.x, [0, 1], [-10, 10]),
+              y: useTransform(mousePosition.y, [0, 1], [-10, 10]),
+            }}
+          />
+        </div>
+        
+        {/* Animated grid patterns */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,105,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,105,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] z-10"></div>
+        
+        <div className="container mx-auto px-4 relative z-20">
+          <motion.div 
+            style={{ y, opacity }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+          >
+            <div className="flex flex-col space-y-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 text-sm font-medium"
+              >
+                <span className="animate-pulse text-blue-500 mr-2">
+                  <Sparkles size={16} />
+                </span> 
+                Revolutionizing Auto Parts & Services
+              </motion.div>
               
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-                Connect With <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Parts & Garages</span> In One Place
-              </h1>
+              <motion.h1 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-5xl md:text-6xl font-bold leading-tight"
+              >
+                Connect With{" "}
+                <span className="relative">
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    Parts & Garages
+                  </span>
+                  <motion.span 
+                    className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 1, delay: 0.6 }}
+                  />
+                </span>
+                {" "}In One Place
+              </motion.h1>
               
-              <p className="text-xl text-gray-600">
+              <motion.p 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-xl text-gray-600 max-w-xl"
+              >
                 No more fragmented market. Find quality parts and trusted garages for all your vehicle needs.
-              </p>
+              </motion.p>
               
-              <div className="grid grid-cols-2 gap-3 pt-2 md:flex md:space-x-3 md:space-y-0">
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="flex flex-col sm:flex-row gap-4 pt-4"
+              >
                 <Button 
-                  className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
+                  className="bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-blue-200/50 transition-all transform hover:scale-105 group"
                   onClick={handleAppDownloadClick}
                 >
-                  <Smartphone className="mr-2 h-5 w-5" /> Get The App
+                  <Smartphone className="mr-2 h-5 w-5" /> 
+                  Get The App
+                  <motion.span
+                    initial={{ x: 0, opacity: 0 }}
+                    whileHover={{ x: 5, opacity: 1 }}
+                    className="ml-1"
+                  >
+                    <ArrowRight size={16} />
+                  </motion.span>
                 </Button>
                 
                 {!isAuthenticated ? (
-                  <Link to="/login" className="w-full md:w-auto">
-                    <Button variant="outline" className="w-full">
+                  <Link to="/login">
+                    <Button variant="outline" className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 font-medium px-6 py-3 rounded-xl transition-all w-full sm:w-auto">
                       Login / Sign Up
                     </Button>
                   </Link>
                 ) : (
-                  <Link to="/customer-dashboard" className="w-full md:w-auto">
-                    <Button variant="outline" className="w-full">
+                  <Link to="/customer-dashboard">
+                    <Button variant="outline" className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 font-medium px-6 py-3 rounded-xl transition-all w-full sm:w-auto">
                       Dashboard
                     </Button>
                   </Link>
                 )}
-              </div>
+              </motion.div>
               
-              <div className="flex items-center space-x-2 pt-3">
-                <div className="flex -space-x-2">
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="flex items-center space-x-3 pt-2"
+              >
+                <div className="flex -space-x-3">
                   {[1, 2, 3, 4].map(num => (
-                    <div key={num} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-200 to-blue-300 border-2 border-white flex items-center justify-center text-xs font-medium text-blue-700">
-                      {num}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium text-blue-700">1,000+</span> users joined this month
-                </p>
-              </div>
-            </div>
-            
-            <div className="relative lg:block hidden">
-              {/* Main feature card with transparent prices tag */}
-              <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 transform rotate-1 relative z-20">
-                <div className="absolute -top-3 -right-3 bg-blue-100 px-3 py-1 rounded-full text-blue-700 text-xs font-medium z-30">
-                  Transparent prices
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {solutionFeatures.slice(0, 4).map((feature, index) => (
                     <motion.div 
-                      key={index}
-                      className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition-all"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      key={num} 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-medium text-blue-700 border-2 border-white"
+                      style={{ 
+                        background: `linear-gradient(135deg, #EEF2FF ${num * 10}%, #DBEAFE ${num * 25}%)`,
+                        zIndex: 5 - num
+                      }}
+                      whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     >
-                      <div className="bg-blue-100 p-2 rounded-full w-10 h-10 flex items-center justify-center mb-3">
-                        {feature.icon}
-                      </div>
-                      <h3 className="font-medium text-sm mb-1">{feature.title}</h3>
-                      <p className="text-xs text-gray-500">{feature.description}</p>
+                      {num}
                     </motion.div>
                   ))}
                 </div>
-              </div>
-              
-              {/* "Ready to join?" card positioned behind the main card */}
-              <div className="absolute -bottom-5 -left-5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg shadow-lg p-4 transform -rotate-3 z-10">
-                <div className="font-medium text-sm mb-2 text-blue-800">Ready to join?</div>
-                <div className="flex space-x-2">
-                  <div className="bg-white px-3 py-2 rounded text-xs">Customers</div>
-                  <div className="bg-blue-600 text-white px-3 py-2 rounded text-xs">Garages</div>
+                <div className="relative">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium text-blue-700">1,000+</span> users joined this month
+                  </p>
+                  <motion.div
+                    className="absolute -right-2 -top-2 w-2 h-2 rounded-full bg-blue-500"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [1, 0.5, 1]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "loop"
+                    }}
+                  />
                 </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
+            
+            <div className="relative hidden lg:block h-full perspective-500">
+              {/* Interactive 3D Card Group */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+                className="relative"
+                style={{
+                  transformStyle: "preserve-3d",
+                  transform: `rotateY(${mousePosition.x * 5 - 2.5}deg) rotateX(${mousePosition.y * -5 + 2.5}deg)`,
+                  transition: "transform 0.1s ease-out"
+                }}
+              >
+                {/* Main feature card with transparent prices tag */}
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-indigo-50 shadow-xl p-7 transform relative z-20 overflow-hidden">
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-1.5 rounded-full text-white text-xs font-medium z-30 shadow-md">
+                    Transparent prices
+                  </div>
+                  
+                  <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-transparent to-blue-50/50 pointer-events-none"></div>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    {solutionFeatures.slice(0, 4).map((feature, index) => (
+                      <motion.div 
+                        key={index}
+                        className="bg-gradient-to-br from-white to-blue-50/50 p-5 rounded-xl border border-blue-100/30 hover:shadow-md transition-all group"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
+                        whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                      >
+                        <div className="bg-gradient-to-br from-blue-100 to-indigo-100/70 p-3 rounded-xl w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <div className="text-blue-600">
+                            {feature.icon}
+                          </div>
+                        </div>
+                        <h3 className="font-semibold text-gray-800 mb-2">{feature.title}</h3>
+                        <p className="text-sm text-gray-600">{feature.description}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* "Ready to join?" card positioned behind the main card */}
+                <div 
+                  className="absolute -bottom-8 -left-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-5 transform -rotate-3 z-10 text-white"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transform: "translateZ(-50px) rotate(-3deg)",
+                  }}
+                >
+                  <div className="font-medium mb-3">Ready to join?</div>
+                  <div className="flex space-x-3">
+                    <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg text-sm hover:bg-white/20 transition-colors cursor-pointer">Customers</div>
+                    <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-colors cursor-pointer">Garages</div>
+                  </div>
+                </div>
+                
+                {/* Floating small badges */}
+                <motion.div 
+                  className="absolute -top-4 -left-4 bg-gradient-to-r from-green-100 to-emerald-100 px-3 py-1.5 rounded-full text-emerald-800 text-xs font-medium shadow-sm z-30"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transform: "translateZ(30px)",
+                  }}
+                  animate={{ 
+                    y: [0, -10, 0],
+                  }}
+                  transition={{ 
+                    duration: 4,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut"
+                  }}
+                >
+                  Easy to use
+                </motion.div>
+                
+                <motion.div 
+                  className="absolute bottom-14 -right-5 bg-gradient-to-r from-amber-100 to-yellow-100 px-3 py-1.5 rounded-full text-amber-800 text-xs font-medium shadow-sm z-30"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transform: "translateZ(40px) rotate(5deg)",
+                  }}
+                  animate={{ 
+                    y: [0, 10, 0],
+                  }}
+                  transition={{ 
+                    duration: 5,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut",
+                    delay: 1
+                  }}
+                >
+                  Verified garages
+                </motion.div>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
         
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-blue-100/20 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-blue-100/20 to-transparent"></div>
+        {/* Bottom decorative wave */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden z-10">
+          <svg className="w-full h-12 md:h-24" viewBox="0 0 1440 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,37.5 C240,125 480,0 720,37.5 C960,75 1200,0 1440,37.5 L1440,74 L0,74 Z" fill="white" />
+          </svg>
+        </div>
       </section>
 
       {/* Market Problems & Our Solution Section */}
