@@ -68,6 +68,20 @@ export const InstallationOrdersDebugger = () => {
     try {
       console.log(`Fetching order details for ID: ${orderId}`);
       
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .maybeSingle();
+        
+      if (orderError) {
+        console.error("Error fetching order:", orderError);
+        setDebugInfo(prev => ({ ...prev, orderError }));
+      } else {
+        console.log("Direct order data:", orderData);
+        setDebugInfo(prev => ({ ...prev, directOrderData: orderData }));
+      }
+      
       const { data: orderItem, error: orderItemError } = await supabase
         .from('order_items')
         .select(`
@@ -90,23 +104,9 @@ export const InstallationOrdersDebugger = () => {
       if (orderItemError) {
         console.error("Error fetching order item with order data:", orderItemError);
         setDebugInfo(prev => ({ ...prev, orderItemError }));
-      }
-      
-      console.log("Order item with order data:", orderItem);
-      setDebugInfo(prev => ({ ...prev, orderItemWithOrderData: orderItem }));
-      
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .maybeSingle();
-        
-      if (orderError) {
-        console.error("Error fetching order:", orderError);
-        setDebugInfo(prev => ({ ...prev, orderError }));
       } else {
-        console.log("Direct order data:", orderData);
-        setDebugInfo(prev => ({ ...prev, directOrderData: orderData }));
+        console.log("Order item with order data:", orderItem);
+        setDebugInfo(prev => ({ ...prev, orderItemWithOrderData: orderItem }));
       }
       
       let customerInfo = {
@@ -134,6 +134,8 @@ export const InstallationOrdersDebugger = () => {
       
       const userId = orderData?.user_id || orderItem?.orders?.user_id;
       if (userId && (!customerInfo.name || !customerInfo.email || !customerInfo.phone)) {
+        console.log("Trying to get missing info from user profile with ID:", userId);
+        
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('firstName, lastName, email, phone')
@@ -145,6 +147,7 @@ export const InstallationOrdersDebugger = () => {
           setDebugInfo(prev => ({ ...prev, profileError }));
         } else if (profile) {
           console.log("Got profile:", profile);
+          setDebugInfo(prev => ({ ...prev, profileData: profile }));
           
           if (!customerInfo.name && (profile.firstName || profile.lastName)) {
             customerInfo.name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
@@ -219,6 +222,15 @@ export const InstallationOrdersDebugger = () => {
       return;
     }
     
+    if (!customerName || !customerEmail || !customerPhone) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all customer fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const { data: checkOrder, error: checkError } = await supabase
@@ -236,7 +248,7 @@ export const InstallationOrdersDebugger = () => {
         const { data: sessionData } = await supabase.auth.getSession();
         const userId = sessionData?.session?.user?.id || "00000000-0000-0000-0000-000000000000";
         
-        console.log("Using user ID for new order:", userId);
+        console.log("Creating new order with user ID:", userId);
         setDebugInfo(prev => ({ ...prev, userIdForNewOrder: userId }));
         
         const { data: newOrder, error: createError } = await supabase
@@ -250,7 +262,7 @@ export const InstallationOrdersDebugger = () => {
             status: 'pending',
             total_amount: 0
           })
-          .select('id')
+          .select()
           .maybeSingle();
           
         if (createError) {
@@ -258,16 +270,18 @@ export const InstallationOrdersDebugger = () => {
           throw createError;
         }
         
+        console.log("Order created successfully:", newOrder);
+        setDebugInfo(prev => ({ ...prev, createOrderResult: newOrder }));
+        
         toast({
           title: "Success",
           description: "Order created with customer information"
         });
         
-        setDebugInfo(prev => ({ ...prev, createOrderResult: newOrder }));
         return;
       }
       
-      console.log("Updating order with customer info:", {
+      console.log("Updating existing order with customer info:", {
         name: customerName,
         email: customerEmail,
         phone: customerPhone
@@ -280,16 +294,21 @@ export const InstallationOrdersDebugger = () => {
           user_email: customerEmail,
           user_phone: customerPhone
         })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .select();
         
       if (error) throw error;
+      
+      console.log("Order updated successfully:", data);
+      setDebugInfo(prev => ({ ...prev, updateResult: data }));
       
       toast({
         title: "Success",
         description: "Order customer information updated successfully"
       });
       
-      setDebugInfo(prev => ({ ...prev, updateResult: data }));
+      fetchOrderDetails(orderId);
+      
     } catch (error) {
       console.error("Error updating order:", error);
       toast({
@@ -381,33 +400,45 @@ export const InstallationOrdersDebugger = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="customerName">Customer Name</Label>
+                      <Label htmlFor="customerName">Customer Name <span className="text-red-500">*</span></Label>
                       <Input 
                         id="customerName" 
                         value={customerName} 
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Enter customer name" 
+                        className={!customerName || customerName === "Customer Name Required" ? "border-red-300 bg-red-50" : ""}
                       />
+                      {(!customerName || customerName === "Customer Name Required") && (
+                        <p className="text-xs text-red-500 mt-1">Customer name is required</p>
+                      )}
                     </div>
                     
                     <div>
-                      <Label htmlFor="customerEmail">Customer Email</Label>
+                      <Label htmlFor="customerEmail">Customer Email <span className="text-red-500">*</span></Label>
                       <Input 
                         id="customerEmail" 
                         value={customerEmail} 
                         onChange={(e) => setCustomerEmail(e.target.value)}
                         placeholder="Enter customer email" 
+                        className={!customerEmail || customerEmail === "Email Required" ? "border-red-300 bg-red-50" : ""}
                       />
+                      {(!customerEmail || customerEmail === "Email Required") && (
+                        <p className="text-xs text-red-500 mt-1">Customer email is required</p>
+                      )}
                     </div>
                     
                     <div>
-                      <Label htmlFor="customerPhone">Customer Phone</Label>
+                      <Label htmlFor="customerPhone">Customer Phone <span className="text-red-500">*</span></Label>
                       <Input 
                         id="customerPhone" 
                         value={customerPhone} 
                         onChange={(e) => setCustomerPhone(e.target.value)}
                         placeholder="Enter customer phone" 
+                        className={!customerPhone || customerPhone === "Phone Required" ? "border-red-300 bg-red-50" : ""}
                       />
+                      {(!customerPhone || customerPhone === "Phone Required") && (
+                        <p className="text-xs text-red-500 mt-1">Customer phone is required</p>
+                      )}
                     </div>
                     
                     <Button 
@@ -449,6 +480,8 @@ export const InstallationOrdersDebugger = () => {
                       <div className="text-xs bg-gray-50 p-2 rounded">
                         <div className="font-medium mb-1">Data Source:</div>
                         <div>{debugInfo.customerSourceInfo || 'Not set'}</div>
+                        <div className="font-medium mt-1">Status:</div>
+                        <div>{debugInfo.customerInfoStatus || 'Unknown'}</div>
                       </div>
                     </div>
                     
