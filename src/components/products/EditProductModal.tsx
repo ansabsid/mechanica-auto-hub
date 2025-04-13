@@ -237,31 +237,38 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Add extra padding at the bottom to ensure space for footer buttons on mobile */}
+            <div className="h-16 md:h-0 col-span-full"></div>
           </div>
         </ScrollArea>
         
-        <DialogFooter className="sticky bottom-0 border-t bg-white p-4">
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="mechanica" 
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save Changes'
-            )}
-          </Button>
+        <DialogFooter className="sticky bottom-0 w-full border-t bg-white p-4 mt-auto">
+          <div className="flex flex-row justify-end gap-2 w-full">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+              className="w-full md:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="mechanica" 
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full md:w-auto"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
