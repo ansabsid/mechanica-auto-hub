@@ -28,9 +28,15 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="text-xs bg-gray-50 p-2 rounded">
             <div className="font-medium mb-1">Current Values:</div>
-            <div>Name: {customerName || '(empty)'}</div>
-            <div>Email: {customerEmail || '(empty)'}</div>
-            <div>Phone: {customerPhone || '(empty)'}</div>
+            <div className={customerName === 'Unknown Customer' ? 'text-red-500 font-bold' : ''}>
+              Name: {customerName || '(empty)'}
+            </div>
+            <div className={customerEmail === 'No Email' ? 'text-red-500' : ''}>
+              Email: {customerEmail || '(empty)'}
+            </div>
+            <div className={customerPhone === 'No Phone' ? 'text-red-500' : ''}>
+              Phone: {customerPhone || '(empty)'}
+            </div>
           </div>
           
           <div className="text-xs bg-gray-50 p-2 rounded">
@@ -53,14 +59,20 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
         </div>
         
         <div className="mb-2">
-          <div className="font-medium text-xs mb-1">Customer Data Diagnostics:</div>
+          <div className="font-medium text-xs mb-1">Order Data Diagnostics:</div>
           <div className="text-xs bg-gray-50 p-2 rounded">
             {debugInfo.orderData ? (
               <>
-                <div className="font-medium">Order Table Data:</div>
-                <div>Name: {debugInfo.orderData.user_name || '(empty)'}</div>
-                <div>Email: {debugInfo.orderData.user_email || '(empty)'}</div>
-                <div>Phone: {debugInfo.orderData.user_phone || '(empty)'}</div>
+                <div className="font-medium">Order Data:</div>
+                <div className={!debugInfo.orderData.user_name ? 'text-red-500' : ''}>
+                  Name: {debugInfo.orderData.user_name || '(empty)'}
+                </div>
+                <div className={!debugInfo.orderData.user_email ? 'text-red-500' : ''}>
+                  Email: {debugInfo.orderData.user_email || '(empty)'}
+                </div>
+                <div className={!debugInfo.orderData.user_phone ? 'text-red-500' : ''}>
+                  Phone: {debugInfo.orderData.user_phone || '(empty)'}
+                </div>
               </>
             ) : (
               <div className="text-orange-600">No order record found</div>

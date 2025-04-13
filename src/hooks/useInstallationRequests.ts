@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -130,6 +129,7 @@ export const useInstallationRequests = (garageId: string) => {
       
       const orderIds = [...new Set(orderItemsData.map(item => item.order_id))];
       console.log("Order IDs to fetch:", orderIds);
+      setDebug(prev => ({ ...prev, orderIds }));
       
       // Fetch all orders in a single query
       const { data: ordersData, error: ordersError } = await supabase
@@ -226,10 +226,11 @@ export const useInstallationRequests = (garageId: string) => {
           // Get the corresponding order data
           const order = orderMap.get(item.order_id);
           
-          // Store the order data in debug
+          // Debug: Store the order data for better troubleshooting
           setDebug(prev => ({ 
             ...prev, 
-            [`orderData_${item.order_id}`]: order
+            [`orderData_${item.order_id}`]: order,
+            orderData: order
           }));
           
           // Get corresponding profile if available
@@ -252,35 +253,48 @@ export const useInstallationRequests = (garageId: string) => {
             } : 'No profile data'
           });
           
-          // PRIORITY: We will now prioritize getting customer info from the orders table first
-          // Default values for customer info
+          // Default values
           let customerName = "Unknown Customer";
           let customerPhone = "No Phone";
           let customerEmail = "No Email";
           let customerSourceInfo = "Not found";
           
-          // First priority: Check for order data (always use this if available)
-          if (order && order.user_name) {
-            customerName = order.user_name;
-            customerSourceInfo = "Order Table (name)";
+          // First priority: Check for order data and use it directly from the orders table
+          if (order) {
+            if (order.user_name) {
+              customerName = order.user_name;
+              customerSourceInfo = "Order Table (name)";
+            }
+            
+            if (order.user_email) {
+              customerEmail = order.user_email;
+              customerSourceInfo = customerSourceInfo === "Not found" ? 
+                "Order Table (email)" : customerSourceInfo + " + email";
+            }
+            
+            if (order.user_phone) {
+              customerPhone = order.user_phone;
+              customerSourceInfo = customerSourceInfo === "Not found" ? 
+                "Order Table (phone)" : customerSourceInfo + " + phone";
+            }
+            
+            // Debug logging for order data
+            console.log(`Using order data for ${item.order_id}:`, {
+              customerName,
+              customerEmail,
+              customerPhone,
+              source: customerSourceInfo
+            });
+          } else {
+            console.log(`No order found for order_id: ${item.order_id}`);
           }
           
-          if (order && order.user_email) {
-            customerEmail = order.user_email;
-            customerSourceInfo = customerSourceInfo === "Not found" ? 
-              "Order Table (email)" : customerSourceInfo + " + email";
-          }
-          
-          if (order && order.user_phone) {
-            customerPhone = order.user_phone;
-            customerSourceInfo = customerSourceInfo === "Not found" ? 
-              "Order Table (phone)" : customerSourceInfo + " + phone";
-          }
-          
-          // Second priority: Fall back to profile data ONLY if order data is missing
-          if (customerName === "Unknown Customer" && profile && profile.firstName && profile.lastName) {
-            customerName = `${profile.firstName} ${profile.lastName}`;
-            customerSourceInfo = "Profile Table";
+          // Second priority: Only fall back to profile data if order data is missing
+          if (customerName === "Unknown Customer" && profile) {
+            if (profile.firstName && profile.lastName) {
+              customerName = `${profile.firstName} ${profile.lastName}`;
+              customerSourceInfo = "Profile Table (name)";
+            }
           }
           
           if (customerEmail === "No Email" && profile && profile.email) {
@@ -300,7 +314,7 @@ export const useInstallationRequests = (garageId: string) => {
             new Date(order.created_at).toISOString().split('T')[0] : 
             new Date().toISOString().split('T')[0];
           
-          return {
+          const requestData = {
             id: item.id,
             customerName,
             customerPhone,
@@ -317,9 +331,14 @@ export const useInstallationRequests = (garageId: string) => {
             appointmentTime: item.scheduled_time,
             partId: item.part_id
           };
+          
+          // Final debug log for this request
+          console.log(`Processed installation request for ${item.id}:`, requestData);
+          
+          return requestData;
         });
       
-      console.log("Processed installation requests with customer info and part names:", requests);
+      console.log("Processed installation requests with customer info:", requests);
       setDebug(prev => ({ 
         ...prev, 
         mappedRequests: requests, 
@@ -328,7 +347,8 @@ export const useInstallationRequests = (garageId: string) => {
           orderItemId: r.orderItemId,
           customerName: r.customerName,
           customerEmail: r.customerEmail,
-          customerPhone: r.customerPhone
+          customerPhone: r.customerPhone,
+          source: r.customerName !== "Unknown Customer" ? "Order Table" : "Not Found"
         }))
       }));
       
@@ -346,6 +366,7 @@ export const useInstallationRequests = (garageId: string) => {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+      setDebug(prev => ({ ...prev, lastFetchTime: new Date().toISOString() }));
     }
   };
 
