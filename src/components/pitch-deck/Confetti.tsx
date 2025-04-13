@@ -19,151 +19,145 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    // Modern confetti with various shapes and better movement
-    const confettiCount = 150;
-    const gravity = 0.35;
-    const terminalVelocity = 5;
-    const drag = 0.075;
-    
+    // Modern particle animation system
     const particles: {
       x: number;
       y: number;
-      width: number;
-      height: number;
+      size: number;
       color: string;
-      tilt: number;
-      tiltAngleIncrement: number;
-      tiltAngle: number;
-      velocity: {x: number, y: number};
-      shape: 'circle' | 'square' | 'triangle' | 'line';
+      speed: number;
       opacity: number;
-      opacityDecrement: number;
+      rotation: number;
+      rotationSpeed: number;
+      type: 'circle' | 'star' | 'square' | 'triangle';
     }[] = [];
     
     const colors = [
-      '#3498db', '#9b59b6', '#e74c3c', '#2ecc71', 
-      '#f39c12', '#1abc9c', '#d35400', '#c0392b',
-      '#16a085', '#8e44ad', '#2980b9', '#f1c40f',
-      '#27ae60', '#e67e22', '#ecf0f1', '#95a5a6'
+      '#3498db', '#2ecc71', '#e74c3c', '#f39c12', 
+      '#9b59b6', '#1abc9c', '#e67e22', '#27ae60',
+      '#d35400', '#2980b9', '#8e44ad', '#c0392b',
+      '#16a085', '#f1c40f', '#ecf0f1', '#95a5a6'
     ];
     
-    const shapes = ['circle', 'square', 'triangle', 'line'] as const;
+    const shapes = ['circle', 'star', 'square', 'triangle'] as const;
     
-    // Create confetti particles
-    for (let i = 0; i < confettiCount; i++) {
+    // Generate particles
+    const particleCount = 120;
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height * 0.5 - canvas.height * 0.25,
-        width: Math.random() * 8 + 6,
-        height: Math.random() * 4 + 3,
+        y: -Math.random() * canvas.height * 0.5,
+        size: Math.random() * 10 + 5,
         color: colors[Math.floor(Math.random() * colors.length)],
-        tilt: Math.random() * 10 - 5,
-        tiltAngleIncrement: Math.random() * 0.1 + 0.05,
-        tiltAngle: 0,
-        velocity: {
-          x: Math.random() * 4 - 2,
-          y: Math.random() * 2 + 0.1
-        },
-        shape: shapes[Math.floor(Math.random() * shapes.length)],
-        opacity: 1,
-        opacityDecrement: Math.random() * 0.01 + 0.01
+        speed: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.5 + 0.5,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.05,
+        type: shapes[Math.floor(Math.random() * shapes.length)]
       });
     }
     
-    const drawParticle = (particle: typeof particles[0]) => {
+    // Draw a star shape
+    const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, spikes: number, rotation: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      
       ctx.beginPath();
-      ctx.setTransform(
-        1,
-        particle.tilt,
-        0,
-        1,
-        particle.x,
-        particle.y
-      );
+      for (let i = 0; i < spikes * 2; i++) {
+        const r = i % 2 === 0 ? radius : radius * 0.4;
+        const angle = (i * Math.PI) / spikes;
+        ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+      }
+      ctx.closePath();
+      ctx.fill();
       
+      ctx.restore();
+    };
+    
+    // Draw a triangle
+    const drawTriangle = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, rotation: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      
+      ctx.beginPath();
+      ctx.moveTo(0, -size / 2);
+      ctx.lineTo(-size / 2, size / 2);
+      ctx.lineTo(size / 2, size / 2);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.restore();
+    };
+    
+    // Draw particles based on their type
+    const drawParticle = (particle: typeof particles[0]) => {
       ctx.globalAlpha = particle.opacity;
+      ctx.fillStyle = particle.color;
       
-      switch (particle.shape) {
+      switch (particle.type) {
         case 'circle':
           ctx.beginPath();
-          ctx.arc(0, 0, particle.width / 2, 0, Math.PI * 2, false);
+          ctx.arc(particle.x, particle.y, particle.size / 2, 0, Math.PI * 2);
           ctx.fill();
           break;
         case 'square':
-          ctx.fillRect(-particle.width / 2, -particle.height / 2, particle.width, particle.height);
+          ctx.save();
+          ctx.translate(particle.x, particle.y);
+          ctx.rotate(particle.rotation);
+          ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+          ctx.restore();
+          break;
+        case 'star':
+          drawStar(ctx, particle.x, particle.y, particle.size / 2, 5, particle.rotation);
           break;
         case 'triangle':
-          ctx.beginPath();
-          ctx.moveTo(-particle.width / 2, particle.height / 2);
-          ctx.lineTo(particle.width / 2, particle.height / 2);
-          ctx.lineTo(0, -particle.height / 2);
-          ctx.closePath();
-          ctx.fill();
-          break;
-        case 'line':
-          ctx.beginPath();
-          ctx.moveTo(-particle.width / 2, 0);
-          ctx.lineTo(particle.width / 2, 0);
-          ctx.lineWidth = particle.height;
-          ctx.stroke();
+          drawTriangle(ctx, particle.x, particle.y, particle.size, particle.rotation);
           break;
       }
-      
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
     };
     
-    const updateParticles = () => {
-      particles.forEach((particle, index) => {
-        // Apply gravity and drag
-        particle.velocity.y = Math.min(particle.velocity.y + gravity, terminalVelocity);
-        particle.velocity.x *= (1 - drag);
-        
-        // Update position
-        particle.x += particle.velocity.x;
-        particle.y += particle.velocity.y;
-        
-        // Update tilt
-        particle.tiltAngle += particle.tiltAngleIncrement;
-        particle.tilt = Math.sin(particle.tiltAngle) * 10;
-        
-        // Reduce opacity gradually
-        particle.opacity = Math.max(0, particle.opacity - particle.opacityDecrement);
-        
-        // Reset particles that fall off the screen or become invisible
-        if (particle.y > canvas.height || particle.opacity <= 0) {
-          if (Math.random() > 0.9 || particle.y > canvas.height) {
-            particles[index] = {
-              ...particle,
-              x: Math.random() * canvas.width,
-              y: -20,
-              tiltAngle: 0,
-              opacity: 1
-            };
-          }
-        }
-      });
-    };
-    
+    // Animation loop
     const animate = () => {
       if (!ctx) return;
       
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Apply subtle fade effect to create trails
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      
-      updateParticles();
-      
-      // Draw all particles
-      particles.forEach(particle => {
-        ctx.fillStyle = particle.color;
-        ctx.strokeStyle = particle.color;
+      // Update and draw particles
+      particles.forEach((particle, index) => {
+        // Update position
+        particle.y += particle.speed;
+        particle.rotation += particle.rotationSpeed;
+        
+        // Add some horizontal drift
+        particle.x += Math.sin(particle.y * 0.01) * 0.5;
+        
+        // Gradually reduce opacity
+        particle.opacity = Math.max(0, particle.opacity - 0.001);
+        
+        // Draw the particle
         drawParticle(particle);
+        
+        // Reset particles that go offscreen or fade out
+        if (particle.y > canvas.height || particle.opacity <= 0.1) {
+          particles[index] = {
+            ...particle,
+            x: Math.random() * canvas.width,
+            y: -particle.size,
+            size: Math.random() * 10 + 5,
+            speed: Math.random() * 2 + 1,
+            opacity: Math.random() * 0.5 + 0.5
+          };
+        }
       });
       
       animationFrameId.current = requestAnimationFrame(animate);
     };
     
+    // Start animation
     animate();
     
     // Handle window resize
@@ -191,6 +185,7 @@ const Confetti: React.FC<ConfettiProps> = ({ isActive }) => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-50"
+      style={{ mixBlendMode: 'lighten' }}
     />
   );
 };
