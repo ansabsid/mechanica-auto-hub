@@ -122,6 +122,7 @@ export const useOrdersDebugger = () => {
         .from('order_items')
         .select(`
           id,
+          order_id,
           part_id,
           installation_status,
           scheduled_date,
@@ -135,7 +136,7 @@ export const useOrdersDebugger = () => {
         
       if (orderItemError) {
         console.error("Error fetching order item details:", orderItemError);
-      } else {
+      } else if (orderItem) {
         console.log("Order item details:", orderItem);
         setDebugInfo(prev => ({ ...prev, orderItemDetails: orderItem }));
         setSelectedItem(orderItem);
