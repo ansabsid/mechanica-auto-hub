@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, ShoppingCart, LogOut, Home, Settings, Presentation } from "lucide-react";
+import { Menu, X, User, ShoppingCart, LogOut, Home, Settings, Presentation, Car } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,11 @@ const Header = () => {
                 </Link>
               </>
             )}
+
+            <Link to="/vin-decoder" className="text-gray-700 hover:text-mechanica-500 transition-colors flex items-center gap-1">
+              <Car className="h-4 w-4" />
+              VIN Decoder
+            </Link>
             
             <Link to="/about" className="text-gray-700 hover:text-mechanica-500 transition-colors">
               About
@@ -190,6 +196,15 @@ const Header = () => {
                   </Link>
                 </>
               )}
+              
+              <Link
+                to="/vin-decoder"
+                className="text-gray-700 hover:text-mechanica-500 transition-colors flex items-center gap-1"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Car className="h-4 w-4" />
+                VIN Decoder
+              </Link>
               
               <Link
                 to="/about"
