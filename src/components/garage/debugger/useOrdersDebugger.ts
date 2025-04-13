@@ -34,6 +34,30 @@ export const useOrdersDebugger = () => {
     try {
       const garageId = "c64a9350-d34a-4903-b34c-16c0e4699a44";
       
+      // Get the authenticated user first to confirm our auth state
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Auth session error:", sessionError);
+        setDebugInfo(prev => ({ ...prev, sessionError }));
+      } else {
+        console.log("Auth session:", sessionData?.session ? "Active" : "Not active");
+        setDebugInfo(prev => ({ ...prev, authSession: sessionData }));
+      }
+      
+      // Test profile access
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .limit(1);
+        
+      if (profileError) {
+        console.error("Profile access error:", profileError);
+        setDebugInfo(prev => ({ ...prev, profileError }));
+      } else {
+        console.log("Profile access test:", profileData);
+        setDebugInfo(prev => ({ ...prev, profileTest: profileData }));
+      }
+      
       const { data: items, error } = await supabase
         .from('order_items')
         .select(`
@@ -49,7 +73,11 @@ export const useOrdersDebugger = () => {
         .order('created_at', { ascending: false })
         .limit(10);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching order items:", error);
+        setDebugInfo(prev => ({ ...prev, fetchError: error }));
+        throw error;
+      }
       
       setOrderItems(items || []);
       setDebugInfo(prev => ({ ...prev, fetchedItems: items }));
