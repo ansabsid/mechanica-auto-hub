@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -514,7 +513,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                             <AlertDescription>
                               Order not found in the database
                               {orderCheckResult.orderError && (
-                                <span className="block text-xs mt-1">{orderCheckResult.orderError}</span>
+                                <span className="block text-xs mt-1">{String(orderCheckResult.orderError)}</span>
                               )}
                             </AlertDescription>
                           </Alert>
@@ -530,7 +529,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4 mr-2" />
                         <AlertDescription>
-                          Error checking order items: {orderCheckResult.orderItemsError}
+                          Error checking order items: {String(orderCheckResult.orderItemsError)}
                         </AlertDescription>
                       </Alert>
                     ) : (

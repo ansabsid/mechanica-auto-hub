@@ -15,6 +15,21 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
   customerEmail,
   customerPhone
 }) => {
+  // Helper function to safely convert any value to a string
+  const safeStringify = (value: any): string => {
+    if (value === null || value === undefined) {
+      return '(empty)';
+    }
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch (err) {
+        return '[Object]';
+      }
+    }
+    return String(value);
+  };
+
   return (
     <details>
       <summary className="text-sm font-semibold cursor-pointer">Debug Information</summary>
@@ -46,7 +61,7 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           
           <div className="text-xs bg-gray-50 p-2 rounded">
             <div className="font-medium mb-1">Data Source:</div>
-            <div>{debugInfo.customerSourceInfo || 'Not set'}</div>
+            <div>{safeStringify(debugInfo.customerSourceInfo) || 'Not set'}</div>
             <div className="font-medium mt-1">Status:</div>
             <div>{!customerName || customerName === 'Unknown Customer' ? 'Missing Data' : 'Data Available'}</div>
           </div>
@@ -56,9 +71,9 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
           <div className="font-medium text-xs mb-1">RLS Status:</div>
           <div className="text-xs bg-gray-50 p-2 rounded">
             <div>Garage Access: {debugInfo.hasGarageAccess ? 'Granted' : 'Denied'}</div>
-            <div>Policy Status: {debugInfo.rlsStatus || 'Unknown'}</div>
+            <div>Policy Status: {safeStringify(debugInfo.rlsStatus) || 'Unknown'}</div>
             {debugInfo.rlsError && (
-              <div className="text-red-600">Error: {debugInfo.rlsError}</div>
+              <div className="text-red-600">Error: {safeStringify(debugInfo.rlsError)}</div>
             )}
           </div>
         </div>
@@ -70,13 +85,13 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
               <>
                 <div className="font-medium">Order Data:</div>
                 <div className={!debugInfo.orderData.user_name ? 'text-red-500' : 'text-green-600'}>
-                  Name: {debugInfo.orderData.user_name || '(empty)'}
+                  Name: {safeStringify(debugInfo.orderData.user_name) || '(empty)'}
                 </div>
                 <div className={!debugInfo.orderData.user_email ? 'text-red-500' : 'text-green-600'}>
-                  Email: {debugInfo.orderData.user_email || '(empty)'}
+                  Email: {safeStringify(debugInfo.orderData.user_email) || '(empty)'}
                 </div>
                 <div className={!debugInfo.orderData.user_phone ? 'text-red-500' : 'text-green-600'}>
-                  Phone: {debugInfo.orderData.user_phone || '(empty)'}
+                  Phone: {safeStringify(debugInfo.orderData.user_phone) || '(empty)'}
                 </div>
               </>
             ) : (
@@ -92,13 +107,16 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
               <>
                 <div className="font-medium">Profile Information:</div>
                 <div className={!debugInfo.profileData.firstName && !debugInfo.profileData.lastName ? 'text-red-500' : 'text-green-600'}>
-                  Name: {[debugInfo.profileData.firstName, debugInfo.profileData.lastName].filter(Boolean).join(' ') || '(empty)'}
+                  Name: {[
+                    safeStringify(debugInfo.profileData.firstName), 
+                    safeStringify(debugInfo.profileData.lastName)
+                  ].filter(val => val && val !== '(empty)').join(' ') || '(empty)'}
                 </div>
                 <div className={!debugInfo.profileData.email ? 'text-red-500' : 'text-green-600'}>
-                  Email: {debugInfo.profileData.email || '(empty)'}
+                  Email: {safeStringify(debugInfo.profileData.email) || '(empty)'}
                 </div>
                 <div className={!debugInfo.profileData.phone ? 'text-red-500' : 'text-green-600'}>
-                  Phone: {debugInfo.profileData.phone || '(empty)'}
+                  Phone: {safeStringify(debugInfo.profileData.phone) || '(empty)'}
                 </div>
               </>
             ) : (
@@ -117,13 +135,13 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({
                   <div key={orderId} className="mb-2 p-1 border-b border-gray-200">
                     <div className="font-medium">Order ID: {orderId}</div>
                     <div className={!data?.user_name ? 'text-red-500' : 'text-green-600'}>
-                      Name: {data?.user_name || '(empty)'}
+                      Name: {data?.user_name ? safeStringify(data.user_name) : '(empty)'}
                     </div>
                     <div className={!data?.user_email ? 'text-red-500' : 'text-green-600'}>
-                      Email: {data?.user_email || '(empty)'}
+                      Email: {data?.user_email ? safeStringify(data.user_email) : '(empty)'}
                     </div>
                     <div className={!data?.user_phone ? 'text-red-500' : 'text-green-600'}>
-                      Phone: {data?.user_phone || '(empty)'}
+                      Phone: {data?.user_phone ? safeStringify(data.user_phone) : '(empty)'}
                     </div>
                   </div>
                 ))}
