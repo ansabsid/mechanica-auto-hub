@@ -10,9 +10,11 @@ import { toast } from "sonner";
 import { Moon, Sun, MonitorSmartphone } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
+type Theme = "light" | "dark" | "system";
+
 const AppearanceSettings = () => {
   const { theme, setTheme } = useTheme();
-  const [selectedTheme, setSelectedTheme] = useState(theme);
+  const [selectedTheme, setSelectedTheme] = useState<Theme>(theme);
   
   useEffect(() => {
     setSelectedTheme(theme);
@@ -35,7 +37,7 @@ const AppearanceSettings = () => {
 
         <RadioGroup 
           value={selectedTheme} 
-          onValueChange={setSelectedTheme}
+          onValueChange={(value: Theme) => setSelectedTheme(value)}
           className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2"
         >
           <div>
