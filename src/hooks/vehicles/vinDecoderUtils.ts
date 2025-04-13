@@ -1,12 +1,28 @@
 
 import { Vehicle } from "@/hooks/useVehicles";
-import { fetchWithTimeout } from "@/hooks/car-parts/utils/network";
+import { fetchWithTimeout, fetchWithCache } from "@/hooks/car-parts/utils/network";
 
 type NhtsaResponse = {
   Results: Array<{
     Variable: string;
     Value: string | null;
   }>;
+};
+
+type VinDecoderFallbackResponse = {
+  specification: {
+    make: string;
+    model: string;
+    year: number;
+    fuel_type: string;
+    transmission: string;
+    body_type: string;
+    engine: {
+      displacement: string;
+      configuration: string;
+    };
+  };
+  vin: string;
 };
 
 /**
@@ -18,36 +34,94 @@ export const fetchVehicleByVin = async (vin: string): Promise<Vehicle> => {
   try {
     console.log(`Fetching data for VIN: ${vin}`);
     
-    const response = await fetchWithTimeout(async () => {
-      const apiUrl = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/${vin}?format=json`;
-      const res = await fetch(apiUrl);
+    // Try the NHTSA API first
+    try {
+      const vehicleData = await fetchFromNhtsaApi(vin);
       
-      if (!res.ok) {
-        throw new Error(`API request failed with status ${res.status}`);
+      // If we have complete data from NHTSA, return it
+      if (vehicleData.make && vehicleData.model && vehicleData.year) {
+        console.log("Successfully decoded vehicle using NHTSA API:", vehicleData);
+        return vehicleData;
       }
       
-      return await res.json();
-    });
-    
-    const data = response as NhtsaResponse;
-    
-    if (!data.Results || !Array.isArray(data.Results)) {
-      throw new Error("Invalid response format from VIN decoder API");
+      console.log("Incomplete data from NHTSA API, trying fallback API...");
+    } catch (error) {
+      console.warn("NHTSA API failed, trying fallback API...", error);
     }
     
-    // Extract the relevant vehicle information from the API response
-    const vehicleData = extractVehicleData(data);
+    // If NHTSA API fails or returns incomplete data, try the fallback API
+    const fallbackData = await fetchFromFallbackApi(vin);
+    console.log("Successfully decoded vehicle using fallback API:", fallbackData);
+    return fallbackData;
     
-    if (!vehicleData.make || !vehicleData.model || !vehicleData.year) {
-      throw new Error("Unable to decode VIN or retrieve complete vehicle information");
-    }
-    
-    console.log("Decoded vehicle data:", vehicleData);
-    return vehicleData;
   } catch (error: any) {
-    console.error("Error decoding VIN:", error);
+    console.error("Error decoding VIN with both APIs:", error);
     throw new Error(error.message || "Failed to decode VIN");
   }
+};
+
+/**
+ * Fetches vehicle data from the NHTSA API
+ */
+const fetchFromNhtsaApi = async (vin: string): Promise<Vehicle> => {
+  const response = await fetchWithTimeout(async () => {
+    const apiUrl = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/${vin}?format=json`;
+    const res = await fetch(apiUrl);
+    
+    if (!res.ok) {
+      throw new Error(`API request failed with status ${res.status}`);
+    }
+    
+    return await res.json();
+  });
+  
+  const data = response as NhtsaResponse;
+  
+  if (!data.Results || !Array.isArray(data.Results)) {
+    throw new Error("Invalid response format from VIN decoder API");
+  }
+  
+  // Extract the relevant vehicle information from the API response
+  const vehicleData = extractVehicleData(data);
+  
+  return vehicleData;
+};
+
+/**
+ * Fetches vehicle data from the fallback VIN decoder API
+ */
+const fetchFromFallbackApi = async (vin: string): Promise<Vehicle> => {
+  // Note: In a production app, you would store this API key as an environment variable
+  // For demo purposes, we're using a placeholder value
+  const apiKey = "YOUR_FALLBACK_API_KEY"; // Replace with actual API key
+  
+  const response = await fetchWithTimeout(async () => {
+    const apiUrl = `https://vindecoderapi.com/v1/decode/${vin}?apikey=${apiKey}`;
+    const res = await fetch(apiUrl);
+    
+    if (!res.ok) {
+      throw new Error(`Fallback API request failed with status ${res.status}`);
+    }
+    
+    return await res.json();
+  });
+  
+  const data = response as VinDecoderFallbackResponse;
+  
+  // Map the response to our Vehicle type
+  return {
+    make: data.specification.make || "",
+    model: data.specification.model || "",
+    year: data.specification.year || 0,
+    vin: data.vin || vin,
+    engine_details: {
+      type: data.specification.engine.configuration || "",
+      size: data.specification.engine.displacement || "",
+      fuel: data.specification.fuel_type || ""
+    },
+    body_style: data.specification.body_type || "",
+    transmission: data.specification.transmission || ""
+  } as Vehicle;
 };
 
 /**
@@ -76,7 +150,7 @@ const extractVehicleData = (data: NhtsaResponse): Vehicle => {
     make,
     model,
     year,
-    vin: getValueByVariable("VIN"), // Fix: Use getValueByVariable instead of direct access
+    vin: getValueByVariable("VIN"),
     engine_details: {
       type: engineType || "",
       size: engineSize || "",
