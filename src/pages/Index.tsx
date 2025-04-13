@@ -43,7 +43,6 @@ import {
 } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 
-// Trusted garage logos
 const trustedGarages = [
   "AutoCare Dubai",
   "BrakeMax",
@@ -53,7 +52,6 @@ const trustedGarages = [
   "DXB Car Services",
 ];
 
-// Testimonials data
 const testimonials = [
   {
     id: 1,
@@ -75,7 +73,6 @@ const testimonials = [
   }
 ];
 
-// Market problems data
 const customerProblems = [
   {
     icon: <ShoppingBag className="h-5 w-5 text-red-500" />,
@@ -112,7 +109,6 @@ const garageProblems = [
   }
 ];
 
-// Solution features data
 const solutionFeatures = [
   {
     icon: <Lightbulb className="h-6 w-6 text-blue-600" />,
@@ -136,7 +132,6 @@ const solutionFeatures = [
   }
 ];
 
-// New hero benefits data
 const heroBenefits = [
   {
     icon: <Car className="h-5 w-5" />,
@@ -160,7 +155,6 @@ const heroBenefits = [
   }
 ];
 
-// Customer journey steps
 const customerJourneySteps = [
   {
     icon: <Car className="h-8 w-8 text-blue-600" />,
@@ -231,7 +225,6 @@ const Index = () => {
     const fetchFeaturedParts = async () => {
       setIsLoading(true);
       try {
-        // Get 4 random parts from the database
         const { data: partsData, error: partsError } = await supabase
           .from('parts')
           .select('*')
@@ -240,10 +233,8 @@ const Index = () => {
         if (partsError) throw partsError;
         
         if (partsData && partsData.length > 0) {
-          // Get all part IDs to fetch their associated garages
           const partIds = partsData.map(part => part.id);
           
-          // Fetch garages for all parts using the bulk function
           const { data: garageData, error: garageError } = await supabase
             .rpc('get_garages_for_part_bulk', { part_ids: partIds });
             
@@ -251,12 +242,9 @@ const Index = () => {
             console.error("Error fetching garage data:", garageError);
           }
           
-          // Process the parts data with real garage information
           const processedParts: Part[] = partsData.map(part => {
-            // Find all garages for this part
             const partGarages = garageData ? garageData.filter(g => g.part_id === part.id) : [];
             
-            // Default garage if none found
             const mainGarage = partGarages.length > 0 ? 
               { 
                 name: partGarages[0].name,
@@ -267,18 +255,15 @@ const Index = () => {
                 location: 'Dubai, UAE'
               };
               
-            // Format all available garages for this part
             const availableGaragesList = partGarages.map(garage => ({
               id: garage.id,
               name: garage.name,
               location: garage.location,
               installationFee: Number(garage.installation_fee),
-              area: garage.location.split(',')[0].trim() // Extract area from location
+              area: garage.location.split(',')[0].trim()
             }));
             
-            // If no garages found through association, check if part has a direct garage_id
             if (part.garage_id && availableGaragesList.length === 0) {
-              // Fetch this specific garage
               supabase
                 .from('garages')
                 .select('*')
@@ -290,14 +275,13 @@ const Index = () => {
                       id: directGarage.id,
                       name: directGarage.name,
                       location: directGarage.location,
-                      installationFee: 25.99, // Default installation fee
+                      installationFee: 25.99,
                       area: directGarage.area || directGarage.location.split(',')[0].trim()
                     });
                   }
                 });
             }
             
-            // Ensure we always have some available garages for installation
             const finalAvailableGarages = availableGaragesList.length > 0 
               ? availableGaragesList 
               : [
@@ -342,16 +326,12 @@ const Index = () => {
 
   return (
     <>
-      {/* New Modern Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 overflow-hidden">
-        {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
-          {/* Large rings */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] border border-blue-500/10 rounded-full" />
           <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] border border-blue-400/10 rounded-full" />
           <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[400px] h-[400px] border border-blue-300/10 rounded-full" />
           
-          {/* Background dots grid */}
           <div className="absolute inset-0 opacity-20"
             style={{
               backgroundImage: 'radial-gradient(circle at 16px 16px, rgba(255,255,255,0.1) 2px, transparent 0)',
@@ -359,7 +339,6 @@ const Index = () => {
             }}
           />
           
-          {/* Light beams */}
           <div className="absolute -top-20 -left-20 w-80 h-80 bg-blue-400 rounded-full opacity-20 blur-[100px]" />
           <div className="absolute -bottom-40 -right-20 w-96 h-96 bg-indigo-400 rounded-full opacity-20 blur-[100px]" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-sky-300 rounded-full opacity-10 blur-[80px]" />
@@ -367,7 +346,6 @@ const Index = () => {
         
         <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-x-12 gap-y-16">
-            {/* Text content */}
             <div className="w-full lg:w-6/12 text-center lg:text-left">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -411,9 +389,9 @@ const Index = () => {
                 </Button>
                 
                 {!isAuthenticated ? (
-                  <Link to="/login">
+                  <Link to="/register">
                     <Button variant="outline" className="border-2 border-blue-400/30 bg-blue-900/30 backdrop-blur-sm text-white hover:bg-blue-800/50 font-medium px-8 py-6 rounded-xl transition-all">
-                      Login / Sign Up
+                      Start Your Journey Today
                     </Button>
                   </Link>
                 ) : (
@@ -451,10 +429,8 @@ const Index = () => {
               </motion.div>
             </div>
             
-            {/* Right side - Feature showcase */}
             <div className="w-full lg:w-6/12">
               <div className="relative">
-                {/* Main illustration */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -467,7 +443,6 @@ const Index = () => {
                     className="rounded-2xl shadow-2xl shadow-blue-900/50 w-full object-cover max-h-[500px]"
                   />
                   
-                  {/* Floating card 1 - Order confirmation */}
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -489,7 +464,6 @@ const Index = () => {
                     </div>
                   </motion.div>
                   
-                  {/* Floating card 2 - Mechanic Rating */}
                   <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -518,7 +492,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Benefits grid */}
           <div className="mt-16 md:mt-20">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {heroBenefits.map((benefit, index) => (
@@ -540,7 +513,6 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Bottom wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 200" className="w-full h-auto">
             <path fill="#ffffff" fillOpacity="1" d="M0,160L80,144C160,128,320,96,480,96C640,96,800,128,960,138.7C1120,149,1280,139,1360,133.3L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
@@ -548,7 +520,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Market Problems & Our Solution Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -644,7 +615,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="py-12 md:py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -675,7 +645,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How It Works - Updated Customer Journey */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -685,10 +654,8 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Journey Steps - Desktop View */}
           <div className="hidden md:block">
             <div className="relative">
-              {/* Timeline connector */}
               <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-blue-200 -translate-x-1/2 z-0"></div>
               
               <div className="space-y-16">
@@ -696,4 +663,128 @@ const Index = () => {
                   <div key={index} className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
                     <div className={`w-5/12 ${index % 2 === 0 ? 'text-right pr-10' : 'text-left pl-10'}`}>
                       <motion.div
-                        initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 2
+                        initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                      >
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
+                        <p className="text-gray-600 mb-4">{step.description}</p>
+                        <div className="text-sm text-blue-600 font-medium">
+                          <span className="inline-flex items-center">
+                            <CheckCircle2 className="h-4 w-4 mr-1" /> {step.benefit}
+                          </span>
+                        </div>
+                      </motion.div>
+                    </div>
+                    
+                    <div className="relative z-10">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
+                        className="w-16 h-16 rounded-full bg-white border-4 border-blue-200 flex items-center justify-center"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                          {step.icon}
+                        </div>
+                      </motion.div>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-800 font-bold">
+                        {step.step}
+                      </div>
+                    </div>
+                    
+                    <div className="w-5/12"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="md:hidden">
+            <div className="relative">
+              <div className="absolute left-6 top-0 bottom-0 w-1 bg-blue-200 z-0"></div>
+              
+              <div className="space-y-12">
+                {customerJourneySteps.map((step, index) => (
+                  <div key={index} className="flex">
+                    <div className="relative z-10 mr-6">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
+                        className="w-12 h-12 rounded-full bg-white border-4 border-blue-200 flex items-center justify-center"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          {step.icon}
+                        </div>
+                      </motion.div>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-800 font-bold text-sm">
+                        {step.step}
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                      >
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">{step.title}</h3>
+                        <p className="text-gray-600 mb-2 text-sm">{step.description}</p>
+                        <div className="text-xs text-blue-600 font-medium">
+                          <span className="inline-flex items-center">
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> {step.benefit}
+                          </span>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <Link to="/register">
+              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all">
+                Start Your Journey Today <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12 bg-gradient-to-r from-blue-900 to-indigo-900 text-white">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-8 md:mb-0">
+              <h2 className="text-2xl font-bold mb-2">Get the BookMyParts App</h2>
+              <p className="text-blue-100 max-w-md">
+                Manage your vehicles, order parts, and book services directly from your phone.
+              </p>
+            </div>
+            <Button 
+              className="bg-white text-blue-900 hover:bg-blue-50 font-medium px-6 py-5 rounded-xl transition-all"
+              onClick={handleAppDownloadClick}
+            >
+              <Smartphone className="mr-2 h-5 w-5" /> Download Now
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <ComingSoonDialog 
+        open={isComingSoonOpen} 
+        onOpenChange={setIsComingSoonOpen}
+        title="Mobile App Coming Soon"
+        description="Our mobile app is currently in development. Sign up to be notified when it launches!"
+      />
+    </>
+  );
+};
+
+export default Index;
