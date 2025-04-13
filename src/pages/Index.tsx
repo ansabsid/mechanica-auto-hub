@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -306,8 +305,9 @@ const Index = () => {
             </div>
             
             <div className="relative lg:block hidden">
-              <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 transform rotate-1 relative">
-                <div className="absolute -top-3 -right-3 bg-blue-100 px-3 py-1 rounded-full text-blue-700 text-xs font-medium z-10">
+              {/* Main feature card with transparent prices tag */}
+              <div className="bg-white rounded-xl shadow-xl p-6 md:p-8 transform rotate-1 relative z-20">
+                <div className="absolute -top-3 -right-3 bg-blue-100 px-3 py-1 rounded-full text-blue-700 text-xs font-medium z-30">
                   Transparent prices
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -329,7 +329,8 @@ const Index = () => {
                 </div>
               </div>
               
-              <div className="absolute -bottom-5 -left-5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg shadow-lg p-4 transform -rotate-3 z-0">
+              {/* "Ready to join?" card positioned behind the main card */}
+              <div className="absolute -bottom-5 -left-5 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg shadow-lg p-4 transform -rotate-3 z-10">
                 <div className="font-medium text-sm mb-2 text-blue-800">Ready to join?</div>
                 <div className="flex space-x-2">
                   <div className="bg-white px-3 py-2 rounded text-xs">Customers</div>
