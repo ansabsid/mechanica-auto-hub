@@ -11,7 +11,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, AlertTriangle, FileWarning, Search } from "lucide-react";
+import { 
+  AlertCircle, 
+  AlertTriangle, 
+  FileWarning, 
+  Search, 
+  CheckCircle, 
+  Check 
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -209,7 +216,10 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                               onClick={() => {
                                 setOrderIdToCheck(request.orderId);
                                 checkOrderExists(request.orderId);
-                                document.querySelector('[data-value="manual-check"]')?.click();
+                                const tabTrigger = document.querySelector('[data-value="manual-check"]');
+                                if (tabTrigger instanceof HTMLElement) {
+                                  tabTrigger.click();
+                                }
                               }}
                             >
                               Verify
@@ -278,7 +288,10 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                                   onClick={() => {
                                     setOrderIdToCheck(failure.orderId);
                                     checkOrderExists(failure.orderId);
-                                    document.querySelector('[data-value="manual-check"]')?.click();
+                                    const tabTrigger = document.querySelector('[data-value="manual-check"]');
+                                    if (tabTrigger instanceof HTMLElement) {
+                                      tabTrigger.click();
+                                    }
                                   }}
                                 >
                                   Verify
@@ -344,7 +357,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                         {orderCheckResult.orderExists ? (
                           <div className="mt-2">
                             <Alert variant="default" className="bg-green-50 border-green-200">
-                              <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                               <AlertDescription className="text-green-800">
                                 Order found in database
                               </AlertDescription>
@@ -377,7 +390,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                         {orderCheckResult.orderItemsExist ? (
                           <div className="mt-2">
                             <Alert variant="default" className="bg-green-50 border-green-200">
-                              <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                               <AlertDescription className="text-green-800">
                                 Found {orderCheckResult.orderItemsData.length} order items with this order ID
                               </AlertDescription>
@@ -425,7 +438,7 @@ export const DebugDialog: React.FC<DebugDialogProps> = ({
                           {orderCheckResult.orderExists ? (
                             orderCheckResult.orderItemsExist ? (
                               <Alert variant="default" className="bg-green-50 border-green-200">
-                                <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                                 <AlertDescription className="text-green-800">
                                   Both order and order items exist in the database. If you're seeing "Unknown Customer",
                                   check if customer information is properly set in the order record above.
