@@ -31,11 +31,26 @@ export type RPCFunctions = {
     has_access: boolean;
     user_id: string;
     user_garage_id: string;
-    request_matches: boolean;
-    rlsStatus: string;
-    hasGarageAccess: boolean;
-    rlsError: string | null;
+    request_garage_id: string;
+    is_staff: boolean;
+    error_message: string;
   };
+  debug_installation_request_access: (args: { garage_id_param: string }) => {
+    has_access: boolean;
+    user_id: string;
+    user_garage_id: string;
+    request_garage_id: string;
+    is_staff: boolean;
+    error_message: string;
+  }[];
+  get_customer_info_for_installation: (args: { order_id_param: string }) => {
+    customer_name: string;
+    customer_email: string;
+    customer_phone: string;
+    customer_source_info: string;
+  }[];
+  get_installation_requests_for_garage: (args: { garage_id_param: string }) => any[];
+  has_installation_request_access: (args: { request_garage_id: string }) => boolean;
 };
 
 // Enhance the SupabaseClient type with our custom RPC function signatures

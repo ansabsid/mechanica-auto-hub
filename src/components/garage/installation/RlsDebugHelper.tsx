@@ -22,7 +22,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
     try {
       // Test direct RLS function first to diagnose any issues
       const { data: rlsDebugData, error: rlsDebugError } = await supabase
-        .rpc('debug_rls_access', { garage_id_param: garageId });
+        .rpc('debug_installation_request_access', { garage_id_param: garageId });
         
       if (rlsDebugError) {
         console.error("RLS debug function error:", rlsDebugError);
