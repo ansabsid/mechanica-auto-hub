@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -242,7 +243,7 @@ export const useGarageProducts = (garageId?: string) => {
   const fetchProducts = async (garageId: string) => {
     if (!garageId) {
       console.log("No garage ID provided for fetching products");
-      return;
+      return [];
     }
     
     console.log("Fetching products for garage ID:", garageId);
@@ -253,7 +254,12 @@ export const useGarageProducts = (garageId?: string) => {
         .select('*')
         .eq('garage_id', garageId);
 
-      if (directError) throw directError;
+      if (directError) {
+        console.error("Error fetching direct parts:", directError);
+        throw directError;
+      }
+      
+      console.log("Direct parts fetched:", directParts?.length || 0);
       
       const { data: associatedParts, error: associationError } = await supabase
         .from('parts_garages')
@@ -304,6 +310,7 @@ export const useGarageProducts = (garageId?: string) => {
     } catch (error: any) {
       console.error("Error fetching products:", error.message);
       toast.error("Failed to load products");
+      setProducts([]);
       return [];
     } finally {
       setFetchLoading(false);
@@ -646,3 +653,5 @@ export const useGarageProducts = (garageId?: string) => {
     uploadImageToBucket
   };
 };
+
+export default useGarageProducts;

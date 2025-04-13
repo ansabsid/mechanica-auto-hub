@@ -264,6 +264,7 @@ const GarageDashboard = () => {
   };
 
   const handleEditProduct = (product: any) => {
+    console.log("Editing product:", product);
     const formattedProduct: GarageProduct = {
       id: product.id,
       name: product.name,
@@ -285,6 +286,7 @@ const GarageDashboard = () => {
   };
 
   const handleUpdateProduct = async (updatedProduct: GarageProduct) => {
+    console.log("Updating product:", updatedProduct);
     return await updateProduct(updatedProduct);
   };
 
@@ -314,6 +316,9 @@ const GarageDashboard = () => {
     });
     setStatusUpdateDialogOpen(true);
   };
+
+  console.log("Current products in GarageDashboard:", products);
+  console.log("Current garage ID:", currentGarageId);
 
   return (
     <div className="container mx-auto py-4 md:py-8 px-2 md:px-4">

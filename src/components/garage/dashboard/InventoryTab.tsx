@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Upload, Package, MoreHorizontal, Edit, Trash2, Car, Wrench } from "lucide-react";
 import { 
@@ -62,6 +62,8 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
   handleFileChange,
   filteredModels,
 }) => {
+  console.log("InventoryTab rendering with products:", products);
+  
   return (
     <div className="flex flex-col space-y-4 md:space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
@@ -117,7 +119,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                     </div>
                   </td>
                 </tr>
-              ) : products.length > 0 ? (
+              ) : products && products.length > 0 ? (
                 products.map((product: any) => (
                   <tr key={product.id} className="border-b">
                     <td className="p-2 md:p-4">
