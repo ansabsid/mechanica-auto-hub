@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -26,7 +25,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Check, AlertCircle, MapPin, Building, User, Mail, Lock, Phone, Flag, UserPlus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Define a schema for country codes
 const countryCodes = [
   { code: "+971", country: "UAE" },
   { code: "+1", country: "USA" },
@@ -39,7 +37,6 @@ const countryCodes = [
   { code: "+968", country: "Oman" },
 ] as const;
 
-// Create a customer registration schema
 const customerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -54,7 +51,6 @@ const customerSchema = z.object({
   role: z.literal("customer"),
 });
 
-// Create a garage registration schema
 const garageSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -72,7 +68,6 @@ const garageSchema = z.object({
   role: z.literal("garage"),
 });
 
-// Union the two schemas
 const registerSchema = z.discriminatedUnion("role", [
   customerSchema,
   garageSchema,
@@ -102,7 +97,6 @@ const Register = () => {
     },
   });
 
-  // Watch the role to conditionally render form fields
   const watchRole = form.watch("role");
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -110,7 +104,6 @@ const Register = () => {
       setRegistrationStatus("idle");
       setErrorMessage(null);
 
-      // Prepare metadata with all the collected information
       const metadata = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -119,7 +112,6 @@ const Register = () => {
         phoneNumber: data.phoneNumber,
       };
 
-      // Add garage-specific metadata if role is garage
       if (data.role === "garage") {
         Object.assign(metadata, {
           garageName: data.garageName,
@@ -136,7 +128,6 @@ const Register = () => {
         description: "Please check your email to confirm your account",
       });
       
-      // Redirect to login page after 2 seconds
       setTimeout(() => {
         navigate("/login");
       }, 2000);
@@ -152,11 +143,9 @@ const Register = () => {
     }
   };
 
-  // Function to reset role selection
   const setRole = (role: "customer" | "garage") => {
     form.setValue("role", role);
     
-    // Reset garage-specific fields when switching to customer
     if (role === "customer") {
       form.unregister("garageName");
       form.unregister("garageLocation");
@@ -422,11 +411,11 @@ const Register = () => {
           
           <Button 
             type="submit" 
-            className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600 text-lg py-6" 
+            className="w-full bg-bookmyparts-500 hover:bg-bookmyparts-600 text-lg py-6 mt-8 text-white font-bold rounded-md shadow-lg" 
             disabled={isLoading || registrationStatus === "success"}
           >
             <UserPlus className="mr-2 h-5 w-5" />
-            {isLoading ? "Creating Account..." : "Signup"}
+            {isLoading ? "Creating Account..." : "SIGNUP"}
           </Button>
         </form>
       </Form>
