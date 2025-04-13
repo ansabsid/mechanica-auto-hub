@@ -1,9 +1,8 @@
 
--- Drop existing problematic functions
-DROP FUNCTION IF EXISTS public.is_garage_staff(uuid);
-DROP FUNCTION IF EXISTS public.debug_rls_access(uuid);
+-- This migration fixes ambiguous column reference issues in RLS policies
+-- and functions related to garage access
 
--- Create a properly qualified is_garage_staff function
+-- Update is_garage_staff function with explicit column references (instead of dropping)
 CREATE OR REPLACE FUNCTION public.is_garage_staff(garage_id_param UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -26,7 +25,10 @@ RETURNS TABLE(
   has_access BOOLEAN,
   user_id UUID,
   user_garage_id UUID,
-  request_matches BOOLEAN
+  request_matches BOOLEAN,
+  rlsStatus TEXT,
+  hasGarageAccess BOOLEAN,
+  rlsError TEXT
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -34,6 +36,8 @@ AS $$
 DECLARE
   current_user_id UUID;
   user_garage UUID;
+  is_staff BOOLEAN;
+  error_message TEXT;
 BEGIN
   -- Get the current authenticated user
   current_user_id := auth.uid();
@@ -43,12 +47,29 @@ BEGIN
   FROM profiles
   WHERE profiles.id = current_user_id;
   
+  -- Check if user is garage staff
+  BEGIN
+    SELECT public.is_garage_staff(garage_id_param) INTO is_staff;
+    error_message := NULL;
+  EXCEPTION WHEN OTHERS THEN
+    is_staff := FALSE;
+    error_message := SQLERRM;
+  END;
+  
   RETURN QUERY
   SELECT
-    (user_garage = garage_id_param OR public.is_garage_staff(garage_id_param)) as has_access,
+    (user_garage = garage_id_param OR is_staff) as has_access,
     current_user_id as user_id,
     user_garage as user_garage_id,
-    (user_garage = garage_id_param) as request_matches;
+    (user_garage = garage_id_param) as request_matches,
+    CASE 
+      WHEN error_message IS NOT NULL THEN 'Error'
+      WHEN user_garage = garage_id_param THEN 'Direct access'
+      WHEN is_staff THEN 'Staff access'
+      ELSE 'No access'
+    END as rlsStatus,
+    is_staff as hasGarageAccess,
+    error_message as rlsError;
 END;
 $$;
 
@@ -70,7 +91,6 @@ USING (
 );
 
 -- Create policy for update access to order_items for garage staff
--- with explicit table qualification
 CREATE POLICY "Garage staff can update their installation requests"
 ON public.order_items
 FOR UPDATE
