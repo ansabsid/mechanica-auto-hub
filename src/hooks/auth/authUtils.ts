@@ -57,7 +57,7 @@ export const createUserProfile = async (
       return; // Profile already exists, no need to create a new one
     }
     
-    // Extract phone information from metadata
+    // Extract user information from metadata
     const { countryCode, phoneNumber, firstName, lastName, fullPhone } = metadata as any;
     
     // Create profile data object with basic info
@@ -66,6 +66,8 @@ export const createUserProfile = async (
       email: email,
       role: role,
       phone: fullPhone || (countryCode && phoneNumber ? `${countryCode}${phoneNumber}` : null),
+      firstName: firstName,
+      lastName: lastName,
     };
     
     // Add garage-specific data if role is garage

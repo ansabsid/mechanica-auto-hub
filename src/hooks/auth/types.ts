@@ -8,6 +8,8 @@ export interface Profile {
   created_at?: string;
   updated_at?: string;
   phone?: string;
+  firstName?: string;
+  lastName?: string;
   garage_id?: string;
 }
 
