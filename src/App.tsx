@@ -19,7 +19,9 @@ import Categories from './pages/Categories';
 import CategoryPage from './components/categories/CategoryPage';
 import BookAppointment from './pages/BookAppointment';
 import PitchDeck from './pages/PitchDeck';
+import Settings from './pages/Settings';
 import { AuthProvider } from './hooks/auth';
+import { ThemeProvider } from './providers/ThemeProvider';
 import { useCapacitor } from './hooks/useCapacitor';
 import './App.css';
 
@@ -39,32 +41,35 @@ function App() {
   }, [isCapacitor]);
   
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<Index />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-            <Route path="orders/:orderId" element={<OrdersPage />} />
-            <Route path="orders" element={<OrdersListPage />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="customer-dashboard" element={<CustomerDashboard />} />
-            <Route path="garages" element={<Garages />} />
-            <Route path="book-appointment/:id" element={<BookAppointment />} />
-            <Route path="garage-dashboard" element={<GarageDashboard />} />
-            <Route path="contact" element={<Contact />} />
-            <Route path="about" element={<About />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="category/:categoryName" element={<CategoryPage />} />
-            <Route path="scanner" element={<PartScanner />} />
-            <Route path="scan" element={<PartScanner />} /> {/* Adding this route as well for backward compatibility */}
-            <Route path="pitch-deck" element={<PitchDeck />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<Index />} />
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="orders/:orderId" element={<OrdersPage />} />
+              <Route path="orders" element={<OrdersListPage />} />
+              <Route path="checkout" element={<Checkout />} />
+              <Route path="customer-dashboard" element={<CustomerDashboard />} />
+              <Route path="garages" element={<Garages />} />
+              <Route path="book-appointment/:id" element={<BookAppointment />} />
+              <Route path="garage-dashboard" element={<GarageDashboard />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="about" element={<About />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="category/:categoryName" element={<CategoryPage />} />
+              <Route path="scanner" element={<PartScanner />} />
+              <Route path="scan" element={<PartScanner />} /> {/* Adding this route as well for backward compatibility */}
+              <Route path="pitch-deck" element={<PitchDeck />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
