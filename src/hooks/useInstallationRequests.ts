@@ -191,13 +191,13 @@ export const useInstallationRequests = (garageId: string) => {
         setDebug(prev => ({ ...prev, authSession: sessionData }));
       }
       
-      // Fix the SQL query to avoid ambiguous column reference by specifically referencing the table
+      // Using a simpler approach to avoid the ambiguous column reference issue
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
           id,
           order_id,
-          order_items.garage_id,
+          garage_id,
           quantity,
           price,
           installation_status,
@@ -206,7 +206,7 @@ export const useInstallationRequests = (garageId: string) => {
           installation_fee,
           part_id
         `)
-        .eq('order_items.garage_id', garageId)
+        .eq('garage_id', garageId)
         .not('installation_status', 'is', null);
         
       if (orderItemsError) {
