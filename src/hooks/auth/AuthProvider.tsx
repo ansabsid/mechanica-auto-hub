@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -185,6 +186,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
+        // Create the user profile explicitly since we can't rely solely on triggers
+        console.log("User created, now creating profile");
+        await createUserProfile(data.user.id, email, role, userMetadata);
+        
         toast({
           variant: "default",
           title: "Account created successfully",

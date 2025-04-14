@@ -317,6 +317,13 @@ export type Database = {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -690,13 +697,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "order_items_part_id_fkey"
             columns: ["item_part_id"]
             isOneToOne: false
@@ -760,27 +760,27 @@ export type Database = {
       get_installation_requests_for_garage: {
         Args: { garage_id_param: string }
         Returns: {
-          garage_id: string | null
-          garage_location: string | null
-          garage_name: string | null
-          installation_fee: number | null
-          installation_status: string | null
-          item_part_id: number | null
-          order_id: string | null
-          order_item_id: string | null
-          part_description: string | null
-          part_id: number | null
-          part_image_url: string | null
-          part_name: string | null
-          scheduled_date: string | null
-          scheduled_time: string | null
-          user_email: string | null
-          user_first_name: string | null
-          user_id: string | null
-          user_last_name: string | null
-          user_name: string | null
-          user_phone: string | null
-          user_phone_profile: string | null
+          order_item_id: string
+          order_id: string
+          user_id: string
+          user_first_name: string
+          user_last_name: string
+          user_email: string
+          user_phone_profile: string
+          user_name: string
+          user_phone: string
+          garage_id: string
+          garage_name: string
+          garage_location: string
+          item_part_id: number
+          part_id: number
+          part_name: string
+          part_description: string
+          part_image_url: string
+          installation_status: string
+          scheduled_date: string
+          scheduled_time: string
+          installation_fee: number
         }[]
       }
       get_retailers: {

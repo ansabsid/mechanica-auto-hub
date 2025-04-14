@@ -22,11 +22,28 @@ export const checkUserProfile = async (userId: string) => {
       
     if (error) {
       console.error("Error fetching profile:", error);
+      
+      // Check for the specific cause of the error
+      if (error.code === 'PGRST116') {
+        console.log("IMPORTANT: No profile found for user. Profile creation might have failed!");
+      }
+      
       return null;
     }
     
     if (!profile) {
       console.log("No profile found for user ID:", userId);
+      console.log("IMPORTANT: Profile creation might have failed for this user!");
+      
+      // Additional check in auth.users table to see if user exists but profile doesn't
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+      if (userError) {
+        console.error("Error checking user in auth.users:", userError);
+      } else if (userData) {
+        console.log("User exists in auth.users but no profile found!");
+        console.log("User metadata:", userData.user.user_metadata);
+      }
+      
       return null;
     }
     
@@ -37,9 +54,69 @@ export const checkUserProfile = async (userId: string) => {
       console.log("IMPORTANT: User profile exists but firstName and lastName are not set!");
     }
     
+    // Check if role is set
+    if (!profile.role) {
+      console.log("IMPORTANT: User profile exists but role is not set!");
+    }
+    
     return profile;
   } catch (err) {
     console.error("Error in profile check:", err);
     return null;
+  }
+};
+
+/**
+ * Check for inconsistencies between user metadata and profile data
+ */
+export const checkUserMetadataConsistency = async (userId: string) => {
+  try {
+    // Get the user from Supabase Auth
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (userError) {
+      console.error("Error getting user metadata:", userError);
+      return;
+    }
+    
+    if (!userData) {
+      console.log("No user found with ID:", userId);
+      return;
+    }
+    
+    // Get the user's profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+      
+    if (profileError) {
+      console.error("Error getting profile for consistency check:", profileError);
+      return;
+    }
+    
+    const metadata = userData.user.user_metadata;
+    
+    // Compare role
+    if (metadata.role !== profile.role) {
+      console.log("Inconsistency detected: Role in metadata is", metadata.role, "but in profile is", profile.role);
+    }
+    
+    // Compare name
+    if (metadata.firstName !== profile.firstName || metadata.lastName !== profile.lastName) {
+      console.log("Inconsistency detected: Name in metadata is", 
+        `${metadata.firstName || ''} ${metadata.lastName || ''}`, 
+        "but in profile is", 
+        `${profile.firstName || ''} ${profile.lastName || ''}`);
+    }
+    
+    // Compare phone
+    if (metadata.fullPhone !== profile.phone) {
+      console.log("Inconsistency detected: Phone in metadata is", metadata.fullPhone, "but in profile is", profile.phone);
+    }
+    
+    console.log("Metadata consistency check completed.");
+  } catch (err) {
+    console.error("Error in metadata consistency check:", err);
   }
 };
