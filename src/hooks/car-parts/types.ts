@@ -78,4 +78,5 @@ export interface GarageData {
   location: string;
   installation_fee: number;
   area?: string;
+  part_id?: number;
 }

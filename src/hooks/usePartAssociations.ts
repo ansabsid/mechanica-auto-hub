@@ -28,21 +28,10 @@ export const usePartAssociations = (garageId: string) => {
     try {
       console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
       
-      // Use a direct SQL query to avoid type issues
-      const { data, error } = await supabase
-        .from('parts')
-        .select(`
-          id,
-          name,
-          description,
-          price,
-          stock,
-          image_url,
-          retailer_id,
-          retailers (name),
-          source_type
-        `)
-        .eq('source_type', 'retailer');
+      // Use a stored procedure to get retailer parts to avoid type issues
+      const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
+        garage_id_param: garageId
+      });
 
       if (error) {
         console.error("Error fetching retailer parts:", error.message);
@@ -51,43 +40,26 @@ export const usePartAssociations = (garageId: string) => {
         return [];
       }
 
-      console.log("Direct query result for retailer parts:", data);
+      console.log("RPC function result for retailer parts:", data);
       
       if (!data || data.length === 0) {
         setRetailerParts([]);
         return [];
       }
       
-      // Now check which parts are associated with this garage
-      const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
-        data.map(async (part) => {
-          // Check if this part is associated with the current garage
-          const { data: association, error: assocError } = await supabase
-            .from('parts_garages')
-            .select('installation_fee')
-            .eq('part_id', part.id)
-            .eq('garage_id', garageId)
-            .maybeSingle();
-
-          if (assocError) {
-            console.error("Error checking part association:", assocError);
-          }
-
-          return {
-            part_id: part.id,
-            part_name: part.name,
-            part_description: part.description,
-            part_price: part.price,
-            part_stock: part.stock,
-            part_image_url: part.image_url,
-            retailer_id: part.retailer_id || "",
-            retailer_name: part.retailers?.name || "Unknown Retailer",
-            installation_fee: association?.installation_fee || 0,
-            is_associated: !!association,
-            current_installation_fee: association?.installation_fee || 0
-          };
-        })
-      );
+      const formattedParts: RetailerPartWithAssociation[] = data.map(part => ({
+        part_id: part.part_id,
+        part_name: part.part_name,
+        part_description: part.part_description,
+        part_price: part.part_price,
+        part_stock: part.part_stock,
+        part_image_url: part.part_image_url,
+        retailer_id: part.retailer_id,
+        retailer_name: part.retailer_name,
+        installation_fee: part.installation_fee || 0,
+        is_associated: part.is_associated,
+        current_installation_fee: part.installation_fee || 0
+      }));
 
       console.log("Formatted retailer parts:", formattedParts);
       setRetailerParts(formattedParts);

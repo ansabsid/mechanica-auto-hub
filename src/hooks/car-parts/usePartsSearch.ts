@@ -144,18 +144,32 @@ export const usePartsSearch = (
           } else {
             console.log(`Part ${part.id}: No garages available`);
           }
-          
+
           // Create a proper Part object with garages information
-          return {
-            ...part,
-            source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
+          const formattedPart: Part = {
+            id: part.id,
+            name: part.name,
+            description: part.description,
+            price: part.price,
+            stock: part.stock,
+            manufacturer_id: part.manufacturer_id,
+            model_id: part.model_id,
+            year: part.year,
+            garage_id: part.garage_id || null,
             retailer_id: part.retailer_id || null,
+            source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
             },
-            availableGarages: availableGarages
-          } as Part;
+            availableGarages: availableGarages,
+            image_url: part.image_url,
+            category: part.category,
+            created_at: part.created_at,
+            updated_at: part.updated_at
+          };
+          
+          return formattedPart;
         });
         
         console.log("Parts with garages:", partsWithGarages);
@@ -200,16 +214,30 @@ export const usePartsSearch = (
           const availableGarages = garagesMap[part.id] || [];
           
           // Create a proper Part object with garages information
-          return {
-            ...part,
-            source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
+          const formattedPart: Part = {
+            id: part.id,
+            name: part.name,
+            description: part.description,
+            price: part.price,
+            stock: part.stock,
+            manufacturer_id: part.manufacturer_id,
+            model_id: part.model_id,
+            year: part.year,
+            garage_id: part.garage_id || null,
             retailer_id: part.retailer_id || null,
+            source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
             },
-            availableGarages: availableGarages
-          } as Part;
+            availableGarages: availableGarages,
+            image_url: part.image_url,
+            category: part.category,
+            created_at: part.created_at,
+            updated_at: part.updated_at
+          };
+          
+          return formattedPart;
         });
         
         console.log("All parts with fresh garage data:", partsWithGarages);

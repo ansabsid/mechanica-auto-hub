@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -150,10 +149,8 @@ export const useRetailerProducts = (retailerId?: string) => {
 
   const fetchAvailableRetailers = async () => {
     try {
-      // Use direct table query since the get_retailers function is new
-      const { data, error } = await supabase
-        .from('retailers')
-        .select('id, name, location, area');
+      // Use RPC function to get retailers
+      const { data, error } = await supabase.rpc('get_retailers');
           
       if (error) {
         console.error("Query error:", error);
@@ -161,7 +158,7 @@ export const useRetailerProducts = (retailerId?: string) => {
       }
       
       if (data && data.length > 0) {
-        console.log("Available retailers (direct query):", data);
+        console.log("Available retailers (from RPC):", data);
         setAvailableRetailers(data);
         return data;
       }

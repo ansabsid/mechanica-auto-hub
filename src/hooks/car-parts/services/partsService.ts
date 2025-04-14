@@ -1,6 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Manufacturer, Model, Part } from "../types";
+import { Manufacturer, Model, Part, Garage, GarageData } from "../types";
 
 // Various functions for handling parts data
 
@@ -23,12 +24,17 @@ export const fetchManufacturers = async (): Promise<Manufacturer[]> => {
 };
 
 // Fetch models for a specific manufacturer
-export const fetchModels = async (manufacturerId: string): Promise<Model[]> => {
+export const fetchModels = async (manufacturerId: number | string): Promise<Model[]> => {
   try {
+    // Convert string to number if needed
+    const numericManufacturerId = typeof manufacturerId === 'string' 
+      ? parseInt(manufacturerId, 10) 
+      : manufacturerId;
+      
     const { data, error } = await supabase
       .from('models')
       .select('*')
-      .eq('manufacturer_id', manufacturerId)
+      .eq('manufacturer_id', numericManufacturerId)
       .order('name');
       
     if (error) throw error;
@@ -51,6 +57,229 @@ export const generateYearRange = (
     years.push(year);
   }
   return years;
+};
+
+// Function to fetch garages for a part from the database
+export const fetchGaragesForPart = async (partId: number): Promise<GarageData[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_garages_for_part', {
+      part_id_param: partId
+    });
+
+    if (error) {
+      console.error("Error fetching garages for part:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in fetchGaragesForPart:", error);
+    return [];
+  }
+};
+
+// Main function to search for parts based on manufacturer, model, and year
+export const searchParts = async (
+  manufacturerId: number,
+  modelId: number,
+  year: number
+): Promise<Part[]> => {
+  try {
+    console.log("Searching parts with criteria:", { manufacturerId, modelId, year });
+    
+    // Query the database
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*, retailers(name, location)')
+      .eq('manufacturer_id', manufacturerId)
+      .eq('model_id', modelId)
+      .eq('year', year);
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Get all garages for these parts
+    const partsWithGarages = await Promise.all(
+      data.map(async (part) => {
+        const garageData = await fetchGaragesForPart(part.id);
+        
+        // Transform garage data to match our Garage interface
+        const availableGarages: Garage[] = garageData.map(garage => ({
+          id: garage.id,
+          name: garage.name,
+          location: garage.location,
+          installationFee: typeof garage.installation_fee === 'string' 
+            ? parseFloat(garage.installation_fee) 
+            : Number(garage.installation_fee),
+          area: garage.area || ""
+        }));
+        
+        // Create a Part object with the correct structure
+        const formattedPart: Part = {
+          id: part.id,
+          name: part.name,
+          description: part.description,
+          price: part.price,
+          stock: part.stock,
+          manufacturer_id: part.manufacturer_id,
+          model_id: part.model_id,
+          year: part.year,
+          garage_id: part.garage_id || null,
+          retailer_id: part.retailer_id || null,
+          source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
+          garages: {
+            name: "Default Garage",
+            location: "Dubai, UAE"
+          },
+          image_url: part.image_url,
+          availableGarages: availableGarages,
+          category: part.category,
+          created_at: part.created_at,
+          updated_at: part.updated_at
+        };
+        
+        return formattedPart;
+      })
+    );
+    
+    return partsWithGarages;
+  } catch (error: any) {
+    console.error("Error searching parts:", error.message);
+    toast.error("Failed to search parts");
+    return [];
+  }
+};
+
+// Function to fetch all parts (often used for admin interfaces)
+export const fetchAllParts = async (): Promise<Part[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*')
+      .order('name');
+      
+    if (error) throw error;
+    
+    // Return empty array if no data
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Process each part and attach garage data
+    const partsWithGarages = await Promise.all(
+      data.map(async (part) => {
+        const garageData = await fetchGaragesForPart(part.id);
+        
+        // Transform garage data to match our Garage interface
+        const availableGarages: Garage[] = garageData.map(garage => ({
+          id: garage.id,
+          name: garage.name,
+          location: garage.location,
+          installationFee: typeof garage.installation_fee === 'string' 
+            ? parseFloat(garage.installation_fee) 
+            : Number(garage.installation_fee),
+          area: garage.area || ""
+        }));
+        
+        // Create a Part object with the correct structure
+        const formattedPart: Part = {
+          id: part.id,
+          name: part.name,
+          description: part.description,
+          price: part.price,
+          stock: part.stock,
+          manufacturer_id: part.manufacturer_id,
+          model_id: part.model_id,
+          year: part.year,
+          garage_id: part.garage_id || null,
+          retailer_id: part.retailer_id || null,
+          source_type: part.source_type || (part.garage_id ? 'garage' : 'retailer'),
+          garages: {
+            name: "Default Garage",
+            location: "Dubai, UAE"
+          },
+          image_url: part.image_url,
+          availableGarages: availableGarages,
+          category: part.category,
+          created_at: part.created_at,
+          updated_at: part.updated_at
+        };
+        
+        return formattedPart;
+      })
+    );
+    
+    return partsWithGarages;
+  } catch (error: any) {
+    console.error("Error fetching all parts:", error.message);
+    toast.error("Failed to fetch parts");
+    return [];
+  }
+};
+
+// Function to fetch a specific part by ID
+export const fetchPartById = async (partId: number): Promise<Part | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*')
+      .eq('id', partId)
+      .limit(1);
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    // Fetch garages that can install this part
+    const part = data[0];
+    const garageData = await fetchGaragesForPart(part.id);
+    
+    // Transform garage data to match our Garage interface
+    const availableGarages: Garage[] = garageData.map(garage => ({
+      id: garage.id,
+      name: garage.name,
+      location: garage.location,
+      installationFee: typeof garage.installation_fee === 'string' 
+        ? parseFloat(garage.installation_fee) 
+        : Number(garage.installation_fee),
+      area: garage.area || ""
+    }));
+    
+    // Create a Part object with the correct structure
+    const formattedPart: Part = {
+      id: part.id,
+      name: part.name,
+      description: part.description,
+      price: part.price,
+      stock: part.stock,
+      manufacturer_id: part.manufacturer_id,
+      model_id: part.model_id,
+      year: part.year,
+      garage_id: part.garage_id || null,
+      retailer_id: part.retailer_id || null,
+      source_type: part.source_type || (part.garage_id ? 'garage' : 'retailer'),
+      garages: {
+        name: "Default Garage",
+        location: "Dubai, UAE"
+      },
+      image_url: part.image_url,
+      availableGarages: availableGarages,
+      category: part.category,
+      created_at: part.created_at,
+      updated_at: part.updated_at
+    };
+    
+    return formattedPart;
+  } catch (error: any) {
+    console.error("Error fetching part by ID:", error.message);
+    toast.error("Failed to fetch part details");
+    return null;
+  }
 };
 
 // Function to mock search results for debugging or testing
