@@ -61,3 +61,12 @@ export interface CarPartsSearchState {
   readonly isSearching: boolean;
   readonly searchCompleted: boolean;
 }
+
+// Type for garage data returned by the Supabase function
+export interface GarageData {
+  id: string;
+  name: string;
+  location: string;
+  installation_fee: number;
+  area?: string;
+}

@@ -196,7 +196,8 @@ export const useRetailerProducts = (retailerId?: string) => {
       console.log("Retailer parts fetched:", data?.length || 0);
       
       // Map the database parts to RetailerProduct format
-      const formattedProducts: RetailerProduct[] = (data as PartFromDB[] || []).map(part => ({
+      const typedData = data as PartFromDB[] || [];
+      const formattedProducts: RetailerProduct[] = typedData.map(part => ({
         id: part.id,
         name: part.name,
         description: part.description || '',

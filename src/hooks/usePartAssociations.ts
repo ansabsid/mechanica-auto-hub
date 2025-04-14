@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,41 +24,8 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // Use the RPC function to fetch retailer parts for this garage
-      const { data, error } = await supabase.rpc(
-        'get_retailer_parts_for_garage',
-        { garage_id_param: garageId }
-      );
-
-      if (error) {
-        console.error("RPC Error fetching retailer parts:", error.message);
-        toast.error("Failed to load retailer parts");
-        setRetailerParts([]);
-        return [];
-      }
-
-      console.log("Retailer parts fetched:", data);
-      const typedParts = data as RetailerPartWithAssociation[];
-      setRetailerParts(typedParts);
-      return typedParts;
-    } catch (error: any) {
-      console.error("Error fetching retailer parts:", error.message);
-      toast.error("Failed to load retailer parts");
-      
-      // Use the alternative approach as fallback
-      return await fetchRetailerPartsAlternative();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Alternative implementation if the RPC isn't available yet
-  const fetchRetailerPartsAlternative = async () => {
-    try {
-      console.log("Using alternative approach to fetch retailer parts");
-      
-      // First get all retailer parts
-      const { data: partsData, error: partsError } = await supabase
+      // We need to use a direct query because the RPC function might not be registered yet
+      const { data, error } = await supabase
         .from('parts')
         .select(`
           id,
@@ -73,14 +39,22 @@ export const usePartAssociations = (garageId: string) => {
         `)
         .eq('source_type', 'retailer');
 
-      if (partsError) throw partsError;
-
-      if (!partsData || partsData.length === 0) {
+      if (error) {
+        console.error("Error fetching retailer parts:", error.message);
+        toast.error("Failed to load retailer parts");
         setRetailerParts([]);
         return [];
       }
 
-      // Then check which ones are associated with this garage
+      console.log("Direct query result for retailer parts:", data);
+      
+      // Check which ones are associated with this garage
+      if (!data || data.length === 0) {
+        setRetailerParts([]);
+        return [];
+      }
+      
+      // Define the part data type
       type PartDataType = {
         id: number;
         name: string;
@@ -94,8 +68,11 @@ export const usePartAssociations = (garageId: string) => {
         } | null;
       };
 
+      // Safely cast data to the correct type
+      const typedData = data as unknown as PartDataType[];
+      
       const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
-        (partsData as PartDataType[]).map(async (part) => {
+        typedData.map(async (part) => {
           // Check if this part is associated with the current garage
           const { data: association, error: assocError } = await supabase
             .from('parts_garages')
@@ -123,14 +100,16 @@ export const usePartAssociations = (garageId: string) => {
         })
       );
 
-      console.log("Retailer parts (alternative method):", formattedParts);
+      console.log("Retailer parts (direct query):", formattedParts);
       setRetailerParts(formattedParts);
       return formattedParts;
     } catch (error: any) {
-      console.error("Error in alternative retailer parts fetch:", error.message);
+      console.error("Error in retailer parts fetch:", error.message);
       toast.error("Failed to load retailer parts");
       setRetailerParts([]);
       return [];
+    } finally {
+      setIsLoading(false);
     }
   };
 

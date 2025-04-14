@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Part, Manufacturer, Model } from "./types";
+import { Part, Manufacturer, Model, GarageData } from "./types";
 import { toast } from "sonner";
 
 export const usePartsSearch = (
@@ -71,7 +71,8 @@ export const usePartsSearch = (
           id: item.id, // This is a UUID string, no conversion needed
           name: item.name,
           location: item.location,
-          installationFee: installationFee
+          installationFee: installationFee,
+          area: item.area || ""
         });
       });
     }
@@ -106,7 +107,7 @@ export const usePartsSearch = (
       // Query parts table for matching parts
       const { data, error } = await supabase
         .from('parts')
-        .select('*')
+        .select('*, retailers(name)')
         .eq('manufacturer_id', manufacturerId)
         .eq('model_id', modelId)
         .eq('year', year);
@@ -180,7 +181,7 @@ export const usePartsSearch = (
     try {
       const { data, error } = await supabase
         .from('parts')
-        .select('*')
+        .select('*, retailers(name)')
         .order('name');
 
       if (error) {
