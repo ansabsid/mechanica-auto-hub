@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedSupabaseClient } from "./supabaseTypes";
 
@@ -72,25 +73,35 @@ export const createUserProfile = async (
     if (role === "garage") {
       console.log("Creating new garage for garage owner");
       
-      const garageData = {
+      // Add detailed logging to track the garage creation
+      console.log("Garage data for creation:", {
         name: metadata.garageName || 'New Garage',
         location: metadata.garageLocation || 'Location pending',
         area: metadata.garageLocation?.split(',')[0]?.trim() || null,
-      };
+      });
       
+      // Create the garage entry explicitly
       const { data: garageResult, error: garageError } = await supabase
         .from('garages')
-        .insert(garageData)
-        .select()
-        .single();
+        .insert([{
+          name: metadata.garageName || 'New Garage',
+          location: metadata.garageLocation || 'Location pending',
+          area: metadata.garageLocation?.split(',')[0]?.trim() || null
+        }])
+        .select();
         
       if (garageError) {
         console.error("Error creating garage entry:", garageError);
         throw garageError;
       }
       
-      console.log("New garage created successfully:", garageResult);
-      garageId = garageResult.id;
+      if (!garageResult || garageResult.length === 0) {
+        console.error("No garage was created despite successful response");
+        throw new Error("Failed to create garage - no ID returned");
+      }
+      
+      console.log("New garage created successfully:", garageResult[0]);
+      garageId = garageResult[0].id;
     }
     
     // Create profile data object with basic info
@@ -109,7 +120,7 @@ export const createUserProfile = async (
     // Insert the profile data
     const { error: insertError } = await supabase
       .from('profiles')
-      .insert(profileData);
+      .insert([profileData]);
       
     if (insertError) {
       console.error("Error inserting profile:", insertError);
@@ -126,6 +137,25 @@ export const createUserProfile = async (
     }
     
     console.log("Profile successfully created for user:", userId, "with role:", role);
+    
+    // Double-check that the garage was created and linked properly for garage role
+    if (role === "garage") {
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('garage_id')
+        .eq('id', userId)
+        .single();
+        
+      console.log("Profile garage_id verification:", profileCheck?.garage_id);
+      
+      const { data: garageCheck } = await supabase
+        .from('garages')
+        .select('*')
+        .eq('id', garageId)
+        .single();
+        
+      console.log("Garage verification:", garageCheck ? "Exists" : "Not Found");
+    }
     
   } catch (err) {
     console.error("Error in createUserProfile:", err);
