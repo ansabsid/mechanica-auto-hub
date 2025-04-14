@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -177,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          data: userMetadata
+          data: userMetadata // This metadata will be available in raw_user_meta_data
         }
       });
 
@@ -186,9 +185,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        console.log("User created, now creating profile");
-        await createUserProfile(data.user.id, email, role, userMetadata);
-        
         toast({
           variant: "default",
           title: "Account created successfully",
