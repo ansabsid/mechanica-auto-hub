@@ -148,7 +148,7 @@ export const usePartsSearch = (
           return {
             ...part,
             source_type: part.garage_id ? 'garage' : 'retailer',
-            retailer_id: part.garage_id ? null : part.retailer_id || null,
+            retailer_id: part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
@@ -202,7 +202,7 @@ export const usePartsSearch = (
           return {
             ...part,
             source_type: part.garage_id ? 'garage' : 'retailer',
-            retailer_id: part.garage_id ? null : part.retailer_id || null,
+            retailer_id: part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'

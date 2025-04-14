@@ -27,6 +27,28 @@ interface InsertPartResponse {
   [key: string]: any;
 }
 
+// This is the corrected interface for what actually comes back from the database
+interface PartFromDB {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number;
+  manufacturer_id: number;
+  model_id: number;
+  year: number;
+  garage_id: string | null;
+  retailer_id: string | null;
+  image_url: string | null;
+  category: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  source_type?: 'garage' | 'retailer' | null;
+  retailers?: {
+    name: string;
+  };
+}
+
 export const useRetailerProducts = (retailerId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<RetailerProduct[]>([]);
@@ -174,7 +196,7 @@ export const useRetailerProducts = (retailerId?: string) => {
       console.log("Retailer parts fetched:", data?.length || 0);
       
       // Map the database parts to RetailerProduct format
-      const formattedProducts: RetailerProduct[] = (data || []).map(part => ({
+      const formattedProducts: RetailerProduct[] = (data as PartFromDB[] || []).map(part => ({
         id: part.id,
         name: part.name,
         description: part.description || '',

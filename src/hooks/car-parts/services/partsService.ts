@@ -1,643 +1,431 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Part, Manufacturer, Model } from "../types";
-import { fetchWithTimeout } from "../utils/network";
-import { generateMockParts } from "../utils";
+import { toast } from "sonner";
+import { Manufacturer, Model, Part } from "../types";
 
-/**
- * Fetches all parts from the database
- * @returns All parts with enhanced data
- */
-export const fetchAllPartsFromDB = async () => {
-  console.log("Fetching all available parts");
-  
+// Various functions for handling parts data
+
+// Fetch manufacturers
+export const fetchManufacturers = async (): Promise<Manufacturer[]> => {
   try {
-    // Define the return type for better type safety
-    const response = await fetchWithTimeout<{data: any[], error: any}>(() => 
-      supabase.from('parts').select('*')
-    );
-    
-    if (response.error) {
-      throw response.error;
-    }
-    
-    console.log("All parts fetched from database:", response.data?.length || 0);
-    
-    // Get available garages for all parts
-    const partIds = response.data?.map(part => part.id) || [];
-    let availableGarages: Record<number, any[]> = {};
-    
-    if (partIds.length > 0) {
-      const { data: garagesData, error: garagesError } = await supabase
-        .rpc('get_garages_for_part_bulk', { part_ids: partIds });
+    const { data, error } = await supabase
+      .from('manufacturers')
+      .select('*')
+      .order('name');
       
-      if (!garagesError && garagesData) {
-        // Group garages by part_id
-        garagesData.forEach(item => {
-          if (!availableGarages[item.part_id]) {
-            availableGarages[item.part_id] = [];
-          }
-          availableGarages[item.part_id].push({
-            id: item.id,
-            name: item.name,
-            location: item.location,
-            installationFee: item.installation_fee,
-            area: item.location.split(',')[0].trim() // Extract area from location
-          });
-        });
-      }
-    }
+    if (error) throw error;
     
-    // Process the parts data with garage information
-    const processedParts: Part[] = (response.data || []).map(part => {
-      return {
-        ...part,
-        garages: part.garage_id ? { 
-          name: 'AutoCare Dubai',
-          location: 'Dubai Marina'
-        } : { 
-          name: 'Mechanica Service Center',
-          location: 'Dubai, UAE'
-        },
-        availableGarages: availableGarages[part.id] || [
-          {
-            id: "g1",
-            name: "Mechanica Service Center - Dubai Marina",
-            location: "Dubai Marina, Dubai, UAE",
-            installationFee: 25.99,
-            area: "Dubai Marina"
-          },
-          {
-            id: "g2",
-            name: "Mechanica Service Center - Downtown",
-            location: "Downtown Dubai, Dubai, UAE",
-            installationFee: 29.99,
-            area: "Downtown Dubai"
-          },
-          {
-            id: "g3",
-            name: "Mechanica Service Center - Jumeirah",
-            location: "Jumeirah, Dubai, UAE",
-            installationFee: 32.99,
-            area: "Jumeirah"
-          },
-          {
-            id: "g4",
-            name: "Mechanica Service Center - Deira",
-            location: "Deira, Dubai, UAE",
-            installationFee: 27.99,
-            area: "Deira"
-          },
-          {
-            id: "g5",
-            name: "AutoFix Express - Deira",
-            location: "Al Rigga, Deira, Dubai, UAE",
-            installationFee: 24.99,
-            area: "Deira"
-          },
-          {
-            id: "g6",
-            name: "QuickFix Auto Workshop - Deira",
-            location: "Al Muteena, Deira, Dubai, UAE",
-            installationFee: 22.99,
-            area: "Deira"
-          },
-          {
-            id: "g7",
-            name: "Dubai Auto Care - Deira",
-            location: "Naif Road, Deira, Dubai, UAE",
-            installationFee: 26.50,
-            area: "Deira"
-          },
-          {
-            id: "g8",
-            name: "Speedy Auto Repair - Deira",
-            location: "Port Saeed, Deira, Dubai, UAE",
-            installationFee: 28.99,
-            area: "Deira"
-          },
-          {
-            id: "g9",
-            name: "Al Muraqqabat Auto Center - Deira",
-            location: "Al Muraqqabat, Deira, Dubai, UAE",
-            installationFee: 23.50,
-            area: "Deira"
-          }
-        ],
-        image_url: part.image_url || getDefaultImageUrlForPart(part.name)
-      } as Part;
-    });
-    
-    return processedParts;
-  } catch (error) {
-    console.error("Error in fetchAllPartsFromDB:", error);
-    throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error("Error fetching manufacturers:", error.message);
+    toast.error("Failed to load manufacturers");
+    return [];
   }
 };
 
-// Helper function to get default image URL based on part name
-function getDefaultImageUrlForPart(partName: string): string {
-  const name = partName.toLowerCase();
-  
-  if (name.includes('oil')) {
-    return "https://images.unsplash.com/photo-1635954749253-a0642359cdfa?w=800&h=600&auto=format";
-  } else if (name.includes('filter')) {
-    return "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format";
-  } else if (name.includes('brake')) {
-    return "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format";
-  } else if (name.includes('spark') || name.includes('ignition')) {
-    return "https://images.unsplash.com/photo-1602079836063-583166fbeba2?w=800&h=600&auto=format";
-  } else if (name.includes('tire') || name.includes('wheel')) {
-    return "https://images.unsplash.com/photo-1591839728094-39242732d4c1?w=800&h=600&auto=format";
-  } else if (name.includes('battery') || name.includes('electrical')) {
-    return "https://images.unsplash.com/photo-1619641464045-b201ebd9ec0c?w=800&h=600&auto=format";
-  } else if (name.includes('belt')) {
-    return "https://images.unsplash.com/photo-1629584603667-e9eda1c06851?w=800&h=600&auto=format"; 
-  } else {
-    // Default auto parts image for other categories
-    return "https://images.unsplash.com/photo-1647427060118-4911c9821b82?w=800&h=600&auto=format";
-  }
-}
-
-/**
- * Fetches parts for a specific vehicle from the database
- * @param manufacturerId The manufacturer ID
- * @param modelId The model ID 
- * @param year The year
- * @returns Filtered parts with enhanced data
- */
-export const fetchPartsForVehicle = async (
-  manufacturerId: number,
-  modelId: number, 
-  yearNum: number
-) => {
-  console.log(`Querying Supabase for parts: mfr=${manufacturerId}, model=${modelId}, year=${yearNum}`);
-  
+// Fetch models for a specific manufacturer
+export const fetchModels = async (manufacturerId: string): Promise<Model[]> => {
   try {
-    // Define the return type for better type safety
-    const response = await fetchWithTimeout<{data: any[], error: any}>(() => 
-      supabase
-        .from('parts')
-        .select('*')
-        .eq('manufacturer_id', manufacturerId)
-        .eq('model_id', modelId)
-        .eq('year', yearNum)
-    );
-    
-    if (response.error) {
-      throw response.error;
-    }
-    
-    console.log("Supabase query result:", response.data);
-    
-    // Get available garages for all matched parts
-    const partIds = response.data?.map(part => part.id) || [];
-    let availableGarages: Record<number, any[]> = {};
-    
-    if (partIds.length > 0) {
-      const { data: garagesData, error: garagesError } = await supabase
-        .rpc('get_garages_for_part_bulk', { part_ids: partIds });
+    const { data, error } = await supabase
+      .from('models')
+      .select('*')
+      .eq('manufacturer_id', manufacturerId)
+      .order('name');
       
-      if (!garagesError && garagesData) {
-        // Group garages by part_id
-        garagesData.forEach(item => {
-          if (!availableGarages[item.part_id]) {
-            availableGarages[item.part_id] = [];
-          }
-          availableGarages[item.part_id].push({
-            id: item.id,
-            name: item.name,
-            location: item.location,
-            installationFee: item.installation_fee,
-            area: item.location.split(',')[0].trim() // Extract area from location
-          });
-        });
-      }
-    }
+    if (error) throw error;
     
-    // Process and enhance the database results with garage information
-    const validParts: Part[] = (response.data || []).map(part => {
-      return {
-        ...part,
-        garages: part.garage_id ? { 
-          name: 'AutoCare Dubai',
-          location: 'Dubai Marina'
-        } : { 
-          name: 'Mechanica Service Center',
-          location: 'Dubai, UAE'
-        },
-        // Use real garages data from database if available
-        availableGarages: availableGarages[part.id] || [],
-        image_url: part.image_url || getDefaultImageUrlForPart(part.name)
-      } as Part;
-    });
-    
-    console.log("🔢 Valid parts from DB:", validParts.length);
-    
-    return validParts;
-  } catch (error) {
-    console.error("Error in fetchPartsForVehicle:", error);
-    throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error("Error fetching models:", error.message);
+    toast.error("Failed to load models");
+    return [];
   }
 };
 
-/**
- * Creates mock parts for a specific vehicle when database returns no results
- * @param manufacturerId The manufacturer ID 
- * @param modelId The model ID
- * @param year The year
- * @param manufacturers List of manufacturers for names
- * @param models List of models for names
- * @returns Mock parts for the vehicle
- */
-export const createMockPartsForVehicle = (
+// Generate a range of years (typically for car manufacturing years)
+export const generateYearRange = (
+  startYear: number = new Date().getFullYear() - 20,
+  endYear: number = new Date().getFullYear()
+): number[] => {
+  const years: number[] = [];
+  for (let year = endYear; year >= startYear; year--) {
+    years.push(year);
+  }
+  return years;
+};
+
+// Function to mock search results for debugging or testing
+export const mockSearchResults = async (
   manufacturerId: number,
   modelId: number,
-  yearNum: number,
-  manufacturers: Manufacturer[],
-  models: Model[]
-): Part[] => {
-  console.log("Generating mock parts for the specific vehicle...");
-  
-  // Special case for Toyota(1) Corolla(2) 2022
-  if (manufacturerId === 1 && modelId === 2 && yearNum === 2022) {
-    console.log("SPECIAL CASE: Toyota Corolla 2022 - returning only air filter and brake pads");
+  year: number
+): Promise<Part[]> => {
+  try {
+    console.log("Mocking search for:", { manufacturerId, modelId, year });
     
-    return [
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Mock data
+    const mockParts: Part[] = [
       {
-        id: 101,
-        name: "Air Filter - Toyota Corolla",
-        description: "OEM compatible air filter for Toyota Corolla 2022",
-        price: 29.99,
-        stock: 15,
-        manufacturer_id: 1, // Toyota
-        model_id: 2, // Corolla
-        year: 2022,
+        id: 1,
+        name: "Oil Filter",
+        description: "High quality oil filter for optimal engine protection",
+        price: 15.99,
+        stock: 45,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
         garage_id: null,
+        retailer_id: "3f0c6c4e-1c4d-4f5a-9c6e-8f7a9c0e1b2a",
+        source_type: "retailer",
         garages: {
-          name: 'Mechanica Service Center',
-          location: 'Dubai, UAE'
+          name: "AutoCare Plus",
+          location: "Dubai Marina"
         },
-        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format",
+        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1",
         availableGarages: [
           {
-            id: "g1",
-            name: "Mechanica Service Center - Dubai Marina",
-            location: "Dubai Marina, Dubai, UAE",
-            installationFee: 15.99,
+            id: "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+            name: "AutoCare Plus",
+            location: "Dubai Marina",
+            installationFee: 25,
             area: "Dubai Marina"
           },
           {
-            id: "g2",
-            name: "Mechanica Service Center - Downtown",
-            location: "Downtown, Dubai, UAE",
-            installationFee: 19.99,
-            area: "Downtown Dubai"
-          },
-          {
-            id: "g3",
-            name: "Mechanica Service Center - Jumeirah",
-            location: "Jumeirah, Dubai, UAE",
-            installationFee: 17.99,
+            id: "6p5o4n3m-2l1k-0j9i-8h7g-6f5e4d3c2b1a",
+            name: "Premium Auto Garage",
+            location: "Jumeirah",
+            installationFee: 35,
             area: "Jumeirah"
-          },
+          }
+        ]
+      },
+      {
+        id: 2,
+        name: "Brake Pads (Front)",
+        description: "Premium ceramic brake pads for quiet, effective braking",
+        price: 45.99,
+        stock: 22,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
+        garage_id: null,
+        retailer_id: "4e5f6g7h-8i9j-0k1l-2m3n-4o5p6q7r8s9t",
+        source_type: "retailer",
+        garages: {
+          name: "Brake Specialists",
+          location: "Al Quoz"
+        },
+        image_url: "https://images.unsplash.com/photo-1615384340342-28de71316d2a",
+        availableGarages: [
           {
-            id: "g4",
-            name: "Mechanica Service Center - Deira",
-            location: "Deira, Dubai, UAE",
-            installationFee: 16.99,
+            id: "2b3c4d5e-6f7g-8h9i-0j1k-2l3m4n5o6p7q",
+            name: "Brake Specialists",
+            location: "Al Quoz",
+            installationFee: 50,
+            area: "Al Quoz"
+          }
+        ]
+      },
+      {
+        id: 3,
+        name: "Spark Plugs (Set of 4)",
+        description: "Iridium spark plugs for improved fuel efficiency and performance",
+        price: 32.50,
+        stock: 15,
+        manufacturer_id: manufacturerId,
+        model_id: modelId,
+        year: year,
+        garage_id: null,
+        retailer_id: "5g6h7i8j-9k0l-1m2n-3o4p-5q6r7s8t9u0v",
+        source_type: "retailer",
+        garages: {
+          name: "Engine Experts",
+          location: "Deira"
+        },
+        image_url: "https://images.unsplash.com/photo-1602079836063-583166fbeba2",
+        availableGarages: [
+          {
+            id: "3c4d5e6f-7g8h-9i0j-1k2l-3m4n5o6p7q8r",
+            name: "Engine Experts",
+            location: "Deira",
+            installationFee: 40,
             area: "Deira"
           },
           {
-            id: "g5",
-            name: "AutoFix Express - Deira",
-            location: "Al Rigga, Deira, Dubai, UAE",
-            installationFee: 14.99,
-            area: "Deira"
+            id: "8r7q6p5o-4n3m-2l1k-0j9i-8h7g6f5e4d3c",
+            name: "AutoCare Plus",
+            location: "Dubai Marina",
+            installationFee: 45,
+            area: "Dubai Marina"
+          }
+        ]
+      }
+    ];
+    
+    return mockParts;
+  } catch (error: any) {
+    console.error("Error fetching mock search results:", error.message);
+    toast.error("Failed to load parts data");
+    return [];
+  }
+};
+
+// Function to fetch garages for a part from the database
+export const fetchGaragesForPart = async (partId: number) => {
+  try {
+    const { data, error } = await supabase.rpc('get_garages_for_part', {
+      part_id_param: partId
+    });
+
+    if (error) {
+      console.error("Error fetching garages for part:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in fetchGaragesForPart:", error);
+    return [];
+  }
+};
+
+// Main function to search for parts based on manufacturer, model, and year
+export const searchParts = async (
+  manufacturerId: number,
+  modelId: number,
+  year: number
+): Promise<Part[]> => {
+  try {
+    console.log("Searching parts with criteria:", { manufacturerId, modelId, year });
+    
+    // Query the database
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*, retailers(name, location)')
+      .eq('manufacturer_id', manufacturerId)
+      .eq('model_id', modelId)
+      .eq('year', year);
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Get all garages for these parts
+    const partsWithGarages = await Promise.all(
+      data.map(async (part) => {
+        const garageData = await fetchGaragesForPart(part.id);
+        
+        return {
+          id: part.id,
+          name: part.name,
+          description: part.description,
+          price: part.price,
+          stock: part.stock,
+          manufacturer_id: part.manufacturer_id,
+          model_id: part.model_id,
+          year: part.year,
+          garage_id: part.garage_id || null,
+          retailer_id: part.retailer_id || null,
+          source_type: part.garage_id ? 'garage' : 'retailer',
+          garages: {
+            name: "Default Garage",
+            location: "Dubai, UAE"
           },
-          {
-            id: "g6",
-            name: "QuickFix Auto Workshop - Deira",
-            location: "Al Muteena, Deira, Dubai, UAE",
-            installationFee: 13.99,
-            area: "Deira"
+          image_url: part.image_url,
+          availableGarages: garageData,
+          category: part.category,
+          created_at: part.created_at,
+          updated_at: part.updated_at
+        } as Part;
+      })
+    );
+    
+    return partsWithGarages;
+  } catch (error: any) {
+    console.error("Error searching parts:", error.message);
+    toast.error("Failed to search parts");
+    return [];
+  }
+};
+
+// Function to fetch all parts (often used for admin interfaces)
+export const fetchAllParts = async (): Promise<Part[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*')
+      .order('name');
+      
+    if (error) throw error;
+    
+    // Return empty array if no data
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Process each part and attach garage data
+    const partsWithGarages = await Promise.all(
+      data.map(async (part) => {
+        const garageData = await fetchGaragesForPart(part.id);
+        
+        return {
+          id: part.id,
+          name: part.name,
+          description: part.description,
+          price: part.price,
+          stock: part.stock,
+          manufacturer_id: part.manufacturer_id,
+          model_id: part.model_id,
+          year: part.year,
+          garage_id: part.garage_id || null,
+          retailer_id: part.retailer_id || null,
+          source_type: part.garage_id ? 'garage' : 'retailer',
+          garages: {
+            name: "Default Garage",
+            location: "Dubai, UAE"
           },
+          image_url: part.image_url,
+          availableGarages: garageData,
+          category: part.category,
+          created_at: part.created_at,
+          updated_at: part.updated_at
+        } as Part;
+      })
+    );
+    
+    return partsWithGarages;
+  } catch (error: any) {
+    console.error("Error fetching all parts:", error.message);
+    toast.error("Failed to fetch parts");
+    return [];
+  }
+};
+
+// Function to fetch a specific part by ID
+export const fetchPartById = async (partId: number): Promise<Part | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('parts')
+      .select('*')
+      .eq('id', partId)
+      .limit(1);
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    // Fetch garages that can install this part
+    const part = data[0];
+    const garageData = await fetchGaragesForPart(part.id);
+    
+    return {
+      id: part.id,
+      name: part.name,
+      description: part.description,
+      price: part.price,
+      stock: part.stock,
+      manufacturer_id: part.manufacturer_id,
+      model_id: part.model_id,
+      year: part.year,
+      garage_id: part.garage_id || null,
+      retailer_id: part.retailer_id || null,
+      source_type: part.garage_id ? 'garage' : 'retailer',
+      garages: {
+        name: "Default Garage",
+        location: "Dubai, UAE"
+      },
+      image_url: part.image_url,
+      availableGarages: garageData,
+      category: part.category,
+      created_at: part.created_at,
+      updated_at: part.updated_at
+    } as Part;
+  } catch (error: any) {
+    console.error("Error fetching part by ID:", error.message);
+    toast.error("Failed to fetch part details");
+    return null;
+  }
+};
+
+// Function to fetch parts by VIN (Vehicle Identification Number)
+export const fetchPartsByVin = async (vin: string): Promise<Part[]> => {
+  try {
+    console.log("Fetching parts for VIN:", vin);
+    
+    // In a real implementation, this would call an API to decode the VIN
+    // and then fetch parts that match the vehicle specifications
+    
+    // For now, we'll return mock data
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Mock data until VIN API is implemented
+    const mockParts: Part[] = [
+      {
+        id: 101,
+        name: "Oil Filter for " + vin.substring(0, 6),
+        description: "Compatible with your vehicle's specs",
+        price: 18.99,
+        stock: 32,
+        manufacturer_id: 1,
+        model_id: 1,
+        year: 2020,
+        garage_id: null,
+        retailer_id: "3f0c6c4e-1c4d-4f5a-9c6e-8f7a9c0e1b2a",
+        source_type: "retailer",
+        garages: {
+          name: "AutoCare Plus",
+          location: "Dubai Marina"
+        },
+        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1",
+        availableGarages: [
           {
-            id: "g7",
-            name: "Dubai Auto Care - Deira",
-            location: "Naif Road, Deira, Dubai, UAE",
-            installationFee: 15.50,
-            area: "Deira"
-          },
-          {
-            id: "g8",
-            name: "Speedy Auto Repair - Deira",
-            location: "Port Saeed, Deira, Dubai, UAE",
-            installationFee: 17.99,
-            area: "Deira"
-          },
-          {
-            id: "g9",
-            name: "Al Muraqqabat Auto Center - Deira",
-            location: "Al Muraqqabat, Deira, Dubai, UAE",
-            installationFee: 14.50,
-            area: "Deira"
+            id: "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+            name: "AutoCare Plus",
+            location: "Dubai Marina",
+            installationFee: 25,
+            area: "Dubai Marina"
           }
         ]
       },
       {
         id: 102,
-        name: "Brake Pads - Toyota Corolla",
-        description: "Premium brake pads for Toyota Corolla 2022",
-        price: 79.99,
-        stock: 8,
-        manufacturer_id: 1, // Toyota
-        model_id: 2, // Corolla
-        year: 2022,
+        name: "Air Filter for " + vin.substring(0, 6),
+        description: "High-flow air filter for your vehicle",
+        price: 22.50,
+        stock: 18,
+        manufacturer_id: 1,
+        model_id: 1,
+        year: 2020,
         garage_id: null,
+        retailer_id: "4e5f6g7h-8i9j-0k1l-2m3n-4o5p6q7r8s9t",
+        source_type: "retailer",
         garages: {
-          name: 'Mechanica Service Center',
-          location: 'Dubai, UAE'
+          name: "AutoCare Plus",
+          location: "Dubai Marina"
         },
-        image_url: "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format",
+        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1",
         availableGarages: [
           {
-            id: "g1",
-            name: "Mechanica Service Center - Dubai Marina",
-            location: "Dubai Marina, Dubai, UAE",
-            installationFee: 35.99,
+            id: "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+            name: "AutoCare Plus",
+            location: "Dubai Marina",
+            installationFee: 20,
             area: "Dubai Marina"
-          },
-          {
-            id: "g3",
-            name: "Mechanica Service Center - Jumeirah",
-            location: "Jumeirah, Dubai, UAE",
-            installationFee: 39.99,
-            area: "Jumeirah"
-          },
-          {
-            id: "g4",
-            name: "Mechanica Service Center - Deira",
-            location: "Deira, Dubai, UAE",
-            installationFee: 32.99,
-            area: "Deira"
-          },
-          {
-            id: "g5",
-            name: "AutoFix Express - Deira",
-            location: "Al Rigga, Deira, Dubai, UAE",
-            installationFee: 34.99,
-            area: "Deira"
-          },
-          {
-            id: "g7",
-            name: "Dubai Auto Care - Deira",
-            location: "Naif Road, Deira, Dubai, UAE",
-            installationFee: 36.50,
-            area: "Deira"
-          },
-          {
-            id: "g8",
-            name: "Speedy Auto Repair - Deira",
-            location: "Port Saeed, Deira, Dubai, UAE",
-            installationFee: 38.99,
-            area: "Deira"
-          },
-          {
-            id: "g9",
-            name: "Al Muraqqabat Auto Center - Deira",
-            location: "Al Muraqqabat, Deira, Dubai, UAE",
-            installationFee: 33.50,
-            area: "Deira"
           }
         ]
       }
     ];
-  }
-  
-  // Special case for Toyota(1) Corolla(2) 2023
-  if (manufacturerId === 1 && modelId === 2 && yearNum === 2023) {
-    console.log("SPECIAL CASE: Toyota Corolla 2023 - returning only air filter and brake pads");
     
-    return [
-      {
-        id: 201,
-        name: "Air Filter - Toyota Corolla",
-        description: "OEM compatible air filter for Toyota Corolla 2023",
-        price: 32.99,
-        stock: 20,
-        manufacturer_id: 1, // Toyota
-        model_id: 2, // Corolla
-        year: 2023,
-        garage_id: null,
-        garages: {
-          name: 'Mechanica Service Center',
-          location: 'Dubai, UAE'
-        },
-        image_url: "https://images.unsplash.com/photo-1635249576589-6e5c7326ffc1?w=800&h=600&auto=format",
-        availableGarages: [
-          {
-            id: "g1",
-            name: "Mechanica Service Center - Dubai Marina",
-            location: "Dubai Marina, Dubai, UAE",
-            installationFee: 15.99,
-            area: "Dubai Marina"
-          },
-          {
-            id: "g2",
-            name: "Mechanica Service Center - Downtown",
-            location: "Downtown, Dubai, UAE",
-            installationFee: 19.99,
-            area: "Downtown Dubai"
-          },
-          {
-            id: "g4",
-            name: "Mechanica Service Center - Deira",
-            location: "Deira, Dubai, UAE",
-            installationFee: 18.99,
-            area: "Deira"
-          },
-          {
-            id: "g5",
-            name: "AutoFix Express - Deira",
-            location: "Al Rigga, Deira, Dubai, UAE",
-            installationFee: 17.99,
-            area: "Deira"
-          },
-          {
-            id: "g6",
-            name: "QuickFix Auto Workshop - Deira",
-            location: "Al Muteena, Deira, Dubai, UAE",
-            installationFee: 16.99,
-            area: "Deira"
-          },
-          {
-            id: "g8",
-            name: "Speedy Auto Repair - Deira",
-            location: "Port Saeed, Deira, Dubai, UAE",
-            installationFee: 18.99,
-            area: "Deira"
-          },
-          {
-            id: "g9",
-            name: "Al Muraqqabat Auto Center - Deira",
-            location: "Al Muraqqabat, Deira, Dubai, UAE",
-            installationFee: 15.50,
-            area: "Deira"
-          }
-        ]
-      },
-      {
-        id: 202,
-        name: "Brake Pads - Toyota Corolla",
-        description: "Premium brake pads for Toyota Corolla 2023",
-        price: 84.99,
-        stock: 12,
-        manufacturer_id: 1, // Toyota
-        model_id: 2, // Corolla
-        year: 2023,
-        garage_id: null,
-        garages: {
-          name: 'Mechanica Service Center',
-          location: 'Dubai, UAE'
-        },
-        image_url: "https://images.unsplash.com/photo-1615384340342-28de71316d2a?w=800&h=600&auto=format",
-        availableGarages: [
-          {
-            id: "g1",
-            name: "Mechanica Service Center - Dubai Marina",
-            location: "Dubai Marina, Dubai, UAE",
-            installationFee: 35.99,
-            area: "Dubai Marina"
-          },
-          {
-            id: "g3",
-            name: "Mechanica Service Center - Jumeirah",
-            location: "Jumeirah, Dubai, UAE",
-            installationFee: 39.99,
-            area: "Jumeirah"
-          },
-          {
-            id: "g4",
-            name: "Mechanica Service Center - Deira",
-            location: "Deira, Dubai, UAE",
-            installationFee: 36.99,
-            area: "Deira"
-          },
-          {
-            id: "g6",
-            name: "QuickFix Auto Workshop - Deira",
-            location: "Al Muteena, Deira, Dubai, UAE",
-            installationFee: 34.99,
-            area: "Deira"
-          },
-          {
-            id: "g7",
-            name: "Dubai Auto Care - Deira",
-            location: "Naif Road, Deira, Dubai, UAE",
-            installationFee: 37.50,
-            area: "Deira"
-          },
-          {
-            id: "g8",
-            name: "Speedy Auto Repair - Deira",
-            location: "Port Saeed, Deira, Dubai, UAE",
-            installationFee: 39.99,
-            area: "Deira"
-          },
-          {
-            id: "g9",
-            name: "Al Muraqqabat Auto Center - Deira",
-            location: "Al Muraqqabat, Deira, Dubai, UAE",
-            installationFee: 35.50,
-            area: "Deira"
-          }
-        ]
-      }
-    ];
+    return mockParts;
+  } catch (error: any) {
+    console.error("Error fetching parts by VIN:", error.message);
+    toast.error("Failed to fetch parts for this VIN");
+    return [];
   }
-  
-  // For all other vehicles, generate and filter mock parts
-  const mockParts = generateMockParts(
-    manufacturerId, 
-    modelId, 
-    yearNum,
-    manufacturers,
-    models
-  ).filter(part => 
-    part.manufacturer_id === manufacturerId && 
-    part.model_id === modelId && 
-    part.year === yearNum
-  );
-
-  // Add availableGarages to mock parts and ensure image_url is present
-  return mockParts.map(part => ({
-    ...part,
-    image_url: part.image_url || getDefaultImageUrlForPart(part.name),
-    availableGarages: [
-      {
-        id: "g1",
-        name: "Mechanica Service Center - Dubai Marina",
-        location: "Dubai Marina, Dubai, UAE",
-        installationFee: 25.99,
-        area: "Dubai Marina"
-      },
-      {
-        id: "g2",
-        name: "Mechanica Service Center - Downtown",
-        location: "Downtown, Dubai, UAE",
-        installationFee: 29.99,
-        area: "Downtown Dubai"
-      },
-      {
-        id: "g3",
-        name: "Mechanica Service Center - Jumeirah",
-        location: "Jumeirah, Dubai, UAE",
-        installationFee: 32.99,
-        area: "Jumeirah"
-      },
-      {
-        id: "g4",
-        name: "Mechanica Service Center - Deira",
-        location: "Deira, Dubai, UAE",
-        installationFee: 27.99,
-        area: "Deira"
-      },
-      {
-        id: "g5",
-        name: "AutoFix Express - Deira",
-        location: "Al Rigga, Deira, Dubai, UAE",
-        installationFee: 24.99,
-        area: "Deira"
-      },
-      {
-        id: "g6",
-        name: "QuickFix Auto Workshop - Deira",
-        location: "Al Muteena, Deira, Dubai, UAE",
-        installationFee: 22.99,
-        area: "Deira"
-      },
-      {
-        id: "g7",
-        name: "Dubai Auto Care - Deira",
-        location: "Naif Road, Deira, Dubai, UAE",
-        installationFee: 26.50,
-        area: "Deira"
-      },
-      {
-        id: "g8",
-        name: "Speedy Auto Repair - Deira",
-        location: "Port Saeed, Deira, Dubai, UAE",
-        installationFee: 28.99,
-        area: "Deira"
-      },
-      {
-        id: "g9",
-        name: "Al Muraqqabat Auto Center - Deira",
-        location: "Al Muraqqabat, Deira, Dubai, UAE",
-        installationFee: 23.50,
-        area: "Deira"
-      }
-    ]
-  }));
 };

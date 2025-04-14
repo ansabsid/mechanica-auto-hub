@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,12 +25,29 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // Use the alternative approach for now until we have the RPC function
-      return await fetchRetailerPartsAlternative();
+      // Use the RPC function to fetch retailer parts for this garage
+      const { data, error } = await supabase.rpc(
+        'get_retailer_parts_for_garage',
+        { garage_id_param: garageId }
+      );
+
+      if (error) {
+        console.error("RPC Error fetching retailer parts:", error.message);
+        toast.error("Failed to load retailer parts");
+        setRetailerParts([]);
+        return [];
+      }
+
+      console.log("Retailer parts fetched:", data);
+      const typedParts = data as RetailerPartWithAssociation[];
+      setRetailerParts(typedParts);
+      return typedParts;
     } catch (error: any) {
       console.error("Error fetching retailer parts:", error.message);
       toast.error("Failed to load retailer parts");
-      return [];
+      
+      // Use the alternative approach as fallback
+      return await fetchRetailerPartsAlternative();
     } finally {
       setIsLoading(false);
     }
@@ -63,8 +81,21 @@ export const usePartAssociations = (garageId: string) => {
       }
 
       // Then check which ones are associated with this garage
+      type PartDataType = {
+        id: number;
+        name: string;
+        description: string | null;
+        price: number;
+        stock: number;
+        image_url: string | null;
+        retailer_id: string;
+        retailers: {
+          name: string;
+        } | null;
+      };
+
       const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
-        partsData.map(async (part: any) => {
+        (partsData as PartDataType[]).map(async (part) => {
           // Check if this part is associated with the current garage
           const { data: association, error: assocError } = await supabase
             .from('parts_garages')

@@ -46,6 +46,9 @@ export interface Part {
   } | null;
   readonly image_url: string | null;
   readonly availableGarages?: ReadonlyArray<Garage>;
+  readonly category?: string | null;
+  readonly created_at?: string | null;
+  readonly updated_at?: string | null;
 }
 
 // Search state interface
