@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Part, Manufacturer, Model } from "./types";
@@ -147,7 +148,7 @@ export const usePartsSearch = (
           return {
             ...part,
             source_type: part.garage_id ? 'garage' : 'retailer',
-            retailer_id: part.garage_id ? null : part.retailer_id,
+            retailer_id: part.garage_id ? null : part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
@@ -200,8 +201,8 @@ export const usePartsSearch = (
           // Create a proper Part object with garages information
           return {
             ...part,
-            source_type: part.source_type || "garage",
-            retailer_id: part.retailer_id || null,
+            source_type: part.garage_id ? 'garage' : 'retailer',
+            retailer_id: part.garage_id ? null : part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'

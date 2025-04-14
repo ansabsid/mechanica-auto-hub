@@ -24,24 +24,12 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // Use the RPC function we created earlier
-      const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
-        garage_id_param: garageId
-      });
-
-      if (error) throw error;
-
-      if (data) {
-        console.log("Retailer parts with associations:", data);
-        setRetailerParts(data as RetailerPartWithAssociation[]);
-        return data as RetailerPartWithAssociation[];
-      }
-      return [];
+      // Use the alternative approach for now until we have the RPC function
+      return await fetchRetailerPartsAlternative();
     } catch (error: any) {
       console.error("Error fetching retailer parts:", error.message);
-      
-      // Alternative approach if RPC fails
-      return await fetchRetailerPartsAlternative();
+      toast.error("Failed to load retailer parts");
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +64,7 @@ export const usePartAssociations = (garageId: string) => {
 
       // Then check which ones are associated with this garage
       const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
-        partsData.map(async (part) => {
+        partsData.map(async (part: any) => {
           // Check if this part is associated with the current garage
           const { data: association, error: assocError } = await supabase
             .from('parts_garages')

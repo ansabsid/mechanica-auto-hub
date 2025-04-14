@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -127,29 +128,18 @@ export const useRetailerProducts = (retailerId?: string) => {
 
   const fetchAvailableRetailers = async () => {
     try {
-      // Use a more direct SQL approach since the retailers table is new
-      const { data, error } = await supabase.rpc('get_retailers');
-      
-      if (error) {
-        console.error("RPC error (get_retailers):", error);
-        
-        // Fallback to direct table query if the RPC doesn't exist yet
-        const { data: directData, error: directError } = await supabase
-          .from('retailers')
-          .select('id, name, location, area');
+      // Use direct table query since the get_retailers function is new
+      const { data, error } = await supabase
+        .from('retailers')
+        .select('id, name, location, area');
           
-        if (directError) {
-          console.error("Direct query error:", directError);
-          return [];
-        }
-        
-        if (directData && directData.length > 0) {
-          console.log("Available retailers (direct query):", directData);
-          setAvailableRetailers(directData);
-          return directData;
-        }
-      } else if (data && data.length > 0) {
-        console.log("Available retailers (RPC):", data);
+      if (error) {
+        console.error("Query error:", error);
+        return [];
+      }
+      
+      if (data && data.length > 0) {
+        console.log("Available retailers (direct query):", data);
         setAvailableRetailers(data);
         return data;
       }
@@ -182,8 +172,26 @@ export const useRetailerProducts = (retailerId?: string) => {
       }
       
       console.log("Retailer parts fetched:", data?.length || 0);
-      setProducts(data || []);
-      return data || [];
+      
+      // Map the database parts to RetailerProduct format
+      const formattedProducts: RetailerProduct[] = (data || []).map(part => ({
+        id: part.id,
+        name: part.name,
+        description: part.description || '',
+        category: part.category || '',
+        price: part.price,
+        quantity: part.stock,
+        status: part.stock > 0 ? 'In Stock' : 'Out of Stock',
+        retailer_id: part.retailer_id,
+        source_type: 'retailer',
+        imageUrl: part.image_url,
+        manufacturer_id: part.manufacturer_id,
+        model_id: part.model_id,
+        year: part.year
+      }));
+      
+      setProducts(formattedProducts);
+      return formattedProducts;
     } catch (error: any) {
       console.error("Error fetching products:", error.message);
       toast.error("Failed to load products");
