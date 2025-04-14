@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
@@ -29,14 +28,9 @@ import './App.css';
 function App() {
   const { isCapacitor } = useCapacitor();
   
-  // Apply any mobile-specific initializations here
   useEffect(() => {
     if (isCapacitor) {
-      // Add mobile-specific initialization code here
-      // For example, adjusting the status bar, handling deep links, etc.
       console.log("Initializing mobile app features");
-      
-      // Add a class to the body for mobile-specific styling
       document.body.classList.add('capacitor-app');
     }
   }, [isCapacitor]);
@@ -62,7 +56,7 @@ function App() {
               <Route path="categories" element={<Categories />} />
               <Route path="category/:categoryName" element={<CategoryPage />} />
               <Route path="scanner" element={<PartScanner />} />
-              <Route path="scan" element={<PartScanner />} /> {/* Adding this route as well for backward compatibility */}
+              <Route path="scan" element={<PartScanner />} />
               <Route path="pitch-deck" element={<PitchDeck />} />
               <Route path="settings" element={<Settings />} />
               <Route path="vin-decoder" element={<VinDecoder />} />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -77,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch user role after a slight delay to avoid race conditions
         setTimeout(async () => {
           const role = await fetchUserRole(session.user.id);
           if (role) {
@@ -181,7 +179,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[AUTH DEBUG] Starting signup process with metadata:", JSON.stringify(metadata));
       console.log("[AUTH DEBUG] User role:", role);
 
-      // Check if user already exists
       const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
         email,
         password: password + '_checkonly',
@@ -194,9 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("[AUTH DEBUG] User doesn't exist, proceeding with signup");
 
-      // Prepare user metadata
       const userMetadata = {
-        role: role, // Ensure role is explicitly set here
+        role: role,
         firstName: metadata.firstName || null,
         lastName: metadata.lastName || null,
         fullPhone: metadata.fullPhone || (metadata.countryCode && metadata.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
@@ -206,8 +202,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[AUTH DEBUG] Prepared user metadata for signup:", JSON.stringify(userMetadata));
       console.log("[AUTH DEBUG] Role being set in metadata:", role);
 
-      // Create the user in Supabase Auth
-      console.log("[AUTH DEBUG] Creating user account via supabase.auth.signUp");
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -229,7 +223,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         await createUserProfile(data.user.id, email, role, userMetadata);
         
-        // Check if profile was created successfully after a small delay
         setTimeout(async () => {
           console.log("[AUTH DEBUG] Verifying profile creation for user:", data.user!.id);
           const profile = await checkUserProfile(data.user!.id);
@@ -241,7 +234,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log("[AUTH DEBUG] Profile lastName:", profile.lastName);
             console.log("[AUTH DEBUG] Profile phone:", profile.phone);
             
-            // Check for garage-specific fields in the profile type-safely
             if (role === "garage" && profile.hasOwnProperty('garage_name')) {
               console.log("[AUTH DEBUG] Garage specific data:");
               console.log("[AUTH DEBUG] Garage name:", (profile as any).garage_name || "Not set");
