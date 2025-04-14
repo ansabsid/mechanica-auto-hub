@@ -18,11 +18,17 @@ export interface Appointment {
   customer?: string;
   phone?: string;
   car?: string;
+  vehicle_id?: string;
+  vehicle?: any;
+  confirmation_code?: string;
 }
 
 export interface AvailableSlot {
+  id: string;
   date: string;
   time: string;
   garage_id: string;
-  garage_name: string;
+  available: boolean;
+  service_type: string;
+  garage_name?: string;
 }

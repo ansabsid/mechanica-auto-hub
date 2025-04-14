@@ -211,7 +211,8 @@ export const mockFetchAvailableSlots = (garageId: string, date?: string): Availa
         date: formattedDate,
         time,
         available: true,
-        service_type: "general_service"
+        service_type: "general_service",
+        garage_name: "Mock Garage"
       });
     });
   }
