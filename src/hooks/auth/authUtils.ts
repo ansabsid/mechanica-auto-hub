@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedSupabaseClient } from "./supabaseTypes";
 
@@ -45,7 +44,6 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
 
 /**
  * Creates a profile for a user with a specific role
- * Checks for existing profile first to avoid duplicate key errors
  * @param userId The UUID of the user to create a profile for
  * @param email The email address of the user
  * @param role The role to assign to the user
@@ -153,13 +151,13 @@ export const isDemoAccount = (email: string): boolean => {
 };
 
 // Handle special login flow for demo accounts
-export const handleDemoAccount = async (email: string) => {
+export const handleDemoAccount = async (email: string): Promise<{ user: unknown; role: "customer" | "garage" } | null> => {
   try {
     console.log(`Handling demo account: ${email}`);
     
     // Determine the role based on the demo email
     const isGarage = email.includes("garage") || email.includes("workshop") || email.includes("specialist");
-    const role = isGarage ? "garage" : "customer";
+    const role: "customer" | "garage" = isGarage ? "garage" : "customer";
     
     // Sign in with magic link (this will create the account if it doesn't exist)
     const { data, error } = await supabase.auth.signInWithOtp({
@@ -178,9 +176,6 @@ export const handleDemoAccount = async (email: string) => {
     // This is typically done by a trigger in production
     if (data) {
       console.log("Demo account signed in successfully, setting up profile");
-      
-      // Since we're using OTP, we don't have user data immediately
-      // We'd need a way to retrieve or create the user properly
       
       return {
         user: { email },

@@ -97,7 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (demoResult?.user) {
           setUser(demoResult.user as User);
-          setUserRole(demoResult.role);
+          if (demoResult.role === "customer" || demoResult.role === "garage") {
+            setUserRole(demoResult.role);
+          } else {
+            console.error("Invalid role received from demo account:", demoResult.role);
+            setUserRole("customer"); // Default to customer if invalid role
+          }
           setAuthChangeHandled(true);
           
           const isGarageMasters = email === "garage-masters@bookmyparts.com";
