@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Part, Manufacturer, Model, GarageData } from "./types";
+import { Part, Manufacturer, Model, GarageData, GarageFromDB, Garage } from "./types";
 import { toast } from "sonner";
 
 export const usePartsSearch = (
@@ -49,12 +49,12 @@ export const usePartsSearch = (
     }
 
     // Create a map of part_id to garages
-    const garagesMap: Record<number, any[]> = {};
+    const garagesMap: Record<number, Garage[]> = {};
     
     if (data && Array.isArray(data)) {
       console.log("Raw garage data received:", data);
       
-      data.forEach(item => {
+      data.forEach((item: GarageFromDB & { part_id: number }) => {
         if (!garagesMap[item.part_id]) {
           garagesMap[item.part_id] = [];
         }
@@ -148,7 +148,7 @@ export const usePartsSearch = (
           // Create a proper Part object with garages information
           return {
             ...part,
-            source_type: part.garage_id ? 'garage' : 'retailer',
+            source_type: part.source_type || (part.garage_id ? 'garage' : part.retailers?.name ? 'retailer' : null),
             retailer_id: part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
@@ -202,7 +202,7 @@ export const usePartsSearch = (
           // Create a proper Part object with garages information
           return {
             ...part,
-            source_type: part.garage_id ? 'garage' : 'retailer',
+            source_type: part.source_type || (part.garage_id ? 'garage' : part.retailers?.name ? 'retailer' : null),
             retailer_id: part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',

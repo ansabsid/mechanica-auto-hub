@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // We need to use a direct query because the RPC function might not be registered yet
+      // Use a direct query instead of RPC function to avoid type issues
       const { data, error } = await supabase
         .from('parts')
         .select(`
@@ -35,7 +36,8 @@ export const usePartAssociations = (garageId: string) => {
           stock,
           image_url,
           retailer_id,
-          retailers (name)
+          retailers (name),
+          source_type
         `)
         .eq('source_type', 'retailer');
 
@@ -63,6 +65,7 @@ export const usePartAssociations = (garageId: string) => {
         stock: number;
         image_url: string | null;
         retailer_id: string;
+        source_type: 'retailer';
         retailers: {
           name: string;
         } | null;

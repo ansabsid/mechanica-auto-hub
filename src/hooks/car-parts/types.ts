@@ -28,6 +28,15 @@ export interface Retailer {
   readonly area: string;
 }
 
+// Interface for data that comes directly from the database
+export interface GarageFromDB {
+  readonly id: string;
+  readonly name: string;
+  readonly location: string;
+  readonly installation_fee: number;
+  readonly area?: string;
+}
+
 export interface Part {
   readonly id: number;
   readonly name: string;

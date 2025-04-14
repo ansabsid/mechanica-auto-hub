@@ -205,7 +205,7 @@ export const useRetailerProducts = (retailerId?: string) => {
         price: part.price,
         quantity: part.stock,
         status: part.stock > 0 ? 'In Stock' : 'Out of Stock',
-        retailer_id: part.retailer_id,
+        retailer_id: part.retailer_id || undefined,
         source_type: 'retailer',
         imageUrl: part.image_url,
         manufacturer_id: part.manufacturer_id,
