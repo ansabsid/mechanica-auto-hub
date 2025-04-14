@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { RetailerPartAssociation } from "./car-parts/types";
 
 export interface RetailerPartWithAssociation {
   part_id: number;
@@ -27,7 +28,7 @@ export const usePartAssociations = (garageId: string) => {
     try {
       console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
       
-      // Using a direct query instead of RPC to avoid function name errors
+      // Using a direct query to parts with a join to retailers
       const { data, error } = await supabase
         .from('parts')
         .select(`
@@ -37,7 +38,7 @@ export const usePartAssociations = (garageId: string) => {
           price,
           stock,
           image_url,
-          retailers (id, name)
+          retailer_id
         `)
         .eq('source_type', 'retailer');
 
@@ -57,6 +58,21 @@ export const usePartAssociations = (garageId: string) => {
       
       // Get all part IDs to check for associations
       const partIds = data.map(part => part.id);
+      
+      // Query to get retailer names separately
+      const { data: retailersData, error: retailersError } = await supabase
+        .from('retailers')
+        .select('*');
+        
+      if (retailersError) {
+        console.error("Error fetching retailers:", retailersError);
+      }
+      
+      // Create retailer lookup map
+      const retailersMap = (retailersData || []).reduce((map, retailer) => {
+        map[retailer.id] = retailer.name;
+        return map;
+      }, {} as Record<string, string>);
       
       // Query to get existing associations
       const { data: associationsData, error: associationsError } = await supabase
@@ -86,8 +102,8 @@ export const usePartAssociations = (garageId: string) => {
           part_price: part.price,
           part_stock: part.stock,
           part_image_url: part.image_url,
-          retailer_id: part.retailers?.id || '',
-          retailer_name: part.retailers?.name || 'Unknown Retailer',
+          retailer_id: part.retailer_id || '',
+          retailer_name: retailersMap[part.retailer_id] || 'Unknown Retailer',
           installation_fee: installationFee,
           is_associated: isAssociated,
           current_installation_fee: installationFee

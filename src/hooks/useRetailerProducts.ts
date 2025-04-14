@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,12 +18,6 @@ export interface RetailerProduct {
   description?: string;
 }
 
-interface InsertPartResponse {
-  id: number;
-  [key: string]: any;
-}
-
-// This is the corrected interface for what actually comes back from the database
 interface PartFromDB {
   id: number;
   name: string;
@@ -41,9 +34,6 @@ interface PartFromDB {
   created_at: string | null;
   updated_at: string | null;
   source_type?: 'garage' | 'retailer' | null;
-  retailers?: {
-    name: string;
-  };
 }
 
 export const useRetailerProducts = (retailerId?: string) => {
@@ -147,7 +137,6 @@ export const useRetailerProducts = (retailerId?: string) => {
 
   const fetchAvailableRetailers = async () => {
     try {
-      // Use query instead of RPC to avoid function name issues
       const { data, error } = await supabase
         .from('retailers')
         .select('id, name, location, area')
@@ -193,9 +182,7 @@ export const useRetailerProducts = (retailerId?: string) => {
       
       console.log("Retailer parts fetched:", data?.length || 0);
       
-      // Map the database parts to RetailerProduct format
-      const typedData = data as PartFromDB[] || [];
-      const formattedProducts: RetailerProduct[] = typedData.map(part => ({
+      const formattedProducts: RetailerProduct[] = (data || []).map(part => ({
         id: part.id,
         name: part.name,
         description: part.description || '',
@@ -236,7 +223,6 @@ export const useRetailerProducts = (retailerId?: string) => {
       }
       
       let validRetailerId = productRetailerId;
-      // Check if the provided retailer ID exists in the available retailers
       const retailerExists = retailers.some(retailer => retailer.id === productRetailerId);
       
       if (!retailerExists) {
@@ -279,7 +265,6 @@ export const useRetailerProducts = (retailerId?: string) => {
 
       console.log("Prepared data for database insertion:", productData);
 
-      // Using direct insert instead of RPC to avoid function name issues
       const { data, error } = await supabase
         .from('parts')
         .insert(productData)
@@ -379,7 +364,6 @@ export const useRetailerProducts = (retailerId?: string) => {
     try {
       console.log("Deleting product with ID:", productId);
       
-      // First remove any garage associations
       const { error: associationError } = await supabase
         .from('parts_garages')
         .delete()

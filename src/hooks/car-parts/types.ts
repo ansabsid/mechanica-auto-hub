@@ -31,6 +31,11 @@ export interface GarageFromDB {
   readonly part_id?: number;
 }
 
+export interface RetailerData {
+  readonly id: string;
+  readonly name: string;
+}
+
 export interface Part {
   readonly id: number;
   readonly name: string;
@@ -95,4 +100,18 @@ export interface PartWithRetailer {
   retailers?: {
     name: string;
   };
+}
+
+// Type for retailer part association data
+export interface RetailerPartAssociation {
+  part_id: number;
+  part_name: string;
+  part_description: string | null;
+  part_price: number;
+  part_stock: number;
+  part_image_url: string | null;
+  retailer_id: string;
+  retailer_name: string;
+  is_associated: boolean;
+  current_installation_fee: number;
 }

@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Part, Manufacturer, Model, GarageData, GarageFromDB, Garage, PartWithRetailer } from "./types";
+import { Part, Manufacturer, Model, GarageData, GarageFromDB, Garage } from "./types";
 import { toast } from "sonner";
 
 export const usePartsSearch = (
@@ -154,7 +154,7 @@ export const usePartsSearch = (
             source_type = rawPart.source_type as 'garage' | 'retailer';
           } else if (rawPart.garage_id) {
             source_type = 'garage';
-          } else if (rawPart.retailer_id || rawPart.retailers) {
+          } else if (rawPart.retailer_id) {
             source_type = 'retailer';
           }
 
@@ -235,7 +235,7 @@ export const usePartsSearch = (
             source_type = rawPart.source_type as 'garage' | 'retailer';
           } else if (rawPart.garage_id) {
             source_type = 'garage';
-          } else if (rawPart.retailer_id || rawPart.retailers) {
+          } else if (rawPart.retailer_id) {
             source_type = 'retailer';
           }
 
