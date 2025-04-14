@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -89,10 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);
     try {
-      console.log(`Attempting to sign in with email: ${email}, role: ${role}`);
+      console.log(`[AUTH DEBUG] Attempting to sign in with email: ${email}, role: ${role}`);
       
       if (isDemoAccount(email)) {
-        console.log("Using demo account login flow");
+        console.log("[AUTH DEBUG] Using demo account login flow");
         const demoResult = await handleDemoAccount(email);
         
         if (demoResult?.user) {
@@ -100,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (demoResult.role === "customer" || demoResult.role === "garage") {
             setUserRole(demoResult.role);
           } else {
-            console.error("Invalid role received from demo account:", demoResult.role);
+            console.error("[AUTH DEBUG] Invalid role received from demo account:", demoResult.role);
             setUserRole("customer"); // Default to customer if invalid role
           }
           setAuthChangeHandled(true);
@@ -121,18 +122,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      console.log("[AUTH DEBUG] Calling supabase.auth.signInWithPassword");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("[AUTH DEBUG] Login error:", error.message);
         if (error.message.includes("Invalid login credentials") || 
             error.message.includes("Email not confirmed")) {
           throw new Error("Account not found. Please sign up first or check your credentials.");
         }
         throw error;
       }
+
+      console.log("[AUTH DEBUG] Login successful, user data:", data.user ? {
+        id: data.user.id,
+        email: data.user.email,
+        metadata: data.user.user_metadata
+      } : "No user data");
 
       if (data.user) {
         toast({
@@ -141,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("[AUTH DEBUG] Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -155,17 +164,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, role: "customer" | "garage", metadata: UserMetadata = {}) => {
     setIsLoading(true);
     try {
-      console.log("Starting signup process with metadata:", metadata);
+      console.log("[AUTH DEBUG] Starting signup process with metadata:", JSON.stringify(metadata));
+      console.log("[AUTH DEBUG] User role:", role);
 
+      // Check if user already exists
       const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
         email,
         password: password + '_checkonly',
       });
 
       if (existingUser?.user) {
+        console.error("[AUTH DEBUG] User already exists:", existingUser.user.email);
         throw new Error("An account with this email already exists. Please log in instead.");
       }
 
+      console.log("[AUTH DEBUG] User doesn't exist, proceeding with signup");
+
+      // Prepare user metadata
       const userMetadata = {
         role,
         firstName: metadata.firstName || null,
@@ -174,8 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...metadata
       };
 
-      console.log("Prepared user metadata for signup:", userMetadata);
+      console.log("[AUTH DEBUG] Prepared user metadata for signup:", JSON.stringify(userMetadata));
 
+      // Create the user in Supabase Auth
+      console.log("[AUTH DEBUG] Creating user account via supabase.auth.signUp");
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -184,15 +201,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[AUTH DEBUG] Signup error from Supabase:", error);
+        throw error;
+      }
 
       if (data.user) {
-        console.log("User created successfully, now creating profile");
+        console.log("[AUTH DEBUG] User created successfully with ID:", data.user.id);
+        console.log("[AUTH DEBUG] Now creating profile for user");
+        
         await createUserProfile(data.user.id, email, role, userMetadata);
         
+        // Check if profile was created successfully after a small delay
         setTimeout(async () => {
+          console.log("[AUTH DEBUG] Verifying profile creation for user:", data.user!.id);
           const profile = await checkUserProfile(data.user!.id);
-          console.log("Profile check after creation:", profile);
+          console.log("[AUTH DEBUG] Profile check after creation:", profile ? JSON.stringify(profile) : "No profile found");
+          
+          if (profile) {
+            console.log("[AUTH DEBUG] Profile created successfully with role:", profile.role);
+            console.log("[AUTH DEBUG] Profile firstName:", profile.firstName);
+            console.log("[AUTH DEBUG] Profile lastName:", profile.lastName);
+            console.log("[AUTH DEBUG] Profile phone:", profile.phone);
+            
+            if (role === "garage") {
+              console.log("[AUTH DEBUG] Garage specific data:");
+              console.log("[AUTH DEBUG] Garage name:", profile.garage_name || "Not set");
+              console.log("[AUTH DEBUG] Garage location:", profile.garage_location || "Not set");
+              console.log("[AUTH DEBUG] Garage registration:", profile.garage_registration_number || "Not set");
+            }
+          }
         }, 1000);
         
         toast({
@@ -207,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return { success: false, message: "Failed to create account" };
     } catch (error: any) {
-      console.error("Signup error:", error);
+      console.error("[AUTH DEBUG] Signup error:", error);
       toast({
         variant: "destructive",
         title: "Registration failed",

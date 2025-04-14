@@ -23,7 +23,15 @@ export const useServiceSlots = () => {
    * Fetches all service slots for a specific garage
    */
   const fetchServiceSlots = async (garageId: string, date?: string) => {
-    if (!garageId) return [];
+    if (!garageId) {
+      console.log("[SLOT DEBUG] No garage ID provided for fetching slots");
+      return [];
+    }
+    
+    console.log("[SLOT DEBUG] Fetching service slots for garage:", garageId);
+    if (date) {
+      console.log("[SLOT DEBUG] Filtering by date:", date);
+    }
     
     setFetchLoading(true);
     try {
@@ -39,13 +47,23 @@ export const useServiceSlots = () => {
       
       const { data, error } = await query.order('date', { ascending: true }).order('start_time', { ascending: true });
         
-      if (error) throw error;
+      if (error) {
+        console.error("[SLOT DEBUG] Error fetching service slots:", error);
+        throw error;
+      }
+      
+      console.log("[SLOT DEBUG] Fetched slots:", data ? data.length : 0);
+      if (data && data.length > 0) {
+        console.log("[SLOT DEBUG] First slot:", data[0]);
+        console.log("[SLOT DEBUG] Available dates:", [...new Set(data.map(slot => slot.date))]);
+      } else {
+        console.log("[SLOT DEBUG] No slots available for the selected criteria");
+      }
       
       setSlots(data || []);
-      console.log("Fetched slots:", data);
       return data;
     } catch (error: any) {
-      console.error("Error fetching service slots:", error.message);
+      console.error("[SLOT DEBUG] Error fetching service slots:", error.message);
       toast.error("Failed to load service slots");
       return [];
     } finally {

@@ -215,6 +215,7 @@ export const useOrders = () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.error("[ORDER DEBUG] No authenticated user session found when creating order");
       toast({
         title: "Authentication required",
         description: "Please login to complete your order",
@@ -224,6 +225,7 @@ export const useOrders = () => {
     }
 
     if (cartItems.length === 0) {
+      console.error("[ORDER DEBUG] Attempted to create order with empty cart");
       toast({
         title: "Empty cart",
         description: "Your cart is empty",
@@ -232,14 +234,21 @@ export const useOrders = () => {
       return null;
     }
 
-    console.log("🔍 [Order Creation] Cart items being ordered:", cartItems);
-    console.log("🔍 [Order Creation] User details for order:", userDetails);
+    console.log("[ORDER DEBUG] Cart items being ordered:", JSON.stringify(cartItems.map(item => ({
+      partId: item.part_id,
+      partName: item.part.name,
+      quantity: item.quantity,
+      price: item.part.price,
+      hasInstallation: !!item.installation_data
+    }))));
+    
+    console.log("[ORDER DEBUG] User details for order:", userDetails ? JSON.stringify(userDetails) : "None provided");
     
     const installationItems = cartItems.filter(item => item.installation_data);
-    console.log("🔍 [Order Creation] Items with installation:", installationItems);
+    console.log("[ORDER DEBUG] Items with installation:", installationItems.length);
     
     if (installationItems.length > 0) {
-      console.log("🔍 [Order Creation] Installation garages:", 
+      console.log("[ORDER DEBUG] Installation details:", 
         installationItems.map(item => ({
           garageId: item.installation_data?.garageId,
           garageName: item.installation_data?.garageName,
@@ -253,18 +262,19 @@ export const useOrders = () => {
     try {
       const orderData = await createOrder(session.user.id, cartItems, totalAmount, userDetails);
       
-      console.log("🔍 [Order Creation] Order created:", orderData);
+      console.log("[ORDER DEBUG] Order created:", orderData ? JSON.stringify({
+        orderId: orderData.id,
+        totalAmount: orderData.total_amount,
+        status: orderData.status,
+        userId: orderData.user_id
+      }) : "Failed to create order");
       
-      const itemsWithInstallation = cartItems.filter(item => item.installation_data);
-      
-      console.log("Items with installation:", itemsWithInstallation);
-      
-      if (itemsWithInstallation.length > 0 && orderData && orderData.id) {
-        console.log("🔍 [Order Creation] Processing installation items for order:", orderData.id);
+      if (installationItems.length > 0 && orderData && orderData.id) {
+        console.log("[ORDER DEBUG] Processing installation items for order:", orderData.id);
         
-        for (const item of itemsWithInstallation) {
+        for (const item of installationItems) {
           if (item.installation_data && item.installation_data.garageId) {
-            console.log(`🔍 [Order Creation] Setting installation data for part ${item.part_id} (${item.part.name}):`, {
+            console.log(`[ORDER DEBUG] Setting installation data for part ${item.part_id} (${item.part.name}):`, {
               garage_id: item.installation_data.garageId,
               garage_name: item.installation_data.garageName,
               installation_fee: item.installation_data.installationFee
@@ -281,9 +291,9 @@ export const useOrders = () => {
               .eq('part_id', item.part_id);
               
             if (error) {
-              console.error("🔍 [Order Creation] Error updating order item with installation data:", error);
+              console.error("[ORDER DEBUG] Error updating order item with installation data:", error);
             } else {
-              console.log("🔍 [Order Creation] Successfully updated order item with installation data:", data);
+              console.log("[ORDER DEBUG] Successfully updated order item with installation data");
               
               const { data: verifyData, error: verifyError } = await supabase
                 .from('order_items')
@@ -293,16 +303,16 @@ export const useOrders = () => {
                 .single();
               
               if (verifyError) {
-                console.error("🔍 [Order Creation] Error verifying order item update:", verifyError);
+                console.error("[ORDER DEBUG] Error verifying order item update:", verifyError);
               } else {
-                console.log("🔍 [Order Creation] Verified order item data:", verifyData);
+                console.log("[ORDER DEBUG] Verified order item data:", verifyData);
                 
                 if (verifyData.garage_id !== item.installation_data.garageId) {
-                  console.error("🔍 [Order Creation] Warning: Garage ID mismatch! Expected:", item.installation_data.garageId, "Got:", verifyData.garage_id);
+                  console.error("[ORDER DEBUG] Warning: Garage ID mismatch! Expected:", item.installation_data.garageId, "Got:", verifyData.garage_id);
                 }
                 
                 if (verifyData.installation_status !== 'new') {
-                  console.error("🔍 [Order Creation] Warning: Installation status not set to 'new'! Current value:", verifyData.installation_status);
+                  console.error("[ORDER DEBUG] Warning: Installation status not set to 'new'! Current value:", verifyData.installation_status);
                 }
               }
             }
@@ -322,7 +332,7 @@ export const useOrders = () => {
       await fetchUserOrders();
       return orderData;
     } catch (error: any) {
-      console.error("Error creating order:", error.message);
+      console.error("[ORDER DEBUG] Error creating order:", error.message);
       toast({
         title: "Error",
         description: "Failed to create order",
@@ -365,7 +375,8 @@ export const useOrders = () => {
   ) => {
     setIsLoading(true);
     try {
-      console.log("Updating installation schedule for item:", orderItemId, "Date:", scheduledDate, "Time:", scheduledTime);
+      console.log("[INSTALLATION DEBUG] Updating installation schedule for item:", orderItemId);
+      console.log("[INSTALLATION DEBUG] Schedule details - Date:", scheduledDate, "Time:", scheduledTime);
       
       const { error: updateError } = await supabase
         .from('order_items')
@@ -377,7 +388,7 @@ export const useOrders = () => {
         .eq('id', orderItemId);
         
       if (updateError) {
-        console.error("Error updating installation schedule:", updateError);
+        console.error("[INSTALLATION DEBUG] Error updating installation schedule:", updateError);
         toast({
           title: "Error",
           description: "Failed to schedule installation",
@@ -394,6 +405,8 @@ export const useOrders = () => {
         .single();
         
       if (orderItem && orderItem.garage_id) {
+        console.log("[INSTALLATION DEBUG] Linking installation to garage:", orderItem.garage_id);
+        
         const { error: linkError } = await supabase
           .from('installation_request_garages')
           .upsert({
@@ -402,26 +415,27 @@ export const useOrders = () => {
           });
           
         if (linkError) {
-          console.error("Error updating installation_request_garages:", linkError);
+          console.error("[INSTALLATION DEBUG] Error updating installation_request_garages:", linkError);
         } else {
-          console.log("Successfully updated installation_request_garages");
+          console.log("[INSTALLATION DEBUG] Successfully updated installation_request_garages");
         }
       }
       
+      console.log("[INSTALLATION DEBUG] Updating order status to confirmed:", orderId);
       const { error: orderUpdateError } = await supabase
         .from('orders')
         .update({ status: 'confirmed' })
         .eq('id', orderId);
         
       if (orderUpdateError) {
-        console.error("Error updating order status:", orderUpdateError);
+        console.error("[INSTALLATION DEBUG] Error updating order status:", orderUpdateError);
         toast({
           title: "Warning",
           description: "Installation scheduled, but failed to update order status",
           variant: "destructive",
         });
       } else {
-        console.log("Order status updated to confirmed:", orderId);
+        console.log("[INSTALLATION DEBUG] Order status successfully updated to confirmed");
         
         if (currentOrder && currentOrder.id === orderId) {
           fetchOrderDetails(orderId);
@@ -435,7 +449,7 @@ export const useOrders = () => {
       
       return true;
     } catch (error: any) {
-      console.error("Error scheduling installation:", error.message);
+      console.error("[INSTALLATION DEBUG] Error scheduling installation:", error.message);
       toast({
         title: "Error",
         description: "Failed to schedule installation",

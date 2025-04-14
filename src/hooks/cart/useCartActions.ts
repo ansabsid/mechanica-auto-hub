@@ -20,15 +20,16 @@ export const useCartActions = (
   // Add an item to the cart
   const addToCart = useCallback(async (partId: number, quantity: number = 1, installationOptions?: InstallationOptions) => {
     try {
-      console.log("Adding to cart:", {
+      console.log("[CART DEBUG] Adding to cart:", {
         partId, 
         quantity, 
-        installationOptions
+        installationOptions: installationOptions ? JSON.stringify(installationOptions) : "none"
       });
       
       const sessionData = await getUserSession();
       
       if (!sessionData.session?.user) {
+        console.error("[CART DEBUG] No authenticated user session found");
         toast({
           title: "Authentication required",
           description: "Please login to add items to cart",
@@ -37,13 +38,14 @@ export const useCartActions = (
         return;
       }
       
-      console.log("User is authenticated:", sessionData.session.user.id);
+      console.log("[CART DEBUG] User is authenticated:", sessionData.session.user.id);
+      console.log("[CART DEBUG] User email:", sessionData.session.user.email);
       
       // Always attempt to create/get a cart for the authenticated user
       const userCart = await getUserCart();
       
       if (!userCart) {
-        console.error("Failed to create or retrieve cart");
+        console.error("[CART DEBUG] Failed to create or retrieve cart");
         toast({
           title: "Error",
           description: "Failed to create cart",
@@ -52,11 +54,18 @@ export const useCartActions = (
         return;
       }
       
-      console.log("Using cart with ID:", userCart.id);
+      console.log("[CART DEBUG] Using cart with ID:", userCart.id);
       
       // Now that we definitely have a cart, add the item
       const addedItem = await apiAddToCart(partId, userCart.id, quantity, installationOptions);
-      console.log("Item successfully added to cart:", addedItem);
+      console.log("[CART DEBUG] Item successfully added to cart:", addedItem);
+      
+      if (installationOptions?.installationRequired) {
+        console.log("[CART DEBUG] Installation details:");
+        console.log("[CART DEBUG] Garage ID:", installationOptions.garageId);
+        console.log("[CART DEBUG] Garage Name:", installationOptions.garageName);
+        console.log("[CART DEBUG] Installation Fee:", installationOptions.installationFee);
+      }
       
       let message = "Item added to your cart";
       
@@ -73,7 +82,7 @@ export const useCartActions = (
       // Refresh cart items
       await refreshCart();
     } catch (error: any) {
-      console.error("Error adding to cart:", error);
+      console.error("[CART DEBUG] Error adding to cart:", error);
       toast({
         title: "Error",
         description: "Failed to add item to cart: " + (error.message || "Unknown error"),

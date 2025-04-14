@@ -6,11 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const checkUserProfile = async (userId: string) => {
   if (!userId) {
-    console.log("No user ID provided for profile check");
+    console.log("[PROFILE DEBUG] No user ID provided for profile check");
     return null;
   }
   
-  console.log("Checking profile for user ID:", userId);
+  console.log("[PROFILE DEBUG] Checking profile for user ID:", userId);
   
   try {
     // Fetch the profile
@@ -21,47 +21,47 @@ export const checkUserProfile = async (userId: string) => {
       .single();
       
     if (error) {
-      console.error("Error fetching profile:", error);
+      console.error("[PROFILE DEBUG] Error fetching profile:", error);
       
       // Check for the specific cause of the error
       if (error.code === 'PGRST116') {
-        console.log("IMPORTANT: No profile found for user. Profile creation might have failed!");
+        console.log("[PROFILE DEBUG] IMPORTANT: No profile found for user. Profile creation might have failed!");
       }
       
       return null;
     }
     
     if (!profile) {
-      console.log("No profile found for user ID:", userId);
-      console.log("IMPORTANT: Profile creation might have failed for this user!");
+      console.log("[PROFILE DEBUG] No profile found for user ID:", userId);
+      console.log("[PROFILE DEBUG] IMPORTANT: Profile creation might have failed for this user!");
       
       // Additional check in auth.users table to see if user exists but profile doesn't
       const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
       if (userError) {
-        console.error("Error checking user in auth.users:", userError);
+        console.error("[PROFILE DEBUG] Error checking user in auth.users:", userError);
       } else if (userData) {
-        console.log("User exists in auth.users but no profile found!");
-        console.log("User metadata:", userData.user.user_metadata);
+        console.log("[PROFILE DEBUG] User exists in auth.users but no profile found!");
+        console.log("[PROFILE DEBUG] User metadata:", userData.user.user_metadata);
       }
       
       return null;
     }
     
-    console.log("Profile data for user:", profile);
+    console.log("[PROFILE DEBUG] Full profile data:", JSON.stringify(profile));
     
     // Check if name fields are populated
     if (!profile.firstName && !profile.lastName) {
-      console.log("IMPORTANT: User profile exists but firstName and lastName are not set!");
+      console.log("[PROFILE DEBUG] IMPORTANT: User profile exists but firstName and lastName are not set!");
     }
     
     // Check if role is set
     if (!profile.role) {
-      console.log("IMPORTANT: User profile exists but role is not set!");
+      console.log("[PROFILE DEBUG] IMPORTANT: User profile exists but role is not set!");
     }
     
     return profile;
   } catch (err) {
-    console.error("Error in profile check:", err);
+    console.error("[PROFILE DEBUG] Error in profile check:", err);
     return null;
   }
 };
