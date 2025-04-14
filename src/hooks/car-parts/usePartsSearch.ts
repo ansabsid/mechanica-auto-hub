@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Part, Manufacturer, Model, GarageData, GarageFromDB, Garage } from "./types";
+import { Part, Manufacturer, Model, GarageData, GarageFromDB, Garage, PartWithRetailer } from "./types";
 import { toast } from "sonner";
 
 export const usePartsSearch = (
@@ -132,7 +132,7 @@ export const usePartsSearch = (
         console.log("All fetched installation fees:", garagesMap);
         
         // Map garages to each part
-        const partsWithGarages = data.map(part => {
+        const partsWithGarages = data.map((part: PartWithRetailer) => {
           const availableGarages = garagesMap[part.id] || [];
           console.log(`Processing part ${part.id} with ${availableGarages.length} garages`);
           
@@ -155,8 +155,8 @@ export const usePartsSearch = (
             manufacturer_id: part.manufacturer_id,
             model_id: part.model_id,
             year: part.year,
-            garage_id: part.garage_id || null,
-            retailer_id: part.retailer_id || null,
+            garage_id: part.garage_id,
+            retailer_id: part.retailer_id,
             source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
             garages: { 
               name: 'Mechanica Service Center',
@@ -210,7 +210,7 @@ export const usePartsSearch = (
         const garagesMap = await fetchGaragesForParts(partIds);
         
         // Map garages to each part
-        const partsWithGarages = data.map(part => {
+        const partsWithGarages = data.map((part: PartWithRetailer) => {
           const availableGarages = garagesMap[part.id] || [];
           
           // Create a proper Part object with garages information
@@ -223,8 +223,8 @@ export const usePartsSearch = (
             manufacturer_id: part.manufacturer_id,
             model_id: part.model_id,
             year: part.year,
-            garage_id: part.garage_id || null,
-            retailer_id: part.retailer_id || null,
+            garage_id: part.garage_id,
+            retailer_id: part.retailer_id,
             source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
             garages: { 
               name: 'Mechanica Service Center',

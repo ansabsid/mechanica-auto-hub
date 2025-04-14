@@ -35,6 +35,7 @@ export interface GarageFromDB {
   readonly location: string;
   readonly installation_fee: number;
   readonly area?: string;
+  readonly part_id?: number;
 }
 
 export interface Part {
@@ -79,4 +80,26 @@ export interface GarageData {
   installation_fee: number;
   area?: string;
   part_id?: number;
+}
+
+// Type for database query response that includes retailer info
+export interface PartWithRetailer {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number;
+  manufacturer_id: number;
+  model_id: number;
+  year: number;
+  garage_id: string | null;
+  retailer_id: string | null;
+  source_type: 'garage' | 'retailer' | null;
+  image_url: string | null;
+  category: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  retailers?: {
+    name: string;
+  };
 }

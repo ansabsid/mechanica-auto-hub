@@ -25,7 +25,7 @@ AS $$
     p.price as part_price,
     p.stock as part_stock,
     p.image_url as part_image_url,
-    p.retailer_id,
+    r.id as retailer_id,
     r.name as retailer_name,
     COALESCE(pg.installation_fee, 0) as installation_fee,
     CASE WHEN pg.part_id IS NULL THEN FALSE ELSE TRUE END as is_associated

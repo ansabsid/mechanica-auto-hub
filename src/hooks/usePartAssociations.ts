@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Part } from "./car-parts/types";
 
 export interface RetailerPartWithAssociation {
   part_id: number;
@@ -28,7 +27,7 @@ export const usePartAssociations = (garageId: string) => {
     try {
       console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
       
-      // Use a stored procedure to get retailer parts to avoid type issues
+      // Call the Supabase function to get retailer parts
       const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
         garage_id_param: garageId
       });
@@ -42,7 +41,7 @@ export const usePartAssociations = (garageId: string) => {
 
       console.log("RPC function result for retailer parts:", data);
       
-      if (!data || data.length === 0) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
         setRetailerParts([]);
         return [];
       }
