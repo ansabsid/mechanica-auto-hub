@@ -107,7 +107,10 @@ export const usePartsSearch = (
       // Query parts table for matching parts
       const { data, error } = await supabase
         .from('parts')
-        .select('*, retailers(name)')
+        .select(`
+          *,
+          retailers (name)
+        `)
         .eq('manufacturer_id', manufacturerId)
         .eq('model_id', modelId)
         .eq('year', year);
@@ -132,41 +135,51 @@ export const usePartsSearch = (
         console.log("All fetched installation fees:", garagesMap);
         
         // Map garages to each part
-        const partsWithGarages = data.map((part: PartWithRetailer) => {
-          const availableGarages = garagesMap[part.id] || [];
-          console.log(`Processing part ${part.id} with ${availableGarages.length} garages`);
+        const partsWithGarages = data.map((rawPart: any) => {
+          const availableGarages = garagesMap[rawPart.id] || [];
+          console.log(`Processing part ${rawPart.id} with ${availableGarages.length} garages`);
           
           // Log installation fees for this part
           if (availableGarages.length > 0) {
             availableGarages.forEach(garage => {
-              console.log(`Part ${part.id}, Garage ${garage.id}: Installation Fee = ${garage.installationFee}`);
+              console.log(`Part ${rawPart.id}, Garage ${garage.id}: Installation Fee = ${garage.installationFee}`);
             });
           } else {
-            console.log(`Part ${part.id}: No garages available`);
+            console.log(`Part ${rawPart.id}: No garages available`);
+          }
+
+          // Determine source_type from the data
+          let source_type: 'garage' | 'retailer' | null = null;
+          if (rawPart.source_type) {
+            source_type = rawPart.source_type as 'garage' | 'retailer';
+          } else if (rawPart.garage_id) {
+            source_type = 'garage';
+          } else if (rawPart.retailer_id || rawPart.retailers) {
+            source_type = 'retailer';
           }
 
           // Create a proper Part object with garages information
           const formattedPart: Part = {
-            id: part.id,
-            name: part.name,
-            description: part.description,
-            price: part.price,
-            stock: part.stock,
-            manufacturer_id: part.manufacturer_id,
-            model_id: part.model_id,
-            year: part.year,
-            garage_id: part.garage_id,
-            retailer_id: part.retailer_id,
-            source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
+            id: rawPart.id,
+            name: rawPart.name,
+            description: rawPart.description,
+            price: rawPart.price,
+            stock: rawPart.stock,
+            manufacturer_id: rawPart.manufacturer_id,
+            model_id: rawPart.model_id,
+            year: rawPart.year,
+            garage_id: rawPart.garage_id,
+            retailer_id: rawPart.retailer_id,
+            source_type: source_type,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
             },
             availableGarages: availableGarages,
-            image_url: part.image_url,
-            category: part.category,
-            created_at: part.created_at,
-            updated_at: part.updated_at
+            image_url: rawPart.image_url,
+            category: rawPart.category,
+            created_at: rawPart.created_at,
+            updated_at: rawPart.updated_at
           };
           
           return formattedPart;
@@ -195,7 +208,10 @@ export const usePartsSearch = (
     try {
       const { data, error } = await supabase
         .from('parts')
-        .select('*, retailers(name)')
+        .select(`
+          *,
+          retailers (name)
+        `)
         .order('name');
 
       if (error) {
@@ -210,31 +226,41 @@ export const usePartsSearch = (
         const garagesMap = await fetchGaragesForParts(partIds);
         
         // Map garages to each part
-        const partsWithGarages = data.map((part: PartWithRetailer) => {
-          const availableGarages = garagesMap[part.id] || [];
+        const partsWithGarages = data.map((rawPart: any) => {
+          const availableGarages = garagesMap[rawPart.id] || [];
           
+          // Determine source_type from the data
+          let source_type: 'garage' | 'retailer' | null = null;
+          if (rawPart.source_type) {
+            source_type = rawPart.source_type as 'garage' | 'retailer';
+          } else if (rawPart.garage_id) {
+            source_type = 'garage';
+          } else if (rawPart.retailer_id || rawPart.retailers) {
+            source_type = 'retailer';
+          }
+
           // Create a proper Part object with garages information
           const formattedPart: Part = {
-            id: part.id,
-            name: part.name,
-            description: part.description,
-            price: part.price,
-            stock: part.stock,
-            manufacturer_id: part.manufacturer_id,
-            model_id: part.model_id,
-            year: part.year,
-            garage_id: part.garage_id,
-            retailer_id: part.retailer_id,
-            source_type: part.source_type || (part.garage_id ? 'garage' : (part.retailers ? 'retailer' : null)),
+            id: rawPart.id,
+            name: rawPart.name,
+            description: rawPart.description,
+            price: rawPart.price,
+            stock: rawPart.stock,
+            manufacturer_id: rawPart.manufacturer_id,
+            model_id: rawPart.model_id,
+            year: rawPart.year,
+            garage_id: rawPart.garage_id,
+            retailer_id: rawPart.retailer_id,
+            source_type: source_type,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
             },
             availableGarages: availableGarages,
-            image_url: part.image_url,
-            category: part.category,
-            created_at: part.created_at,
-            updated_at: part.updated_at
+            image_url: rawPart.image_url,
+            category: rawPart.category,
+            created_at: rawPart.created_at,
+            updated_at: rawPart.updated_at
           };
           
           return formattedPart;

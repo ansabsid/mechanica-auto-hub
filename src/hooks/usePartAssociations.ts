@@ -27,10 +27,19 @@ export const usePartAssociations = (garageId: string) => {
     try {
       console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
       
-      // Call the Supabase function to get retailer parts
-      const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
-        garage_id_param: garageId
-      });
+      // Using a direct query instead of RPC to avoid function name errors
+      const { data, error } = await supabase
+        .from('parts')
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          stock,
+          image_url,
+          retailers (id, name)
+        `)
+        .eq('source_type', 'retailer');
 
       if (error) {
         console.error("Error fetching retailer parts:", error.message);
@@ -39,26 +48,51 @@ export const usePartAssociations = (garageId: string) => {
         return [];
       }
 
-      console.log("RPC function result for retailer parts:", data);
+      console.log("Query result for retailer parts:", data);
       
       if (!data || !Array.isArray(data) || data.length === 0) {
         setRetailerParts([]);
         return [];
       }
       
-      const formattedParts: RetailerPartWithAssociation[] = data.map(part => ({
-        part_id: part.part_id,
-        part_name: part.part_name,
-        part_description: part.part_description,
-        part_price: part.part_price,
-        part_stock: part.part_stock,
-        part_image_url: part.part_image_url,
-        retailer_id: part.retailer_id,
-        retailer_name: part.retailer_name,
-        installation_fee: part.installation_fee || 0,
-        is_associated: part.is_associated,
-        current_installation_fee: part.installation_fee || 0
-      }));
+      // Get all part IDs to check for associations
+      const partIds = data.map(part => part.id);
+      
+      // Query to get existing associations
+      const { data: associationsData, error: associationsError } = await supabase
+        .from('parts_garages')
+        .select('part_id, installation_fee')
+        .eq('garage_id', garageId)
+        .in('part_id', partIds);
+        
+      if (associationsError) {
+        console.error("Error fetching part associations:", associationsError);
+      }
+      
+      // Create a map of part_id to installation_fee for quick lookup
+      const associationsMap = (associationsData || []).reduce((map, item) => {
+        map[item.part_id] = item.installation_fee;
+        return map;
+      }, {} as Record<number, number>);
+      
+      const formattedParts: RetailerPartWithAssociation[] = data.map(part => {
+        const isAssociated = part.id in associationsMap;
+        const installationFee = isAssociated ? associationsMap[part.id] : 0;
+        
+        return {
+          part_id: part.id,
+          part_name: part.name,
+          part_description: part.description,
+          part_price: part.price,
+          part_stock: part.stock,
+          part_image_url: part.image_url,
+          retailer_id: part.retailers?.id || '',
+          retailer_name: part.retailers?.name || 'Unknown Retailer',
+          installation_fee: installationFee,
+          is_associated: isAssociated,
+          current_installation_fee: installationFee
+        };
+      });
 
       console.log("Formatted retailer parts:", formattedParts);
       setRetailerParts(formattedParts);

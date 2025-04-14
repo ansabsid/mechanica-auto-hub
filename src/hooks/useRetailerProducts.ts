@@ -1,9 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { EnhancedSupabaseClient } from "@/hooks/auth/supabaseTypes";
-
-const enhancedSupabase = supabase as unknown as EnhancedSupabaseClient;
 
 export interface RetailerProduct {
   id?: number;
@@ -149,8 +147,11 @@ export const useRetailerProducts = (retailerId?: string) => {
 
   const fetchAvailableRetailers = async () => {
     try {
-      // Use RPC function to get retailers
-      const { data, error } = await supabase.rpc('get_retailers');
+      // Use query instead of RPC to avoid function name issues
+      const { data, error } = await supabase
+        .from('retailers')
+        .select('id, name, location, area')
+        .order('name');
           
       if (error) {
         console.error("Query error:", error);
@@ -158,7 +159,7 @@ export const useRetailerProducts = (retailerId?: string) => {
       }
       
       if (data && data.length > 0) {
-        console.log("Available retailers (from RPC):", data);
+        console.log("Available retailers (from query):", data);
         setAvailableRetailers(data);
         return data;
       }
@@ -278,17 +279,19 @@ export const useRetailerProducts = (retailerId?: string) => {
 
       console.log("Prepared data for database insertion:", productData);
 
-      const { data, error } = await enhancedSupabase.rpc('insert_part', {
-        part_data: productData
-      });
+      // Using direct insert instead of RPC to avoid function name issues
+      const { data, error } = await supabase
+        .from('parts')
+        .insert(productData)
+        .select('id')
+        .single();
 
       if (error) {
-        console.error("RPC error:", error);
+        console.error("Insert error:", error);
         throw new Error(`Failed to create part: ${error.message}`);
       }
 
-      const response = data as InsertPartResponse;
-      const partId = response.id;
+      const partId = data?.id;
 
       if (!partId) {
         throw new Error("No part ID returned from database");
