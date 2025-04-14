@@ -128,9 +128,10 @@ export const useRetailerProducts = (retailerId?: string) => {
 
   const fetchAvailableRetailers = async () => {
     try {
+      // Query the retailers table directly since it may be a new table
       const { data, error } = await supabase
         .from('retailers')
-        .select('*');
+        .select('id, name, location, area');
         
       if (error) throw error;
       
@@ -193,6 +194,7 @@ export const useRetailerProducts = (retailerId?: string) => {
       }
       
       let validRetailerId = productRetailerId;
+      // Check if the provided retailer ID exists in the available retailers
       const retailerExists = retailers.some(retailer => retailer.id === productRetailerId);
       
       if (!retailerExists) {

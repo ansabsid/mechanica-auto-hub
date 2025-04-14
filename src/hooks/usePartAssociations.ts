@@ -25,16 +25,59 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc(
-        'get_retailer_parts_for_garage',
-        { garage_id_param: garageId }
-      );
+      // Use a direct SQL query instead of RPC since the function might not exist yet
+      const { data, error } = await supabase
+        .from('parts')
+        .select(`
+          id as part_id, 
+          name as part_name,
+          description as part_description,
+          price as part_price,
+          stock as part_stock,
+          image_url as part_image_url,
+          retailer_id,
+          retailers:retailer_id (name)
+        `)
+        .eq('source_type', 'retailer');
 
       if (error) throw error;
 
-      console.log("Retailer parts with associations:", data);
-      setRetailerParts(data || []);
-      return data;
+      if (data) {
+        // Format data to match RetailerPartWithAssociation interface
+        const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
+          data.map(async (part) => {
+            // Check if this part is associated with the current garage
+            const { data: association, error: assocError } = await supabase
+              .from('parts_garages')
+              .select('installation_fee')
+              .eq('part_id', part.part_id)
+              .eq('garage_id', garageId)
+              .maybeSingle();
+
+            if (assocError) {
+              console.error("Error checking part association:", assocError);
+            }
+
+            return {
+              part_id: part.part_id,
+              part_name: part.part_name,
+              part_description: part.part_description,
+              part_price: part.part_price,
+              part_stock: part.part_stock,
+              part_image_url: part.part_image_url,
+              retailer_id: part.retailer_id,
+              retailer_name: part.retailers?.name || "Unknown Retailer",
+              current_installation_fee: association?.installation_fee || 0,
+              is_associated: !!association
+            };
+          })
+        );
+
+        console.log("Retailer parts with associations:", formattedParts);
+        setRetailerParts(formattedParts);
+        return formattedParts;
+      }
+      return [];
     } catch (error: any) {
       console.error("Error fetching retailer parts:", error.message);
       toast.error("Failed to load retailer parts");

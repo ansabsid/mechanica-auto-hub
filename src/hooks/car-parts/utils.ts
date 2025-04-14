@@ -29,6 +29,8 @@ export const generateMockParts = (
       model_id: modelId,
       year: year,
       garage_id: "1",
+      retailer_id: null,
+      source_type: "garage",
       garages: {
         name: "AutoCare Dubai",
         location: "Dubai Marina"
@@ -45,6 +47,8 @@ export const generateMockParts = (
       model_id: modelId,
       year: year,
       garage_id: "2",
+      retailer_id: null,
+      source_type: "garage",
       garages: {
         name: "SparkTech Auto",
         location: "Al Quoz"
@@ -61,6 +65,8 @@ export const generateMockParts = (
       model_id: modelId,
       year: year,
       garage_id: "1",
+      retailer_id: null,
+      source_type: "garage",
       garages: {
         name: "AutoCare Dubai",
         location: "Dubai Marina"
@@ -77,6 +83,8 @@ export const generateMockParts = (
       model_id: modelId,
       year: year,
       garage_id: "3",
+      retailer_id: null,
+      source_type: "garage",
       garages: {
         name: "Elite Auto Parts",
         location: "Jumeirah"

@@ -147,6 +147,8 @@ export const usePartsSearch = (
           // Create a proper Part object with garages information
           return {
             ...part,
+            source_type: part.source_type || null,
+            retailer_id: part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
@@ -199,6 +201,8 @@ export const usePartsSearch = (
           // Create a proper Part object with garages information
           return {
             ...part,
+            source_type: part.source_type || null,
+            retailer_id: part.retailer_id || null,
             garages: { 
               name: 'Mechanica Service Center',
               location: 'Dubai, UAE'
