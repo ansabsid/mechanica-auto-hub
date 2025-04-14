@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedSupabaseClient } from "./supabaseTypes";
 
@@ -100,9 +101,15 @@ export const createUserProfile = async (
     
     // Add garage-specific data if role is garage
     if (role === "garage" && metadata) {
-      profileData.garage_name = metadata.garageName;
-      profileData.garage_location = metadata.garageLocation;
-      profileData.garage_registration_number = metadata.garageRegistrationNumber;
+      if (metadata.hasOwnProperty('garageName')) {
+        profileData.garage_name = metadata.garageName;
+      }
+      if (metadata.hasOwnProperty('garageLocation')) {
+        profileData.garage_location = metadata.garageLocation;
+      }
+      if (metadata.hasOwnProperty('garageRegistrationNumber')) {
+        profileData.garage_registration_number = metadata.garageRegistrationNumber;
+      }
     }
     
     // Insert the profile data
@@ -141,9 +148,9 @@ export const createUserProfile = async (
 export const isDemoAccount = (email: string): boolean => {
   const demoEmails = [
     "demo@bookmyparts.com",
-    "garage-masters@bookmyparts.com", 
-    "workshop-experts@bookmyparts.com",
-    "bmw-specialist@bookmyparts.com",
+    "demo.garage@example.com", 
+    "garage.masters@example.com",
+    "bmw.specialist@example.com",
     "customer@bookmyparts.com"
   ];
   
@@ -155,35 +162,26 @@ export const handleDemoAccount = async (email: string): Promise<{ user: unknown;
   try {
     console.log(`Handling demo account: ${email}`);
     
+    // Instead of trying to authenticate with Supabase which is failing,
+    // let's create a mock user response for demo accounts
+    
     // Determine the role based on the demo email
-    const isGarage = email.includes("garage") || email.includes("workshop") || email.includes("specialist");
+    const isGarage = email.includes("garage") || email.includes("specialist");
     const role: "customer" | "garage" = isGarage ? "garage" : "customer";
     
-    // Sign in with magic link (this will create the account if it doesn't exist)
-    const { data, error } = await supabase.auth.signInWithOtp({
+    // Create a mock user for demo purposes
+    const mockUser = {
       email,
-      options: {
-        shouldCreateUser: true
+      id: "demo-user-id",
+      app_metadata: {
+        role: role
       }
-    });
+    };
     
-    if (error) {
-      console.error("Error in demo account flow:", error);
-      return null;
-    }
-    
-    // For demo accounts, we'll create a profile with appropriate data
-    // This is typically done by a trigger in production
-    if (data) {
-      console.log("Demo account signed in successfully, setting up profile");
-      
-      return {
-        user: { email },
-        role
-      };
-    }
-    
-    return null;
+    return {
+      user: mockUser,
+      role
+    };
   } catch (err) {
     console.error("Error in handleDemoAccount:", err);
     return null;

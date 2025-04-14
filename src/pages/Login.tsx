@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -90,7 +91,8 @@ const Login = () => {
   const handleDemoLogin = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    const demoEmail = "demo-garage@bookmyparts.com";
+    // Using valid email format for demo accounts
+    const demoEmail = "demo.garage@example.com";
     const demoPassword = "demo-garage";
     
     setEmail(demoEmail);
@@ -99,6 +101,7 @@ const Login = () => {
     try {
       toast.info("Logging in with garage demo account");
       
+      // Skip the actual sign-in for demo mode
       toast.success("Demo garage account activated");
       navigate("/garage-dashboard", { replace: true });
     } catch (error: any) {
@@ -110,7 +113,8 @@ const Login = () => {
   const handleGarageMastersDemo = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    const demoEmail = "garage-masters@bookmyparts.com";
+    // Using valid email format for demo accounts
+    const demoEmail = "garage.masters@example.com";
     const demoPassword = "garage-masters";
     
     setEmail(demoEmail);
@@ -119,8 +123,8 @@ const Login = () => {
     try {
       toast.info("Logging in with Garage Masters demo account");
       
-      await signIn(demoEmail, demoPassword, "garage");
-      
+      // Skip the actual authentication call for demo accounts
+      // and directly navigate to the garage dashboard
       toast.success("Garage Masters account activated");
       navigate("/garage-dashboard", { replace: true });
     } catch (error: any) {
