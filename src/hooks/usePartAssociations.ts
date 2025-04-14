@@ -38,10 +38,9 @@ export const usePartAssociations = (garageId: string) => {
           image_url,
           retailer_id,
           retailers(name),
-          parts_garages!inner(garage_id, installation_fee)
+          parts_garages(garage_id, installation_fee)
         `)
-        .eq('source_type', 'retailer')
-        .eq('parts_garages.garage_id', garageId);
+        .eq('source_type', 'retailer');
 
       if (error) {
         console.error("Error fetching retailer parts:", error.message);
@@ -60,6 +59,11 @@ export const usePartAssociations = (garageId: string) => {
       
       // Format the data to match our interface
       const formattedParts: RetailerPartWithAssociation[] = data.map(part => {
+        // Find if this part is associated with the current garage
+        const garageAssociation = part.parts_garages?.find(pg => pg.garage_id === garageId);
+        const isAssociated = !!garageAssociation;
+        const installationFee = garageAssociation?.installation_fee || 0;
+        
         return {
           part_id: part.id,
           part_name: part.name,
@@ -69,9 +73,9 @@ export const usePartAssociations = (garageId: string) => {
           part_image_url: part.image_url,
           retailer_id: part.retailer_id,
           retailer_name: part.retailers?.name || 'Unknown Retailer',
-          installation_fee: part.parts_garages?.installation_fee || 0,
-          is_associated: true, // If it's in parts_garages, it's associated
-          current_installation_fee: part.parts_garages?.installation_fee || 0
+          installation_fee: installationFee,
+          is_associated: isAssociated,
+          current_installation_fee: installationFee
         };
       });
 
