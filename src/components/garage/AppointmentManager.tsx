@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Calendar, 
@@ -278,7 +277,7 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
                         <User className="h-3 w-3 mr-1 text-gray-500" />
                         <span>{appointment.customer_name || "Unknown"}</span>
                       </div>
-                      {appointment.customer_phone && (
+                      {appointment.customer_phone && appointment.customer_phone !== "Not provided" && (
                         <div className="flex items-center text-xs text-gray-600 mt-1">
                           <Phone className="h-3 w-3 mr-1" />
                           <span>{appointment.customer_phone}</span>
@@ -358,13 +357,13 @@ const AppointmentManager: React.FC<AppointmentManagerProps> = ({ garageId }) => 
               <div>
                 <div className="text-sm text-gray-600">Customer</div>
                 <div className="font-medium">{selectedAppointment.customer_name || "Not specified"}</div>
-                {selectedAppointment.customer_email && (
+                {selectedAppointment.customer_email && selectedAppointment.customer_email !== "Not provided" && (
                   <div className="flex items-center text-sm text-gray-600 mt-1">
                     <Mail className="h-3 w-3 mr-1" />
                     <span>{selectedAppointment.customer_email}</span>
                   </div>
                 )}
-                {selectedAppointment.customer_phone && (
+                {selectedAppointment.customer_phone && selectedAppointment.customer_phone !== "Not provided" && (
                   <div className="flex items-center text-sm text-gray-600 mt-1">
                     <Phone className="h-3 w-3 mr-1" />
                     <span>{selectedAppointment.customer_phone}</span>

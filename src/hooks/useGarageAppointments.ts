@@ -86,7 +86,7 @@ export const useGarageAppointments = () => {
       // We'll use a separate query to fetch profile information for each user_id
       const userIds = appointmentsData.map(appointment => appointment.user_id);
       
-      // Fetch user profiles
+      // Fetch user profiles with explicit selection of firstName and lastName
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, firstName, lastName, phone, email')
@@ -114,12 +114,18 @@ export const useGarageAppointments = () => {
         console.log(`Processing appointment ${appointment.id}, vehicle data:`, vehicleData);
         console.log(`Processing appointment ${appointment.id}, profile data:`, profileData);
         
+        // Improved handling of customer name to use the firstName and lastName fields
+        let customerName = "Unknown Customer";
+        if (profileData?.firstName || profileData?.lastName) {
+          const firstName = profileData.firstName || '';
+          const lastName = profileData.lastName || '';
+          customerName = `${firstName} ${lastName}`.trim();
+        }
+        
         const formattedAppointment: Appointment = {
           ...appointment,
           vehicle: vehicleData,
-          customer_name: profileData?.firstName && profileData?.lastName 
-            ? `${profileData.firstName} ${profileData.lastName}` 
-            : "Unknown Customer",
+          customer_name: customerName,
           customer_phone: profileData?.phone || "Not provided",
           customer_email: profileData?.email || "Not provided"
         };
