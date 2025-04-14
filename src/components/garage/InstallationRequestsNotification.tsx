@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Bug, Wrench, AlertTriangle, UserPlus, DatabaseIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { RlsDebugHelper } from "./installation/RlsDebugHelper";
 
 export const InstallationRequestsNotification = () => {
-  // Get garage ID from the current user if available, otherwise use default
   const { user } = useAuth();
-  // Default garage ID - in a real app, this would come from context or props
   const [garageId, setGarageId] = useState("c64a9350-d34a-4903-b34c-16c0e4699a44");
   
-  // UI state
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<InstallationRequest | null>(null);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
@@ -40,7 +36,6 @@ export const InstallationRequestsNotification = () => {
   const [userGarageInfo, setUserGarageInfo] = useState<any>(null);
   const [isFixingAccess, setIsFixingAccess] = useState(false);
   
-  // Use the custom hook for data fetching and management
   const { 
     installationRequests, 
     isLoading, 
@@ -51,7 +46,6 @@ export const InstallationRequestsNotification = () => {
     scheduleInstallation
   } = useInstallationRequests(garageId);
 
-  // Fetch user's garage ID on mount
   useEffect(() => {
     const getUserGarageInfo = async () => {
       if (!user) return;
@@ -59,7 +53,6 @@ export const InstallationRequestsNotification = () => {
       try {
         console.log("Checking user profile for garage ID...");
         
-        // Get profile data to check for linked garage
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('garage_id')
@@ -81,7 +74,6 @@ export const InstallationRequestsNotification = () => {
           return;
         }
         
-        // Check user metadata as fallback
         if (user?.user_metadata?.garageId) {
           console.log("Found garage ID in user metadata:", user.user_metadata.garageId);
           setUserGarageInfo({
@@ -102,33 +94,28 @@ export const InstallationRequestsNotification = () => {
     getUserGarageInfo();
   }, [user]);
 
-  // Initial data load
   useEffect(() => {
     console.log("Initial fetch of installation requests for garage:", garageId);
     fetchInstallationRequests();
   }, [garageId]);
 
-  // Log any updates to installation requests
   useEffect(() => {
     console.log("Installation requests updated:", installationRequests);
     console.log("Current debug state:", debug);
   }, [installationRequests, debug]);
   
-  // Manual refresh handler
   const handleManualRefresh = () => {
     console.log("Manual refresh requested for garage:", garageId);
     toast.info("Refreshing installation requests...");
     fetchInstallationRequests();
   };
   
-  // Handle request click
   const handleRequestClick = (request: InstallationRequest) => {
     console.log("Request clicked:", request);
     setSelectedRequest(request);
     setContactDialogOpen(true);
   };
   
-  // Handle status update
   const handleStatusUpdate = async (status: string) => {
     if (!selectedRequest) return;
     
@@ -140,13 +127,11 @@ export const InstallationRequestsNotification = () => {
     }
   };
   
-  // Schedule appointment handler
   const handleScheduleAppointment = () => {
     if (!selectedRequest) return;
     setSchedulingDialogOpen(true);
   };
   
-  // Confirm schedule handler
   const handleConfirmSchedule = async () => {
     if (!selectedRequest || !selectedDate || !selectedTime) return;
     
@@ -164,7 +149,6 @@ export const InstallationRequestsNotification = () => {
     }
   };
   
-  // Fix garage access by linking profile to garage
   const handleFixGarageAccess = async () => {
     if (!user) {
       toast.error("You must be logged in to fix garage access");
@@ -174,7 +158,6 @@ export const InstallationRequestsNotification = () => {
     setIsFixingAccess(true);
     
     try {
-      // Update the user's profile to link it to this garage
       const { error } = await supabase
         .from('profiles')
         .update({ garage_id: garageId })
@@ -186,7 +169,6 @@ export const InstallationRequestsNotification = () => {
         return;
       }
       
-      // Force data refresh
       setUserGarageInfo({
         garageId: garageId,
         source: "profile (recently updated)"
@@ -194,7 +176,6 @@ export const InstallationRequestsNotification = () => {
       
       toast.success("Successfully linked your account to this garage");
       
-      // Re-fetch data
       fetchInstallationRequests();
       setAccessFixDialogOpen(false);
     } catch (error) {
@@ -205,49 +186,41 @@ export const InstallationRequestsNotification = () => {
     }
   };
   
-  // Available times for scheduling
   const availableTimes = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
     "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"
   ];
   
-  // Format time display
   const formatTimeDisplay = (time: string) => {
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? 'PM' : 'AM'}`;
   };
   
-  // Calculate unread requests
   const unreadRequests = installationRequests.filter(req => req.status === "new").length;
   
-  // Determine if we have an access issue
   const hasAccessIssue = debug.garageAccessCheck && !debug.garageAccessCheck.hasAccess;
   
   return (
     <>
-      {/* Garage ID Alert for debugging */}
       {hasAccessIssue && (
-        <Alert variant="destructive" className="mb-2">
-          <AlertTriangle className="h-4 w-4" />
-          <div className="flex flex-col">
-            <AlertTitle>Access Issue</AlertTitle>
-            <AlertDescription className="flex justify-between items-center">
-              <span>You don't have access to garage {garageId.substring(0, 8)}...</span>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-xs ml-2 whitespace-nowrap"
-                onClick={() => setAccessFixDialogOpen(true)}
-              >
-                <UserPlus className="h-3 w-3 mr-1" /> Fix Access
-              </Button>
-            </AlertDescription>
-          </div>
+        <Alert variant="destructive" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-sm flex flex-col">
+            <p className="font-medium">Access Issue Detected</p>
+            <p className="text-xs mt-1">Your account is not linked to this garage in the database. Fix this to view installation requests.</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="mt-2 text-xs bg-white border-yellow-200 text-yellow-700 hover:bg-yellow-100 w-full"
+              onClick={() => setAccessFixDialogOpen(true)}
+            >
+              <UserPlus className="h-3 w-3 mr-1" /> Link My Account to This Garage
+            </Button>
+          </AlertDescription>
         </Alert>
       )}
-    
-      {/* Main Dialog Trigger */}
+      
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogTrigger asChild>
           <Button variant="outline" size="icon" className="relative">
@@ -285,24 +258,6 @@ export const InstallationRequestsNotification = () => {
           </DialogHeader>
           
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            {hasAccessIssue && (
-              <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-200">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-sm flex flex-col">
-                  <p className="font-medium">Access Issue Detected</p>
-                  <p className="text-xs mt-1">Your account is not linked to this garage in the database. Fix this to view installation requests.</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="mt-2 text-xs bg-white border-yellow-200 text-yellow-700 hover:bg-yellow-100 w-full"
-                    onClick={() => setAccessFixDialogOpen(true)}
-                  >
-                    <UserPlus className="h-3 w-3 mr-1" /> Link My Account to This Garage
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
-          
             <RequestsList 
               installationRequests={installationRequests}
               isLoading={isLoading}
@@ -315,7 +270,6 @@ export const InstallationRequestsNotification = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Customer Contact Dialog */}
       <ContactDialog 
         open={contactDialogOpen}
         onOpenChange={setContactDialogOpen}
@@ -324,7 +278,6 @@ export const InstallationRequestsNotification = () => {
         onScheduleInstallation={handleScheduleAppointment}
       />
       
-      {/* Scheduling Dialog */}
       <SchedulingDialog 
         open={schedulingDialogOpen}
         onOpenChange={setSchedulingDialogOpen}
@@ -338,7 +291,6 @@ export const InstallationRequestsNotification = () => {
         formatTimeDisplay={formatTimeDisplay}
       />
       
-      {/* Debug Dialog */}
       <DebugDialog 
         open={debugDialogOpen}
         onOpenChange={setDebugDialogOpen}
@@ -346,7 +298,6 @@ export const InstallationRequestsNotification = () => {
         user={user}
       />
       
-      {/* Access Fix Dialog */}
       <Dialog open={accessFixDialogOpen} onOpenChange={setAccessFixDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
