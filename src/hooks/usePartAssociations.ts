@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,7 +24,7 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // Query using the SQL function created in the migration
+      // Use the RPC function we created earlier
       const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
         garage_id_param: garageId
       });
@@ -41,7 +40,7 @@ export const usePartAssociations = (garageId: string) => {
     } catch (error: any) {
       console.error("Error fetching retailer parts:", error.message);
       
-      // Alternative approach if RPC fails or doesn't exist yet
+      // Alternative approach if RPC fails
       return await fetchRetailerPartsAlternative();
     } finally {
       setIsLoading(false);

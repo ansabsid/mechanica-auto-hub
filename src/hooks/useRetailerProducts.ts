@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,7 +28,7 @@ interface InsertPartResponse {
 
 export const useRetailerProducts = (retailerId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<RetailerProduct[]>([]);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [availableRetailers, setAvailableRetailers] = useState<any[]>([]);

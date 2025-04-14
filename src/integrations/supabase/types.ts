@@ -532,6 +532,33 @@ export type Database = {
           },
         ]
       }
+      retailers: {
+        Row: {
+          area: string | null
+          created_at: string
+          id: string
+          location: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_slots: {
         Row: {
           created_at: string
@@ -741,6 +768,15 @@ export type Database = {
           user_name: string | null
           user_phone: string | null
           user_phone_profile: string | null
+        }[]
+      }
+      get_retailers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          location: string
+          area: string
         }[]
       }
       has_installation_request_access: {
