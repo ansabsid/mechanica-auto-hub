@@ -48,8 +48,7 @@ export const useAppointments = () => {
     }
   };
 
-  // Mock function to fetch available slots - in real app, this would fetch from the database
-  // based on the garage's availability
+  // Function to fetch available slots - using the mock function
   const fetchAvailableSlots = async (garageId: string, serviceType: string, date?: string) => {
     setIsLoading(true);
     
@@ -95,6 +94,7 @@ export const useAppointments = () => {
         serviceType,
         date,
         time,
+        undefined, // vehicleId (optional)
         notes
       );
       

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -224,11 +223,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log("[AUTH DEBUG] Profile lastName:", profile.lastName);
             console.log("[AUTH DEBUG] Profile phone:", profile.phone);
             
-            if (role === "garage") {
+            // Check for garage-specific fields in the profile type-safely
+            if (role === "garage" && profile.hasOwnProperty('garage_name')) {
               console.log("[AUTH DEBUG] Garage specific data:");
-              console.log("[AUTH DEBUG] Garage name:", profile.garage_name || "Not set");
-              console.log("[AUTH DEBUG] Garage location:", profile.garage_location || "Not set");
-              console.log("[AUTH DEBUG] Garage registration:", profile.garage_registration_number || "Not set");
+              console.log("[AUTH DEBUG] Garage name:", (profile as any).garage_name || "Not set");
+              console.log("[AUTH DEBUG] Garage location:", (profile as any).garage_location || "Not set");
+              console.log("[AUTH DEBUG] Garage registration:", (profile as any).garage_registration_number || "Not set");
             }
           }
         }, 1000);

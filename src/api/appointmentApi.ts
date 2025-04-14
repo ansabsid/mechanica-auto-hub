@@ -142,3 +142,80 @@ export const bookAppointmentApi = async (
     throw error;
   }
 };
+
+/**
+ * Cancels an existing appointment
+ * @param appointmentId The ID of the appointment to cancel
+ * @returns The updated appointment data
+ */
+export const cancelAppointmentApi = async (appointmentId: string) => {
+  try {
+    console.log("[APPOINTMENT DEBUG] Cancelling appointment:", appointmentId);
+    
+    const { data, error } = await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', appointmentId)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("[APPOINTMENT DEBUG] Error cancelling appointment:", error);
+      throw error;
+    }
+    
+    console.log("[APPOINTMENT DEBUG] Appointment cancelled successfully");
+    return data;
+  } catch (error: any) {
+    console.error("[APPOINTMENT DEBUG] Error cancelling appointment:", error.message);
+    throw error;
+  }
+};
+
+/**
+ * Mock function to fetch available slots for a garage
+ * This is a placeholder function that returns dummy data
+ * @param garageId The garage ID to fetch slots for
+ * @param date Optional date filter
+ * @returns Array of available appointment slots
+ */
+export const mockFetchAvailableSlots = (garageId: string, date?: string): AvailableSlot[] => {
+  console.log("[APPOINTMENT DEBUG] Mock fetching available slots for garage:", garageId);
+  if (date) {
+    console.log("[APPOINTMENT DEBUG] Filtering by date:", date);
+  }
+  
+  // Today's date for reference
+  const today = new Date();
+  
+  // Generate mock slots for the next 7 days
+  const slots: AvailableSlot[] = [];
+  
+  for (let i = 0; i < 7; i++) {
+    const slotDate = new Date(today);
+    slotDate.setDate(today.getDate() + i);
+    
+    // Format date as YYYY-MM-DD
+    const formattedDate = slotDate.toISOString().split('T')[0];
+    
+    // Skip if a specific date was requested and this isn't it
+    if (date && formattedDate !== date) continue;
+    
+    // Generate 3 slots per day (9am, 1pm, 5pm)
+    const times = ["09:00", "13:00", "17:00"];
+    
+    times.forEach(time => {
+      slots.push({
+        id: `mock-${formattedDate}-${time}`,
+        garage_id: garageId,
+        date: formattedDate,
+        time,
+        available: true,
+        service_type: "general_service"
+      });
+    });
+  }
+  
+  console.log("[APPOINTMENT DEBUG] Generated mock slots:", slots.length);
+  return slots;
+};
