@@ -387,6 +387,8 @@ export type Database = {
           model_id: number
           name: string
           price: number
+          retailer_id: string | null
+          source_type: string | null
           stock: number
           updated_at: string | null
           year: number
@@ -402,6 +404,8 @@ export type Database = {
           model_id: number
           name: string
           price: number
+          retailer_id?: string | null
+          source_type?: string | null
           stock?: number
           updated_at?: string | null
           year: number
@@ -417,6 +421,8 @@ export type Database = {
           model_id?: number
           name?: string
           price?: number
+          retailer_id?: string | null
+          source_type?: string | null
           stock?: number
           updated_at?: string | null
           year?: number
@@ -441,6 +447,13 @@ export type Database = {
             columns: ["model_id"]
             isOneToOne: false
             referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parts_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
             referencedColumns: ["id"]
           },
         ]
