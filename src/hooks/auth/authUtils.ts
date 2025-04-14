@@ -105,10 +105,10 @@ export const createUserProfile = async (
     }
     
     // Create profile data object with basic info
-    const profileData: any = {
+    const profileData = {
       id: userId,
       email: email,
-      role: role,
+      role: role, // Ensure role is set correctly
       phone: metadata?.fullPhone || (metadata?.countryCode && metadata?.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
       firstName: metadata?.firstName || null,
       lastName: metadata?.lastName || null,

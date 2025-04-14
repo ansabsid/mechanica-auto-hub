@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -191,8 +192,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("[AUTH DEBUG] User doesn't exist, proceeding with signup");
 
+      // Ensure role is correctly set in metadata
       const userMetadata = {
-        role: role,
+        role: role, // This ensures the role is explicitly set
         firstName: metadata.firstName || null,
         lastName: metadata.lastName || null,
         fullPhone: metadata.fullPhone || (metadata.countryCode && metadata.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
@@ -221,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("[AUTH DEBUG] Role from metadata:", data.user.user_metadata.role);
         console.log("[AUTH DEBUG] Now creating profile for user with role:", role);
         
+        // Make sure to pass the correct role explicitly here
         await createUserProfile(data.user.id, email, role, userMetadata);
         
         setTimeout(async () => {

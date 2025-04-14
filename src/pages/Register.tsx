@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -122,7 +121,8 @@ const Register = () => {
       }
 
       console.log("Submitting registration with metadata:", metadata);
-      
+      console.log("Role selected:", data.role);
+
       const result = await signUp(data.email, data.password, data.role, metadata);
       
       if (result && result.success) {
