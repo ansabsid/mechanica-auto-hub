@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +21,7 @@ interface UserMetadata {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null); // Added session state
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -45,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = currentSession?.user ?? null;
         
         console.log("Auth: Initial session user:", currentUser?.email || "No user");
-        setSession(currentSession); // Set the session
+        setSession(currentSession);
         setUser(currentUser);
         
         if (currentUser) {
@@ -77,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setIsLoading(false);
       
-      // Debug: Check profile data when user logs in
       if (session?.user) {
         checkUserProfile(session.user.id);
       }
@@ -97,8 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Using demo account login flow");
         const demoResult = await handleDemoAccount(email);
         
-        if (demoResult) {
-          setUser(demoResult.user);
+        if (demoResult?.user) {
+          setUser(demoResult.user as User);
           setUserRole(demoResult.role);
           setAuthChangeHandled(true);
           
@@ -152,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, role: "customer" | "garage", metadata: UserMetadata = {}) => {
     setIsLoading(true);
     try {
+      console.log("Starting signup process with metadata:", metadata);
+
       const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
         email,
         password: password + '_checkonly',
@@ -161,8 +161,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("An account with this email already exists. Please log in instead.");
       }
 
-      console.log("Creating new user with metadata:", metadata);
-
       const userMetadata = {
         role,
         firstName: metadata.firstName || null,
@@ -171,24 +169,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...metadata
       };
 
-      console.log("Prepared user metadata:", userMetadata);
+      console.log("Prepared user metadata for signup:", userMetadata);
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userMetadata // This metadata will be available in raw_user_meta_data
+          data: userMetadata
         }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (data.user) {
-        // Create the user profile explicitly since we can't rely solely on triggers
-        console.log("User created, now creating profile");
+        console.log("User created successfully, now creating profile");
         await createUserProfile(data.user.id, email, role, userMetadata);
+        
+        setTimeout(async () => {
+          const profile = await checkUserProfile(data.user!.id);
+          console.log("Profile check after creation:", profile);
+        }, 1000);
         
         toast({
           variant: "default",
@@ -202,12 +202,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return { success: false, message: "Failed to create account" };
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         variant: "destructive",
         title: "Registration failed",
         description: error.message || "An error occurred during registration",
       });
-      console.error("Error signing up:", error.message);
       throw error;
     } finally {
       setIsLoading(false);
