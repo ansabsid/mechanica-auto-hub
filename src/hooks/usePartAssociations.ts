@@ -28,51 +28,48 @@ export const usePartAssociations = (garageId: string) => {
     try {
       console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
       
-      // Using a direct query to parts with a join to retailers
-      const { data, error } = await supabase
+      // Using the standard query approach instead of RPC to avoid type errors
+      // First fetch parts with source_type='retailer'
+      const { data: partsData, error: partsError } = await supabase
         .from('parts')
-        .select(`
-          id,
-          name,
-          description,
-          price,
-          stock,
-          image_url,
-          retailer_id
-        `)
+        .select('id, name, description, price, stock, image_url, retailer_id, source_type')
         .eq('source_type', 'retailer');
 
-      if (error) {
-        console.error("Error fetching retailer parts:", error.message);
+      if (partsError) {
+        console.error("Error fetching retailer parts:", partsError.message);
         toast.error("Failed to load retailer parts");
         setRetailerParts([]);
         return [];
       }
 
-      console.log("Query result for retailer parts:", data);
-      
-      if (!data || !Array.isArray(data) || data.length === 0) {
+      if (!partsData || partsData.length === 0) {
+        console.log("No retailer parts found");
         setRetailerParts([]);
         return [];
       }
       
+      console.log(`Found ${partsData.length} retailer parts`);
+      
       // Get all part IDs to check for associations
-      const partIds = data.map(part => part.id);
+      const partIds = partsData.map(part => part.id);
       
       // Query to get retailer names separately
       const { data: retailersData, error: retailersError } = await supabase
         .from('retailers')
-        .select('*');
+        .select('id, name');
         
       if (retailersError) {
         console.error("Error fetching retailers:", retailersError);
+        toast.error("Failed to load retailers");
       }
       
       // Create retailer lookup map
-      const retailersMap = (retailersData || []).reduce((map, retailer) => {
-        map[retailer.id] = retailer.name;
-        return map;
-      }, {} as Record<string, string>);
+      const retailersMap: Record<string, string> = {};
+      if (retailersData) {
+        retailersData.forEach(retailer => {
+          retailersMap[retailer.id] = retailer.name;
+        });
+      }
       
       // Query to get existing associations
       const { data: associationsData, error: associationsError } = await supabase
@@ -83,15 +80,18 @@ export const usePartAssociations = (garageId: string) => {
         
       if (associationsError) {
         console.error("Error fetching part associations:", associationsError);
+        toast.error("Failed to load part associations");
       }
       
       // Create a map of part_id to installation_fee for quick lookup
-      const associationsMap = (associationsData || []).reduce((map, item) => {
-        map[item.part_id] = item.installation_fee;
-        return map;
-      }, {} as Record<number, number>);
+      const associationsMap: Record<number, number> = {};
+      if (associationsData) {
+        associationsData.forEach(item => {
+          associationsMap[item.part_id] = item.installation_fee;
+        });
+      }
       
-      const formattedParts: RetailerPartWithAssociation[] = data.map(part => {
+      const formattedParts: RetailerPartWithAssociation[] = partsData.map(part => {
         const isAssociated = part.id in associationsMap;
         const installationFee = isAssociated ? associationsMap[part.id] : 0;
         
