@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -74,11 +75,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setIsLoading(false);
       
       if (session?.user) {
-        checkUserProfile(session.user.id);
+        // Fetch user role after a slight delay to avoid race conditions
+        setTimeout(async () => {
+          const role = await fetchUserRole(session.user.id);
+          if (role) {
+            setUserRole(role);
+            console.log("Auth state change: User role set to:", role);
+          } else {
+            console.log("Auth state change: No role found for user");
+          }
+          
+          checkUserProfile(session.user.id);
+        }, 100);
+      } else {
+        setUserRole(null);
       }
+      
+      setIsLoading(false);
     });
 
     return () => {

@@ -1,24 +1,29 @@
 
 import { User } from "@supabase/supabase-js";
 
-export interface Profile {
-  id: string;
-  email: string;
-  role: "customer" | "garage";
-  created_at?: string;
-  updated_at?: string;
-  phone?: string;
+interface UserMetadata {
   firstName?: string;
   lastName?: string;
-  garage_id?: string;
+  fullPhone?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  garageName?: string;
+  garageLocation?: string;
+  garageRegistrationNumber?: string;
+  [key: string]: any;
 }
 
-export type AuthContextType = {
+interface SignUpResult {
+  success: boolean;
+  message?: string;
+}
+
+export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   userRole: "customer" | "garage" | null;
   signIn: (email: string, password: string, role: "customer" | "garage") => Promise<void>;
-  signUp: (email: string, password: string, role: "customer" | "garage", metadata?: any) => Promise<{ success: boolean; message: string; } | undefined>;
+  signUp: (email: string, password: string, role: "customer" | "garage", metadata?: UserMetadata) => Promise<SignUpResult | undefined>;
   signOut: () => Promise<void>;
-};
+}

@@ -25,13 +25,16 @@ const enhancedSupabase = supabase as unknown as EnhancedSupabaseClient;
  */
 export const fetchUserRole = async (userId: string): Promise<"customer" | "garage" | null> => {
   try {
+    console.log("Fetching role for user:", userId);
+    
     const { data, error } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, garage_id')
       .eq('id', userId)
       .single();
       
     if (data && !error) {
+      console.log("Found profile for user:", data);
       return data.role as "customer" | "garage";
     } else if (error) {
       console.error("Error fetching user profile:", error.message);

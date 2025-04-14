@@ -28,7 +28,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"customer" | "garage">("customer");
   const [error, setError] = useState<string | null>(null);
-  const { signIn, isLoading, isAuthenticated } = useAuth();
+  const { signIn, isLoading, isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -46,7 +46,12 @@ const Login = () => {
     
     if (isAuthenticated && !afterLogout) {
       console.log("User is authenticated, redirecting to:", from);
-      if (from.startsWith('/book-appointment/')) {
+      console.log("User role is:", userRole);
+      
+      // Navigate based on the user's role
+      if (userRole === "garage") {
+        navigate("/garage-dashboard", { replace: true });
+      } else if (from.startsWith('/book-appointment/')) {
         navigate(from, { 
           state: { 
             garageName,
@@ -58,7 +63,7 @@ const Login = () => {
         navigate(from, { replace: true });
       }
     }
-  }, [isAuthenticated, navigate, from, garageName, garageId, afterLogout, location.key]);
+  }, [isAuthenticated, navigate, from, garageName, garageId, afterLogout, location.key, userRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
