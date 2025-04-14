@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Bug, Wrench, AlertTriangle } from "lucide-react";
+import { Bell, Bug, Wrench, AlertTriangle, UserPlus, DatabaseIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,8 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useInstallationRequests, InstallationRequest } from "@/hooks/useInstallationRequests";
 import { useAuth } from "@/hooks/auth";
 import { ContactDialog } from "./installation/ContactDialog";
@@ -19,6 +20,7 @@ import { DebugDialog } from "./installation/DebugDialog";
 import { RequestsList } from "./installation/RequestsList";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { RlsDebugHelper } from "./installation/RlsDebugHelper";
 
 export const InstallationRequestsNotification = () => {
   // Get garage ID from the current user if available, otherwise use default
@@ -32,9 +34,11 @@ export const InstallationRequestsNotification = () => {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [schedulingDialogOpen, setSchedulingDialogOpen] = useState(false);
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
+  const [accessFixDialogOpen, setAccessFixDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
   const [userGarageInfo, setUserGarageInfo] = useState<any>(null);
+  const [isFixingAccess, setIsFixingAccess] = useState(false);
   
   // Use the custom hook for data fetching and management
   const { 
@@ -160,6 +164,47 @@ export const InstallationRequestsNotification = () => {
     }
   };
   
+  // Fix garage access by linking profile to garage
+  const handleFixGarageAccess = async () => {
+    if (!user) {
+      toast.error("You must be logged in to fix garage access");
+      return;
+    }
+    
+    setIsFixingAccess(true);
+    
+    try {
+      // Update the user's profile to link it to this garage
+      const { error } = await supabase
+        .from('profiles')
+        .update({ garage_id: garageId })
+        .eq('id', user.id);
+        
+      if (error) {
+        console.error("Error updating profile with garage ID:", error);
+        toast.error("Failed to link your account to this garage");
+        return;
+      }
+      
+      // Force data refresh
+      setUserGarageInfo({
+        garageId: garageId,
+        source: "profile (recently updated)"
+      });
+      
+      toast.success("Successfully linked your account to this garage");
+      
+      // Re-fetch data
+      fetchInstallationRequests();
+      setAccessFixDialogOpen(false);
+    } catch (error) {
+      console.error("Error in handleFixGarageAccess:", error);
+      toast.error("An error occurred while fixing garage access");
+    } finally {
+      setIsFixingAccess(false);
+    }
+  };
+  
   // Available times for scheduling
   const availableTimes = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -176,15 +221,29 @@ export const InstallationRequestsNotification = () => {
   // Calculate unread requests
   const unreadRequests = installationRequests.filter(req => req.status === "new").length;
   
+  // Determine if we have an access issue
+  const hasAccessIssue = debug.garageAccessCheck && !debug.garageAccessCheck.hasAccess;
+  
   return (
     <>
       {/* Garage ID Alert for debugging */}
-      {debug.garageAccessCheck && !debug.garageAccessCheck.hasAccess && (
+      {hasAccessIssue && (
         <Alert variant="destructive" className="mb-2">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Access issue: You don't have access to garage {garageId.substring(0, 8)}...
-          </AlertDescription>
+          <div className="flex flex-col">
+            <AlertTitle>Access Issue</AlertTitle>
+            <AlertDescription className="flex justify-between items-center">
+              <span>You don't have access to garage {garageId.substring(0, 8)}...</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-xs ml-2 whitespace-nowrap"
+                onClick={() => setAccessFixDialogOpen(true)}
+              >
+                <UserPlus className="h-3 w-3 mr-1" /> Fix Access
+              </Button>
+            </AlertDescription>
+          </div>
         </Alert>
       )}
     
@@ -226,6 +285,24 @@ export const InstallationRequestsNotification = () => {
           </DialogHeader>
           
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {hasAccessIssue && (
+              <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-sm flex flex-col">
+                  <p className="font-medium">Access Issue Detected</p>
+                  <p className="text-xs mt-1">Your account is not linked to this garage in the database. Fix this to view installation requests.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="mt-2 text-xs bg-white border-yellow-200 text-yellow-700 hover:bg-yellow-100 w-full"
+                    onClick={() => setAccessFixDialogOpen(true)}
+                  >
+                    <UserPlus className="h-3 w-3 mr-1" /> Link My Account to This Garage
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+          
             <RequestsList 
               installationRequests={installationRequests}
               isLoading={isLoading}
@@ -268,6 +345,49 @@ export const InstallationRequestsNotification = () => {
         debug={debug}
         user={user}
       />
+      
+      {/* Access Fix Dialog */}
+      <Dialog open={accessFixDialogOpen} onOpenChange={setAccessFixDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <DatabaseIcon className="mr-2 h-5 w-5" /> Fix Garage Access
+            </DialogTitle>
+            <DialogDescription>
+              Link your user account to this garage in the database to gain access to installation requests.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Your user account (ID: {user?.id?.substring(0, 8)}...) is not currently linked to garage ID: {garageId.substring(0, 8)}...
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">
+                This will update your user profile in the database to link it with this garage, granting you access to its installation requests.
+              </p>
+            </div>
+            
+            <RlsDebugHelper garageId={garageId} />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccessFixDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleFixGarageAccess}
+              disabled={isFixingAccess}
+            >
+              {isFixingAccess ? "Linking..." : "Link Account to Garage"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
