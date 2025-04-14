@@ -128,15 +128,29 @@ export const useRetailerProducts = (retailerId?: string) => {
 
   const fetchAvailableRetailers = async () => {
     try {
-      // Query the retailers table directly since it may be a new table
-      const { data, error } = await supabase
-        .from('retailers')
-        .select('id, name, location, area');
-        
-      if (error) throw error;
+      // Use a more direct SQL approach since the retailers table is new
+      const { data, error } = await supabase.rpc('get_retailers');
       
-      if (data && data.length > 0) {
-        console.log("Available retailers:", data);
+      if (error) {
+        console.error("RPC error (get_retailers):", error);
+        
+        // Fallback to direct table query if the RPC doesn't exist yet
+        const { data: directData, error: directError } = await supabase
+          .from('retailers')
+          .select('id, name, location, area');
+          
+        if (directError) {
+          console.error("Direct query error:", directError);
+          return [];
+        }
+        
+        if (directData && directData.length > 0) {
+          console.log("Available retailers (direct query):", directData);
+          setAvailableRetailers(directData);
+          return directData;
+        }
+      } else if (data && data.length > 0) {
+        console.log("Available retailers (RPC):", data);
         setAvailableRetailers(data);
         return data;
       }

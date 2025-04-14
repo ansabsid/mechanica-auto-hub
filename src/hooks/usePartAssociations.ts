@@ -25,65 +25,94 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // Use a direct SQL query instead of RPC since the function might not exist yet
-      const { data, error } = await supabase
-        .from('parts')
-        .select(`
-          id as part_id, 
-          name as part_name,
-          description as part_description,
-          price as part_price,
-          stock as part_stock,
-          image_url as part_image_url,
-          retailer_id,
-          retailers:retailer_id (name)
-        `)
-        .eq('source_type', 'retailer');
+      // Query using the SQL function created in the migration
+      const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
+        garage_id_param: garageId
+      });
 
       if (error) throw error;
 
       if (data) {
-        // Format data to match RetailerPartWithAssociation interface
-        const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
-          data.map(async (part) => {
-            // Check if this part is associated with the current garage
-            const { data: association, error: assocError } = await supabase
-              .from('parts_garages')
-              .select('installation_fee')
-              .eq('part_id', part.part_id)
-              .eq('garage_id', garageId)
-              .maybeSingle();
-
-            if (assocError) {
-              console.error("Error checking part association:", assocError);
-            }
-
-            return {
-              part_id: part.part_id,
-              part_name: part.part_name,
-              part_description: part.part_description,
-              part_price: part.part_price,
-              part_stock: part.part_stock,
-              part_image_url: part.part_image_url,
-              retailer_id: part.retailer_id,
-              retailer_name: part.retailers?.name || "Unknown Retailer",
-              current_installation_fee: association?.installation_fee || 0,
-              is_associated: !!association
-            };
-          })
-        );
-
-        console.log("Retailer parts with associations:", formattedParts);
-        setRetailerParts(formattedParts);
-        return formattedParts;
+        console.log("Retailer parts with associations:", data);
+        setRetailerParts(data as RetailerPartWithAssociation[]);
+        return data as RetailerPartWithAssociation[];
       }
       return [];
     } catch (error: any) {
       console.error("Error fetching retailer parts:", error.message);
-      toast.error("Failed to load retailer parts");
-      return [];
+      
+      // Alternative approach if RPC fails or doesn't exist yet
+      return await fetchRetailerPartsAlternative();
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // Alternative implementation if the RPC isn't available yet
+  const fetchRetailerPartsAlternative = async () => {
+    try {
+      console.log("Using alternative approach to fetch retailer parts");
+      
+      // First get all retailer parts
+      const { data: partsData, error: partsError } = await supabase
+        .from('parts')
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          stock,
+          image_url,
+          retailer_id,
+          retailers (name)
+        `)
+        .eq('source_type', 'retailer');
+
+      if (partsError) throw partsError;
+
+      if (!partsData || partsData.length === 0) {
+        setRetailerParts([]);
+        return [];
+      }
+
+      // Then check which ones are associated with this garage
+      const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
+        partsData.map(async (part) => {
+          // Check if this part is associated with the current garage
+          const { data: association, error: assocError } = await supabase
+            .from('parts_garages')
+            .select('installation_fee')
+            .eq('part_id', part.id)
+            .eq('garage_id', garageId)
+            .maybeSingle();
+
+          if (assocError) {
+            console.error("Error checking part association:", assocError);
+          }
+
+          return {
+            part_id: part.id,
+            part_name: part.name,
+            part_description: part.description,
+            part_price: part.price,
+            part_stock: part.stock,
+            part_image_url: part.image_url,
+            retailer_id: part.retailer_id,
+            retailer_name: part.retailers?.name || "Unknown Retailer",
+            current_installation_fee: association?.installation_fee || 0,
+            is_associated: !!association
+          };
+        })
+      );
+
+      console.log("Retailer parts (alternative method):", formattedParts);
+      setRetailerParts(formattedParts);
+      return formattedParts;
+    } catch (error: any) {
+      console.error("Error in alternative retailer parts fetch:", error.message);
+      toast.error("Failed to load retailer parts");
+      setRetailerParts([]);
+      return [];
     }
   };
 
