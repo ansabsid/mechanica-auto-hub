@@ -1,5 +1,5 @@
 
-import { Part } from "@/hooks/useCarParts";
+import { Part } from "@/hooks/car-parts/types";
 import { CartItem } from "@/types/cart.types";
 
 export interface Order {
@@ -22,6 +22,7 @@ export interface OrderItem {
   order_id: string;
   part_id: number;
   garage_id?: string;
+  retailer_id?: string; 
   quantity: number;
   price: number;
   created_at: string;
@@ -33,8 +34,14 @@ export interface OrderItem {
     name: string;
     description?: string;
     image_url?: string;
+    source_type?: 'garage' | 'retailer';
   };
   garage?: {
+    name: string;
+    location: string;
+    area?: string;
+  };
+  retailer?: {
     name: string;
     location: string;
     area?: string;
@@ -44,6 +51,7 @@ export interface OrderItem {
 export interface CreateOrderItem {
   part_id: number;
   garage_id: string | null;
+  retailer_id?: string | null;
   quantity: number;
   price: number;
   installation_fee?: number | null;
@@ -72,6 +80,7 @@ export interface OrphanedOrderItem {
   order_id: string;
   part_id: number;
   garage_id?: string;
+  retailer_id?: string;
   installation_status?: string;
   created_at: string;
   verified: boolean;

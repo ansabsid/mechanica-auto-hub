@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { useGarageProducts, GarageProduct } from "@/hooks/useGarageProducts";
@@ -14,8 +15,9 @@ import { GarageHeader } from "@/components/garage/dashboard/GarageHeader";
 import { DashboardTabs } from "@/components/garage/dashboard/DashboardTabs";
 import { InventoryTab } from "@/components/garage/dashboard/InventoryTab";
 import { GarageTab } from "@/components/garage/dashboard/GarageTab";
+import { RetailerPartsTab } from "@/components/garage/dashboard/RetailerPartsTab";
 import { EmptyTabContent } from "@/components/garage/dashboard/EmptyTabContent";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, ShoppingBag } from "lucide-react";
 import InstallationOrdersDebugger from "@/components/garage/InstallationOrdersDebugger";
 
 const dubaiAreas = [
@@ -343,6 +345,13 @@ const GarageDashboard = () => {
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
             isMobile={isMobile}
+            tabs={[
+              { id: "inventory", label: "My Inventory", icon: "package" },
+              { id: "retailer-parts", label: "Retailer Parts", icon: "shopping-bag" },
+              { id: "appointments", label: "Appointments", icon: "calendar" },
+              { id: "service-slots", label: "Service Slots", icon: "clock" },
+              { id: "garages", label: "Garage Details", icon: "settings" }
+            ]}
           >
             <TabsContent value="inventory">
               <InventoryTab 
@@ -369,6 +378,20 @@ const GarageDashboard = () => {
                 handleFileChange={handleFileChange}
                 filteredModels={filteredModels}
               />
+            </TabsContent>
+
+            <TabsContent value="retailer-parts">
+              {currentGarageId ? (
+                <RetailerPartsTab 
+                  currentGarageId={currentGarageId}
+                  isMobile={isMobile}
+                />
+              ) : (
+                <EmptyTabContent 
+                  Icon={ShoppingBag} 
+                  message="Please select a garage to view retailer parts" 
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="appointments">

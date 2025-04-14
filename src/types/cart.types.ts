@@ -8,6 +8,12 @@ export interface Garage {
   installationFee: number;
 }
 
+export interface Retailer {
+  id: string;
+  name: string;
+  location: string;
+}
+
 export interface InstallationOptions {
   installationRequired: boolean;
   garageId: string;

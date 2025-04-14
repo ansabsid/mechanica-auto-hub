@@ -21,6 +21,13 @@ export interface Garage {
   readonly area: string;
 }
 
+export interface Retailer {
+  readonly id: string;
+  readonly name: string;
+  readonly location: string;
+  readonly area: string;
+}
+
 export interface Part {
   readonly id: number;
   readonly name: string;
@@ -31,6 +38,8 @@ export interface Part {
   readonly model_id: number;
   readonly year: number;
   readonly garage_id: string | null;
+  readonly retailer_id: string | null;
+  readonly source_type: 'garage' | 'retailer' | null;
   readonly garages: {
     readonly name: string;
     readonly location: string;
