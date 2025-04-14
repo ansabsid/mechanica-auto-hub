@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -117,12 +116,10 @@ export const useInstallationRequests = (garageId: string) => {
     }
   };
 
-  // Function to directly check if order exists
   const verifyOrderExists = async (orderId: string) => {
     try {
       console.log(`Verifying order exists: ${orderId}`);
       
-      // First check if the order ID is valid
       if (!orderId || orderId.length < 10) {
         console.error(`Invalid order ID format: ${orderId}`);
         return {
@@ -191,21 +188,9 @@ export const useInstallationRequests = (garageId: string) => {
         setDebug(prev => ({ ...prev, authSession: sessionData }));
       }
       
-      // Using a simpler approach to avoid the ambiguous column reference issue
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
-        .select(`
-          id,
-          order_id,
-          garage_id,
-          quantity,
-          price,
-          installation_status,
-          scheduled_date,
-          scheduled_time,
-          installation_fee,
-          part_id
-        `)
+        .select('id, order_id, garage_id, quantity, price, installation_status, scheduled_date, scheduled_time, installation_fee, part_id')
         .eq('garage_id', garageId)
         .not('installation_status', 'is', null);
         
@@ -242,7 +227,6 @@ export const useInstallationRequests = (garageId: string) => {
       console.log("Order IDs to fetch:", orderIds);
       setDebug(prev => ({ ...prev, orderIds }));
       
-      // Verify each order exists before proceeding
       const orderVerificationResults = [];
       for (const orderId of orderIds) {
         const result = await verifyOrderExists(orderId);
@@ -347,7 +331,6 @@ export const useInstallationRequests = (garageId: string) => {
       
       const requests: InstallationRequest[] = await Promise.all(orderItemsData
         .map(async (item) => {
-          // Get order and verify it exists
           const order = orderMap.get(item.order_id);
           const orderVerification = orderVerificationResults.find(r => r.orderId === item.order_id);
           

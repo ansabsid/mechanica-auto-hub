@@ -40,6 +40,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     );
   }
 
+  // Add logging to help debug authentication and role information
+  console.log("MainLayout rendering with auth state:", { 
+    isAuthenticated, 
+    userRole, 
+    currentPath: location.pathname 
+  });
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />

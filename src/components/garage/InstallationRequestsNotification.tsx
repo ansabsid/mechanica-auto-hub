@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Bug, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +18,10 @@ import { DebugDialog } from "./installation/DebugDialog";
 import { RequestsList } from "./installation/RequestsList";
 
 export const InstallationRequestsNotification = () => {
+  // Get garage ID from the current user if available, otherwise use default
+  const { user } = useAuth();
   // Default garage ID - in a real app, this would come from context or props
-  const garageId = "c64a9350-d34a-4903-b34c-16c0e4699a44";
+  const [garageId, setGarageId] = useState("c64a9350-d34a-4903-b34c-16c0e4699a44");
   
   // UI state
   const [openDialog, setOpenDialog] = useState(false);
@@ -29,8 +31,6 @@ export const InstallationRequestsNotification = () => {
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
-  
-  const { user } = useAuth();
   
   // Use the custom hook for data fetching and management
   const { 
@@ -42,9 +42,22 @@ export const InstallationRequestsNotification = () => {
     updateInstallationStatus,
     scheduleInstallation
   } = useInstallationRequests(garageId);
+
+  // Log any updates to installation requests
+  useEffect(() => {
+    console.log("Installation requests updated:", installationRequests);
+    console.log("Current debug state:", debug);
+  }, [installationRequests, debug]);
+  
+  // Manual refresh handler
+  const handleManualRefresh = () => {
+    console.log("Manual refresh requested");
+    fetchInstallationRequests();
+  };
   
   // Handle request click
   const handleRequestClick = (request: InstallationRequest) => {
+    console.log("Request clicked:", request);
     setSelectedRequest(request);
     setContactDialogOpen(true);
   };
@@ -59,11 +72,6 @@ export const InstallationRequestsNotification = () => {
       setContactDialogOpen(false);
       setOpenDialog(false);
     }
-  };
-  
-  // Manual refresh handler
-  const handleManualRefresh = () => {
-    fetchInstallationRequests();
   };
   
   // Schedule appointment handler
