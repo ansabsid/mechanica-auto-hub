@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthContext from "./AuthContext";
 import { fetchUserRole, createUserProfile, isDemoAccount, handleDemoAccount } from "./authUtils";
 import { AuthContextType } from "./types";
+import { checkUserProfile } from "@/hooks/useProfileDebugger";
 
 interface UserMetadata {
   firstName?: string;
@@ -64,57 +65,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     getSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event);
-        
-        if (event === 'SIGNED_OUT') {
-          console.log("Setting user to null due to SIGNED_OUT event");
-          setUser(null);
-          setUserRole(null);
-          setAuthChangeHandled(false);
-          
-          toast({
-            title: "Logged out",
-            description: "You have been successfully logged out",
-          });
-          
-          return;
-        }
-        
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        
-        if (currentUser) {
-          try {
-            setTimeout(async () => {
-              const role = await fetchUserRole(currentUser.id);
-              
-              if (role) {
-                console.log("Setting user role in auth state change:", role);
-                setUserRole(role);
-                
-                if (event === 'SIGNED_IN' && !authChangeHandled) {
-                  setAuthChangeHandled(true);
-                  
-                  toast({
-                    title: "Login successful",
-                    description: `Welcome to Bookmyparts!`,
-                  });
-                }
-              }
-            }, 0);
-          } catch (err) {
-            console.error("Error in auth state change handler:", err);
-          }
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+      
+      // Debug: Check profile data when user logs in
+      if (session?.user) {
+        checkUserProfile(session.user.id);
       }
-    );
+    });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast, authChangeHandled]);
+  }, []);
 
   const signIn = async (email: string, password: string, role: "customer" | "garage") => {
     setIsLoading(true);
@@ -298,3 +265,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+export default AuthProvider;

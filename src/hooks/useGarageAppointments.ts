@@ -111,15 +111,23 @@ export const useGarageAppointments = () => {
         const vehicleData = appointment.vehicle;
         const profileData = profileMap.get(appointment.user_id);
         
+        console.log(`Processing appointment ${appointment.id}, user_id: ${appointment.user_id}`);
         console.log(`Processing appointment ${appointment.id}, vehicle data:`, vehicleData);
         console.log(`Processing appointment ${appointment.id}, profile data:`, profileData);
         
         // Improved handling of customer name to use the firstName and lastName fields
         let customerName = "Unknown Customer";
-        if (profileData?.firstName || profileData?.lastName) {
-          const firstName = profileData.firstName || '';
-          const lastName = profileData.lastName || '';
-          customerName = `${firstName} ${lastName}`.trim();
+        if (profileData) {
+          if (profileData.firstName || profileData.lastName) {
+            const firstName = profileData.firstName || '';
+            const lastName = profileData.lastName || '';
+            customerName = `${firstName} ${lastName}`.trim();
+            console.log(`Generated customer name: '${customerName}' from firstName: '${profileData.firstName}', lastName: '${profileData.lastName}'`);
+          } else {
+            console.log(`Profile found for user ${appointment.user_id} but firstName/lastName are empty`);
+          }
+        } else {
+          console.log(`No profile found for user ${appointment.user_id}`);
         }
         
         const formattedAppointment: Appointment = {
