@@ -13,8 +13,9 @@ export interface RetailerPartWithAssociation {
   part_image_url: string | null;
   retailer_id: string;
   retailer_name: string;
-  current_installation_fee: number;
+  installation_fee: number;
   is_associated: boolean;
+  current_installation_fee: number;
 }
 
 export const usePartAssociations = (garageId: string) => {
@@ -25,7 +26,9 @@ export const usePartAssociations = (garageId: string) => {
   const fetchRetailerParts = async () => {
     setIsLoading(true);
     try {
-      // Use a direct query instead of RPC function to avoid type issues
+      console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
+      
+      // Use a direct SQL query to avoid type issues
       const { data, error } = await supabase
         .from('parts')
         .select(`
@@ -50,32 +53,14 @@ export const usePartAssociations = (garageId: string) => {
 
       console.log("Direct query result for retailer parts:", data);
       
-      // Check which ones are associated with this garage
       if (!data || data.length === 0) {
         setRetailerParts([]);
         return [];
       }
       
-      // Define the part data type
-      type PartDataType = {
-        id: number;
-        name: string;
-        description: string | null;
-        price: number;
-        stock: number;
-        image_url: string | null;
-        retailer_id: string;
-        source_type: 'retailer';
-        retailers: {
-          name: string;
-        } | null;
-      };
-
-      // Safely cast data to the correct type
-      const typedData = data as unknown as PartDataType[];
-      
+      // Now check which parts are associated with this garage
       const formattedParts: RetailerPartWithAssociation[] = await Promise.all(
-        typedData.map(async (part) => {
+        data.map(async (part) => {
           // Check if this part is associated with the current garage
           const { data: association, error: assocError } = await supabase
             .from('parts_garages')
@@ -95,15 +80,16 @@ export const usePartAssociations = (garageId: string) => {
             part_price: part.price,
             part_stock: part.stock,
             part_image_url: part.image_url,
-            retailer_id: part.retailer_id,
+            retailer_id: part.retailer_id || "",
             retailer_name: part.retailers?.name || "Unknown Retailer",
-            current_installation_fee: association?.installation_fee || 0,
-            is_associated: !!association
+            installation_fee: association?.installation_fee || 0,
+            is_associated: !!association,
+            current_installation_fee: association?.installation_fee || 0
           };
         })
       );
 
-      console.log("Retailer parts (direct query):", formattedParts);
+      console.log("Formatted retailer parts:", formattedParts);
       setRetailerParts(formattedParts);
       return formattedParts;
     } catch (error: any) {
