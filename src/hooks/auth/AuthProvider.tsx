@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Prepare user metadata
       const userMetadata = {
-        role,
+        role: role, // Ensure role is explicitly set here
         firstName: metadata.firstName || null,
         lastName: metadata.lastName || null,
         fullPhone: metadata.fullPhone || (metadata.countryCode && metadata.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
@@ -204,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       console.log("[AUTH DEBUG] Prepared user metadata for signup:", JSON.stringify(userMetadata));
+      console.log("[AUTH DEBUG] Role being set in metadata:", role);
 
       // Create the user in Supabase Auth
       console.log("[AUTH DEBUG] Creating user account via supabase.auth.signUp");
@@ -222,7 +223,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         console.log("[AUTH DEBUG] User created successfully with ID:", data.user.id);
-        console.log("[AUTH DEBUG] Now creating profile for user");
+        console.log("[AUTH DEBUG] User metadata:", data.user.user_metadata);
+        console.log("[AUTH DEBUG] Role from metadata:", data.user.user_metadata.role);
+        console.log("[AUTH DEBUG] Now creating profile for user with role:", role);
         
         await createUserProfile(data.user.id, email, role, userMetadata);
         

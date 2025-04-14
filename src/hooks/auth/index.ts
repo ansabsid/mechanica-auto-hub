@@ -1,5 +1,5 @@
 
-import { AuthProvider } from "./AuthProvider";
+// This file serves as the entry point for auth-related hooks
 import { useAuth } from "./useAuth";
 
-export { AuthProvider, useAuth };
+export { useAuth };
