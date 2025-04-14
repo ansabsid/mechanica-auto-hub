@@ -213,6 +213,13 @@ export type Database = {
             foreignKeyName: "installation_request_garages_order_item_id_fkey"
             columns: ["order_item_id"]
             isOneToOne: false
+            referencedRelation: "installation_requests"
+            referencedColumns: ["order_item_id"]
+          },
+          {
+            foreignKeyName: "installation_request_garages_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
             referencedRelation: "order_items"
             referencedColumns: ["id"]
           },
@@ -712,8 +719,73 @@ export type Database = {
           },
         ]
       }
+      installation_requests: {
+        Row: {
+          garage_id: string | null
+          garage_name: string | null
+          installation_fee: number | null
+          installation_status: string | null
+          order_id: string | null
+          order_item_id: string | null
+          part_id: number | null
+          part_name: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+          user_phone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_garage_id_fkey"
+            columns: ["garage_id"]
+            isOneToOne: false
+            referencedRelation: "garages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "installation_request_details"
+            referencedColumns: ["part_id"]
+          },
+          {
+            foreignKeyName: "order_items_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      check_garage_and_installation_requests: {
+        Args: { garage_id_param: string }
+        Returns: {
+          garage_exists: boolean
+          garage_name: string
+          installation_requests_count: number
+          user_has_access: boolean
+          error_message: string
+        }[]
+      }
       debug_installation_request_access: {
         Args: { garage_id_param: string }
         Returns: {
@@ -736,6 +808,25 @@ export type Database = {
           customer_email: string
           customer_phone: string
           customer_source_info: string
+        }[]
+      }
+      get_garage_installation_requests: {
+        Args: { garage_id_param: string }
+        Returns: {
+          order_item_id: string
+          order_id: string
+          garage_id: string
+          garage_name: string
+          part_id: number
+          part_name: string
+          installation_status: string
+          installation_fee: number
+          scheduled_date: string
+          scheduled_time: string
+          user_id: string
+          user_name: string
+          user_email: string
+          user_phone: string
         }[]
       }
       get_garages_for_part: {

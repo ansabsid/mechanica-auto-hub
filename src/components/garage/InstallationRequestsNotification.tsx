@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Bug, Wrench } from "lucide-react";
+import { Bell, Bug, Wrench, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInstallationRequests, InstallationRequest } from "@/hooks/useInstallationRequests";
 import { useAuth } from "@/hooks/auth";
 import { ContactDialog } from "./installation/ContactDialog";
@@ -17,6 +18,7 @@ import { SchedulingDialog } from "./installation/SchedulingDialog";
 import { DebugDialog } from "./installation/DebugDialog";
 import { RequestsList } from "./installation/RequestsList";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const InstallationRequestsNotification = () => {
   // Get garage ID from the current user if available, otherwise use default
@@ -32,6 +34,7 @@ export const InstallationRequestsNotification = () => {
   const [debugDialogOpen, setDebugDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+  const [userGarageInfo, setUserGarageInfo] = useState<any>(null);
   
   // Use the custom hook for data fetching and management
   const { 
@@ -44,18 +47,61 @@ export const InstallationRequestsNotification = () => {
     scheduleInstallation
   } = useInstallationRequests(garageId);
 
+  // Fetch user's garage ID on mount
+  useEffect(() => {
+    const getUserGarageInfo = async () => {
+      if (!user) return;
+      
+      try {
+        console.log("Checking user profile for garage ID...");
+        
+        // Get profile data to check for linked garage
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('garage_id')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          return;
+        }
+        
+        if (profileData?.garage_id) {
+          console.log("Found garage ID in profile:", profileData.garage_id);
+          setUserGarageInfo({
+            garageId: profileData.garage_id,
+            source: "profile"
+          });
+          setGarageId(profileData.garage_id);
+          return;
+        }
+        
+        // Check user metadata as fallback
+        if (user?.user_metadata?.garageId) {
+          console.log("Found garage ID in user metadata:", user.user_metadata.garageId);
+          setUserGarageInfo({
+            garageId: user.user_metadata.garageId,
+            source: "metadata" 
+          });
+          setGarageId(user.user_metadata.garageId);
+          return;
+        }
+        
+        console.log("No garage ID found in profile or metadata, using default:", garageId);
+        
+      } catch (error) {
+        console.error("Error getting user garage info:", error);
+      }
+    };
+    
+    getUserGarageInfo();
+  }, [user]);
+
   // Initial data load
   useEffect(() => {
     console.log("Initial fetch of installation requests for garage:", garageId);
     fetchInstallationRequests();
-    // Let's also explicitly check if we're looking at the right garage
-    if (user?.user_metadata?.garageId) {
-      console.log("User has garage ID in metadata:", user.user_metadata.garageId);
-      if (user.user_metadata.garageId !== garageId) {
-        console.log("Updating garage ID from user metadata");
-        setGarageId(user.user_metadata.garageId);
-      }
-    }
   }, [garageId]);
 
   // Log any updates to installation requests
@@ -132,6 +178,16 @@ export const InstallationRequestsNotification = () => {
   
   return (
     <>
+      {/* Garage ID Alert for debugging */}
+      {debug.garageAccessCheck && !debug.garageAccessCheck.hasAccess && (
+        <Alert variant="destructive" className="mb-2">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Access issue: You don't have access to garage {garageId.substring(0, 8)}...
+          </AlertDescription>
+        </Alert>
+      )}
+    
       {/* Main Dialog Trigger */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogTrigger asChild>
@@ -161,6 +217,11 @@ export const InstallationRequestsNotification = () => {
             </DialogTitle>
             <DialogDescription>
               Customers who purchased parts with installation service
+              {userGarageInfo && (
+                <span className="block text-xs text-gray-500 mt-1">
+                  Garage ID: {userGarageInfo.garageId.substring(0, 8)}... (from {userGarageInfo.source})
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           
