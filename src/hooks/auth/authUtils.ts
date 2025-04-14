@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedSupabaseClient } from "./supabaseTypes";
 
@@ -46,13 +45,6 @@ export const fetchUserRole = async (userId: string): Promise<"customer" | "garag
   return null;
 };
 
-/**
- * Creates a profile for a user with a specific role
- * @param userId The UUID of the user to create a profile for
- * @param email The email address of the user
- * @param role The role to assign to the user
- * @param metadata Additional metadata for the user profile
- */
 export const createUserProfile = async (
   userId: string, 
   email: string, 
@@ -61,9 +53,9 @@ export const createUserProfile = async (
 ) => {
   try {
     console.log("Creating user profile with metadata:", metadata);
-    console.log("ROLE BEING SET:", role); // Add explicit logging
+    console.log("ROLE BEING SET:", role);
     
-    // Check if profile already exists to avoid duplicate errors
+    // Check if profile already exists
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id, role')
@@ -71,109 +63,19 @@ export const createUserProfile = async (
       .maybeSingle();
     
     if (existingProfile) {
-      console.log("Profile already exists for user:", userId, "with role:", existingProfile.role);
-      
-      // If the profile exists but with the wrong role, update it
-      if (existingProfile.role !== role) {
-        console.log("Updating existing profile role from", existingProfile.role, "to", role);
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            firstName: metadata?.firstName || null,
-            lastName: metadata?.lastName || null,
-            phone: metadata?.fullPhone || null,
-            role: role // Make sure to update the role
-          })
-          .eq('id', userId);
-          
-        if (updateError) {
-          console.error("Error updating existing profile:", updateError);
-        } else {
-          console.log("Successfully updated profile role to:", role);
-        }
-      } else {
-        // Update other metadata fields if needed
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            firstName: metadata?.firstName || null,
-            lastName: metadata?.lastName || null,
-            phone: metadata?.fullPhone || null,
-          })
-          .eq('id', userId);
-          
-        if (updateError) {
-          console.error("Error updating existing profile metadata:", updateError);
-        }
-      }
-      
-      return; // Profile already exists and was updated
+      console.log("Profile already exists for user:", userId);
+      return;
     }
     
-    // Create profile data object with basic info
-    const profileData: any = {
-      id: userId,
-      email: email,
-      role: role, // Ensure role is set correctly
-      phone: metadata?.fullPhone || (metadata?.countryCode && metadata?.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
-      firstName: metadata?.firstName || null,
-      lastName: metadata?.lastName || null,
-    };
-    
-    console.log("Creating new profile with role:", role);
-    console.log("Creating profile with data:", profileData);
-    
-    // Add garage-specific data if role is garage
-    if (role === "garage" && metadata) {
-      if (metadata.hasOwnProperty('garageName')) {
-        profileData.garage_name = metadata.garageName;
-      }
-      if (metadata.hasOwnProperty('garageLocation')) {
-        profileData.garage_location = metadata.garageLocation;
-      }
-      if (metadata.hasOwnProperty('garageRegistrationNumber')) {
-        profileData.garage_registration_number = metadata.garageRegistrationNumber;
-      }
-    }
-    
-    // Insert the profile data
-    const { data: profileResult, error: insertError } = await supabase
-      .from('profiles')
-      .insert(profileData);
-      
-    if (insertError) {
-      console.error("Error inserting profile:", insertError);
-      
-      // If RPC function exists, try using it as a fallback
-      try {
-        console.log("Trying RPC fallback with role:", role);
-        const { error: rpcError } = await enhancedSupabase.rpc('create_profile_for_user', {
-          user_id: userId,
-          user_email: email,
-          user_role: role
-        });
-        
-        if (rpcError) {
-          console.error("RPC fallback failed:", rpcError);
-        } else {
-          console.log("Profile created using RPC function with role:", role);
-        }
-      } catch (rpcErr) {
-        console.error("Error calling RPC function:", rpcErr);
-      }
-    } else {
-      console.log("Profile successfully created for user:", userId, "with role:", role);
-    }
-    
-    // If this is a garage owner, also create an entry in the garages table
-    if (role === "garage" && metadata?.garageName && metadata?.garageLocation) {
-      console.log("Creating garage entry for garage owner");
+    // If this is a garage owner, first create the garage entry
+    let garageId: string | null = null;
+    if (role === "garage") {
+      console.log("Creating new garage for garage owner");
       
       const garageData = {
-        name: metadata.garageName,
-        location: metadata.garageLocation,
-        area: metadata.garageLocation.split(',')[0]?.trim() || null, // Extract area from location if possible
+        name: metadata.garageName || 'New Garage',
+        location: metadata.garageLocation || 'Location pending',
+        area: metadata.garageLocation?.split(',')[0]?.trim() || null,
       };
       
       const { data: garageResult, error: garageError } = await supabase
@@ -184,26 +86,50 @@ export const createUserProfile = async (
         
       if (garageError) {
         console.error("Error creating garage entry:", garageError);
-      } else {
-        console.log("Garage entry created successfully:", garageResult);
-        
-        // Now link the garage ID to the user's profile
-        if (garageResult) {
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ garage_id: garageResult.id })
-            .eq('id', userId);
-            
-          if (updateError) {
-            console.error("Error linking garage to profile:", updateError);
-          } else {
-            console.log("Garage successfully linked to user profile");
-          }
-        }
+        throw garageError;
       }
+      
+      console.log("New garage created successfully:", garageResult);
+      garageId = garageResult.id;
     }
+    
+    // Create profile data object with basic info
+    const profileData: any = {
+      id: userId,
+      email: email,
+      role: role,
+      phone: metadata?.fullPhone || (metadata?.countryCode && metadata?.phoneNumber ? `${metadata.countryCode}${metadata.phoneNumber}` : null),
+      firstName: metadata?.firstName || null,
+      lastName: metadata?.lastName || null,
+      garage_id: garageId // Link the new garage ID to the profile
+    };
+    
+    console.log("Creating new profile with data:", profileData);
+    
+    // Insert the profile data
+    const { error: insertError } = await supabase
+      .from('profiles')
+      .insert(profileData);
+      
+    if (insertError) {
+      console.error("Error inserting profile:", insertError);
+      
+      // If the profile insertion fails, try to clean up the created garage
+      if (garageId) {
+        await supabase
+          .from('garages')
+          .delete()
+          .eq('id', garageId);
+      }
+      
+      throw insertError;
+    }
+    
+    console.log("Profile successfully created for user:", userId, "with role:", role);
+    
   } catch (err) {
     console.error("Error in createUserProfile:", err);
+    throw err;
   }
 };
 
