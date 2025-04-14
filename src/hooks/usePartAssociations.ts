@@ -27,10 +27,21 @@ export const usePartAssociations = (garageId: string) => {
     try {
       console.log(`Fetching retailer parts that garage ${garageId} can offer installation for`);
       
-      // Use the get_retailer_parts_for_garage RPC function to avoid complex joins and type issues
-      const { data, error } = await supabase.rpc('get_retailer_parts_for_garage', {
-        garage_id_param: garageId
-      });
+      // Since we can't use typed RPC call, use direct SQL query through the function API
+      const { data, error } = await supabase.from('parts')
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          stock,
+          image_url,
+          retailer_id,
+          retailers(name),
+          parts_garages!inner(garage_id, installation_fee)
+        `)
+        .eq('source_type', 'retailer')
+        .eq('parts_garages.garage_id', garageId);
 
       if (error) {
         console.error("Error fetching retailer parts:", error.message);
@@ -50,17 +61,17 @@ export const usePartAssociations = (garageId: string) => {
       // Format the data to match our interface
       const formattedParts: RetailerPartWithAssociation[] = data.map(part => {
         return {
-          part_id: part.part_id,
-          part_name: part.part_name,
-          part_description: part.part_description,
-          part_price: part.part_price,
-          part_stock: part.part_stock,
-          part_image_url: part.part_image_url,
+          part_id: part.id,
+          part_name: part.name,
+          part_description: part.description,
+          part_price: part.price,
+          part_stock: part.stock,
+          part_image_url: part.image_url,
           retailer_id: part.retailer_id,
-          retailer_name: part.retailer_name,
-          installation_fee: part.installation_fee,
-          is_associated: part.is_associated,
-          current_installation_fee: part.installation_fee
+          retailer_name: part.retailers?.name || 'Unknown Retailer',
+          installation_fee: part.parts_garages?.installation_fee || 0,
+          is_associated: true, // If it's in parts_garages, it's associated
+          current_installation_fee: part.parts_garages?.installation_fee || 0
         };
       });
 
