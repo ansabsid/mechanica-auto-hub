@@ -113,7 +113,7 @@ export const createUserProfile = async (
     }
     
     // Insert the profile data
-    const { error: insertError } = await supabase
+    const { data: profileResult, error: insertError } = await supabase
       .from('profiles')
       .insert(profileData);
       
@@ -138,6 +138,43 @@ export const createUserProfile = async (
       }
     } else {
       console.log("Profile successfully created for user:", userId);
+    }
+    
+    // If this is a garage owner, also create an entry in the garages table
+    if (role === "garage" && metadata?.garageName && metadata?.garageLocation) {
+      console.log("Creating garage entry for garage owner");
+      
+      const garageData = {
+        name: metadata.garageName,
+        location: metadata.garageLocation,
+        area: metadata.garageLocation.split(',')[0]?.trim() || null, // Extract area from location if possible
+      };
+      
+      const { data: garageResult, error: garageError } = await supabase
+        .from('garages')
+        .insert(garageData)
+        .select()
+        .single();
+        
+      if (garageError) {
+        console.error("Error creating garage entry:", garageError);
+      } else {
+        console.log("Garage entry created successfully:", garageResult);
+        
+        // Now link the garage ID to the user's profile
+        if (garageResult) {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ garage_id: garageResult.id })
+            .eq('id', userId);
+            
+          if (updateError) {
+            console.error("Error linking garage to profile:", updateError);
+          } else {
+            console.log("Garage successfully linked to user profile");
+          }
+        }
+      }
     }
   } catch (err) {
     console.error("Error in createUserProfile:", err);
