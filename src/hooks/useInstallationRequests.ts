@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ interface DebugData {
   customerDataFromOrders?: any;
   profileData?: any;
   orderLookupFailures?: any[];
+  rawQuery?: string;
 }
 
 export const useInstallationRequests = (garageId: string) => {
@@ -188,9 +190,26 @@ export const useInstallationRequests = (garageId: string) => {
         setDebug(prev => ({ ...prev, authSession: sessionData }));
       }
       
+      // Create an explicit query string to avoid ambiguous column references
+      const query = `
+        id, 
+        order_id, 
+        quantity, 
+        price, 
+        installation_status, 
+        scheduled_date, 
+        scheduled_time, 
+        installation_fee, 
+        part_id, 
+        garage_id
+      `;
+      
+      console.log("Using query:", query);
+      setDebug(prev => ({ ...prev, rawQuery: query }));
+      
       const { data: orderItemsData, error: orderItemsError } = await supabase
         .from('order_items')
-        .select('id, order_id, garage_id, quantity, price, installation_status, scheduled_date, scheduled_time, installation_fee, part_id')
+        .select(query)
         .eq('garage_id', garageId)
         .not('installation_status', 'is', null);
         

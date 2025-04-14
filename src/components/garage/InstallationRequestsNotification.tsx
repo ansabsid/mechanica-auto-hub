@@ -16,6 +16,7 @@ import { ContactDialog } from "./installation/ContactDialog";
 import { SchedulingDialog } from "./installation/SchedulingDialog";
 import { DebugDialog } from "./installation/DebugDialog";
 import { RequestsList } from "./installation/RequestsList";
+import { toast } from "sonner";
 
 export const InstallationRequestsNotification = () => {
   // Get garage ID from the current user if available, otherwise use default
@@ -43,6 +44,20 @@ export const InstallationRequestsNotification = () => {
     scheduleInstallation
   } = useInstallationRequests(garageId);
 
+  // Initial data load
+  useEffect(() => {
+    console.log("Initial fetch of installation requests for garage:", garageId);
+    fetchInstallationRequests();
+    // Let's also explicitly check if we're looking at the right garage
+    if (user?.user_metadata?.garageId) {
+      console.log("User has garage ID in metadata:", user.user_metadata.garageId);
+      if (user.user_metadata.garageId !== garageId) {
+        console.log("Updating garage ID from user metadata");
+        setGarageId(user.user_metadata.garageId);
+      }
+    }
+  }, [garageId]);
+
   // Log any updates to installation requests
   useEffect(() => {
     console.log("Installation requests updated:", installationRequests);
@@ -51,7 +66,8 @@ export const InstallationRequestsNotification = () => {
   
   // Manual refresh handler
   const handleManualRefresh = () => {
-    console.log("Manual refresh requested");
+    console.log("Manual refresh requested for garage:", garageId);
+    toast.info("Refreshing installation requests...");
     fetchInstallationRequests();
   };
   
