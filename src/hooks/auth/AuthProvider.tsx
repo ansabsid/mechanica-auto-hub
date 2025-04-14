@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, ReactNode } from "react";
-import { User } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AuthContext from "./AuthContext";
@@ -21,6 +22,7 @@ interface UserMetadata {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null); // Added session state
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<"customer" | "garage" | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -39,8 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         
-        const currentUser = data.session?.user ?? null;
+        const currentSession = data.session;
+        const currentUser = currentSession?.user ?? null;
+        
         console.log("Auth: Initial session user:", currentUser?.email || "No user");
+        setSession(currentSession); // Set the session
         setUser(currentUser);
         
         if (currentUser) {
