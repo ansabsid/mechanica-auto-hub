@@ -1,10 +1,17 @@
-
 export interface Slide {
   title: string;
   bgColor: string;
 }
 
 export const slideData: Slide[] = [
+  {
+    title: "Introduction",
+    bgColor: "bg-gradient-to-br from-gray-50 to-blue-50"
+  },
+  {
+    title: "Product Demo",
+    bgColor: "bg-gradient-to-br from-gray-50 to-blue-50"
+  },
   {
     title: "BookMyParts",
     bgColor: "bg-gradient-to-br from-blue-50 to-indigo-100"

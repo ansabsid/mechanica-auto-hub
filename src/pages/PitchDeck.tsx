@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { slideData } from "@/components/pitch-deck/SlideData";
 import SlideContainer from "@/components/pitch-deck/SlideContainer";
@@ -8,8 +7,8 @@ import { useCapacitor } from "@/hooks/useCapacitor";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   IntroSlide,
+  VideoSlide,
   ProblemSlide,
-  SolutionSlide,
   MarketSlide,
   AdvantagesSlide,
   BusinessModelSlide,
@@ -96,9 +95,9 @@ const PitchDeck = () => {
       case 0:
         return <IntroSlide />;
       case 1:
-        return <ProblemSlide />;
+        return <VideoSlide />;
       case 2:
-        return <SolutionSlide />;
+        return <ProblemSlide />;
       case 3:
         return <MarketSlide />;
       case 4:

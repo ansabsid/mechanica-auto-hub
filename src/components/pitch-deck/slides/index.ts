@@ -1,4 +1,3 @@
-
 export { default as IntroSlide } from './IntroSlide';
 export { default as ProblemSlide } from './ProblemSlide';
 export { default as SolutionSlide } from './SolutionSlide';
@@ -9,3 +8,4 @@ export { default as RoadmapSlide } from './RoadmapSlide';
 export { default as TeamSlide } from './TeamSlide';
 export { default as InvestmentSlide } from './InvestmentSlide';
 export { default as ContactSlide } from './ContactSlide';
+export { default as VideoSlide } from './VideoSlide';
