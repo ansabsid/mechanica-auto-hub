@@ -24,7 +24,7 @@ const TeamSlide: React.FC = () => {
     },
     {
       name: "Asad Sayed",
-      role: "COO",
+      role: "Co-Founder & COO",
       initials: "AS",
       fact: "He treats the desert like his personal stunt arena — if there's a dune, he's probably launched his car off it! 🏜️🚗💥",
       description: "Operations expert with a background in supply chain management",
@@ -197,3 +197,4 @@ const TeamSlide: React.FC = () => {
 };
 
 export default TeamSlide;
+
