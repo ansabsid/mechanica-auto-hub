@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase, checkGarageAccess } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,9 +31,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         console.error("Direct RLS access error:", directAccessError);
         setErrorDetails(directAccessError.message);
         
-        toast({
-          variant: "destructive",
-          title: "Direct RLS Access Failed",
+        toast.error("Direct RLS Access Failed", {
           description: `Error: ${directAccessError.message}`
         });
       }
@@ -46,9 +45,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         setErrorDetails(prev => prev ? `${prev}\n\nCheck error: ${accessCheck.error}` : 
           `Check error: ${accessCheck.error}`);
         
-        toast({
-          variant: "destructive",
-          title: "Access Check Failed",
+        toast.error("Access Check Failed", {
           description: `Error: ${accessCheck.error || "Access denied"}`
         });
       }
@@ -85,29 +82,22 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       
       // Determine if user has access and provide appropriate toast
       if (fullResults.hasAccess) {
-        toast({
-          title: "RLS Test Passed",
+        toast.success("RLS Test Passed", {
           description: "You have access to installation requests for this garage."
         });
       } else if (directAccessError || accessCheck.error) {
-        toast({
-          variant: "destructive",
-          title: "RLS Test Failed with Errors",
+        toast.error("RLS Test Failed with Errors", {
           description: "Please check the error details below."
         });
       } else {
-        toast({
-          variant: "destructive",
-          title: "RLS Test Failed",
+        toast.error("RLS Test Failed", {
           description: "You don't have access to this garage's installation requests."
         });
       }
     } catch (error: any) {
       console.error("RLS debug error:", error);
       setErrorDetails(error.message);
-      toast({
-        variant: "destructive",
-        title: "RLS Debug Error",
+      toast.error("RLS Debug Error", {
         description: "An error occurred while testing RLS policies."
       });
     } finally {
@@ -123,9 +113,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast({
-          variant: "destructive",
-          title: "Not Authenticated",
+        toast.error("Not Authenticated", {
           description: "You need to be logged in to fix garage access."
         });
         return;
@@ -140,16 +128,13 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         
       if (error) {
         console.error("Error fixing garage access:", error);
-        toast({
-          variant: "destructive",
-          title: "Fix Failed",
+        toast.error("Fix Failed", {
           description: `Error: ${error.message}`
         });
         return;
       }
       
-      toast({
-        title: "Access Fixed",
+      toast.success("Access Fixed", {
         description: "Your user profile has been linked to this garage."
       });
       
@@ -158,9 +143,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       
     } catch (error: any) {
       console.error("Error fixing access:", error);
-      toast({
-        variant: "destructive",
-        title: "Fix Error",
+      toast.error("Fix Error", {
         description: `Error: ${error.message}`
       });
     } finally {
@@ -180,7 +163,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       </p>
       
       {errorDetails && (
-        <Alert variant="destructive" className="mb-3 py-2 text-xs">
+        <Alert className="mb-3 py-2 text-xs">
           <AlertTriangle className="h-3 w-3 mr-1" />
           <AlertDescription>
             <div className="font-semibold">Error Details:</div>
@@ -251,7 +234,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
           </div>
           
           {results.check && (
-            <Alert variant="default" className="mt-2 py-2 px-3 bg-blue-50 border-blue-200">
+            <Alert className="mt-2 py-2 px-3 bg-blue-50 border-blue-200">
               <AlertDescription className="text-xs">
                 <strong>Garage Exists:</strong> 
                 {results.check.garageName ? (
@@ -282,3 +265,4 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
     </div>
   );
 };
+
