@@ -3,17 +3,22 @@ import React, { useState } from 'react';
 import { supabase, checkGarageAccess } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, ShieldAlert, AlertTriangle, UserPlus, DatabaseIcon } from "lucide-react";
+import { Loader2, ShieldAlert, AlertTriangle, UserPlus, DatabaseIcon, LogIn } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/auth";
 
 interface RlsDebugHelperProps {
   garageId: string;
 }
 
 export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
+  const { user, signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [loginEmail, setLoginEmail] = useState<string>("");
+  const [loginPassword, setLoginPassword] = useState<string>("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const runRlsTest = async () => {
     setLoading(true);
@@ -150,6 +155,44 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
       setLoading(false);
     }
   };
+
+  const handleQuickLogin = async () => {
+    if (!loginEmail || !loginPassword) {
+      toast.error("Missing Login Details", {
+        description: "Please enter both email and password"
+      });
+      return;
+    }
+    
+    try {
+      setIsLoggingIn(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword
+      });
+      
+      if (error) {
+        toast.error("Login Failed", {
+          description: error.message
+        });
+        return;
+      }
+      
+      toast.success("Login Successful", {
+        description: "You've been logged in successfully"
+      });
+      
+      // Re-run RLS test after login
+      await runRlsTest();
+      
+    } catch (error: any) {
+      toast.error("Login Error", {
+        description: error.message
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
   
   return (
     <div className="mt-4 p-3 border border-yellow-200 rounded-md bg-yellow-50">
@@ -170,6 +213,54 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
             <pre className="whitespace-pre-wrap text-xs mt-1">{errorDetails}</pre>
           </AlertDescription>
         </Alert>
+      )}
+      
+      {!user && (
+        <div className="mb-3 p-2 border border-orange-200 rounded bg-orange-50">
+          <div className="flex items-center mb-1">
+            <LogIn className="h-3 w-3 mr-1 text-orange-600" />
+            <div className="text-xs font-medium text-orange-800">Authentication Required</div>
+          </div>
+          <p className="text-xs text-orange-700 mb-2">
+            You need to be logged in to test RLS access and fix permissions.
+          </p>
+          
+          <div className="grid gap-2">
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full px-2 py-1 text-xs rounded border"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full px-2 py-1 text-xs rounded border"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+            />
+            <Button 
+              variant="outline"
+              size="sm"
+              className="text-xs bg-white border-orange-300 text-orange-700 hover:bg-orange-100"
+              onClick={handleQuickLogin}
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-3 w-3 mr-2" />
+                  Quick Login
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       )}
       
       <div className="flex gap-2">
@@ -195,7 +286,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
           variant="outline"
           className="flex-1 text-xs bg-white border-green-300 text-green-700 hover:bg-green-100"
           onClick={fixUserGarageAccess}
-          disabled={loading}
+          disabled={loading || !user}
         >
           <UserPlus className="h-3 w-3 mr-2" />
           Fix Access
