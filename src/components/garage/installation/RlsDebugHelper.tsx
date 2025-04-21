@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkGarageAccess } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ShieldAlert, AlertTriangle, UserPlus, DatabaseIcon } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface RlsDebugHelperProps {
   garageId: string;
@@ -38,37 +37,19 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         });
       }
       
-      // Test our diagnostic function
-      console.log(`Testing debug_installation_request_access for garage ID: ${garageId}`);
-      const { data: diagData, error: diagError } = await supabase
-        .rpc('debug_installation_request_access', { garage_id_param: garageId });
-        
-      if (diagError) {
-        console.error("Diagnostic function error:", diagError);
-        setErrorDetails(prev => prev ? `${prev}\n\nDiagnostic error: ${diagError.message}` : 
-          `Diagnostic error: ${diagError.message}`);
-        
-        toast({
-          variant: "destructive",
-          title: "Diagnostic Function Failed",
-          description: `Error: ${diagError.message}`
-        });
-      }
-      
       // Test the comprehensive check function
       console.log(`Testing check_garage_and_installation_requests for garage ID: ${garageId}`);
-      const { data: checkData, error: checkError } = await supabase
-        .rpc('check_garage_and_installation_requests', { garage_id_param: garageId });
+      const accessCheck = await checkGarageAccess(garageId);
         
-      if (checkError) {
-        console.error("Check function error:", checkError);
-        setErrorDetails(prev => prev ? `${prev}\n\nCheck error: ${checkError.message}` : 
-          `Check error: ${checkError.message}`);
+      if (!accessCheck.hasAccess) {
+        console.error("Check function error:", accessCheck.error);
+        setErrorDetails(prev => prev ? `${prev}\n\nCheck error: ${accessCheck.error}` : 
+          `Check error: ${accessCheck.error}`);
         
         toast({
           variant: "destructive",
-          title: "Check Function Failed",
-          description: `Error: ${checkError.message}`
+          title: "Access Check Failed",
+          description: `Error: ${accessCheck.error || "Access denied"}`
         });
       }
       
@@ -91,10 +72,13 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
           success: !directAccessError,
           error: directAccessError ? directAccessError.message : null
         },
-        diagnostics: diagData ? diagData[0] : null, 
-        check: checkData ? checkData[0] : null,
-        hasAccess: (checkData && checkData[0]?.user_has_access) || 
-                  (diagData && diagData[0]?.has_access) || false
+        check: {
+          hasAccess: accessCheck.hasAccess,
+          garageName: accessCheck.garageName,
+          requestsCount: accessCheck.requestsCount,
+          error: accessCheck.error
+        },
+        hasAccess: accessCheck.hasAccess
       };
       
       setResults(fullResults);
@@ -105,7 +89,7 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
           title: "RLS Test Passed",
           description: "You have access to installation requests for this garage."
         });
-      } else if (directAccessError || diagError || checkError) {
+      } else if (directAccessError || accessCheck.error) {
         toast({
           variant: "destructive",
           title: "RLS Test Failed with Errors",
@@ -263,11 +247,6 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
               )}
               <br />
               <strong>Target Garage:</strong> {garageId.substring(0, 8)}...
-              <br />
-              <strong>Diagnostic:</strong> {results.diagnostics?.has_access ? 
-                <span className="text-green-600">Pass</span> : 
-                <span className="text-red-600">Fail</span>
-              }
             </div>
           </div>
           
@@ -275,54 +254,24 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
             <Alert variant="default" className="mt-2 py-2 px-3 bg-blue-50 border-blue-200">
               <AlertDescription className="text-xs">
                 <strong>Garage Exists:</strong> 
-                {results.check.garage_exists ? (
-                  <span className="text-green-600"> Yes - {results.check.garage_name}</span>
+                {results.check.garageName ? (
+                  <span className="text-green-600"> Yes - {results.check.garageName}</span>
                 ) : (
                   <span className="text-red-600"> No</span>
                 )}
                 <br />
-                <strong>Installation Count:</strong> {results.check.installation_requests_count}
+                <strong>Installation Count:</strong> {results.check.requestsCount || 0}
                 <br />
                 <strong>User Has Access:</strong> 
-                {results.check.user_has_access ? (
+                {results.check.hasAccess ? (
                   <span className="text-green-600"> Yes</span>
                 ) : (
                   <span className="text-red-600"> No</span>
                 )}
-                {results.check.error_message && (
+                {results.check.error && (
                   <>
                     <br />
-                    <strong>Error:</strong> <span className="text-red-600">{results.check.error_message}</span>
-                  </>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {results.diagnostics && (
-            <Alert variant="default" className="mt-2 py-2 px-3 bg-blue-50 border-blue-200">
-              <AlertDescription className="text-xs">
-                <strong>Has Access:</strong> 
-                {results.diagnostics.has_access ? (
-                  <span className="text-green-600"> Yes</span>
-                ) : (
-                  <span className="text-red-600"> No</span>
-                )}
-                <br />
-                <strong>Is Staff:</strong> 
-                {results.diagnostics.is_staff ? (
-                  <span className="text-green-600"> Yes</span>
-                ) : (
-                  <span className="text-red-600"> No</span>
-                )}
-                <br />
-                <strong>User Garage:</strong> {results.diagnostics.user_garage_id?.substring(0, 8) || 'Not set'}...
-                <br />
-                <strong>Request Garage:</strong> {results.diagnostics.request_garage_id?.substring(0, 8) || 'Not set'}...
-                {results.diagnostics.error_message && (
-                  <>
-                    <br />
-                    <strong>Error:</strong> <span className="text-red-600">{results.diagnostics.error_message}</span>
+                    <strong>Error:</strong> <span className="text-red-600">{results.check.error}</span>
                   </>
                 )}
               </AlertDescription>

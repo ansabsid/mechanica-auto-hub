@@ -20,6 +20,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Helper function to check if a user has access to a garage
 export const checkGarageAccess = async (garageId: string) => {
   try {
+    // Use the check_garage_and_installation_requests RPC function
+    // This is a more reliable way to check access that works with the existing is_garage_staff function
     const { data, error } = await supabase
       .rpc('check_garage_and_installation_requests', { garage_id_param: garageId });
       

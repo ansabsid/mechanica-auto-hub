@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, checkGarageAccess } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -64,42 +63,6 @@ export const useInstallationRequests = (garageId: string) => {
   });
   const { toast } = useToast();
 
-  // Function to check garage access and connection
-  const checkGarageAccess = async (garageId: string) => {
-    try {
-      console.log(`Checking garage access for: ${garageId}`);
-      
-      const { data, error } = await supabase
-        .rpc('check_garage_and_installation_requests', { garage_id_param: garageId });
-        
-      if (error) {
-        console.error("Garage access check error:", error);
-        return {
-          hasAccess: false,
-          error: error.message,
-          details: null
-        };
-      }
-      
-      console.log("Garage access check result:", data);
-      return {
-        hasAccess: data[0]?.user_has_access || false,
-        garageExists: data[0]?.garage_exists || false,
-        garageName: data[0]?.garage_name,
-        requestsCount: data[0]?.installation_requests_count,
-        error: data[0]?.error_message,
-        details: data
-      };
-    } catch (error: any) {
-      console.error("Exception in checkGarageAccess:", error);
-      return {
-        hasAccess: false,
-        error: error.message || 'Unknown error',
-        details: error
-      };
-    }
-  };
-
   const fetchInstallationRequests = async () => {
     if (isRefreshing) return;
     
@@ -110,7 +73,6 @@ export const useInstallationRequests = (garageId: string) => {
       console.log("Fetching installation requests for garage:", garageId);
       setDebug(prev => ({ ...prev, garageId, fetchStarted: new Date().toISOString(), orderLookupFailures: [] }));
       
-      // Get current auth session
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error("Auth session error:", sessionError);
@@ -120,7 +82,6 @@ export const useInstallationRequests = (garageId: string) => {
         setDebug(prev => ({ ...prev, authSession: sessionData }));
       }
       
-      // First check garage access
       const accessCheck = await checkGarageAccess(garageId);
       setDebug(prev => ({ ...prev, garageAccessCheck: accessCheck }));
       
@@ -136,31 +97,6 @@ export const useInstallationRequests = (garageId: string) => {
         return;
       }
       
-      // First try the direct table access - this tests if RLS is working properly
-      const { data: directData, error: directError } = await supabase
-        .from('order_items')
-        .select('*')
-        .eq('garage_id', garageId)
-        .not('installation_status', 'is', null)
-        .limit(10);
-        
-      setDebug(prev => ({ 
-        ...prev, 
-        directTest: { 
-          data: directData, 
-          error: directError,
-          success: !directError && directData && directData.length > 0
-        } 
-      }));
-        
-      if (directError) {
-        console.error("Direct table access error:", directError);
-        // Continue to use the RPC function as a fallback
-      } else {
-        console.log("Direct table access success, found", directData?.length || 0, "items");
-      }
-      
-      // Use our database function to get installation requests
       const { data: requestsData, error } = await supabase.rpc(
         'get_garage_installation_requests',
         { garage_id_param: garageId }
@@ -194,9 +130,7 @@ export const useInstallationRequests = (garageId: string) => {
         return;
       }
       
-      // Map the response data to our InstallationRequest interface
       const mappedRequests: InstallationRequest[] = requestsData.map(item => {
-        // Get the order date (assuming orders table doesn't have it in our data)
         const orderDate = new Date().toISOString().split('T')[0];
         
         return {
@@ -207,7 +141,7 @@ export const useInstallationRequests = (garageId: string) => {
           part: item.part_name || `Part #${item.part_id}`,
           orderDate,
           status: item.installation_status || "new",
-          price: 0, // We don't have this in our view, could add if needed
+          price: 0,
           installationFee: Number(item.installation_fee) || 50,
           garageId: item.garage_id,
           orderId: item.order_id,
