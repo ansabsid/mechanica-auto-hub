@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, ShieldAlert, AlertTriangle } from "lucide-react";
+import { Loader2, ShieldAlert, AlertTriangle, UserPlus, DatabaseIcon } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface RlsDebugHelperProps {
@@ -20,29 +20,57 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
     setErrorDetails(null);
     
     try {
-      // Test direct RLS function first to diagnose any issues
-      const { data: rlsDebugData, error: rlsDebugError } = await supabase
-        .rpc('debug_installation_request_access', { garage_id_param: garageId });
+      // Test direct RLS access first
+      console.log(`Testing direct RLS access for garage ID: ${garageId}`);
+      const { data: directAccessData, error: directAccessError } = await supabase
+        .from('order_items')
+        .select('count(*)', { count: 'exact', head: true })
+        .eq('garage_id', garageId);
         
-      if (rlsDebugError) {
-        console.error("RLS debug function error:", rlsDebugError);
-        setErrorDetails(rlsDebugError.message);
+      if (directAccessError) {
+        console.error("Direct RLS access error:", directAccessError);
+        setErrorDetails(directAccessError.message);
         
         toast({
           variant: "destructive",
-          title: "RLS Test Failed",
-          description: `Error in RLS function: ${rlsDebugError.message}`
+          title: "Direct RLS Access Failed",
+          description: `Error: ${directAccessError.message}`
         });
-        
-        // Still continue with other tests
       }
       
-      // Test direct access to order_items
-      const { data: orderItemsData, error: orderItemsError } = await supabase
-        .from('order_items')
-        .select('id, order_id, garage_id')
-        .eq('garage_id', garageId)
-        .limit(1);
+      // Test our diagnostic function
+      console.log(`Testing debug_installation_request_access for garage ID: ${garageId}`);
+      const { data: diagData, error: diagError } = await supabase
+        .rpc('debug_installation_request_access', { garage_id_param: garageId });
+        
+      if (diagError) {
+        console.error("Diagnostic function error:", diagError);
+        setErrorDetails(prev => prev ? `${prev}\n\nDiagnostic error: ${diagError.message}` : 
+          `Diagnostic error: ${diagError.message}`);
+        
+        toast({
+          variant: "destructive",
+          title: "Diagnostic Function Failed",
+          description: `Error: ${diagError.message}`
+        });
+      }
+      
+      // Test the comprehensive check function
+      console.log(`Testing check_garage_and_installation_requests for garage ID: ${garageId}`);
+      const { data: checkData, error: checkError } = await supabase
+        .rpc('check_garage_and_installation_requests', { garage_id_param: garageId });
+        
+      if (checkError) {
+        console.error("Check function error:", checkError);
+        setErrorDetails(prev => prev ? `${prev}\n\nCheck error: ${checkError.message}` : 
+          `Check error: ${checkError.message}`);
+        
+        toast({
+          variant: "destructive",
+          title: "Check Function Failed",
+          description: `Error: ${checkError.message}`
+        });
+      }
       
       // Get current user and their profile
       const { data: { user } } = await supabase.auth.getUser();
@@ -52,78 +80,42 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         .eq('id', user?.id || '')
         .maybeSingle();
         
-      // Check if the user's garage_id matches the requested garage_id
-      const hasAccess = profileData?.garage_id === garageId;
-      const requestMatches = profileData?.garage_id === garageId;
-      
-      // Additional tests to check various RLS configurations
-      const { data: directTestData, error: directTestError } = await supabase
-        .from('garages')
-        .select('id, name')
-        .eq('id', garageId)
-        .single();
-        
-      // Test if is_garage_staff function works properly
-      const { data: isStaffData, error: isStaffError } = await supabase
-        .rpc('is_garage_staff', { garage_id: garageId });
-      
-      if (isStaffError) {
-        console.error("Staff function error:", isStaffError);
-        setErrorDetails(prev => prev ? `${prev}\n\nStaff function error: ${isStaffError.message}` : 
-          `Staff function error: ${isStaffError.message}`);
-      }
-      
-      // Build a comprehensive diagnostic result
-      const diagnosisResult = {
-        has_access: hasAccess,
-        user_id: user?.id,
-        user_garage_id: profileData?.garage_id,
-        user_role: profileData?.role,
-        request_matches: requestMatches,
-        is_staff_function: {
-          result: isStaffData,
-          error: isStaffError ? isStaffError.message : null
-        },
-        garage_data: {
-          exists: !!directTestData,
-          error: directTestError ? directTestError.message : null
-        }
-      };
-      
-      // If we have the RLS debug data, include it
+      // Prepare the comprehensive results
       const fullResults = {
-        orderItemsAccess: {
-          success: !orderItemsError,
-          count: orderItemsData?.length || 0,
-          error: orderItemsError
-        },
-        rlsDebug: rlsDebugData ? rlsDebugData[0] : diagnosisResult,
-        rlsDebugFunctionError: rlsDebugError ? rlsDebugError.message : null,
         user: {
           id: user?.id,
           email: user?.email
         },
-        profile: profileData
+        profile: profileData,
+        directAccess: {
+          success: !directAccessError,
+          error: directAccessError ? directAccessError.message : null
+        },
+        diagnostics: diagData ? diagData[0] : null, 
+        check: checkData ? checkData[0] : null,
+        hasAccess: (checkData && checkData[0]?.user_has_access) || 
+                  (diagData && diagData[0]?.has_access) || false
       };
       
       setResults(fullResults);
       
-      if (!orderItemsError && (orderItemsData?.length || 0) > 0) {
+      // Determine if user has access and provide appropriate toast
+      if (fullResults.hasAccess) {
         toast({
           title: "RLS Test Passed",
           description: "You have access to installation requests for this garage."
         });
-      } else if (orderItemsError) {
+      } else if (directAccessError || diagError || checkError) {
         toast({
           variant: "destructive",
-          title: "RLS Test Failed",
-          description: `Database error: ${orderItemsError.message}`
+          title: "RLS Test Failed with Errors",
+          description: "Please check the error details below."
         });
       } else {
         toast({
           variant: "destructive",
           title: "RLS Test Failed",
-          description: "You don't have access to installation requests for this garage."
+          description: "You don't have access to this garage's installation requests."
         });
       }
     } catch (error: any) {
@@ -133,6 +125,59 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         variant: "destructive",
         title: "RLS Debug Error",
         description: "An error occurred while testing RLS policies."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const fixUserGarageAccess = async () => {
+    try {
+      setLoading(true);
+      
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Not Authenticated",
+          description: "You need to be logged in to fix garage access."
+        });
+        return;
+      }
+      
+      // Update the user's profile to link them with this garage
+      console.log(`Linking user ${user.id} to garage ${garageId}`);
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ garage_id: garageId })
+        .eq('id', user.id);
+        
+      if (error) {
+        console.error("Error fixing garage access:", error);
+        toast({
+          variant: "destructive",
+          title: "Fix Failed",
+          description: `Error: ${error.message}`
+        });
+        return;
+      }
+      
+      toast({
+        title: "Access Fixed",
+        description: "Your user profile has been linked to this garage."
+      });
+      
+      // Re-run the RLS test to verify the fix worked
+      await runRlsTest();
+      
+    } catch (error: any) {
+      console.error("Error fixing access:", error);
+      toast({
+        variant: "destructive",
+        title: "Fix Error",
+        description: `Error: ${error.message}`
       });
     } finally {
       setLoading(false);
@@ -160,22 +205,35 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
         </Alert>
       )}
       
-      <Button 
-        size="sm"
-        variant="outline"
-        className="w-full text-xs bg-white border-yellow-300 text-yellow-700 hover:bg-yellow-100"
-        onClick={runRlsTest}
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-            Testing RLS Policies...
-          </>
-        ) : (
-          <>Test RLS Access</>
-        )}
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          size="sm"
+          variant="outline"
+          className="flex-1 text-xs bg-white border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+          onClick={runRlsTest}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+              Testing...
+            </>
+          ) : (
+            <>Test RLS Access</>
+          )}
+        </Button>
+        
+        <Button 
+          size="sm"
+          variant="outline"
+          className="flex-1 text-xs bg-white border-green-300 text-green-700 hover:bg-green-100"
+          onClick={fixUserGarageAccess}
+          disabled={loading}
+        >
+          <UserPlus className="h-3 w-3 mr-2" />
+          Fix Access
+        </Button>
+      </div>
       
       {results && (
         <div className="mt-3 text-xs">
@@ -191,63 +249,82 @@ export const RlsDebugHelper: React.FC<RlsDebugHelperProps> = ({ garageId }) => {
             </div>
             <div className="p-2 rounded bg-white">
               <strong>Access Status:</strong> 
-              {results.orderItemsAccess.success ? (
+              {results.hasAccess ? (
                 <span className="text-green-600">Pass</span>
               ) : (
                 <span className="text-red-600">Fail</span>
               )}
               <br />
-              <strong>Items Found:</strong> {results.orderItemsAccess.count}
+              <strong>Direct Access:</strong>
+              {results.directAccess.success ? (
+                <span className="text-green-600">Pass</span>
+              ) : (
+                <span className="text-red-600">Fail</span>
+              )}
               <br />
               <strong>Target Garage:</strong> {garageId.substring(0, 8)}...
               <br />
-              <strong>Staff Check:</strong> {results.rlsDebug?.hasGarageAccess === true || 
-                results.rlsDebug?.is_staff_function?.result === true ? 
-                <span className="text-green-600">Yes</span> : 
-                <span className="text-red-600">No</span>
+              <strong>Diagnostic:</strong> {results.diagnostics?.has_access ? 
+                <span className="text-green-600">Pass</span> : 
+                <span className="text-red-600">Fail</span>
               }
             </div>
           </div>
           
-          {results.rlsDebug && (
+          {results.check && (
             <Alert variant="default" className="mt-2 py-2 px-3 bg-blue-50 border-blue-200">
               <AlertDescription className="text-xs">
-                <strong>RLS Diagnosis:</strong> 
-                {results.rlsDebug.has_access ? (
-                  <span className="text-green-600"> You have access</span>
+                <strong>Garage Exists:</strong> 
+                {results.check.garage_exists ? (
+                  <span className="text-green-600"> Yes - {results.check.garage_name}</span>
                 ) : (
-                  <span className="text-red-600"> Access denied</span>
+                  <span className="text-red-600"> No</span>
                 )}
                 <br />
-                <strong>User-Garage Match:</strong> 
-                {results.rlsDebug.request_matches ? (
+                <strong>Installation Count:</strong> {results.check.installation_requests_count}
+                <br />
+                <strong>User Has Access:</strong> 
+                {results.check.user_has_access ? (
                   <span className="text-green-600"> Yes</span>
                 ) : (
                   <span className="text-red-600"> No</span>
                 )}
-                {results.rlsDebug.rlsError && (
+                {results.check.error_message && (
                   <>
                     <br />
-                    <strong>RLS Error:</strong> 
-                    <span className="text-red-600"> {results.rlsDebug.rlsError}</span>
+                    <strong>Error:</strong> <span className="text-red-600">{results.check.error_message}</span>
                   </>
                 )}
               </AlertDescription>
             </Alert>
           )}
           
-          {results.rlsDebugFunctionError && (
-            <Alert variant="destructive" className="mt-2 py-2 px-3">
+          {results.diagnostics && (
+            <Alert variant="default" className="mt-2 py-2 px-3 bg-blue-50 border-blue-200">
               <AlertDescription className="text-xs">
-                <strong>RLS Function Error:</strong> {results.rlsDebugFunctionError}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {results.orderItemsAccess.error && (
-            <Alert variant="destructive" className="mt-2 py-2 px-3">
-              <AlertDescription className="text-xs">
-                <strong>Database Error:</strong> {results.orderItemsAccess.error.message}
+                <strong>Has Access:</strong> 
+                {results.diagnostics.has_access ? (
+                  <span className="text-green-600"> Yes</span>
+                ) : (
+                  <span className="text-red-600"> No</span>
+                )}
+                <br />
+                <strong>Is Staff:</strong> 
+                {results.diagnostics.is_staff ? (
+                  <span className="text-green-600"> Yes</span>
+                ) : (
+                  <span className="text-red-600"> No</span>
+                )}
+                <br />
+                <strong>User Garage:</strong> {results.diagnostics.user_garage_id?.substring(0, 8) || 'Not set'}...
+                <br />
+                <strong>Request Garage:</strong> {results.diagnostics.request_garage_id?.substring(0, 8) || 'Not set'}...
+                {results.diagnostics.error_message && (
+                  <>
+                    <br />
+                    <strong>Error:</strong> <span className="text-red-600">{results.diagnostics.error_message}</span>
+                  </>
+                )}
               </AlertDescription>
             </Alert>
           )}

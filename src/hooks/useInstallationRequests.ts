@@ -136,7 +136,31 @@ export const useInstallationRequests = (garageId: string) => {
         return;
       }
       
-      // Use our new database function to get installation requests
+      // First try the direct table access - this tests if RLS is working properly
+      const { data: directData, error: directError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('garage_id', garageId)
+        .not('installation_status', 'is', null)
+        .limit(10);
+        
+      setDebug(prev => ({ 
+        ...prev, 
+        directTest: { 
+          data: directData, 
+          error: directError,
+          success: !directError && directData && directData.length > 0
+        } 
+      }));
+        
+      if (directError) {
+        console.error("Direct table access error:", directError);
+        // Continue to use the RPC function as a fallback
+      } else {
+        console.log("Direct table access success, found", directData?.length || 0, "items");
+      }
+      
+      // Use our database function to get installation requests
       const { data: requestsData, error } = await supabase.rpc(
         'get_garage_installation_requests',
         { garage_id_param: garageId }
