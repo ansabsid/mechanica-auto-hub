@@ -27,11 +27,18 @@ export const checkGarageAccess = async (garageId: string) => {
       
     if (error) throw error;
     
+    if (!data || data.length === 0) {
+      return {
+        hasAccess: false,
+        error: "No results returned from access check"
+      };
+    }
+    
     return {
-      hasAccess: data?.[0]?.user_has_access || false,
-      garageName: data?.[0]?.garage_name,
-      requestsCount: data?.[0]?.installation_requests_count,
-      error: data?.[0]?.error_message
+      hasAccess: data[0]?.user_has_access || false,
+      garageName: data[0]?.garage_name,
+      requestsCount: data[0]?.installation_requests_count,
+      error: data[0]?.error_message
     };
   } catch (error: any) {
     console.error("Error checking garage access:", error);
