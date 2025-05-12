@@ -1,14 +1,55 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Settings, Coffee, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactSlide: React.FC = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleContactClick = () => {
-    navigate("/contact");
+  const handleContactClick = async () => {
+    try {
+      // First try to go to the contact page
+      navigate("/contact");
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // If navigation fails, show a toast message
+      toast.error("Couldn't navigate to contact page. Try refreshing the page.");
+    }
+  };
+  
+  const handleQuickContact = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Create a lead in Freshsales with minimal information
+      const { data, error } = await supabase.functions.invoke(
+        "create-freshsales-lead",
+        {
+          body: {
+            name: "Pitch Deck Lead",
+            email: "Team@BookMyParts.com", // Using the visible email as fallback
+            subject: "Interest from Pitch Deck",
+            message: "This lead was generated from someone viewing the pitch deck contact slide."
+          },
+        }
+      );
+      
+      if (error) {
+        console.error("Freshsales API error:", error);
+        toast.error("Couldn't register your interest. Please try using the contact form.");
+      } else {
+        toast.success("Thanks for your interest! Our team will contact you soon.");
+      }
+    } catch (error) {
+      console.error("Error submitting interest:", error);
+      toast.error("An error occurred. Please try again or use the contact form.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -29,13 +70,22 @@ const ContactSlide: React.FC = () => {
         <p className="text-muted-foreground mt-2">Ready to transform the auto parts and service industry?</p>
       </div>
       
-      <div>
+      <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
         <Button 
           variant="mechanica" 
           className="bg-gradient-to-r from-mechanica-500 to-mechanica-600 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 border-none px-8 py-2.5"
           onClick={handleContactClick}
         >
           Contact Us
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="rounded-full shadow-sm hover:shadow-md transition-all transform hover:scale-105 border-mechanica-200 hover:border-mechanica-300 px-8 py-2.5"
+          onClick={handleQuickContact}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Registering..." : "Register Interest"}
         </Button>
       </div>
       
