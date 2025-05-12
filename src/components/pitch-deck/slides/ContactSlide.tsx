@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Settings, Coffee } from "lucide-react";
+import { Settings, Coffee, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -39,9 +39,15 @@ const ContactSlide: React.FC = () => {
         </Button>
       </div>
       
-      <div className="pt-6 border-t border-gray-200 w-full max-w-xs mx-auto mt-4">
-        <p className="text-sm font-medium text-mechanica-700 hover:text-mechanica-500 transition-colors">Team@BookMyParts.com</p>
-        <p className="text-sm text-muted-foreground">Dubai, UAE</p>
+      <div className="pt-6 border-t border-gray-200 w-full max-w-xs mx-auto mt-4 flex flex-col gap-2">
+        <div className="flex items-center justify-center gap-2">
+          <Mail className="h-4 w-4 text-mechanica-600" />
+          <p className="text-sm font-medium text-mechanica-700 hover:text-mechanica-500 transition-colors">Team@BookMyParts.com</p>
+        </div>
+        <div className="flex items-center justify-center gap-2">
+          <MapPin className="h-4 w-4 text-mechanica-600" />
+          <p className="text-sm text-muted-foreground">Dubai, UAE</p>
+        </div>
       </div>
     </div>
   );

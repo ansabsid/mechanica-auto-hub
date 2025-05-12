@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +18,7 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -45,10 +47,23 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // First, create a lead in Freshsales
+      const { data: freshsalesData, error: freshsalesError } = await supabase.functions.invoke(
+        "create-freshsales-lead",
+        {
+          body: data,
+        }
+      );
       
-      console.log("Form submitted with data:", data);
+      if (freshsalesError) {
+        console.error("Freshsales API error:", freshsalesError);
+        // Continue with form submission anyway, but log the error
+      } else {
+        console.log("Freshsales response:", freshsalesData);
+      }
+      
+      // Here you could also store the form submission in your Supabase database if needed
+      
       toast.success("Your message has been sent successfully!");
       form.reset();
     } catch (error) {
