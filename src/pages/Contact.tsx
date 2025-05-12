@@ -23,6 +23,8 @@ import { supabase } from "@/integrations/supabase/client";
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
+  organization: z.string().optional(),
+  phone: z.string().min(7, { message: "Please enter a valid phone number." }).optional(),
   subject: z.string().min(5, { message: "Subject must be at least 5 characters." }),
   message: z.string().min(10, { message: "Message must be at least 10 characters." }),
 });
@@ -38,6 +40,8 @@ const Contact = () => {
     defaultValues: {
       name: "",
       email: "",
+      organization: "",
+      phone: "",
       subject: "",
       message: "",
     },
@@ -188,6 +192,49 @@ const Contact = () => {
                               <Input
                                 type="email"
                                 placeholder="Your email"
+                                className="w-full"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                      <FormField
+                        control={form.control}
+                        name="organization"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">
+                              Organization
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Your company or organization"
+                                className="w-full"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">
+                              Phone Number
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="tel"
+                                placeholder="Your phone number"
                                 className="w-full"
                                 {...field}
                               />

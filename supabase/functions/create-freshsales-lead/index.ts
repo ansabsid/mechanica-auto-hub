@@ -4,6 +4,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 interface ContactFormData {
   name: string;
   email: string;
+  organization?: string;
+  phone?: string;
   subject: string;
   message: string;
 }
@@ -51,12 +53,19 @@ serve(async (req) => {
       return responseError('Freshsales API key not configured', 500);
     }
     
+    // Parse name into first and last name
+    const nameParts = formData.name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '-';
+    
     // Prepare the lead data for Freshsales API
     const leadData = {
       lead: {
-        first_name: formData.name.split(' ')[0],
-        last_name: formData.name.split(' ').slice(1).join(' ') || '-',
+        first_name: firstName,
+        last_name: lastName || '-',
         email: formData.email,
+        mobile_number: formData.phone || null,
+        company: formData.organization || null,
         custom_field: {
           cf_subject: formData.subject,
           cf_message: formData.message

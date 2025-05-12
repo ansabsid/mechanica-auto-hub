@@ -32,6 +32,8 @@ const ContactSlide: React.FC = () => {
           body: {
             name: "Pitch Deck Lead",
             email: "Team@BookMyParts.com", // Using the visible email as fallback
+            organization: "BookMyParts Pitch Deck Viewer",
+            phone: "", // No phone provided in quick contact
             subject: "Interest from Pitch Deck",
             message: "This lead was generated from someone viewing the pitch deck contact slide."
           },
